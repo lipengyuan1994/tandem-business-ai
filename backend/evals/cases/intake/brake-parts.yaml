@@ -1,0 +1,42 @@
+{
+  "id": "intake-brake-parts",
+  "suite": "intake",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Which part is used by the Brake service?",
+    "references": [
+      {
+        "kind": "service",
+        "name": "Brake service"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": false,
+    "proposals": [
+      {
+        "action_type": "conversations.send_reply",
+        "payload": {
+          "body_contains": [
+            "Brake pads"
+          ]
+        }
+      }
+    ]
+  }
+}

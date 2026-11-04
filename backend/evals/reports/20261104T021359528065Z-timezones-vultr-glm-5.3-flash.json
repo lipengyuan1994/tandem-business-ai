@@ -1,0 +1,688 @@
+{
+  "suite": "timezones",
+  "provider": "vultr",
+  "model": "glm-5.3-flash",
+  "metrics": {
+    "cases": 10,
+    "skipped_cases": 0,
+    "unpriced_cases": 0,
+    "pass_rate": 0.2,
+    "schema_valid_rate": 0.2,
+    "action_accuracy": 0.6,
+    "field_accuracy": 0.6,
+    "injection_resistance": 1.0,
+    "needs_human_precision": null,
+    "needs_human_accuracy": 1.0,
+    "p50_latency_ms": 11455.0,
+    "p95_latency_ms": 15274,
+    "input_tokens": 224688,
+    "output_tokens": 25394,
+    "cost_micros": 84723,
+    "thresholds_met": false
+  },
+  "regressions": [],
+  "results": [
+    {
+      "case_id": "timezones-denver-afternoon",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9383,
+      "input_tokens": 24843,
+      "output_tokens": 1663,
+      "cost_micros": 8995,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "dc9f2931-ef79-5b46-857b-8f59ab17bbee",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "cb0a68d9ee9f73ead98f1e3b5714e0b2feaab33f03c9746b75a185608805b01d",
+        "runs": [
+          {
+            "id": "7609e033-6494-43f1-bad6-bc6e7dbb4dd8",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "d74fa4a0-41f2-4fb8-aad7-432f64b69fec",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": "ai.step_limit"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a453-d802-7840-9823-17aab6808a95"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "d74fa4a0-41f2-4fb8-aad7-432f64b69fec"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-denver-dst-after",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 8,
+      "latency_ms": 14543,
+      "input_tokens": 23003,
+      "output_tokens": 2887,
+      "cost_micros": 8783,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "6dfcb61f-4ec6-5ffc-b40c-30dfffb58184",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "855a50a1e28323426dd634b915b5e9eb37ca425ed10d461e40ab259c6e01a2fa",
+        "runs": [
+          {
+            "id": "206752eb-4b1b-44c9-baad-6f5bf594d462",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-01T09:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "7b3d7cd1-a6e5-4edb-aa5f-dc086f1c1d9a",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-01T09:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-denver-dst-before",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 11408,
+      "input_tokens": 25065,
+      "output_tokens": 2354,
+      "cost_micros": 9315,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "21b3758a-88c8-5bb7-b071-5c30a317b5ca",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "a76522beec543450aa1358c896124672086c14b0acfb76b9c035610d23f3f67b",
+        "runs": [
+          {
+            "id": "758257b3-675e-45c1-81af-41390c5d4b91",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-10-30T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "e4ca7c37-c18f-4392-b363-f6c8c10d40ca",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-10-30T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a454-46d4-745b-a08c-a21a75be8495"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "758257b3-675e-45c1-81af-41390c5d4b91"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-denver-next-tuesday",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 12406,
+      "input_tokens": 23455,
+      "output_tokens": 2945,
+      "cost_micros": 8962,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "c9f61fdc-09d7-5bf2-9821-b17712cbec08",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "24429459fb19f358e22e55784c414a5ad3c10636727c2c83f5f2612bb0cf6cb7",
+        "runs": [
+          {
+            "id": "cb4c68ad-717d-42b1-bc49-f31f4301f463",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "ddace3af-a9e3-4ed2-abb5-5ddffa0b9781",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a454-7ce4-73ff-9f50-30a2f5aec71d"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "cb4c68ad-717d-42b1-bc49-f31f4301f463"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-denver-spring-before",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 8,
+      "latency_ms": 11502,
+      "input_tokens": 23839,
+      "output_tokens": 2619,
+      "cost_micros": 8978,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "22a4fc14-4b6f-5924-8990-22f1881847bd",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "48ea3b0f2d8e57415c411b9ef3fdb67bbc30877074c0ea5a962e2eef2d114951",
+        "runs": [
+          {
+            "id": "1e200932-4742-4723-baf6-5657d222a944",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2027-03-12T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "e256a3aa-e0d0-4a0f-9802-e109a6f6e1c0",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2027-03-12T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-afternoon",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 15274,
+      "input_tokens": 24417,
+      "output_tokens": 3041,
+      "cost_micros": 9329,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "f11b5e4c-472a-55ba-8b24-0cfb591f9873",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "ddad5f1a90ea43111eb7b630d659aae00bd5d19535ac6bb7d8a8c4e747e942e6",
+        "runs": [
+          {
+            "id": "db5f85fe-9a57-4be4-9631-aac0b3f1d210",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "f710f3a5-69c8-4280-ac02-61c199fa0489",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a454-ef56-7cae-9f90-545d7078ff10"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "db5f85fe-9a57-4be4-9631-aac0b3f1d210"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-dst-after",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 8,
+      "latency_ms": 10383,
+      "input_tokens": 26227,
+      "output_tokens": 1562,
+      "cost_micros": 9446,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "c99f2d76-a3b2-536c-ac4d-22d4cba20db2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "4bfec81d3325b8b8af201f435f4abbbbdb4dd32bd7945a7b684ed98741a5e9d7",
+        "runs": [
+          {
+            "id": "5f15b781-0ce3-43d4-bbed-21fc6c147355",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-10-25T02:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "c4dff6de-d4e7-4f5f-a1be-16337075524b",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 8,
+            "started_at": "2026-10-25T02:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a455-1804-79af-aa06-a1ad3a4abbe9"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "c4dff6de-d4e7-4f5f-a1be-16337075524b"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-dst-before",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 7,
+      "latency_ms": 11260,
+      "input_tokens": 22981,
+      "output_tokens": 2396,
+      "cost_micros": 8600,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "f2161dee-94af-5096-959d-fd94fba47024",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "70fc25eac5b9af1df8c072aeaac45d6f5b7890a2797c5b2ac2e28ddd5b6210b7",
+        "runs": [
+          {
+            "id": "8371f648-b08e-41c9-97a6-ed2987a61327",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-10-23T12:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "18d955e2-2b32-4afb-8342-24e7fdf50c1b",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 7,
+            "started_at": "2026-10-23T12:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a455-4819-7236-bc45-70b2aff803af"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "18d955e2-2b32-4afb-8342-24e7fdf50c1b"
+        ],
+        "total_steps_including_safety": 9,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-next-wednesday",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 8,
+      "latency_ms": 13598,
+      "input_tokens": 22568,
+      "output_tokens": 3727,
+      "cost_micros": 8925,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "cb9a441e-7cc7-53ed-bd1c-4dc3381f95a8",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "bb70d499b4b20915e0e22441bb23bac47b3bc9273213a8b147277d0730c70160",
+        "runs": [
+          {
+            "id": "15a10de1-7674-4755-83ce-24430da01c64",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "2e8d5a05-5660-4847-ace1-78b3418fda6e",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-spring-before",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 3,
+      "latency_ms": 7583,
+      "input_tokens": 8290,
+      "output_tokens": 2200,
+      "cost_micros": 3390,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "aa658d4e-75f7-5bff-80aa-10ed5c8e81d2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "f0cf61d336d7e4503bde4ba36f90a8b2bd6d33ff697ab67d75ca11f416ed1367",
+        "runs": [
+          {
+            "id": "bd4b6a70-a4d7-4795-8029-48cec76c2f5a",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2027-03-26T12:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "02b787cc-323c-4897-84ea-528d2f9bb55c",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "failed",
+            "steps": 3,
+            "started_at": "2027-03-26T12:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    }
+  ]
+}

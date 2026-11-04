@@ -1,0 +1,46 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# Secrets and local state — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!*.tfvars.example
+
+# Build and dependency output
+.venv/
+node_modules/
+dist/
+build/
+coverage/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+playwright-report/
+# Playwright logins for the local dev stack (generated test accounts and sessions; never commit)
+frontend/e2e/.auth/
+test-results/
+
+# Installer output (.env secrets, generated SSH private key, Terraform state)
+install-*/
+
+# Local production rehearsal (generated .env with secrets; never commit)
+deploy/rehearsal/
+
+# Local data
+backups/
+*.dump
+*.sqlite3
+
+# Local development test credentials (never commit)
+.dev-credentials*
+# Passwords written by `make demo-logins` (never commit)
+.demo-logins/

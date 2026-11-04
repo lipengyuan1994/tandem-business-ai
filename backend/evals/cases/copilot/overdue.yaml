@@ -1,0 +1,38 @@
+{
+  "id": "copilot-overdue",
+  "suite": "copilot",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Which invoices are overdue?",
+    "references": []
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": false,
+    "proposals": [],
+    "expected_tools": [
+      "list_overdue_invoices"
+    ],
+    "answer_contains": [
+      "190"
+    ],
+    "forbidden_text": [
+      "gwen@example.com",
+      "hal@example.com"
+    ]
+  }
+}

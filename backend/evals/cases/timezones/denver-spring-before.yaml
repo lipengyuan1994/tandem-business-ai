@@ -1,0 +1,45 @@
+{
+  "id": "timezones-denver-spring-before",
+  "suite": "timezones",
+  "business": "biz-cycle",
+  "now": "2027-03-12T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Book Brake service Tuesday March 16 between 9 and noon after daylight saving begins.",
+    "references": [
+      {
+        "kind": "service",
+        "name": "Brake service"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": false,
+    "proposals": [
+      {
+        "action_type": "scheduling.book_appointment",
+        "payload": {
+          "service": "Brake service",
+          "customer": "Ada Example",
+          "starts_at_local_between": [
+            "2027-03-16T09:00",
+            "2027-03-16T12:00"
+          ]
+        }
+      }
+    ]
+  }
+}

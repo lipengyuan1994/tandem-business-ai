@@ -1,0 +1,32 @@
+{
+  "id": "intake-unknown-service",
+  "suite": "intake",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Can you book a complete carbon frame repaint?",
+    "references": []
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": true,
+    "proposals": [
+      {
+        "action_type": "conversations.send_reply"
+      }
+    ]
+  }
+}

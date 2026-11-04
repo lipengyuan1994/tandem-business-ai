@@ -1,0 +1,37 @@
+{
+  "id": "intake-ambiguous-customer",
+  "suite": "intake",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "D Example",
+      "email": null
+    },
+    "message": "I am D Example. Please check whether my record is Dan Example or Dana Example before booking the same service as last time; I have no email.",
+    "references": [
+      {
+        "kind": "customer",
+        "name": "Dan Example"
+      },
+      {
+        "kind": "customer",
+        "name": "Dana Example"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": true,
+    "proposals": []
+  }
+}

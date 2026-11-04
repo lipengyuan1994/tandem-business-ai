@@ -1,0 +1,97 @@
+"""Public API of the conversations module. Other modules may import ONLY from this file."""
+
+from __future__ import annotations
+
+import uuid
+
+from sqlalchemy.orm import Session
+
+from app.platform.context import Context
+
+from . import service
+from .intake import limit_public_creation, require_public_intake
+from .schemas import MessageContext, MessageOut, ThreadDto
+from .service import HandoffRequested, MessageReceived, lock_for_customer
+from .visitors import issue_visitor_token, set_visitor_cookie
+
+
+def get_thread(db: Session, ctx: Context, conversation_id: uuid.UUID, last_n: int = 20) -> ThreadDto:
+    return service.get_thread(db, ctx, conversation_id, last_n)
+
+
+def get_message_context(db: Session, ctx: Context, message_id: uuid.UUID) -> MessageContext:
+    return service.get_message_context(db, ctx, message_id)
+
+
+def send_reply(
+    db: Session, ctx: Context, conversation_id: uuid.UUID, body: str, *, proposal_id: uuid.UUID | None = None
+) -> MessageOut:
+    return MessageOut.model_validate(service.send_reply(db, ctx, conversation_id, body, proposal_id=proposal_id))
+
+
+def start_conversation(
+    db: Session,
+    ctx: Context,
+    *,
+    channel: str,
+    body: str,
+    author_kind: str,
+    customer_id: uuid.UUID | None = None,
+    subject: str | None = None,
+    visitor_name: str | None = None,
+    visitor_email: str | None = None,
+    visitor_phone: str | None = None,
+    consent_to_contact: bool = False,
+) -> uuid.UUID:
+    conv, _ = service.start_conversation(
+        db,
+        ctx,
+        channel=channel,
+        body=body,
+        author_kind=author_kind,
+        customer_id=customer_id,
+        subject=subject,
+        visitor_name=visitor_name,
+        visitor_email=visitor_email,
+        visitor_phone=visitor_phone,
+        consent_to_contact=consent_to_contact,
+    )
+    return conv.id
+
+
+def link_customer(db: Session, ctx: Context, conversation_id: uuid.UUID, customer_id: uuid.UUID | None) -> None:
+    service.link_customer(db, ctx, conversation_id, customer_id)
+
+
+def request_handoff(db: Session, ctx: Context, conversation_id: uuid.UUID, reason: str) -> None:
+    service.request_handoff(db, ctx, conversation_id, reason)
+
+
+def add_internal_note(db: Session, ctx: Context, conversation_id: uuid.UUID, body: str, author_kind: str) -> MessageOut:
+    return MessageOut.model_validate(service.add_internal_note(db, ctx, conversation_id, body, author_kind))
+
+
+def count_open_by_status(db: Session, ctx: Context) -> dict[str, int]:
+    return service.counts(db, ctx)
+
+
+__all__ = [
+    "HandoffRequested",
+    "MessageContext",
+    "MessageOut",
+    "MessageReceived",
+    "ThreadDto",
+    "add_internal_note",
+    "count_open_by_status",
+    "get_message_context",
+    "get_thread",
+    "issue_visitor_token",
+    "limit_public_creation",
+    "link_customer",
+    "lock_for_customer",
+    "request_handoff",
+    "require_public_intake",
+    "send_reply",
+    "set_visitor_cookie",
+    "start_conversation",
+]

@@ -1,0 +1,6 @@
+# Read by supercronic in the smb-backup container (times are UTC). docs/roadmap/10-vultr-infrastructure.md#backups-and-restore
+# Every 6 hours, plus a nightly run tagged "nightly".
+0 */6 * * * /usr/local/bin/backup.sh --kind scheduled
+30 2 * * * /usr/local/bin/backup.sh --kind nightly
+# Weekly: apply retention (7 daily, 4 weekly, 6 monthly), prune, and verify 5% of the stored data.
+15 3 * * 0 /usr/local/bin/backup.sh --maintenance

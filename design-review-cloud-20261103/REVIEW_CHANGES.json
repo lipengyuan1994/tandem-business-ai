@@ -1,0 +1,19 @@
+{
+  "reviewed_at": "2026-10-24T23:20:04.403361+00:00",
+  "original_sha256": {
+    "docs/02-vultr-architecture-privacy-and-deployment.md": "057431184379cc54605331d45ba5904560d53946f57fb83ec433ff2a230fba7e",
+    "docs/01-product-scope-and-workflows.md": "c675445a2b91076bbfa60a0e61d50025ee7578376b10a576d43ef61bee45e666"
+  },
+  "revised_sha256": {
+    "docs/02-vultr-architecture-privacy-and-deployment.md": "7d8cb2daf69bf0909a952b620d9166f2c91d99c33c4e4c353489fb969aa68f8a",
+    "docs/01-product-scope-and-workflows.md": "2472c3cbe1f0e065104166451ae7e5167d962a8892e848b6f7a08143740d599e"
+  },
+  "changes": [
+    "Reservation-release correction",
+    "Pre-event scope clarification",
+    "Approval revocation and transactional audit requirements",
+    "Developer NAT source and unsupported inconsistency claim removed",
+    "Browser transit boundary clarified",
+    "Auth, isolation, speech, budget and restore requirements added"
+  ]
+}

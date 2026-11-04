@@ -1,0 +1,138 @@
+# Production reverse proxy, baked into the smb-web image (docs/roadmap/06-security-and-privacy.md#network-exposure).
+# DOMAIN is the public host name. A real name gets a Let's Encrypt certificate automatically (ports 80 and 443 must
+# reach this container); `localhost` uses Caddy's internal CA for the local rehearsal.
+{
+	admin off
+	# Caddy's own HTTP-to-HTTPS redirect always sends `Server: Caddy` and cannot be configured: the `http://` site at the
+	# end of this file does the redirect instead (docs/security/2026-11-03-rescan.md, F7).
+	auto_https disable_redirects
+	# Only matters for `localhost` (the local rehearsal), where Caddy's internal CA would try to add its root certificate
+	# to the container's trust store. The container runs as a non-root user with a read-only root filesystem, so the
+	# attempt could only fail and log an error, and nothing inside the container needs that trust.
+	skip_install_trust
+	# Clients that send no server name (monitoring probes, some scanners) get the site's certificate, not a TLS error.
+	default_sni {$DOMAIN}
+	# Caddy writes no access log, but its error log (for example a 502 while the api restarts) records the request URI
+	# and the Referer header. Those carry capabilities: the token of /q/<token> and /api/v1/public/quotes/<token>, the
+	# OIDC code and state, the unsubscribe token. Mask them before anything is written. The same rule is in
+	# Caddyfile.dev and tested in deploy/tests/test_capability_logging.py; a site-level `log` needs it too.
+	log {
+		format filter {
+			wrap json
+			request>uri regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
+			request>headers>Referer regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
+		}
+	}
+}
+
+(app_csp) {
+	# Our pages load nothing from other origins, so full cross-origin isolation is safe here (not for Keycloak's pages).
+	header Cross-Origin-Opener-Policy "same-origin"
+	header Cross-Origin-Embedder-Policy "require-corp"
+	header Cross-Origin-Resource-Policy "same-origin"
+	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Headers common to every route. Keycloak sets its own Content-Security-Policy, so ours is added only below.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		Permissions-Policy "camera=(), geolocation=(), microphone=()"
+		-Server
+	}
+	# `-Server` is applied when a handler writes the response. A response that Caddy builds itself from an error (a 502
+	# or 504 while the api or Keycloak is down, a 413 for an oversized chunked body) never passes through it and keeps
+	# `Server: Caddy`. `handle_errors` could remove that too, but then Caddy logs such failures at debug level instead of
+	# error level and the masked error log (below) would go silent, so those few responses keep the header.
+
+	# Keycloak administration is never public: use an SSH tunnel (docs/runbooks/access.md). That includes the master
+	# realm, which holds the administrator's own login (its admin-cli client accepts a password for the admin API).
+	handle /auth/admin* {
+		respond "Not found" 404
+	}
+	handle /auth/realms/master* {
+		respond "Not found" 404
+	}
+	handle /auth/* {
+		reverse_proxy keycloak:8080
+	}
+
+	handle /api/* {
+		header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+		header Cross-Origin-Resource-Policy "same-origin"
+		header Cache-Control "no-store"
+		# Known oversize bodies can be rejected before contacting the API.
+		@oversized_public {
+			path /api/v1/public/*
+			expression `{http.request.header.Content-Length} != "" && int({http.request.header.Content-Length}) > 128000`
+		}
+		respond @oversized_public "Request body too large" 413
+		# Cap body bytes (excluding chunk framing) read/forwarded, even when length is unknown.
+		request_body /api/v1/public/* {
+			max_size 128KB
+		}
+		# Buffering is bounded, not an up-front size validation: Caddy may forward a partial body
+		# before its reader hits max_size. Oversize chunked bodies must never arrive complete.
+		reverse_proxy /api/v1/public/* api:8000 {
+			request_buffers 128KB
+		}
+		reverse_proxy /api/v1/ai/copilot/* api:8000 {
+			flush_interval -1
+		}
+		reverse_proxy api:8000
+	}
+
+	# Fingerprinted build output is cacheable forever.
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		header Cross-Origin-Resource-Policy "same-origin"
+		root * /srv
+		# Answered here, not by file_server's "not found" error, which would carry `Server: Caddy` (see above).
+		@missing not file
+		respond @missing "Not found" 404
+		file_server
+	}
+
+	# The public widget and supplier capability page use the separate public bundle.
+	@public_pages path /p/* /q/*
+	handle @public_pages {
+		import app_csp
+		header Cache-Control "no-cache"
+		rewrite * /widget.html
+		root * /srv
+		file_server
+	}
+
+	# Single-page app: unknown paths fall back to index.html so client-side routes work on reload.
+	handle {
+		import app_csp
+		header Cache-Control "no-cache"
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Plain HTTP only redirects to HTTPS (the same answer as Caddy's built-in redirect: 308 to the same host and path, for
+# every Host). ACME HTTP challenges are answered before any route is reached.
+http:// {
+	header -Server
+	redir https://{host}{uri} 308
+}
+
+# A request for another Host (a scanner that uses the IP address) is dropped. Without this site Caddy answers it with
+# 200, an empty body and `Server: Caddy`.
+https:// {
+	abort
+}
+
+# Health endpoint for the container health check. Reachable only inside the container's network, never published.
+:8081 {
+	bind 127.0.0.1
+	header -Server
+	respond /healthz "ok" 200
+}

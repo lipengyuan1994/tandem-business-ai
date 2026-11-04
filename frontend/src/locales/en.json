@@ -1,0 +1,1249 @@
+{
+  "app": {
+    "name": "SMB Operations",
+    "skipToContent": "Skip to content",
+    "mainNav": "Main",
+    "countLabel": "{{n}} waiting",
+    "openMenu": "Menu"
+  },
+  "nav": {
+    "today": "Today",
+    "inbox": "Inbox",
+    "approvals": "Approvals",
+    "customers": "{{Customers}}",
+    "schedule": "Schedule",
+    "inventory": "Inventory",
+    "catalog": "Catalog",
+    "marketing": "Marketing",
+    "audit": "Audit",
+    "settings": "Settings",
+    "system": "System",
+    "sales": "Sales",
+    "purchasing": "Purchasing"
+  },
+  "status": {
+    "pending_review": "Pending review",
+    "approved": "Approved",
+    "executing": "Executing",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "rejected": "Rejected",
+    "expired": "Expired",
+    "cancelled": "Cancelled",
+    "held": "Held",
+    "confirmed": "Confirmed",
+    "completed": "Completed",
+    "no_show": "No-show",
+    "open": "Open",
+    "waiting_on_staff": "Waiting on staff",
+    "waiting_on_customer": "Waiting on {{customer}}",
+    "closed": "Closed",
+    "delivered": "Delivered",
+    "unknown": "Uncertain",
+    "simulated": "Simulated",
+    "pending": "Pending",
+    "unknownStatus": "Unknown status",
+    "draft": "Draft",
+    "in_review": "In review",
+    "sent": "Sent",
+    "sending": "Sending",
+    "accepted": "Accepted",
+    "declined": "Declined",
+    "fulfilled": "Fulfilled",
+    "issued": "Issued",
+    "paid": "Paid",
+    "void": "Void",
+    "partially_received": "Partially received",
+    "received": "Received",
+    "active": "Active",
+    "inactive": "Inactive",
+    "invited": "Invited",
+    "responded": "Responded"
+  },
+  "common": {
+    "close": "Close",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loadMore": "Load more",
+    "errorTitle": "Something went wrong",
+    "emptyTitle": "Nothing here yet",
+    "done": "Done",
+    "save": "Save",
+    "saved": "Saved",
+    "add": "Add",
+    "actions": "Actions",
+    "tableScroll": "More columns: scroll sideways →",
+    "tableRegion": "Scrollable table"
+  },
+  "conflict": {
+    "title": "This record changed since you opened it",
+    "description": "Someone else saved a newer version. Reload to see it; your unsaved changes are kept in the form so you can copy them.",
+    "reload": "Reload"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "back": "Go to Today"
+  },
+  "today": {
+    "title": "Today",
+    "placeholder": "Your day at a glance will appear here (task P3-13).",
+    "agenda": "Today's agenda",
+    "approvals": "Approvals you can decide ({{n}})",
+    "nothingPending": "Nothing waiting for you.",
+    "openInbox": "Open inbox",
+    "deliveryIssues": "Delivery issues",
+    "deliveryIssuesCount": "{{n}} messages may not have arrived",
+    "noDeliveryIssues": "No delivery issues reported",
+    "stockOk": "Nothing below its reorder point.",
+    "noAppointments": "No {{appointments}} today."
+  },
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "operator": "Operator",
+    "inventory_manager": "Inventory manager",
+    "marketing_manager": "Marketing manager",
+    "auditor": "Auditor"
+  },
+  "weekdays": {
+    "0": "Monday",
+    "1": "Tuesday",
+    "2": "Wednesday",
+    "3": "Thursday",
+    "4": "Friday",
+    "5": "Saturday",
+    "6": "Sunday"
+  },
+  "errors": {
+    "auth.permission_denied": "You don't have permission to do that.",
+    "auth.csrf_failed": "Your session needs a refresh. Reload the page and try again.",
+    "identity.last_owner": "A business must keep at least one active owner.",
+    "identity.owner_grant_forbidden": "Only an owner can grant or remove the owner role.",
+    "identity.invitation_exists": "There is already a pending invitation for this email.",
+    "identity.already_member": "This person is already a member of this business.",
+    "identity.keycloak_unavailable": "The sign-in {{service}} is unavailable. Try again shortly.",
+    "org.invalid_hours": "Opening hours are invalid or overlap.",
+    "org.default_location_required": "Choose another default location first.",
+    "approvals.revision_changed": "This proposal was edited since you opened it. The latest version is now shown.",
+    "approvals.self_approval_forbidden": "You can't approve your own proposal (see Settings → Policies).",
+    "approvals.not_authorized_to_approve": "Your role can't approve this type of change.",
+    "approvals.expired": "This proposal has expired.",
+    "approvals.not_pending": "This proposal has already been decided.",
+    "approvals.invalid_payload": "Some values are invalid.",
+    "crm.customer_version_conflict": "This {{customer}} changed since you opened it.",
+    "scheduling.slot_unavailable": "That time was just taken. Pick another slot.",
+    "inventory.insufficient_stock": "Not enough stock available.",
+    "conversations.public_chat_disabled": "Public chat is turned off.",
+    "scheduling.outside_working_hours": "That time is outside working hours.",
+    "scheduling.lead_time_violation": "That time is too soon to book.",
+    "admin_ops.erasure_blocked": "Erasure is blocked until the listed items are resolved.",
+    "admin_ops.confirmation_mismatch": "The name you typed does not match.",
+    "sales.document_locked": "This is no longer a draft. Reload the page to see available actions.",
+    "sales.invalid_transition": "This action is no longer available. Reload the document.",
+    "sales.already_converted": "An order or invoice already exists. Open it from this page.",
+    "sales.item_unavailable": "This catalog item is unavailable. Choose another item or enter your own.",
+    "sales.currency_mismatch": "Choose items that use the same currency as this quote, order or invoice.",
+    "sales.fractional_quantity": "Enter a whole number for this item’s quantity.",
+    "sales.amount_too_large": "The total is too large. Reduce the prices or quantities and try again.",
+    "sales.lines_required": "Add at least one item.",
+    "sales.appointment_not_completed": "Complete the {{appointment}} before creating an invoice.",
+    "purchasing.over_receipt": "This would exceed 110% of the ordered quantity. Ask an owner or admin to record an override.",
+    "purchasing.invite_not_unanswered": "This supplier has already answered, or the invitation has expired.",
+    "purchasing.quote_request_closed": "This quote request is closed.",
+    "purchasing.quote_link_unavailable": "This link can no longer be rebuilt. Send a follow-up instead."
+  },
+  "identity": {
+    "selectBusiness": {
+      "title": "Choose a business",
+      "subtitle": "Signed in as {{name}}.",
+      "open": "Open",
+      "none": "You don't belong to any business yet",
+      "noneHelp": "Ask an owner to invite you, then sign in again.",
+      "openNamed": "Open {{name}}"
+    },
+    "loginFailed": {
+      "title": "Sign-in didn't complete",
+      "help": "The sign-in link may have expired or been used already. Please try again.",
+      "retry": "Sign in again"
+    },
+    "menu": {
+      "label": "Account menu",
+      "switch": "Switch business",
+      "logout": "Log out",
+      "logoutAll": "Log out everywhere"
+    },
+    "staff": {
+      "title": "Staff",
+      "description": "People who can sign in to this business, and what they can do.",
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles",
+      "status": "Status",
+      "invite": "Invite staff",
+      "editRoles": "Edit roles",
+      "suspend": "Suspend",
+      "suspendTitle": "Suspend {{name}}?",
+      "suspendHelp": "They lose access immediately. You can restore access later."
+    },
+    "invite": {
+      "title": "Invite a staff member",
+      "description": "They get an account with multi-factor sign-in.",
+      "email": "Email",
+      "name": "Name",
+      "roles": "Roles",
+      "submit": "Send invitation",
+      "passwordTitle": "Temporary password (shown once)",
+      "passwordHelp": "No email server is configured, so give this password to them in person. They must change it and set up an authenticator app when they first sign in.",
+      "addedExisting": "They already had an account and have been added to this business.",
+      "emailSent": "An email with sign-in instructions was sent."
+    },
+    "roles": {
+      "title": "Roles for {{name}}",
+      "description": "Changes take effect on their next click."
+    }
+  },
+  "settings": {
+    "tabs": {
+      "business": "Business",
+      "locations": "Locations & hours",
+      "policies": "Policies",
+      "staff": "Staff"
+    },
+    "business": {
+      "name": "Business name",
+      "legalName": "Legal name",
+      "timezone": "Time zone",
+      "timezoneHelp": "Existing {{appointments}} keep their exact moment in time; only how they are displayed changes.",
+      "locale": "Locale",
+      "currency": "Currency {{currency}} · public address /p/{{slug}}"
+    },
+    "locations": {
+      "default": "Default",
+      "new": "New location name"
+    },
+    "hours": {
+      "title": "Opening hours",
+      "day": "Day",
+      "opens": "Opens",
+      "closes": "Closes",
+      "opensFor": "Opening time on {{day}}",
+      "closesFor": "Closing time on {{day}}",
+      "closed": "Closed",
+      "open": "Open this day",
+      "close": "Close this day",
+      "save": "Save opening hours"
+    },
+    "policies": {
+      "scheduling": "Scheduling",
+      "approvals": "Approvals and stock",
+      "customers": "{{Customers}} and data",
+      "ai": "AI assistant",
+      "hold_minutes": "Minutes a proposed slot is held while waiting for approval",
+      "booking_lead_time_minutes": "Minimum notice for bookings (minutes)",
+      "retention_days_conversations": "Keep conversations for (days)",
+      "allow_self_approval": "Allow people to approve their own proposals",
+      "allow_self_approvalHelp": "Useful for one-person businesses. Off means a second person must approve.",
+      "allow_backorders": "Allow booking parts that are out of stock",
+      "allow_backordersHelp": "Off means a booking fails if the needed part isn't available.",
+      "public_chat_enabled": "Public chat on your website",
+      "public_chat_enabledHelp": "Visitors can send messages and {{appointment}} requests.",
+      "ai_policy": "Where AI processes text",
+      "aiPolicies": {
+        "hosted_vultr": "Vultr Serverless Inference",
+        "hosted_any": "Vultr or other approved AI providers",
+        "strict_private": "Only a model inside this installation"
+      },
+      "aiPolicyHelp": {
+        "hosted_vultr": "{{Customer}} messages are sent to Vultr's AI {{service}} in the US for processing; nothing is used for training by us.",
+        "hosted_any": "Like the Vultr option, plus fallbacks to other providers configured by your administrator.",
+        "strict_private": "No text leaves this installation. AI features are off if no local model is configured."
+      },
+      "sales": "Sales",
+      "salesTaxRate": "Default sales tax (%)",
+      "salesTaxHelp": "Used for new document lines. Existing lines keep their saved tax rate.",
+      "salesTaxInvalid": "Enter a percentage from 0 to 100 with up to two decimal places.",
+      "terminology": "Terminology",
+      "terminologyHelp": "Choose the words used for navigation, titles and main actions. Leave blank for the default."
+    }
+  },
+  "approvals": {
+    "description": "Every change proposed by the assistant or by staff waits here for a decision.",
+    "tabs": {
+      "mine": "Needs my decision",
+      "pending": "All pending",
+      "recent": "Recent"
+    },
+    "columns": {
+      "title": "Proposal",
+      "type": "Type",
+      "status": "Status",
+      "created": "Created"
+    },
+    "empty": "Nothing waiting for a decision",
+    "notFound": "Proposal not found",
+    "aiProposed": "AI proposed",
+    "detailSubtitle": "Action type: {{type}}",
+    "changes": "What will change (revision {{n}})",
+    "new": "New",
+    "before": "Before",
+    "approveEffect": "Approve: {{effect}}",
+    "reject": "Reject",
+    "rejectTitle": "Reject this proposal?",
+    "comment": "Comment (optional)",
+    "cancel": "Withdraw",
+    "failed": "Execution failed: {{code}}. Nothing was changed.",
+    "deliveries": "Messages",
+    "uncertain": "Delivery uncertain — check with the {{customer}}",
+    "channels": {
+      "web_chat": "Web chat",
+      "email": "Email",
+      "sms": "SMS",
+      "simulated": "Simulated delivery"
+    },
+    "evidence": "Why this was proposed",
+    "noEvidence": "No evidence attached.",
+    "evidenceKinds": {
+      "message": "Message",
+      "tool_result": "Check",
+      "record": "Record",
+      "note": "Note"
+    },
+    "history": "History",
+    "revisionLine": "Revision {{n}} by {{who}}",
+    "by": {
+      "staff": "staff",
+      "assistant": "assistant"
+    },
+    "decisionLine": {
+      "approve": "Approved by {{who}}",
+      "reject": "Rejected by {{who}}"
+    },
+    "attemptLine": "Execution",
+    "expires": "Expires",
+    "edit": {
+      "open": "Edit",
+      "save": "Save as new revision",
+      "note": "Saving creates a new revision; any earlier approval no longer applies.",
+      "json": "Proposal details (JSON)",
+      "invalidJson": "That isn't valid JSON."
+    },
+    "forms": {
+      "existingCustomer": "{{Customer}} from the proposal",
+      "bookingNote": "Choosing a slot saves a new revision; the {{customer}}, reply and evidence stay as proposed.",
+      "replyText": "Reply text",
+      "signedQuantity": "Change (negative for a loss)"
+    },
+    "review": "Review →",
+    "actionLabels": {
+      "inventory.adjust_stock": "Stock adjustment"
+    }
+  },
+  "audit": {
+    "description": "Who changed what, when — including the assistant and automatic jobs.",
+    "when": "When",
+    "actor": "Who",
+    "action": "Action",
+    "summary": "Summary",
+    "target": "Record",
+    "proposal": "Proposal",
+    "changes": "Changes",
+    "requestId": "Request ID",
+    "export": "Export CSV",
+    "filterAction": "Filter activity by event prefix",
+    "filterActor": "Actor",
+    "anyActor": "Anyone",
+    "actors": {
+      "user": "Staff",
+      "assistant": "Assistant",
+      "system": "System",
+      "visitor": "Visitor"
+    },
+    "filterHelp": "Enter an event prefix: crm. for customers, sales. for sales. Leave blank for all."
+  },
+  "notifications": {
+    "label": "Notifications ({{count}} unread)",
+    "title": "Notifications",
+    "readAll": "Mark all read",
+    "empty": "You're all caught up"
+  },
+  "crm": {
+    "description": "Everyone you do business with, with their history and consent.",
+    "new": "New {{customer}}",
+    "edit": "Edit {{customer}}",
+    "dialogHint": "Only the name is required.",
+    "nameRequired": "Enter a name.",
+    "search": "Search {{customers}}",
+    "searchHint": "Name, email or phone",
+    "empty": "No {{customers}} yet",
+    "notFound": "{{Customer}} not found",
+    "noTimeline": "Nothing on the timeline yet",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "contact": "Primary contact",
+      "tags": "Tags",
+      "lastInteraction": "Last interaction"
+    },
+    "tabs": {
+      "timeline": "Timeline",
+      "notes": "Notes",
+      "consent": "Consent"
+    },
+    "kinds": {
+      "appointment": "{{Appointment}}",
+      "message": "Message",
+      "note": "Note",
+      "customer": "{{Customer}}",
+      "system": "System"
+    },
+    "notes": {
+      "add": "Add a note",
+      "pin": "Pin to top",
+      "pinned": "Pinned",
+      "empty": "No notes yet."
+    },
+    "consent": {
+      "history": "Consent history",
+      "noHistory": "No consent recorded. Without consent, marketing is not sent.",
+      "none": "Not recorded",
+      "what": "Channel and purpose",
+      "status": "Decision",
+      "evidence": "Evidence",
+      "evidenceHint": "e.g. asked at the front desk on 5 Nov",
+      "record": "Record consent",
+      "channels": {
+        "email": "Email",
+        "sms": "SMS"
+      },
+      "purposes": {
+        "marketing": "marketing",
+        "service_updates": "{{service}} updates"
+      },
+      "statuses": {
+        "granted": "Granted",
+        "denied": "Denied",
+        "withdrawn": "Withdrawn"
+      },
+      "sources": {
+        "form": "web form",
+        "staff": "staff",
+        "import": "import",
+        "unsubscribe_link": "unsubscribe link"
+      }
+    },
+    "erase": {
+      "open": "Erase personal data…",
+      "title": "Erase {{name}}?",
+      "description": "This cannot be undone.",
+      "removes": "Removed: names, e-mail addresses and phone numbers (also where they were copied: messages, notifications, stock and campaign notes, tags, the audit log and approval history), notes, the activity timeline, conversation text, {{appointment}} notes and cancellation reasons. Records about this {{customer}}'s {{appointments}}, conversations and approvals lose all their free text.",
+      "keeps": "Kept: the {{customer}}'s id, {{appointment}} times, stock quantities and money amounts, and the consent decisions (without their free-text evidence). A do-not-e-mail entry for each of their addresses is kept so they are never mailed again.",
+      "backups": "Backups taken earlier still contain the data until they expire (see the backup retention in the runbooks).",
+      "blocked": "Not possible yet",
+      "confirmLabel": "Type “{{name}}” to confirm",
+      "confirm": "Erase personal data",
+      "done": "Personal data erased"
+    },
+    "restrict": {
+      "title": "Restrict {{name}}?",
+      "description": "Restrict contact and keep records under a retention hold.",
+      "removes": "Contact points are blanked and made inactive. Every e-mail address is suppressed. This person is hidden from lists and search, excluded from marketing, and cannot be booked or messaged.",
+      "keeps": "Personal notes, timeline, conversation text, appointment notes, consent evidence and audit history are kept. The customer’s identity is retained.",
+      "backups": "Backups retain existing data until they expire. Lifting a restriction is not available.",
+      "confirm": "Restrict and retain records",
+      "done": "Customer restricted; records retained.",
+      "checks": "Resolve open approval proposals that refer to this {{customer}} or their records, and cancel or complete upcoming held/confirmed {{appointments}} first. Otherwise restriction is blocked and nothing is changed."
+    }
+  },
+  "catalog": {
+    "description": "{{Services}} you book and products you stock. Prices quoted to {{customers}} come only from here.",
+    "tabs": {
+      "services": "{{Services}}",
+      "products": "Products"
+    },
+    "new": {
+      "service": "New {{service}}",
+      "product": "New product"
+    },
+    "dialogHint": "You can add parts, SKU and description later.",
+    "onRequest": "On request",
+    "minutes": "{{n}} min",
+    "yes": "Yes",
+    "no": "No",
+    "fields": {
+      "name": "Name",
+      "sku": "SKU",
+      "price": "Price",
+      "priceInput": "Price (leave empty for “on request”)",
+      "duration": "Duration",
+      "durationInput": "Duration (minutes)",
+      "tracked": "Stock tracked",
+      "status": "Status"
+    }
+  },
+  "inventory": {
+    "description": "On hand is what's on the shelf; reserved is promised to booked {{appointments}}; available is what you can still promise.",
+    "belowOnly": "Only items below reorder point",
+    "belowReorder": "(below reorder point)",
+    "notFound": "Item has no stock record",
+    "itemSummary": "On hand {{onHand}} · Reserved {{reserved}} · Available {{available}}",
+    "ledger": "Stock ledger",
+    "reservations": "Active reservations",
+    "noReservations": "Nothing reserved.",
+    "forAppointment": "{{appointment}}",
+    "rule": "Reorder rule",
+    "ruleLine": "Reorder at {{point}}, up to {{target}}; lead time {{days}} days",
+    "fields": {
+      "item": "Item",
+      "onHand": "On hand",
+      "reserved": "Reserved",
+      "available": "Available",
+      "reorderPoint": "Reorder point",
+      "when": "When",
+      "reason": "Reason",
+      "change": "Change",
+      "balance": "Balance"
+    },
+    "reasons": {
+      "receipt": "Received",
+      "consumption": "Used for a job",
+      "sale": "Sold",
+      "adjustment_gain": "Found / added",
+      "adjustment_loss": "Lost / damaged",
+      "count_correction": "Count correction",
+      "transfer_in": "Transfer in",
+      "transfer_out": "Transfer out",
+      "return": "Returned"
+    },
+    "adjust": {
+      "open": "Adjust stock",
+      "title": "Adjust stock: {{name}}",
+      "hint": "Enter the change, not the new total. Every change needs a reason.",
+      "reason": "Reason",
+      "chooseReason": "Choose a reason",
+      "quantity": "Change (e.g. 2 or -1)",
+      "note": "Note (optional)",
+      "submit": "Record change",
+      "reasonRequired": "Choose a reason.",
+      "quantityRequired": "Enter a change other than 0."
+    },
+    "suggestions": {
+      "title": "Reorder suggestions",
+      "createAll": "Create reorder draft",
+      "created": "Reorder draft created",
+      "line": "order {{n}} (available {{available}})"
+    }
+  },
+  "schedule": {
+    "description": "Times are shown in {{zone}}.",
+    "new": "New {{appointment}}",
+    "newHint": "Free slots come from opening hours, staff availability and existing bookings ({{zone}}).",
+    "date": "Date",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "today": "Today",
+    "noResources": "No bookable resources yet",
+    "service": "{{Service}}",
+    "chooseService": "Choose a {{service}}",
+    "customer": "{{Customer}}",
+    "customerHint": "Type a name",
+    "customerMatches": "Matching {{customers}}",
+    "freeSlots": "Free slots",
+    "noSlots": "No free slots on this day.",
+    "pickCustomerFirst": "Choose a {{customer}} to book a slot.",
+    "booked": "Booked {{when}}",
+    "slotTaken": "That time was just taken by another booking. Pick another slot.",
+    "holdExpires": "hold expires in {{n}} min",
+    "viaProposal": "Created from an approval",
+    "cancelReason": "Cancellation reason (optional)",
+    "actions": {
+      "complete": "Mark completed",
+      "noShow": "No-show",
+      "cancel": "Cancel {{appointment}}"
+    },
+    "emptyDay": "No appointments on this day.",
+    "currentTime": "Current time",
+    "scrollHint": "Scroll for more resources → and hours ↕",
+    "timetable": "Appointment timetable: scroll for resources and hours"
+  },
+  "inbox": {
+    "contactConsent": "Visitor agreed to be contacted about this request",
+    "description": "Conversations from web chat and logged calls.",
+    "threads": "Conversations",
+    "thread": "Conversation",
+    "customer": "{{Customer}}",
+    "tabs": {
+      "waiting_on_staff": "Needs reply",
+      "waiting_on_customer": "Waiting",
+      "closed": "Closed"
+    },
+    "empty": "No conversations here.",
+    "pick": "Choose a conversation",
+    "notFound": "Conversation not found",
+    "anonymous": "Visitor",
+    "close": "Close",
+    "channels": {
+      "web_chat": "Web chat",
+      "phone_log": "Call",
+      "walk_in": "Walk-in",
+      "email": "Email",
+      "voice": "Voice"
+    },
+    "internalNote": "Internal note (not visible to the {{customer}})",
+    "internalToggle": "Internal note",
+    "replyLabel": "Reply",
+    "noteLabel": "Note for staff",
+    "replyPlaceholder": "Write a reply…",
+    "notePlaceholder": "Only staff will see this…",
+    "send": "Send reply",
+    "addNote": "Add note",
+    "openProfile": "Open {{customer}} profile",
+    "linkCustomer": "Link to a {{customer}}",
+    "linkTo": "Link to {{name}}",
+    "back": "Back to conversations",
+    "pickHint": "Select a conversation from the list to read and reply."
+  },
+  "marketing": {
+    "description": "E-mail campaigns to {{customers}} who agreed to receive them. Nothing is sent without an approval.",
+    "new": "New campaign",
+    "newHint": "Choose who should receive it and write the message. You can edit both before asking for approval.",
+    "createDraft": "Create draft",
+    "empty": "No campaigns yet",
+    "emptyHint": "Create one to see who would receive it.",
+    "notFound": "Campaign not found",
+    "channelEmail": "E-mail (simulated in this version: messages are recorded but not delivered)",
+    "tabs": {
+      "campaigns": "Campaigns",
+      "suppressions": "Do not e-mail"
+    },
+    "fields": {
+      "name": "Campaign name",
+      "audience": "Audience",
+      "subject": "Subject",
+      "body": "Message"
+    },
+    "message": "Message",
+    "revisionNo": "revision {{n}}",
+    "saveRevision": "Save as new revision",
+    "saveFirst": "Save your changes as a revision before submitting.",
+    "previewOfMessage": "What recipients get",
+    "footerNote": "Every message ends with an unsubscribe link.",
+    "revisions": "Revision history",
+    "revisionLine": "Revision {{n}} by {{by}}",
+    "by": {
+      "staff": "staff",
+      "assistant": "the assistant"
+    },
+    "audience": "Audience",
+    "eligible_one": "person would receive this",
+    "eligible_other": "people would receive this",
+    "excludedTitle": "Excluded",
+    "noneExcluded": "Nobody in this audience is excluded.",
+    "excluded": {
+      "no_consent_one": "{{count}} has no marketing consent",
+      "no_consent_other": "{{count}} have no marketing consent",
+      "suppressed_one": "{{count}} unsubscribed or suppressed",
+      "suppressed_other": "{{count}} unsubscribed or suppressed",
+      "no_contact_one": "{{count}} has no e-mail address",
+      "no_contact_other": "{{count}} have no e-mail address",
+      "archived_one": "{{count}} archived {{customer}}",
+      "archived_other": "{{count}} archived {{customers}}"
+    },
+    "recipients": "Recipients (page)",
+    "prev": "Previous",
+    "next": "Next",
+    "frozen": "Audience frozen at submission: {{n}} people.",
+    "liveNote": "Live preview. The audience is frozen when you submit.",
+    "submit": "Submit for approval",
+    "cancel": "Cancel campaign",
+    "noRecipients": "Nobody is eligible: everyone in this audience is excluded.",
+    "inReview": {
+      "title": "Waiting for approval",
+      "text": "The message and audience are frozen. Editing the message withdraws this request.",
+      "open": "Open the approval"
+    },
+    "sent": {
+      "title": "Sent",
+      "text": "The approved audience was checked again just before sending: people who unsubscribed meanwhile were skipped."
+    },
+    "editConfirm": {
+      "title": "Edit the message?",
+      "text": "The approval request will be withdrawn and the campaign goes back to draft. You will need to submit it again.",
+      "confirm": "Edit and withdraw"
+    },
+    "suppressionsHint": "These addresses never receive marketing, whatever their consent says. Unsubscribe links add to this list automatically.",
+    "suppressionAdd": "Add an e-mail address",
+    "noSuppressions": "No addresses suppressed yet.",
+    "reasons": {
+      "unsubscribed": "unsubscribed",
+      "bounced": "bounced",
+      "complaint": "complaint",
+      "manual": "added by staff"
+    },
+    "filters": {
+      "active": "Audience filters (all must match)",
+      "none": "No filters yet: add at least one.",
+      "add": "Add a filter",
+      "value": "Value",
+      "days": "Days",
+      "choose": "Choose…",
+      "addButton": "Add filter",
+      "remove": "Remove filter {{filter}}",
+      "kinds": {
+        "tag": "Has tag",
+        "last_interaction_older": "Last contact longer ago than",
+        "last_interaction_newer": "Last contact within",
+        "created_older": "{{Customer}} for longer than",
+        "created_newer": "New {{customer}} within",
+        "customer_kind": "Is a",
+        "service": "Had an {{appointment}} for"
+      },
+      "chip": {
+        "tag": "Tag: {{value}}",
+        "kind": {
+          "person": "Person",
+          "organization": "Organisation"
+        },
+        "service": "Had: {{value}}",
+        "last_interaction_at": {
+          "older_than_days": "No contact for {{value}}+ days",
+          "newer_than_days": "Contact in last {{value}} days"
+        },
+        "created_at": {
+          "older_than_days": "{{Customer}} for {{value}}+ days",
+          "newer_than_days": "New in last {{value}} days"
+        }
+      }
+    },
+    "back": "Back to campaigns",
+    "editHint": "Edit, save a revision, then submit for approval.",
+    "previewRequired": "Load the audience preview before submitting."
+  },
+  "system": {
+    "email": {
+      "title": "E-mail",
+      "configured": "Configured: {{host}}",
+      "disabled": "E-mail is not configured. Messages use simulated delivery.",
+      "test": "Send test e-mail",
+      "hint": "Queues a message through your shop’s e-mail provider. Check delivery issues on this page if it does not arrive.",
+      "recipient": "Recipient e-mail",
+      "send": "Send test",
+      "queued": "Test e-mail queued. Check your inbox; delivery may take a moment."
+    },
+    "description": "Is everything running, and are backups current?",
+    "version": "Version",
+    "environment": "Environment: {{env}}",
+    "backup": "Backups",
+    "backupUnavailable": "Backup health cannot yet be confirmed. Ask your administrator to check the backup service and status file.",
+    "backupOk": "The last backup succeeded.",
+    "backupError": "The last backup failed.",
+    "lastBackup": "Last successful backup {{age}} ago",
+    "backupLate": "Backups should run every 6 hours: this one is overdue.",
+    "queue": "Background work",
+    "queueEmpty": "Nothing is waiting.",
+    "oldestWaiting": "Oldest waiting task: {{age}}",
+    "deadJobs_one": "{{count}} task failed for good",
+    "deadJobs_other": "{{count}} tasks failed for good",
+    "deadEvents_one": "{{count}} internal notification failed for good",
+    "deadEvents_other": "{{count}} internal notifications failed for good",
+    "outbox": "Messages",
+    "outboxIssues_one": "{{count}} message needs attention",
+    "outboxIssues_other": "{{count}} messages need attention",
+    "noMessages": "No messages yet.",
+    "ai": "AI usage today",
+    "aiNotInstalled": "The AI assistant is not installed.",
+    "fine": "OK",
+    "attention": "Needs attention",
+    "data": {
+      "title": "Your data",
+      "exportHint": "Download everything this business has stored ({{customers}}, {{appointments}}, stock, conversations, campaigns, approvals, audit log) as a ZIP of JSON files. Passwords and login tokens are not included. Each download is recorded in the audit log.",
+      "export": "Download all data (ZIP)",
+      "downloaded": "Downloaded {{name}}",
+      "erasures": "Erasure and restriction requests",
+      "noErasures": "No erasure or restriction requests yet.",
+      "erasureLine": "{{Customer}} {{id}}…",
+      "erasureHow": "To erase a {{customer}}'s personal data, open the {{customer}} and choose “Erase personal data”."
+    },
+    "regulated": {
+      "title": "Regulated data profile",
+      "host": "Host agreement: {{text}}",
+      "backup": "Backup agreement: {{text}}",
+      "limit": "This profile makes the software ready but does not make the installation compliant. Signed agreements, the clinic’s own policies and a legal review are needed."
+    },
+    "statusUnavailable": "Status unavailable"
+  },
+  "sales": {
+    "overdue": "Overdue",
+    "reminder": {
+      "title": "Send reminder",
+      "hint": "Create a proposal to email {{email}} about invoice {{number}}. Approval is required before sending. The amount and due date are appended automatically.",
+      "message": "Message",
+      "create": "Create reminder proposal",
+      "review": "Review reminder proposal"
+    },
+    "description": "Quotes, orders and invoices.",
+    "documentTabs": "Sales documents",
+    "tabs": {
+      "quotes": "Quotes",
+      "orders": "Orders",
+      "invoices": "Invoices"
+    },
+    "documentTypes": {
+      "quotes": "Quote",
+      "orders": "Sales order",
+      "invoices": "Invoice"
+    },
+    "new": {
+      "quotes": "New quote",
+      "invoices": "New invoice"
+    },
+    "newHint": "Choose a {{customer}} and add items. Save to see the total.",
+    "fields": {
+      "number": "Number",
+      "customer": "{{Customer}}",
+      "date": "Date",
+      "status": "Status",
+      "total": "Total",
+      "description": "Description",
+      "quantity": "Quantity",
+      "unitPrice": "Unit price",
+      "price": "Unit price ({{currency}})",
+      "taxPercent": "Tax rate (%)",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "catalog": "Catalog item",
+      "created": "Created",
+      "issueDate": "Issue date",
+      "dueDate": "Due date",
+      "paidAt": "Paid at",
+      "notes": "Notes",
+      "address": "Bill-to address (optional)"
+    },
+    "allStatuses": "All statuses",
+    "empty": "No documents found.",
+    "noAccess": "You do not have access to sales.",
+    "notFound": "Document not found.",
+    "back": "Back to sales",
+    "billTo": "Bill to",
+    "lines": "Items",
+    "lineNumber": "Item {{n}}",
+    "linesHint": "Enter prices in the currency shown. Leave tax blank to use your default rate. Save to see the total.",
+    "priceErrors": {
+      "invalid": "Enter an amount using digits and a decimal point.",
+      "precision": "{{currency}} allows up to {{digits}} decimal places.",
+      "tooLarge": "Enter a smaller price."
+    },
+    "catalogHint": "Saving copies the current item name and price. Choose your own item to set the price.",
+    "freeText": "Your own item",
+    "businessDefault": "Business default",
+    "addLine": "Add item",
+    "removeLine": "Remove item {{n}}",
+    "invalidField": "Check this value and try again.",
+    "noCustomers": "No {{customers}} found. Check the name and try again.",
+    "createDraft": "Create draft",
+    "created": "Draft created.",
+    "editLines": "Edit items",
+    "editHint": "Save to update the total. Catalog items use their current name and price when you save.",
+    "locked": "This document is no longer a draft and can no longer be edited.",
+    "invoiceLocked": "An issued invoice cannot be changed. Create a credit note to cancel it.",
+    "actionDone": "Document updated.",
+    "print": "Print",
+    "printable": "Printable document",
+    "unissued": "Not issued",
+    "creditNote": "Credit note",
+    "creditOf": "Credit for",
+    "originalInvoice": "Original invoice",
+    "percent": "{{value}}%",
+    "checkingConversion": "Checking for an existing order or invoice…",
+    "openConverted": "Open order or invoice",
+    "actions": {
+      "send": "Send quote",
+      "accept": "Accept quote",
+      "decline": "Decline quote",
+      "expire": "Expire quote",
+      "convert": "Convert to order",
+      "confirm": "Confirm order",
+      "fulfil": "Fulfil order",
+      "cancel": "Cancel order",
+      "invoice": "Create invoice",
+      "issue": "Issue invoice",
+      "mark-paid": "Mark as paid (record only)",
+      "credit": "Create credit note"
+    },
+    "confirm": {
+      "issue": {
+        "title": "Issue this invoice?",
+        "text": "The invoice will get a number. Once issued, it cannot be changed or undone."
+      },
+      "credit": {
+        "title": "Create a credit note?",
+        "text": "A full credit note will be issued and the invoice will be cancelled. This cannot be undone."
+      },
+      "cancel": {
+        "title": "Cancel this order?",
+        "text": "The order will be cancelled and its reserved stock released. This cannot be undone."
+      }
+    },
+    "export": "Export CSV",
+    "exportHint": "Download issued invoices and credit notes by issue date. Both dates are included.",
+    "fromDate": "From date",
+    "toDate": "To date",
+    "invalidRange": "Choose an end date on or after the start date.",
+    "appointmentHint": "The draft includes the {{appointment}} {{service}} only. Add any parts before issuing.",
+    "useFreeText": "Use your own item"
+  },
+  "purchasing": {
+    "noAccess": "You do not have access to purchasing.",
+    "description": "Buy stock and record deliveries.",
+    "newPO": "New purchase order",
+    "editPO": "Edit purchase order",
+    "newSupplier": "New supplier",
+    "editSupplier": "Edit supplier",
+    "draftHint": "Save a draft, then approve it before marking it as sent.",
+    "supplierHint": "Contact details and stock prices.",
+    "line": "Line {{n}}",
+    "item": "Catalog item",
+    "chooseItem": "Choose an item",
+    "quantity": "Quantity",
+    "cost": "Unit cost ({{currency}})",
+    "unitCost": "Unit cost",
+    "lastPrice": "Last price ({{currency}})",
+    "sku": "Supplier SKU",
+    "leadTime": "Lead time (days)",
+    "removeLine": "Remove line",
+    "addLine": "Add line",
+    "addItem": "Add supplier item",
+    "supplier": "Supplier",
+    "chooseSupplier": "Choose a supplier",
+    "notes": "Notes",
+    "createDraft": "Create draft",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "number": "Number",
+    "status": "Status",
+    "total": "Total",
+    "actions": "Actions",
+    "emptyOrders": "No purchase orders yet",
+    "emptySuppliers": "No suppliers yet",
+    "emptySuggestions": "No stock needs reordering",
+    "available": "Available",
+    "openQuantity": "Open PO quantity",
+    "suggested": "Suggested quantity",
+    "createFor": "Create PO · {{supplier}}",
+    "noSupplier": "Add a supplier for this item",
+    "receive": "Receive goods",
+    "receiveHint": "Enter the quantity delivered for each line. Leave other lines blank.",
+    "receiveItem": "Quantity received · {{item}}",
+    "progress": "Received {{received}} of {{ordered}}",
+    "override": "Allow more than 110%",
+    "reason": "Reason",
+    "recordReceipt": "Record receipt",
+    "receivedToast": "Goods received",
+    "received": "Received",
+    "back": "Back to purchasing",
+    "lines": "Purchase order lines",
+    "receiptHistory": "Receipt history",
+    "noReceipts": "No receipts yet",
+    "overrideNote": "Override: {{reason}}",
+    "action": {
+      "approve": "Approve PO",
+      "send": "Mark as sent",
+      "cancel": "Cancel PO"
+    },
+    "confirm": {
+      "approve": "Approve this purchase order?",
+      "send": "Mark this purchase order as sent?",
+      "cancel": "Cancel this purchase order?"
+    },
+    "confirmHint": {
+      "approve": "Approval locks the lines and assigns a PO number.",
+      "send": "Record that you sent this order to the supplier.",
+      "cancel": "Stop ordering the remaining goods. Recorded receipts stay in stock."
+    },
+    "tabs": {
+      "orders": "Purchase orders",
+      "suppliers": "Suppliers",
+      "suggestions": "Reorder suggestions",
+      "quotes": "Quote requests"
+    },
+    "edit": "Edit",
+    "invalidField": "Check this value.",
+    "receiptUnknown": "The result is unknown. Retry this receipt or reload to check recorded deliveries.",
+    "receiptConflict": "Reload and check recorded deliveries before starting another receipt.",
+    "retryReceipt": "Retry this receipt",
+    "reloadDeliveries": "Reload recorded deliveries",
+    "recordedDeliveries": "Recorded deliveries",
+    "receiptReloadFailed": "Could not reload deliveries. Try again before starting another receipt.",
+    "reviewDeliveriesHint": "Check these deliveries before entering another receipt. Enter only newly delivered goods.",
+    "startAnotherReceipt": "Start another receipt",
+    "notFound": "Purchase order not found."
+  },
+  "procurement": {
+    "requests": "Quote requests",
+    "request": "Request quotes",
+    "detail": "Quote request",
+    "approvalHint": "This creates a proposal. Review and approve it before anything is sent or changed.",
+    "proposed": "Proposal created. Approval is required before this action takes effect.",
+    "review": "Review approval",
+    "needed": "Needed by",
+    "reply": "Reply by",
+    "chooseSuppliers": "Choose 1–5 suppliers",
+    "matchingSuppliers": "Only suppliers with an email address that sell every selected item are shown.",
+    "noSuppliers": "Choose items to see matching suppliers. If none appear, update supplier items and email addresses in Suppliers.",
+    "messageOptional": "Message (optional)",
+    "message": "Message",
+    "answered": "Suppliers answered",
+    "responseCount": "{{x}} of {{y}}",
+    "empty": "No quote requests yet",
+    "enter": "Enter quote",
+    "followup": "Send follow-up",
+    "lastFollowup": "Last follow-up queued",
+    "comparison": "Quote comparison",
+    "formula": "Score = 60% price + 25% delivery + 15% reliability; higher is better.",
+    "formulaDetails": "Price is cheapest total ÷ quote total. Delivery is 1 when on time, falling by 1/14 per late day to zero. Reliability is the on-time share of the last ten completed orders, defaulting to 80% with fewer than three.",
+    "rank": "Rank",
+    "arrival": "Expected arrival",
+    "daysLate": "Days late",
+    "priceComponent": "Price component",
+    "leadComponent": "Delivery component",
+    "reliability": "Reliability",
+    "score": "Score",
+    "defaultReliability": "Default 80% · {{n}} completed orders",
+    "observedReliability": "{{n}} completed orders",
+    "asOf": "Compared as of {{date}}",
+    "noEligible": "No eligible quotes to compare",
+    "createPO": "Create purchase order from this quote",
+    "copyLink": "Copy link",
+    "copyLinkFor": "Copy link for {{name}}",
+    "linkCopied": "Link copied. It works like a password for {{name}}: share it only with them.",
+    "linkTitle": "Link for {{name}}",
+    "linkManual": "Your browser did not allow copying. Select the link and copy it yourself. It works like a password for this supplier.",
+    "linkField": "Quote link",
+    "invited": "Invited suppliers",
+    "received": "Received quotes",
+    "noQuotes": "No quotes received yet",
+    "validUntil": "Valid until",
+    "unspecified": "Not specified",
+    "minimum": "Minimum quantity: {{n}}",
+    "available": "Available: {{n}}",
+    "lateOnly": "Late orders only",
+    "noLate": "No late purchase orders",
+    "lateDays": "{{n}} days late",
+    "expected": "Expected delivery",
+    "lateTitle": "Late purchase orders",
+    "lateCount": "{{n}} purchase orders are late",
+    "lateCount_one": "{{n}} purchase order is late",
+    "openLate": "View late orders",
+    "reason": {
+      "incomplete": "Missing requested lines",
+      "other_currency": "Currency does not match",
+      "expired": "Quote expired",
+      "quantity": "Quantity requirements not met",
+      "invalid_total": "Total must be positive"
+    }
+  },
+  "supplierQuote": {
+    "heading": "Supplier quote",
+    "title": "Quote for {business}",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "needed": "Needed by",
+    "reply": "Reply by",
+    "price": "Unit price ({currency})",
+    "available": "Quantity available",
+    "days": "Lead time (days)",
+    "until": "Valid until (optional)",
+    "minimum": "Minimum quantity per item (optional)",
+    "notes": "Notes (optional)",
+    "decline": "We cannot quote",
+    "send": "Send quote",
+    "sendResponse": "Send response",
+    "sending": "Sending…",
+    "thanks": "Thank you. Your response has been received.",
+    "expired": "This quote link has expired or is invalid. Please ask the business for a new invitation.",
+    "closed": "This quote request is closed. Please contact the business.",
+    "rateLimited": "Too many requests. Please wait a minute and try again.",
+    "validation": "Check the prices, quantities and dates, then try again.",
+    "error": "Something went wrong. Please try again."
+  },
+  "ai": {
+    "disabled": {
+      "not_configured": "AI is not set up on this installation yet. Ask your administrator to connect an AI provider.",
+      "disabled_by_policy": "AI is turned off by your privacy settings. An owner can change this under Settings → AI.",
+      "budget_exceeded": "Today's AI limit has been used up. It starts again at midnight UTC. An owner can raise the limit under Settings → AI.",
+      "unknown": "AI is not available right now.",
+      "nearLimit": "You have used {{percent}}% of today's AI limit."
+    },
+    "errors": {
+      "disabled_by_policy": "AI is turned off by your privacy settings. An owner can change this under Settings → AI.",
+      "not_configured": "AI is not set up on this installation yet.",
+      "budget_exceeded": "Today's AI limit has been used up. It starts again at midnight UTC.",
+      "provider_unavailable": "The AI service did not answer. Nothing was changed. Please try again in a minute.",
+      "invalid_model_output": "The AI gave an answer that could not be used. Nothing was changed. Please try again.",
+      "step_limit": "The AI needed too many steps and stopped. Nothing was changed. Try a smaller question.",
+      "run_timeout": "The AI took too long and stopped. Nothing was changed. Please try again.",
+      "tool_not_allowed": "The AI tried something your role does not allow, so it stopped. Nothing was changed.",
+      "interrupted": "The answer was cut off. Nothing was changed. Please ask again.",
+      "rate_limited": "You have asked a lot of questions this hour. Please wait a little and try again.",
+      "generic": "The AI could not finish. Nothing was changed. Please try again."
+    },
+    "badge": {
+      "proposed": "AI proposed"
+    },
+    "evidence": {
+      "title": "Evidence",
+      "note": "The assistant based this on the items below. Check them before you approve."
+    },
+    "mistakes": "AI can make mistakes; you approve every change",
+    "assistant": {
+      "open": "Assistant",
+      "openTitle": "Open the assistant (Ctrl+J)",
+      "title": "Assistant",
+      "description": "Ask about your {{appointments}}, stock, messages and {{customers}}. It can suggest changes, but nothing happens until you approve.",
+      "threads": "Your chats",
+      "newChat": "New chat",
+      "noThreads": "No chats yet. Ask a question to start one.",
+      "untitled": "New chat",
+      "inputLabel": "Ask the assistant",
+      "placeholder": "For example: What is booked tomorrow?",
+      "send": "Ask",
+      "stop": "Stop",
+      "you": "You",
+      "assistant": "Assistant",
+      "working": "Working on it…",
+      "steps": "What the assistant is doing",
+      "proposals": "Waiting for your approval",
+      "proposalN": "Review proposal {{n}}",
+      "loadingChat": "Loading this chat…",
+      "empty": "Ask a question to get started."
+    },
+    "summary": {
+      "button": "Summarise",
+      "working": "Summarising…",
+      "title": "Conversation summary",
+      "openQuestions": "Open questions",
+      "noQuestions": "No open questions.",
+      "draftCreated": "Reply draft created — review in Approvals",
+      "review": "Review the draft",
+      "noDraft": "No reply draft was created."
+    },
+    "briefing": {
+      "title": "Today's briefing",
+      "updated": "Written at {{time}}. Numbers come from your own records."
+    },
+    "paste": {
+      "button": "Paste supplier reply",
+      "title": "Read a supplier's reply",
+      "description": "Paste the e-mail text. The AI picks out prices and dates; you check them before anything is saved.",
+      "supplier": "Which supplier wrote this?",
+      "chooseSupplier": "Choose a supplier",
+      "text": "Supplier's reply",
+      "count": "{{n}} of {{max}} characters",
+      "read": "Read the reply",
+      "reading": "Reading…",
+      "result": "What the AI found",
+      "line": "Price per unit",
+      "available": "Available",
+      "currency": "Currency",
+      "leadTime": "Lead time",
+      "leadTimeValue": "{{n}} days",
+      "minimum": "Minimum order",
+      "validUntil": "Valid until",
+      "notes": "Notes",
+      "none": "Not given",
+      "notFound": "Not found in the text",
+      "verified": "Every number was found in the text you pasted.",
+      "unverified": "Some numbers could not be found in the text; enter this quote by hand.",
+      "unverifiedList": "Could not be checked",
+      "proposal": "Quote drafted — review in Approvals",
+      "review": "Open the approval",
+      "fields": {
+        "unit_price": "price",
+        "quantity_available": "quantity available",
+        "currency": "currency",
+        "lead_time_days": "lead time",
+        "min_quantity": "minimum order",
+        "valid_until": "valid until",
+        "notes": "notes"
+      }
+    },
+    "quotes": {
+      "button": "Ask AI to request quotes",
+      "working": "Asking…",
+      "hint": "{{count}} suppliers sell this. The AI drafts the quote request; you approve it before anyone is e-mailed.",
+      "done": "Quote request drafted — review in Approvals",
+      "review": "Review proposal {{n}}",
+      "none": "Nothing was drafted. A quote request may already be open for this item."
+    },
+    "settings": {
+      "tab": "AI",
+      "title": "AI assistant",
+      "noAccess": "You don't have access to the AI settings.",
+      "policy": "Where AI may process text",
+      "policyLocked": "Locked: this installation is set up for regulated data, so AI only runs on a model inside it. Your choice below is not used.",
+      "effective": "In effect now: {{policy}}",
+      "policies": {
+        "hosted_vultr": {
+          "label": "Vultr only",
+          "text": "Text is sent to Vultr's AI service for processing, and nowhere else."
+        },
+        "hosted_any": {
+          "label": "Vultr or other approved providers",
+          "text": "Like Vultr only, and it may fall back to other providers your administrator has approved."
+        },
+        "strict_private": {
+          "label": "Inside this installation only",
+          "text": "No text leaves this installation. AI is off if no local model is set up."
+        },
+        "regulated": {
+          "label": "Regulated (locked)",
+          "text": "Set by your administrator for regulated data. AI only runs on a model inside this installation."
+        }
+      },
+      "budget": "Daily limit",
+      "budgetLabel": "Daily limit (tokens)",
+      "budgetHelp": "A token is a small piece of a word that the AI reads or writes. The count restarts at midnight UTC. Leave empty to use the standard limit.",
+      "budgetInvalid": "Enter a whole number, or leave it empty.",
+      "usedToday": "Used today: {{used}} of {{limit}} ({{percent}}%)",
+      "readOnly": "You can look at these settings but not change them.",
+      "usage": "Use over the last 30 days",
+      "usageDay": "{{day}}: {{tokens}} tokens, {{runs}} runs",
+      "noUsage": "No AI use yet.",
+      "runs": "Recent AI runs",
+      "runsHint": "Only what happened, never the text. Cost is in US dollars.",
+      "noRuns": "No AI runs yet.",
+      "loadMore": "Show older runs",
+      "columns": {
+        "when": "When",
+        "what": "What for",
+        "status": "Result",
+        "cost": "Cost",
+        "time": "Time"
+      },
+      "needsHuman": "A person needs to look",
+      "seconds": "{{n}} s",
+      "useCases": {
+        "intake": "Answer a new message",
+        "copilot": "Assistant chat",
+        "summary": "Conversation summary",
+        "reorder_note": "Reorder note",
+        "briefing": "Daily briefing",
+        "procurement": "Supplier quotes",
+        "campaign_draft": "Campaign draft",
+        "payment_followup": "Payment reminder",
+        "safety": "Safety check"
+      },
+      "runStatus": {
+        "running": "Running",
+        "succeeded": "Done",
+        "failed": "Failed",
+        "step_limit": "Stopped: too many steps",
+        "budget_exceeded": "Stopped: daily limit",
+        "policy_blocked": "Blocked by policy"
+      }
+    }
+  }
+}

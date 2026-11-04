@@ -1,0 +1,22 @@
+# Secret scanning for `make secrets`. Only development dummy values are allowlisted, by path.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Development-only dummy credentials and third-party/vendor folders"
+paths = [
+  '''^\.env$''',
+  '''^\.dev-credentials$''',  # gitignored local dev login (never committed)
+  '''^\.demo-logins/''',  # gitignored passwords of the demo logins on the local dev stack (never committed)
+  '''^install-[^/]+/''',  # gitignored installer output
+  '''^deploy/rehearsal/''',  # gitignored local production rehearsal (generated secrets for a throwaway stack)
+  '''^frontend/e2e/\.auth/''',  # gitignored e2e test accounts and sessions for the local dev stack (never committed)
+  '''^\.env\.example$''',
+  '''deploy/keycloak/realm-smb\.dev\.json$''',
+  '''deploy/compose/compose\.dev\.yml$''',
+  '''deploy/compose/compose\.backup-test\.yml$''',  # throwaway test passwords
+  '''(^|/)node_modules/''',
+  '''(^|/)\.venv/''',
+  '''frontend/dist/''',
+  '''design-review-cloud-20261103/.*\.zip$''',
+]

@@ -1,0 +1,59 @@
+# Throwaway stack for `make backup-test` (task P4-03): database + migrations + demo data + backup tooling, with a
+# local restic file repository. No cloud, no published ports. Test-only passwords; never used for a real install.
+name: smb-backuptest
+
+x-db-env: &db-env
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: bt_postgres
+  SMB_OWNER_PASSWORD: bt_owner
+  SMB_APP_PASSWORD: bt_app
+  KEYCLOAK_DB_PASSWORD: bt_keycloak
+
+x-api-env: &api-env
+  APP_ENV: prod
+  APP_BASE_URL: https://localhost
+  APP_SECRET_KEY: backup-test-secret-key-0123456789abcdef
+  DATABASE_URL: postgresql+psycopg://smb_app:bt_app@postgres:5432/smb
+  DATABASE_MIGRATION_URL: postgresql+psycopg://smb_owner:bt_owner@postgres:5432/smb
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg17-bookworm@sha256:ac08538c6f8b9904c33c8224c5e5706dbe760aca29db1d096972b4052c22a75d
+    environment: *db-env
+    volumes:
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d smb"]
+      interval: 2s
+      retries: 40
+
+  migrate:
+    image: ${REGISTRY:-smb}/smb-api:${VERSION:?VERSION is required}
+    command: ["alembic", "upgrade", "head"]
+    environment: *api-env
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  seed:
+    image: ${REGISTRY:-smb}/smb-api:${VERSION}
+    command: ["python", "-m", "app.cli", "seed"]
+    environment: *api-env
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  backup:
+    image: ${REGISTRY:-smb}/smb-backup:${VERSION}
+    environment:
+      PGHOST: postgres
+      POSTGRES_PASSWORD: bt_postgres
+      SMB_OWNER_PASSWORD: bt_owner
+      KEYCLOAK_DB_PASSWORD: bt_keycloak
+      RESTIC_REPOSITORY: /state/restic-repo
+      RESTIC_PASSWORD: backup-test-restic-password
+    volumes:
+      - backup_state:/state
+    depends_on:
+      postgres: { condition: service_healthy }
+
+volumes:
+  backup_state:

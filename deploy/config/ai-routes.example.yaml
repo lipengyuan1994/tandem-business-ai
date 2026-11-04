@@ -1,0 +1,38 @@
+# AI route file (docs/roadmap/ai/contracts.md §6). Copy to ai-routes.yaml next to compose.yml (install.sh does this
+# once and never overwrites an existing file). It is mounted read-only at /config in the api and worker containers.
+# No secrets here: each provider names the environment variable that holds its key (set it in .env). A provider whose
+# key variable is empty is skipped. Hosted provider hosts must also be listed in EGRESS_ALLOWLIST.
+#
+# Routing policy (per business, settings → AI): hosted_vultr allows vendor vultr and local; hosted_any allows all;
+# strict_private allows only hosted: false; regulated (forced by DATA_PROFILE=regulated) allows only baa: true or
+# hosted: false. Set baa: true only after signing that provider's business associate agreement (ADR-018).
+#
+# The routes and prices below are PLACEHOLDERS from the 2026-10-24 Vultr catalog (docs/roadmap/08-ai-layer.md) until
+# the probe (AI-04) and the evals (AI-09) pick the winners. json_schema: true only for models the probe proved.
+providers:
+  vultr:     {kind: openai_compat, base_url: "https://api.vultrinference.com/v1", api_key_env: VULTR_INFERENCE_API_KEY, hosted: true, vendor: vultr}
+  openai:    {kind: openai_compat, base_url: "https://api.openai.com/v1", api_key_env: OPENAI_API_KEY, hosted: true, vendor: external}
+  gemini:    {kind: openai_compat, base_url: "https://generativelanguage.googleapis.com/v1beta/openai", api_key_env: GEMINI_API_KEY, hosted: true, vendor: external}
+  anthropic: {kind: anthropic, base_url: "https://api.anthropic.com", api_key_env: ANTHROPIC_API_KEY, hosted: true, vendor: external}
+  # llama.cpp server on a private host; its DNS name must be in LOCAL_INFERENCE_HOSTS (plain HTTP, no key).
+  local:     {kind: openai_compat, base_url: "http://llm-local:8080/v1", api_key_env: null, hosted: false, vendor: local}
+routes:                               # ordered: the first healthy, policy-allowed entry wins
+  agent:
+    - {provider: vultr, model: glm-5.3-flash, price_in_per_m: 0.35, price_out_per_m: 0.35}
+    - {provider: vultr, model: deepseek-v4.1-flash, price_in_per_m: 0.60, price_out_per_m: 0.60}
+    - {provider: anthropic, model: claude-haiku-5-5}
+  fast_extract:
+    - {provider: vultr, model: qwen3.8-flash-next, price_in_per_m: 0.20, price_out_per_m: 0.20}
+    - {provider: local, model: local-small}
+  writer:
+    - {provider: vultr, model: deepseek-v4.1-flash, price_in_per_m: 0.60, price_out_per_m: 0.60}
+    - {provider: openai, model: gpt-5.6-luna}
+  safety:
+    - {provider: vultr, model: nemotron-3.5-content-safety, price_in_per_m: 0.15, price_out_per_m: 0.15}
+  embed:
+    - {provider: vultr, model: qwen3-embedding-4b, price_in_per_m: 0.05, price_out_per_m: 0.05}
+  stt:
+    - {provider: vultr, model: whisper-large-v3-turbo}
+  tts:
+    - {provider: vultr, model: chatterbox}
+limits: {max_steps: 8, max_input_tokens_per_step: 12000, max_output_tokens_per_step: 800, run_timeout_s: 90, step_timeout_s: 30}

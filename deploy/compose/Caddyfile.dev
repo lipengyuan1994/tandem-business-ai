@@ -1,0 +1,64 @@
+# Development reverse proxy: https://localhost:8443 (host) -> :443 (container), internal CA.
+{
+	admin off
+	local_certs
+	# Caddy's own HTTP-to-HTTPS redirect always sends `Server: Caddy` and cannot be configured: the `http://` site at the
+	# end of this file does the redirect instead (docs/security/2026-11-03-rescan.md, F7).
+	auto_https disable_redirects
+	# Same masking as the production Caddyfile: the error log (for example a 502 while the api reloads) records the
+	# request URI and Referer, which carry supplier-quote tokens, OIDC code/state and unsubscribe tokens.
+	log {
+		format filter {
+			wrap json
+			request>uri regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
+			request>headers>Referer regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
+		}
+	}
+}
+
+localhost {
+	tls internal
+	encode zstd gzip
+
+	# No `Server: Caddy` on the responses of the routes below, as in production. A 502 that Caddy builds itself while the
+	# api reloads keeps it (the Caddyfile explains why `handle_errors` is not used).
+	header -Server
+
+	handle /api/* {
+		reverse_proxy /api/v1/ai/copilot/* api:8000 {
+			flush_interval -1
+		}
+		reverse_proxy api:8000
+	}
+	handle /auth/admin* {
+		# Keycloak admin console is never routed publicly; use http://localhost:8081/auth/admin in dev.
+		respond "Not found" 404
+	}
+	handle /auth/realms/master* {
+		# Nor is the master realm (the administrator's own login); the console on :8081 reaches it directly.
+		respond "Not found" 404
+	}
+	handle /auth/* {
+		reverse_proxy keycloak:8080
+	}
+	# Match production: public visitor and supplier pages use the widget entry.
+	@public_pages path /p/* /q/*
+	handle @public_pages {
+		rewrite * /widget.html
+		reverse_proxy web:5173
+	}
+	handle {
+		reverse_proxy web:5173
+	}
+}
+
+# Plain HTTP only redirects to HTTPS (the same answer as Caddy's built-in redirect). Not published by compose.dev.yml.
+http:// {
+	header -Server
+	redir https://{host}{uri} 308
+}
+
+# A request for another Host is dropped (without this site Caddy answers 200, an empty body and `Server: Caddy`).
+https:// {
+	abort
+}

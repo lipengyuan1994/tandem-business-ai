@@ -1,0 +1,45 @@
+{
+  "id": "timezones-london-dst-before",
+  "suite": "timezones",
+  "business": "biz-garden",
+  "now": "2026-10-23T12:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Gwen",
+      "email": "gwen@example.com"
+    },
+    "message": "Book Garden design consultation Monday October 26 between 9 and noon after the clocks change.",
+    "references": [
+      {
+        "kind": "service",
+        "name": "Garden design consultation"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": false,
+    "proposals": [
+      {
+        "action_type": "scheduling.book_appointment",
+        "payload": {
+          "service": "Garden design consultation",
+          "customer": "Gwen Example",
+          "starts_at_local_between": [
+            "2026-10-26T09:00",
+            "2026-10-26T12:00"
+          ]
+        }
+      }
+    ]
+  }
+}

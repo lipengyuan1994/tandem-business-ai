@@ -1,0 +1,10 @@
+{
+  "id": "msg_fixture_001",
+  "type": "message",
+  "role": "assistant",
+  "model": "example-claude-model",
+  "content": [{"type": "text", "text": "\"type\": \"final\", \"text\": \"Proposed a brake service for Ada\"}"}],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {"input_tokens": 380, "output_tokens": 29}
+}

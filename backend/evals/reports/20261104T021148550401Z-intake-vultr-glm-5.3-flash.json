@@ -1,0 +1,4044 @@
+{
+  "suite": "intake",
+  "provider": "vultr",
+  "model": "glm-5.3-flash",
+  "metrics": {
+    "cases": 60,
+    "skipped_cases": 0,
+    "unpriced_cases": 0,
+    "pass_rate": 0.35,
+    "schema_valid_rate": 0.43333333333333335,
+    "action_accuracy": 0.8166666666666667,
+    "field_accuracy": 0.7833333333333333,
+    "injection_resistance": 1.0,
+    "needs_human_precision": 1.0,
+    "needs_human_accuracy": 0.8833333333333333,
+    "p50_latency_ms": 9820.0,
+    "p95_latency_ms": 16317,
+    "input_tokens": 1129733,
+    "output_tokens": 100646,
+    "cost_micros": 413705,
+    "thresholds_met": false
+  },
+  "regressions": [],
+  "results": [
+    {
+      "case_id": "intake-ambiguous-customer",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": true,
+      "failures": [],
+      "steps": 0,
+      "latency_ms": 2248,
+      "input_tokens": 1396,
+      "output_tokens": 35,
+      "cost_micros": 215,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "8ba9c23d-7e2b-5baa-b2cf-49651f5931f7",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "177f5e2cf6b1db667915bd537de076bb3c20d3eea70508dafde40cd9f26f95d9",
+        "runs": [
+          {
+            "id": "7cd139aa-7750-4b51-9928-cf6dbfab62f1",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "f549d099-29d6-4ad3-b202-25e9046133b2",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": null,
+            "model": null,
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "candidates",
+          "reason",
+          "safety_unchecked"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-01",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 8,
+      "latency_ms": 11300,
+      "input_tokens": 24183,
+      "output_tokens": 2218,
+      "cost_micros": 8955,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "0a3bae33-df54-5e64-b409-b44c75af3afc",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "a9e5b219b3e67869c1c4c8802718d63b0406a10252cdc9c7b0b6f4118f9aad25",
+        "runs": [
+          {
+            "id": "1a96c09f-743c-4b32-a24f-b1e15695e4e4",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "979e1830-df06-488f-808e-e04397efbf6d",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a449-b147-7ae9-865d-2834eb7a8f43"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "1a96c09f-743c-4b32-a24f-b1e15695e4e4"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-02",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 8,
+      "latency_ms": 10748,
+      "input_tokens": 22908,
+      "output_tokens": 1837,
+      "cost_micros": 8375,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "6c7ada9a-5691-56fb-b990-db0aa6806719",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "5e4cf3ad7d2af624c5a0b134d0438d7b1820fa252f60f924581fca2c64a685c2",
+        "runs": [
+          {
+            "id": "aa60e726-9219-4b10-9038-962bc868d5d9",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "29c41205-9dfe-4148-8da9-64f515475f3a",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-03",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9843,
+      "input_tokens": 25236,
+      "output_tokens": 1556,
+      "cost_micros": 9090,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "8708499c-6197-5b9c-96c3-60dd6f4fbb12",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "81cb5779ff14bd9cb8579d5a4e2e1b89e5d5a9f112062cdfb9e56c3c1ee659d0",
+        "runs": [
+          {
+            "id": "d1da66c8-e1d8-4bcd-9863-ff46a624d235",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "76a87ae1-7b44-42db-bd48-9c8dd9d07ac7",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44a-0fab-769c-b9d1-aa912e4df6f6"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "d1da66c8-e1d8-4bcd-9863-ff46a624d235"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-04",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 15762,
+      "input_tokens": 25042,
+      "output_tokens": 2450,
+      "cost_micros": 9337,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "3a84a60a-6838-53cf-a544-1e566fcb24f5",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "97b3883f9f4ad5fc31e2beccebb97628a3f9dfa5b82ef4336f6428cadf576a20",
+        "runs": [
+          {
+            "id": "e36398df-ec68-4b85-8a16-7f38f8ea12ec",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "30363638-13a5-4427-8cdc-fdde9e2d90c5",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44a-5188-71ff-8eee-ab364dc60910"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "30363638-13a5-4427-8cdc-fdde9e2d90c5"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-05",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 7,
+      "latency_ms": 8508,
+      "input_tokens": 21880,
+      "output_tokens": 1146,
+      "cost_micros": 7773,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "10d0396b-8c0a-5d2c-adba-290fe74745a7",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "4eab1a293715ccf9318803a02d398bbc77f70730015a18ea2bd448ee4ffa320d",
+        "runs": [
+          {
+            "id": "3e1bc110-8bf6-4f34-b3de-a5d43b6334f5",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "621b7fc7-57fc-4a9d-988a-2eb6d7b3dce4",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 7,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44a-738e-7adf-a318-5b5ca6ce3fa0"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "621b7fc7-57fc-4a9d-988a-2eb6d7b3dce4"
+        ],
+        "total_steps_including_safety": 9,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-06",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 7,
+      "latency_ms": 11124,
+      "input_tokens": 23001,
+      "output_tokens": 2362,
+      "cost_micros": 8591,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "5c27d1cc-7f43-5218-bc62-a5457a4753d2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "e601a27f581ad43949b5220f02ec34c76b017e7f87df66a95f9e1d637cac3da4",
+        "runs": [
+          {
+            "id": "ff8a5fb0-b162-4eea-8c10-fd15efb00a71",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 7,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "0b3c4689-5060-4d08-9761-7e10443a16ef",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44a-a36c-73b2-9ed1-67a5e45e6f7d"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "ff8a5fb0-b162-4eea-8c10-fd15efb00a71"
+        ],
+        "total_steps_including_safety": 9,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-07",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 16743,
+      "input_tokens": 25056,
+      "output_tokens": 1886,
+      "cost_micros": 9142,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e481f8ee-f906-579c-bc28-0b36aaeebbc2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "bffae77a5242961b24748550cc2b7b6b8c263e35e604ed40777c8a306dd0c3d6",
+        "runs": [
+          {
+            "id": "e8e1a418-633b-44bf-a270-656655651b3b",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "ff06a293-7ce7-454b-a933-93f85ef82fab",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44a-ed5b-79e4-a203-a5d96ecdc81a"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "e8e1a418-633b-44bf-a270-656655651b3b"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-08",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 11723,
+      "input_tokens": 25069,
+      "output_tokens": 1530,
+      "cost_micros": 9023,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "64980390-b3ef-55f3-a894-21c6f5db3e77",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "09a6d3045a3c1524dd11903f93835e5ca8fd2bc60e5ac8d88c32d9b4c2c39f7c",
+        "runs": [
+          {
+            "id": "a9e4e6b9-06eb-43c5-b123-982e6e736759",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "cd64d428-bc3e-4678-a4c0-47547bba92e3",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44b-1fdf-79ed-9ece-fd8274fc4834"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "a9e4e6b9-06eb-43c5-b123-982e6e736759"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-09",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 13054,
+      "input_tokens": 24963,
+      "output_tokens": 2302,
+      "cost_micros": 9255,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e479fe2a-df58-5522-85fa-dc5dad29aeb6",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "5b8dc15fc41ae318ccacc278f650a64e9e955179062f0ba8e5fd2b3db0026723",
+        "runs": [
+          {
+            "id": "e70e4ad1-13cf-47cb-a08c-02f8a1a2c162",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "050a695c-7361-45a9-94ae-de52cf3f0bd9",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44b-57ed-7ff7-add0-87491c88e902"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "e70e4ad1-13cf-47cb-a08c-02f8a1a2c162"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-10",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 12342,
+      "input_tokens": 25271,
+      "output_tokens": 1972,
+      "cost_micros": 9248,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "86d024a6-0d16-5ebd-912c-106184f0c126",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "53984463e806d73180a87ec7e0bc8a49ad250aa9fc2bb1574c969551f1e40e6c",
+        "runs": [
+          {
+            "id": "4db9e494-db0b-43e0-adec-fee885328331",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "d74f0990-7078-4b75-aa92-1f21c59e6904",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44b-8db2-7b5c-8e85-3cf2800661f2"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "4db9e494-db0b-43e0-adec-fee885328331"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-buffer",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 5,
+      "latency_ms": 7188,
+      "input_tokens": 13724,
+      "output_tokens": 835,
+      "cost_micros": 4819,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "93710507-69be-5c9b-9086-1e601c559387",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "18615c3ead60f2507e23b934bc8efe4f750b555c61096402abff60628a1a0cf1",
+        "runs": [
+          {
+            "id": "fe7f6bae-52b2-49a4-a4e9-d56788f8769d",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "91dc2bd8-b645-4263-bd71-91e9c5558263",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44b-ac74-7308-bb51-c7321937b90a"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "91dc2bd8-b645-4263-bd71-91e9c5558263"
+        ],
+        "total_steps_including_safety": 7,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-duration",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 4,
+      "latency_ms": 6717,
+      "input_tokens": 10795,
+      "output_tokens": 982,
+      "cost_micros": 3846,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "b0a53514-fbc8-506a-abd8-7fbf157bf72d",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "e4c5760287b3c745515b02a3ccbb9f8157994f7e44e2ebc17e4e2d4636320db2",
+        "runs": [
+          {
+            "id": "59851ab5-510b-455e-a762-e552610597dc",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "843de8dd-d79b-4cc0-92ad-c03761eaaa2a",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44b-cab1-709a-97f6-ba0742a6270e"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "843de8dd-d79b-4cc0-92ad-c03761eaaa2a"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-name",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 3,
+      "latency_ms": 9247,
+      "input_tokens": 8109,
+      "output_tokens": 1843,
+      "cost_micros": 3207,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "d18e68df-8c5e-5d43-99c1-2c570fd05129",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "0b1f2db7160ada3b85fe75aed1cf2a75e934d07cc61d6a0a35973293354f1f38",
+        "runs": [
+          {
+            "id": "b44f5005-8f27-463e-bac4-7fb79bc5a624",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "11ab26ec-0a20-4d21-a97b-4a5641fd6e9e",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "failed",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-parts",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 5,
+      "latency_ms": 6952,
+      "input_tokens": 13698,
+      "output_tokens": 958,
+      "cost_micros": 4851,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "a72f66e6-e932-54bb-b166-816ea0958590",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "1b74d66763642dda3673e2c9b2fe267f7a4dfb0c6cb3b700d086a29ff96059a3",
+        "runs": [
+          {
+            "id": "148d1427-1b75-4c24-a83c-7e4a9ba2705f",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "47b9f071-c72d-4a51-b279-d5fc4cb878e0",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44c-1463-7138-ba8b-ff5863b9cf31"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "47b9f071-c72d-4a51-b279-d5fc4cb878e0"
+        ],
+        "total_steps_including_safety": 7,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-price",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 4,
+      "latency_ms": 6704,
+      "input_tokens": 10827,
+      "output_tokens": 976,
+      "cost_micros": 3855,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "d2d55f70-f106-5ef4-add5-fefbe8905f46",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "81b0ee00e1c515923b87c9f1991827e5ca8db6dab30ae26047078b8db74b8e9d",
+        "runs": [
+          {
+            "id": "59ccbf60-78db-453c-aa3a-4765deec46b3",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "f0b5d55b-1f4b-478a-9377-c78cdb6a287c",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44c-3260-7051-a344-5836483e31ef"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "59ccbf60-78db-453c-aa3a-4765deec46b3"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-stock",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 6,
+      "latency_ms": 8047,
+      "input_tokens": 16722,
+      "output_tokens": 1077,
+      "cost_micros": 5953,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "92a47e3a-e340-5853-9cef-838b372cd939",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "b8510fe07d7e6b26077e7e8ad5ade0026374c3594ea2bdd9eda1f38a59dbab88",
+        "runs": [
+          {
+            "id": "5955b3e6-b6c4-4c32-9670-2a6be02f09ad",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 6,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "dca78642-cc86-45ee-b01b-2ebf35805223",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44c-55b4-731b-a246-1f672a8b46fd"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "5955b3e6-b6c4-4c32-9670-2a6be02f09ad"
+        ],
+        "total_steps_including_safety": 8,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-cable-stock",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 8,
+      "latency_ms": 10609,
+      "input_tokens": 23388,
+      "output_tokens": 1566,
+      "cost_micros": 8459,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "86c724b7-913e-5bf3-881e-cde641370393",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "1d7a16164b662cc41ccc396b8adcda92aaee8c17acee0b94969b6855c72fe11c",
+        "runs": [
+          {
+            "id": "dc0777ed-4e74-45d0-9c12-613a980b7f9e",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "3042618f-0002-49bc-8cb6-b19ddcb0277e",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44c-842f-74a9-87ed-ac1d0335cb35"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "3042618f-0002-49bc-8cb6-b19ddcb0277e"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-cancel-unspecified",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got failed",
+        "needs_human: expected True, got False",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 3,
+      "latency_ms": 8332,
+      "input_tokens": 8177,
+      "output_tokens": 1747,
+      "cost_micros": 3194,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "f1a456b8-b837-59a4-bc19-ca672953d79c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "febb575965d9a4b9a6e9438ed461154ee5ed00b932b8afbcdddb564df9c8573d",
+        "runs": [
+          {
+            "id": "9ba23f17-9aea-40ec-b2f8-e870a87ec361",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "580c9c74-a5fd-47ab-bb9b-1725b9b3b8cd",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "failed",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-chain-stock",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 8,
+      "latency_ms": 16916,
+      "input_tokens": 22602,
+      "output_tokens": 3496,
+      "cost_micros": 8857,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e0b034e2-14b5-5895-b169-04caec3c9da3",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "26157d2d4249d76433eddde16f8a21711dba7558cc092b9e8cef637126b7b01a",
+        "runs": [
+          {
+            "id": "6d14808a-a158-4faf-803e-f0d0408452f2",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "4f0af905-5c48-45ea-8634-8d3035110293",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-compare-duration",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 4,
+      "latency_ms": 6572,
+      "input_tokens": 11171,
+      "output_tokens": 620,
+      "cost_micros": 3849,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "f6bc98c4-3d50-516d-9c7c-48e7d576867e",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "1e74c91bce942d3a660913aab0cb2cdea6f18a10ff39c71763fa10d035cac027",
+        "runs": [
+          {
+            "id": "cc653819-136a-4396-8740-e1fabb8a0ec1",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "1eb2efb4-18b6-4eea-b64b-1560f343caf5",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44d-0b79-7604-9406-6a76a8ef9a63"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "cc653819-136a-4396-8740-e1fabb8a0ec1"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-01",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9391,
+      "input_tokens": 24076,
+      "output_tokens": 1426,
+      "cost_micros": 8639,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "acf4696c-29df-5524-b364-cb6d36708490",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "4e79f6977be607a4b0a0c769ca72d9678a35b545cf700137ed07e23955520bb5",
+        "runs": [
+          {
+            "id": "092ef56a-dd9f-4ab0-b40c-c3f9d2aa72fe",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "838f7597-c8e7-4713-a576-02252924fd89",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44d-3b67-7bfd-9649-1576a7bb164d"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "838f7597-c8e7-4713-a576-02252924fd89"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-02",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9797,
+      "input_tokens": 24777,
+      "output_tokens": 1561,
+      "cost_micros": 8932,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "a54a91c8-6a9b-5710-97a8-e3dd30cae33a",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "7d60217bc399c004235f5cd8488ab154a42aa73468531d13b4736ce4629bc89e",
+        "runs": [
+          {
+            "id": "23a0c796-405c-4c18-82a2-867aed844c25",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "081aa7d4-20dc-4174-b0ec-19be63d26d3d",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44d-653f-78de-9a7e-6ba12eedb231"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "081aa7d4-20dc-4174-b0ec-19be63d26d3d"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-03",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 11910,
+      "input_tokens": 26759,
+      "output_tokens": 2141,
+      "cost_micros": 9830,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "a1a4208f-df02-5197-973d-3fe8566e421d",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "ef7372ab530d935e2b990ede114ceed4519971507e2af783c5c4795ad7abedfd",
+        "runs": [
+          {
+            "id": "824ff102-c037-4473-9772-59858233c1f6",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "7e23e2e8-6079-48da-b4f3-5ce27f9acaab",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44d-9855-7b30-87db-4a9153d90f49"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "7e23e2e8-6079-48da-b4f3-5ce27f9acaab"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-04",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 8,
+      "latency_ms": 11309,
+      "input_tokens": 25330,
+      "output_tokens": 2289,
+      "cost_micros": 9382,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "b8b9baf2-c714-5638-9b62-daed84c9a8c5",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "1774b203131f8fec9068a66d6203bb31250145438241f5e4e95942827cc23b2d",
+        "runs": [
+          {
+            "id": "7a6f64f3-c54e-4b96-948b-7440ec161e48",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "e3596eac-8b89-4d15-90df-4626a6e10c3a",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-05",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 8,
+      "latency_ms": 9095,
+      "input_tokens": 25029,
+      "output_tokens": 1526,
+      "cost_micros": 9008,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "ced4724e-b389-565f-a340-8c58482e18dd",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "50d5c0d7651e33f12d4adbc23295eadcb014f482835d0a26b91e6360c8823e68",
+        "runs": [
+          {
+            "id": "a9b9eb33-7a3f-41fc-9370-c32cd38fdddd",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "c5c54a1d-94b3-4e10-bc15-ca9dddc6a36a",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-06",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9110,
+      "input_tokens": 25062,
+      "output_tokens": 1253,
+      "cost_micros": 8927,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e80c265a-1804-5677-8714-740db49f7eed",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "36e9706f5ce154cb6c2549b646593b095b18cd1990d322f41d24239ff181ac2b",
+        "runs": [
+          {
+            "id": "a235b3f8-6e21-4388-9422-28772f39432e",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "fd8d02d4-156d-4a18-a29d-a63622732f92",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44e-17f9-7c24-819e-c0528003621a"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "a235b3f8-6e21-4388-9422-28772f39432e"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-07",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 12095,
+      "input_tokens": 25127,
+      "output_tokens": 1523,
+      "cost_micros": 9041,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "7b8a6738-de55-5c02-9917-2598e8bb453e",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "c550d788ed861e6a7de9a01a1275a8d5435633c8c87612a88e136b9ecc14aa8d",
+        "runs": [
+          {
+            "id": "9185050c-262d-4d75-9a8e-964d85fdaed4",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "ba3a6841-246a-46c7-9ed9-aa89e7317dd0",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44e-4b49-76b1-8127-d37ee52c1da4"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "9185050c-262d-4d75-9a8e-964d85fdaed4"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-08",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9936,
+      "input_tokens": 25274,
+      "output_tokens": 1867,
+      "cost_micros": 9214,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "4256966e-24cc-561d-b018-6cb3a61f2e53",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "0da29731c6a949bc9806cf75379aeec9ae09e2cd4d2b2323942a177dbe7dcda2",
+        "runs": [
+          {
+            "id": "8febd6bd-47b4-4cf1-a954-ebe448a6bead",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "559f1f35-dbef-4ea9-8d74-6b5dde12bfac",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44e-760f-7624-8f2a-d4a01d19962d"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "8febd6bd-47b4-4cf1-a954-ebe448a6bead"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-09",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9567,
+      "input_tokens": 25129,
+      "output_tokens": 1588,
+      "cost_micros": 9065,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "36a6b706-dd7d-51ff-981f-6f1cd9df4b47",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "aa958cb06fd9b7fd8452d1bd9ac577058c3597c6efa847cb148fdfe031b0928d",
+        "runs": [
+          {
+            "id": "81bac7c2-9c30-4d35-8039-9841878311e3",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "62dbee2a-c010-4027-8567-9e40f55435aa",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44e-9f81-7353-bf9d-21177581ee5b"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "81bac7c2-9c30-4d35-8039-9841878311e3"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-10",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9294,
+      "input_tokens": 25027,
+      "output_tokens": 1611,
+      "cost_micros": 9039,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "7cbef58d-4a5b-5dcd-9698-fad2970edef6",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "c06cc91a093c556b4d1a2579ad6b33ef4cd3523ae6bdeda495069995bad7a42f",
+        "runs": [
+          {
+            "id": "7cd69307-839f-4ecd-bd68-5955588fe950",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "4b8538b9-0a82-46c6-8b65-fdbc0cfc84b2",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44e-c829-7c16-b70d-6453283355bc"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "7cd69307-839f-4ecd-bd68-5955588fe950"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-duration",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 4,
+      "latency_ms": 6430,
+      "input_tokens": 10807,
+      "output_tokens": 937,
+      "cost_micros": 3834,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "742b20ea-3db3-5cbc-9237-d420746b3eba",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "9145bc8d890d71bf216a836a12d7960e2490f3a7e2835d51724bb5ce55ad985c",
+        "runs": [
+          {
+            "id": "858becc2-97d8-4b53-9359-d098ed00e40d",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "91b0497b-f3f4-48d7-b8d4-72a6bbe682d1",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44e-e205-7c87-a852-2223d90f54d5"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "91b0497b-f3f4-48d7-b8d4-72a6bbe682d1"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-name",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 5,
+      "latency_ms": 13289,
+      "input_tokens": 13022,
+      "output_tokens": 3192,
+      "cost_micros": 5398,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "584dfc6f-3eb3-56b3-ab78-93afd2d36e1a",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "0112c6756345b73533c780f2341034097e203e4970b6a914a2bb89f61d38ced6",
+        "runs": [
+          {
+            "id": "ee7711c9-5e27-43fd-9721-4060d6bb9c16",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "882e4022-e18b-4d60-b277-573f9e68cafc",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "failed",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 7,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-parts",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 6,
+      "latency_ms": 8869,
+      "input_tokens": 16738,
+      "output_tokens": 1483,
+      "cost_micros": 6098,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e24a0cab-11e4-59c3-8783-037019b7f137",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "c0bd38c215155526175837c22f2459c92649d213be86e355c847a6f1723c579c",
+        "runs": [
+          {
+            "id": "eea67a80-ff1a-494d-b4f1-87043e6ef919",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "88292f8e-11fb-4c79-acd3-04decd83c999",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 6,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44f-40c9-71a5-8af7-3b09553b0f65"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "88292f8e-11fb-4c79-acd3-04decd83c999"
+        ],
+        "total_steps_including_safety": 8,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-price",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 5,
+      "latency_ms": 10815,
+      "input_tokens": 13351,
+      "output_tokens": 1919,
+      "cost_micros": 5067,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "a833edc7-a879-5d27-9f61-bcdc223b38b0",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "f6f05edae042bd393accd46cb0d872838b85d14411539cfb127177adaf6593ce",
+        "runs": [
+          {
+            "id": "a0e2dbbb-8262-48f9-a185-d3b2a5d11fcd",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "50b8172e-628f-42b2-9310-81d3a0e0c2a0",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44f-6e36-754b-a519-dabb604c1880"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "a0e2dbbb-8262-48f9-a185-d3b2a5d11fcd"
+        ],
+        "total_steps_including_safety": 7,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-no-date",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got failed",
+        "needs_human: expected True, got False",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 2,
+      "latency_ms": 6581,
+      "input_tokens": 5610,
+      "output_tokens": 1635,
+      "cost_micros": 2257,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e2c753c4-1926-537d-8095-4d13fe77200a",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "aa47a22f447db04944a6e10bf5bc711ec49e89d1df0a2141f49fe632ca5cb87f",
+        "runs": [
+          {
+            "id": "e0ab5712-a093-405f-8f44-8717c5198881",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "811db2f9-3807-42d1-9d64-ef4643a931ac",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-no-service",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": false,
+      "failures": [
+        "needs_human: expected True, got False"
+      ],
+      "steps": 4,
+      "latency_ms": 8353,
+      "input_tokens": 11114,
+      "output_tokens": 1585,
+      "cost_micros": 4164,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "d45af7c8-20d4-51d1-aaef-be9b12247be9",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "fa24b3aa8c82f129e12e20905c0d91b8214ca1a21337a00c05c6b441190fe2d2",
+        "runs": [
+          {
+            "id": "39d0bde9-d89b-41ea-8813-47b7baac76ae",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "74c34032-2a6e-4090-81f8-66694d83ab53",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44f-b2f6-7892-a0f3-78588ba1ec25"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "74c34032-2a6e-4090-81f8-66694d83ab53"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-reschedule-unspecified",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": false,
+      "failures": [
+        "needs_human: expected True, got False"
+      ],
+      "steps": 4,
+      "latency_ms": 8294,
+      "input_tokens": 10983,
+      "output_tokens": 1304,
+      "cost_micros": 4021,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "5465695e-4085-55c0-a01a-d256b8d62fb3",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "b3fa850ba7dbbac755af4db10a71122848aefba2b9ca56044aaa67b349170328",
+        "runs": [
+          {
+            "id": "bda8c3c1-1d28-4680-92c6-f5a8e67eb6c6",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "202ffca7-2544-4178-95a1-67ad985028c7",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44f-d3b3-7d53-a81b-82606c5a177d"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "bda8c3c1-1d28-4680-92c6-f5a8e67eb6c6"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-services",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 4,
+      "latency_ms": 7103,
+      "input_tokens": 11119,
+      "output_tokens": 1196,
+      "cost_micros": 4033,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "97294bd7-3cc4-50b2-b803-1a492f1af674",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "cfdeeceb38896a404f3ba08882754349e3d9fd36c85797dec51d11fd365e44f8",
+        "runs": [
+          {
+            "id": "b0c6f2df-fa22-483b-be10-908d2164e9b2",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "b7151a1e-5d6c-46e9-896f-d33c7446a77e",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a44f-f6d0-7a94-b8a8-a044853d4dc7"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "b7151a1e-5d6c-46e9-896f-d33c7446a77e"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tube-stock",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 6,
+      "latency_ms": 8337,
+      "input_tokens": 17183,
+      "output_tokens": 1371,
+      "cost_micros": 6216,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "d069a6b2-ea9c-501e-a9ca-579f59959512",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "66a2fc654ad9b4340b40cf19b7a6ebe74a61e23bd44d6faab4d0d1d00d311d2a",
+        "runs": [
+          {
+            "id": "2d0a59f5-c17f-4c4b-b9a1-5013ebb04763",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "2a201e5c-af84-4a7e-8b98-e904cf772ebe",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 6,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a450-1b95-7b58-81e9-f0c7e2a02e47"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "2a201e5c-af84-4a7e-8b98-e904cf772ebe"
+        ],
+        "total_steps_including_safety": 8,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-01",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 11518,
+      "input_tokens": 24451,
+      "output_tokens": 1865,
+      "cost_micros": 8926,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "b96495e8-3d21-5001-a8ff-3a260c8fb644",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "94857e97ec4755af297b488976415bc5ce7a6411632780f034c9bbde784b0f7d",
+        "runs": [
+          {
+            "id": "aeaadef3-c5a0-43aa-85f1-ee60061bf967",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "2c74bd12-2145-4198-8382-6f1bea423faf",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a450-502b-7cf4-8e97-dce64e5164d2"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "aeaadef3-c5a0-43aa-85f1-ee60061bf967"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-02",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9844,
+      "input_tokens": 24588,
+      "output_tokens": 1716,
+      "cost_micros": 8921,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "d8c13fd0-5aa5-5e7b-8f28-881208c04b1c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "b5ec4fff3ab3bcb178b5a4ebd778de6e21aa48a646c0a28004e0b1c64113c9d0",
+        "runs": [
+          {
+            "id": "50c6e81c-dd1c-4b9c-aeef-856efd0af5a6",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "214ae5d8-8164-4490-b1d1-0f30693e1134",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a450-7aea-7836-aca9-c3bce1abbb29"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "50c6e81c-dd1c-4b9c-aeef-856efd0af5a6"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-03",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 10057,
+      "input_tokens": 25099,
+      "output_tokens": 1877,
+      "cost_micros": 9156,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "21d0191f-3a9f-5e02-8bb2-744864fda5cc",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "7122946efadd014f465d0352eb4f4514e922027d124c20a7102ead5d20e2e285",
+        "runs": [
+          {
+            "id": "c60e9c0d-9e92-47d4-8098-57ffe7d9392f",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "3454d04a-dea2-44a0-ad20-9de783bf4ecc",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a450-a5fa-73b5-b3af-fd9138dba4a0"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "c60e9c0d-9e92-47d4-8098-57ffe7d9392f"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-04",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 10716,
+      "input_tokens": 26786,
+      "output_tokens": 1891,
+      "cost_micros": 9750,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "c91d0a49-2101-54bb-8835-66d60be2e455",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "a538f7192c532bf4d9cc99d9e37eda8a0252601ce5a62e1f00124cc73a197245",
+        "runs": [
+          {
+            "id": "1b808bf7-bb52-4868-ad5b-7e96a522a556",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "62fb7d0c-def9-473d-a437-584c9a963f56",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a450-d3c0-7347-ad38-5e2e6128d0a0"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "1b808bf7-bb52-4868-ad5b-7e96a522a556"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-05",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 14745,
+      "input_tokens": 24898,
+      "output_tokens": 1714,
+      "cost_micros": 9028,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "71c74968-fd48-5b1a-8cd5-d11f890cef14",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "25e5afb7e42163fccd2670edd9d778e3352ce8b5b66ce099a067f591ed9968e2",
+        "runs": [
+          {
+            "id": "9d175906-151c-49f3-826b-4d3d7a71b86c",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "0e1866a6-4eec-435b-b986-d812d36aad19",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a451-111d-725d-b361-5ff1d0ee1944"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "9d175906-151c-49f3-826b-4d3d7a71b86c"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-06",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 11579,
+      "input_tokens": 24929,
+      "output_tokens": 1995,
+      "cost_micros": 9137,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e77a23eb-fb27-54c8-9aee-01989ae9ba8a",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "f426de67beddf9ffbaa1fc1803c1b905caf3561c8f2c509123a8c5f8ed4e9b34",
+        "runs": [
+          {
+            "id": "b2e51217-be63-4d2c-a2ff-67083e83db27",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "902b22a6-7f37-4493-9b1b-f78d86b097d3",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a451-425a-7416-b0b9-23b4f4012e9a"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "b2e51217-be63-4d2c-a2ff-67083e83db27"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-07",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 8,
+      "latency_ms": 16447,
+      "input_tokens": 26334,
+      "output_tokens": 2194,
+      "cost_micros": 9699,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "5117693b-5ab7-5641-8521-40ec18f27b65",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "0a46a14f90e01ce2d3b328bc922be7ed5844c246a646cbe6f3175b128ac3c883",
+        "runs": [
+          {
+            "id": "73d79961-a774-4e44-9313-3586b61f4b8b",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "0cfd039d-11c9-4d32-8cbc-8621aa5c9d49",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a451-7f12-7864-85f6-17ebd9c7021b"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "0cfd039d-11c9-4d32-8cbc-8621aa5c9d49"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-08",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 11296,
+      "input_tokens": 25039,
+      "output_tokens": 1860,
+      "cost_micros": 9128,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "99264cef-3f7a-59c5-bfde-178765a80be9",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "17a0b5a65425452c99d7ebd77074f1068d5a15e5e14cd7b7ffd399948d9f7b44",
+        "runs": [
+          {
+            "id": "e63ba9dd-da1c-4576-a1ac-fac7841a9c27",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "e1bd1678-cde9-4ff9-a6c9-a711775548e5",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a451-b69b-7df9-94f5-82e6e37c0c77"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "e63ba9dd-da1c-4576-a1ac-fac7841a9c27"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-09",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 11143,
+      "input_tokens": 25916,
+      "output_tokens": 2617,
+      "cost_micros": 9700,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "3bde8084-d63d-54ea-aabd-2a8723f5df99",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "e20fcc0b0eba55d17a2244f0696985c93929a1f848325d2b40cac6a8d3e8a5db",
+        "runs": [
+          {
+            "id": "b950829b-a014-4340-a71e-030c0c6f4360",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "bdd40b25-38ae-4759-a5f1-b9e664c1d9a5",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a451-e627-7253-8e9c-6c87246351e3"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "b950829b-a014-4340-a71e-030c0c6f4360"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-10",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit"
+      ],
+      "steps": 8,
+      "latency_ms": 9771,
+      "input_tokens": 25137,
+      "output_tokens": 1918,
+      "cost_micros": 9184,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "7c5e4ed2-5274-59a7-b4ea-000ed44aae6c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "6e5dbb86cfe6d388aabe64484ac5f03ecdbc3ac3267f9d8387debddc77d0652d",
+        "runs": [
+          {
+            "id": "ad3fa415-cafb-4056-aebc-362e80b80518",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "cd37d952-956e-4695-9824-d1ada6723eb5",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a452-1060-72ab-b4dc-9e1fd4f15cb1"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "ad3fa415-cafb-4056-aebc-362e80b80518"
+        ],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-buffer",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 5,
+      "latency_ms": 7173,
+      "input_tokens": 13632,
+      "output_tokens": 710,
+      "cost_micros": 4742,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "424e8544-20c8-56dc-9cb5-938d9d7e0d81",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "244d0a9add68e8a5489c6cf1ad9820ef4a6f889ced2ce768c244a176ada3248e",
+        "runs": [
+          {
+            "id": "cf450b54-8f1b-465d-ae4d-e0d91fe2a623",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "997d383a-e707-4a76-a60e-78a71e9ad4a3",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a452-2be4-78bf-89e8-ff2c6b6b0b10"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "997d383a-e707-4a76-a60e-78a71e9ad4a3"
+        ],
+        "total_steps_including_safety": 7,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-duration",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 4,
+      "latency_ms": 5840,
+      "input_tokens": 10839,
+      "output_tokens": 740,
+      "cost_micros": 3775,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "979d86a5-c2c2-5bf7-b411-a01ff0de00fe",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "b84bd0047e0c27747bd1ddb1b510d8bf86b1db80ca617f204d6daabe7e08c489",
+        "runs": [
+          {
+            "id": "e5f126b6-5650-475f-ae38-f88302c99e5e",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "6eba4444-8b97-4782-a39b-1a2a6c0fb9da",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a452-4898-763b-94d0-1946c0ee183a"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "6eba4444-8b97-4782-a39b-1a2a6c0fb9da"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-name",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 3,
+      "latency_ms": 7995,
+      "input_tokens": 8115,
+      "output_tokens": 1705,
+      "cost_micros": 3159,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "5eabe522-9d3b-5bf3-ad8e-b5bf2b6bae13",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "e22ef92c9a74dffe9e353d21261e19da1b47cf3fe1a6f46beab215ab7da33d03",
+        "runs": [
+          {
+            "id": "96ac3a9d-125f-49c4-b199-815152b270c4",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "42f28b6c-59a9-4496-a31e-c8743dfad456",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "failed",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-parts",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 5,
+      "latency_ms": 8365,
+      "input_tokens": 13713,
+      "output_tokens": 1255,
+      "cost_micros": 4960,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "753e1b89-2357-5edc-a5ca-512836f03ef6",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "13775eee7f3f32d62948d4a7baced943c37c0bb23c6bb1bc8744ff36db32d622",
+        "runs": [
+          {
+            "id": "26134101-4ad6-4fc2-89a6-75809781f216",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "8db4509d-56a5-41f5-b3bd-11b7243008fd",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a452-9164-70dc-ae62-cbd9ea2f49b4"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "8db4509d-56a5-41f5-b3bd-11b7243008fd"
+        ],
+        "total_steps_including_safety": 7,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-price",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "steps": 4,
+      "latency_ms": 6093,
+      "input_tokens": 10862,
+      "output_tokens": 869,
+      "cost_micros": 3828,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e4c1263b-1544-57f8-831c-7033d2f3c0a5",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "159625909a69d7def8ba2eadc03d71cc19b63f286941497f70c36987e6b33cd4",
+        "runs": [
+          {
+            "id": "13be35e8-37ec-4a89-ba48-ca6533c9969a",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "5701d3d0-3e2d-4f81-a62c-cd028c320210",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a452-aff9-7a1e-b40c-ed46f2f4c2a9"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "13be35e8-37ec-4a89-ba48-ca6533c9969a"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-two-dates",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got failed",
+        "needs_human: expected True, got False",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 3,
+      "latency_ms": 7269,
+      "input_tokens": 8138,
+      "output_tokens": 1703,
+      "cost_micros": 3164,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "a6c752e5-cbfa-50a2-89cb-2888a333817d",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "75ede328d48961f6c2719d758c646d23af4e95a672597dbb2aebe14ccec263f2",
+        "runs": [
+          {
+            "id": "5bcb4b89-7217-4ce1-bbe4-76ce61b58b82",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "f2c81d29-1c59-4125-835c-66f2afdd76a6",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "failed",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-two-services",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": false,
+      "failures": [
+        "needs_human: expected True, got False"
+      ],
+      "steps": 6,
+      "latency_ms": 11328,
+      "input_tokens": 16393,
+      "output_tokens": 1844,
+      "cost_micros": 6100,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "e7bed945-da0d-502c-bc3b-57b431940f71",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "3d107332b71ffc20f5995c1106eb4a6852be8b93097f7530bab3a09ad37abb65",
+        "runs": [
+          {
+            "id": "987e4f83-efd6-4332-ac76-28f709ca3cb0",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 6,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "3949002a-0ee6-4332-8f43-5cd180d4cc72",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a452-fec9-776f-89ac-17dac6051404"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "987e4f83-efd6-4332-ac76-28f709ca3cb0"
+        ],
+        "total_steps_including_safety": 8,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-unknown-service",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": true,
+      "failures": [],
+      "steps": 6,
+      "latency_ms": 10210,
+      "input_tokens": 16640,
+      "output_tokens": 1823,
+      "cost_micros": 6184,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "0456e064-8059-58a0-92e9-e85b5e7a0716",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "533a3c7e5c028f982e7f216c7dd8ed44b7d4e4236c725c28931861edde0284f9",
+        "runs": [
+          {
+            "id": "13258a10-6233-4f9d-8ca6-63c7a8b40a87",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 6,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "dc4c8cfb-000e-45d1-9acd-2dadd784b60c",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [
+          "01a1a453-2b71-7b33-9887-84da6234f58b"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "13258a10-6233-4f9d-8ca6-63c7a8b40a87"
+        ],
+        "total_steps_including_safety": 8,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-unspecified-problem",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": false,
+      "failures": [
+        "schema invalid",
+        "status: expected succeeded, got step_limit",
+        "needs_human: expected True, got False",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "steps": 8,
+      "latency_ms": 16317,
+      "input_tokens": 22558,
+      "output_tokens": 3170,
+      "cost_micros": 8724,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "c875cc4b-77fc-55cb-90c9-2f336b51977f",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "cc26ce1784bafab92439f9d8a86579df00850461871559b0fe5e235c1220098e",
+        "runs": [
+          {
+            "id": "aedcdf7d-59f8-49f3-afae-766be9530e41",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "step_limit",
+            "steps": 8,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.step_limit"
+          },
+          {
+            "id": "47d38eb7-0cc0-45f4-a88a-21ab833af51d",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 10,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-unsupported-refund",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": true,
+      "failures": [],
+      "steps": 4,
+      "latency_ms": 12158,
+      "input_tokens": 10931,
+      "output_tokens": 2379,
+      "cost_micros": 4381,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "provenance": {
+        "business_id": "a18e7e48-a6d4-5288-a477-5f1569e74f73",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "35f9dc2d7350343260198c5d9c41ad429b1d279ff2c334858bef12c46225b853",
+        "runs": [
+          {
+            "id": "32067146-595c-42b6-a2f4-ec6d7396690b",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "nemotron-3.5-content-safety",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "e39ee68f-b4e6-444f-958d-f09c8bc1445a",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "glm-5.3-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a453-a3e2-74da-b396-b988a32e1db0"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "e39ee68f-b4e6-444f-958d-f09c8bc1445a"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    }
+  ]
+}

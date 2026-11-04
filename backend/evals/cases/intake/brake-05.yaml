@@ -1,0 +1,45 @@
+{
+  "id": "intake-brake-05",
+  "suite": "intake",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "My bike stops poorly. I need a Brake service on 2026-11-17 between 9 am and noon.",
+    "references": [
+      {
+        "kind": "service",
+        "name": "Brake service"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": false,
+    "proposals": [
+      {
+        "action_type": "scheduling.book_appointment",
+        "payload": {
+          "service": "Brake service",
+          "customer": "Ada Example",
+          "starts_at_local_between": [
+            "2026-11-17T09:00",
+            "2026-11-17T12:00"
+          ]
+        }
+      }
+    ]
+  }
+}

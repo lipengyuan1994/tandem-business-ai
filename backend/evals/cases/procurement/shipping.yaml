@@ -1,0 +1,67 @@
+{
+  "id": "procurement-shipping",
+  "suite": "procurement",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Brake pads (pair): unit price USD 12.50; shipping USD 8.00 separate. Available 10. Lead time 5 days.",
+    "operation": "extract",
+    "quote_request": {
+      "item": "Brake pads (pair)"
+    },
+    "supplier": "Example Parts Supply",
+    "references": [
+      {
+        "kind": "item",
+        "name": "Brake pads (pair)"
+      },
+      {
+        "kind": "supplier",
+        "name": "Example Parts Supply"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 2,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business",
+      "purchasing.create_purchase_order"
+    ],
+    "needs_human": false,
+    "proposals": [
+      {
+        "action_type": "purchasing.record_supplier_quote",
+        "payload": {
+          "lines": [
+            {
+              "item": "Brake pads (pair)",
+              "unit_price_minor": 1250
+            }
+          ]
+        }
+      }
+    ],
+    "output": {
+      "verified": true,
+      "extract": {
+        "currency": "USD",
+        "lead_time_days": 5,
+        "lines": [
+          {
+            "unit_price": "12.50"
+          }
+        ]
+      }
+    }
+  }
+}

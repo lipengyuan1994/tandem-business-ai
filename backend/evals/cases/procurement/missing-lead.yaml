@@ -1,0 +1,55 @@
+{
+  "id": "procurement-missing-lead",
+  "suite": "procurement",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Brake pads (pair): USD 11.40 each, available 10. Delivery date not yet confirmed.",
+    "operation": "extract",
+    "quote_request": {
+      "item": "Brake pads (pair)"
+    },
+    "supplier": "Example Parts Supply",
+    "references": [
+      {
+        "kind": "item",
+        "name": "Brake pads (pair)"
+      },
+      {
+        "kind": "supplier",
+        "name": "Example Parts Supply"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 2,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business",
+      "purchasing.create_purchase_order"
+    ],
+    "needs_human": true,
+    "proposals": [],
+    "output": {
+      "verified": false,
+      "extract": {
+        "currency": "USD",
+        "lead_time_days": null,
+        "lines": [
+          {
+            "unit_price": "11.40"
+          }
+        ]
+      }
+    }
+  }
+}

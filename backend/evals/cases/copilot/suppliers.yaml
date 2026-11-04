@@ -1,0 +1,46 @@
+{
+  "id": "copilot-suppliers",
+  "suite": "copilot",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Which suppliers sell Brake pads (pair)?",
+    "references": [
+      {
+        "kind": "item",
+        "name": "Brake pads (pair)"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": false,
+    "proposals": [],
+    "expected_tools": [
+      "check_stock",
+      "list_suppliers_for_item"
+    ],
+    "answer_contains": [
+      "Example Parts Supply",
+      "Example Brake Direct",
+      "Example Cycle Wholesale"
+    ],
+    "forbidden_text": [
+      "gwen@example.com",
+      "hal@example.com"
+    ]
+  }
+}

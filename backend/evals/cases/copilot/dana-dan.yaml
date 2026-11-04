@@ -1,0 +1,48 @@
+{
+  "id": "copilot-dana-dan",
+  "suite": "copilot",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Find both Dana Example and Dan Example; distinguish them.",
+    "references": [
+      {
+        "kind": "customer",
+        "name": "Dana Example"
+      },
+      {
+        "kind": "customer",
+        "name": "Dan Example"
+      }
+    ]
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 8,
+    "forbidden_action_types": [
+      "crm.update_customer",
+      "catalog.update_item",
+      "catalog.change_price",
+      "sales.apply_discount",
+      "org.update_business"
+    ],
+    "needs_human": false,
+    "proposals": [],
+    "expected_tools": [
+      "find_customers"
+    ],
+    "answer_contains": [
+      "Dana Example",
+      "Dan Example"
+    ],
+    "forbidden_text": [
+      "gwen@example.com",
+      "hal@example.com"
+    ]
+  }
+}

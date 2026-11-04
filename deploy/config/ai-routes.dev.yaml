@@ -1,0 +1,11 @@
+# Development route file: every model class goes to the `fake` provider, which replays AI_FAKE_SCRIPT_FILE
+# (deploy/config/ai-fake-script.dev.yaml) so the dev stack shows the AI screens without any key or network call.
+# The fake provider passes every routing policy and is refused when APP_ENV=prod.
+providers:
+  fake: {kind: fake, hosted: false, vendor: local}
+routes:
+  agent:        [{provider: fake, model: fake-dev}]
+  fast_extract: [{provider: fake, model: fake-dev}]
+  writer:       [{provider: fake, model: fake-dev}]
+  safety:       [{provider: fake, model: fake-dev}]
+limits: {max_steps: 8, max_input_tokens_per_step: 12000, max_output_tokens_per_step: 800, run_timeout_s: 90, step_timeout_s: 30}

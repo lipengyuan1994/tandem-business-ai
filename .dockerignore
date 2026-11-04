@@ -1,0 +1,26 @@
+# Build context is the repository root for all images in deploy/docker/. Keep secrets and bulk out of it.
+.git
+.claude
+.env
+.env.*
+!.env.example
+.dev-credentials*
+.demo-logins
+**/*.tfstate*
+**/.terraform
+**/*.tfvars
+**/node_modules
+**/dist
+**/__pycache__
+**/.venv
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+frontend/e2e/.auth
+frontend/test-results
+frontend/playwright-report
+design-review-cloud-20261103
+docs
+backups
+deploy/rehearsal
+install-*

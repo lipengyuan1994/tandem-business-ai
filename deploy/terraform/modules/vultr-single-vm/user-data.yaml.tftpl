@@ -1,0 +1,75 @@
+#cloud-config
+# First-boot setup for one SMB Operations VM (docs/roadmap/10-vultr-infrastructure.md#terraform-module). No secrets:
+# the application files, .env and registry login are uploaded later over SSH by deploy/scripts/install.sh.
+package_update: true
+package_upgrade: true
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - jq
+  - ufw
+  - unattended-upgrades
+
+users:
+  - default
+  - name: smb
+    gecos: SMB Operations service user
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+
+write_files:
+  - path: /etc/apt/apt.conf.d/20auto-upgrades
+    permissions: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+  - path: /etc/docker/daemon.json
+    permissions: "0644"
+    content: |
+      {"log-driver": "json-file", "log-opts": {"max-size": "10m", "max-file": "5"}}
+  - path: /etc/systemd/system/smb.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=SMB Operations (Docker Compose)
+      Requires=docker.service
+      After=docker.service network-online.target
+      ConditionPathExists=/opt/smb/compose.yml
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/smb
+      ExecStart=/usr/bin/docker compose -f /opt/smb/compose.yml up -d
+      ExecStop=/usr/bin/docker compose -f /opt/smb/compose.yml down
+      TimeoutStartSec=600
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Docker Engine and the Compose plugin from Docker's official apt repository.
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - sh -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list'
+  - apt-get update
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  - usermod -aG docker smb
+  - install -d -o smb -g smb -m 0750 /opt/smb
+  # Host firewall: redundant with the Vultr firewall group on purpose. Docker-published ports bypass ufw, so the
+  # real control is that only the caddy container publishes ports.
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow 22/tcp
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+  - systemctl daemon-reload
+  - systemctl enable smb.service
+  - systemctl restart docker
+  # Last: the installer waits for this file.
+  - install -o smb -g smb -m 0644 /dev/null /opt/smb/READY

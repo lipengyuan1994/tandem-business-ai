@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars (gitignored) and fill in. install.sh does this for you.
+ssh_public_key = "ssh-ed25519 AAAA...replace-with-the-install-key... smb-demo-install"
+admin_cidrs    = [] # e.g. ["203.0.113.7/32"] to open SSH for your own address
+region         = "sjc"
+plan           = "vhp-4c-8gb-amd"

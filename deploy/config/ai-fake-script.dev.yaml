@@ -1,0 +1,93 @@
+# Scripted replies of the dev `fake` provider (AI_FAKE_SCRIPT_FILE): {use_case: [reply, ...]}, replayed in order per
+# use case and cycling. Harmless demo text only; each reply matches that use case's output format
+# (docs/roadmap/ai/contracts.md §8 AgentStep, §11 output models). No model is called.
+intake:
+  # Literal replay only: the seed generates fresh record IDs and hold_slot returns a fresh hold ID.
+  # This adapter cannot interpolate those results. Nil UUIDs deliberately fail closed; replace this script
+  # with result-aware replay before claiming the dev chat creates a booking. Names, Tuesday time and
+  # argument shapes match the flagship scenario; no booking or reply is claimed or sent on failure.
+  - '{"kind": "tool_call", "tool": "get_conversation", "arguments": {"conversation_id": "00000000-0000-0000-0000-000000000000"}, "reason": "Scripted Tuesday brake-service demo"}'
+  - '{"kind": "tool_call", "tool": "list_services", "arguments": {"query": "brake"}, "reason": "Scripted Tuesday brake-service demo"}'
+  - '{"kind": "tool_call", "tool": "get_service_parts", "arguments": {"service_id": "00000000-0000-0000-0000-000000000000"}, "reason": "Scripted Tuesday brake-service demo"}'
+  - '{"kind": "tool_call", "tool": "check_stock", "arguments": {"item_ids": ["00000000-0000-0000-0000-000000000000"]}, "reason": "Scripted Tuesday brake-service demo"}'
+  - '{"kind": "tool_call", "tool": "find_slots", "arguments": {"service_id": "00000000-0000-0000-0000-000000000000", "earliest": "2026-11-10T09:00:00-07:00", "latest": "2026-11-10T13:00:00-07:00"}, "reason": "Scripted Tuesday brake-service demo"}'
+  - '{"kind": "tool_call", "tool": "hold_slot", "arguments": {"service_id": "00000000-0000-0000-0000-000000000000", "resource_id": "00000000-0000-0000-0000-000000000000", "customer_id": "00000000-0000-0000-0000-000000000000", "starts_at": "2026-11-10T11:45:00-07:00"}, "reason": "Scripted Tuesday brake-service demo"}'
+  - '{"kind": "tool_call", "tool": "propose_booking", "arguments": {"hold_id": "00000000-0000-0000-0000-000000000000", "reply": {"conversation_id": "00000000-0000-0000-0000-000000000000", "body": "Thanks for getting in touch! We can offer Tuesday at 11:45 for your brake service, pending staff approval."}}, "reason": "Scripted Tuesday brake-service demo"}'
+  - '{"kind": "final", "message_to_staff": "This scripted demo needs staff review. Check availability and prepare a booking if no proposal is waiting.", "proposal_ids": [], "needs_human": true}'
+copilot:
+  - '{"kind": "final", "message_to_staff": "Demo mode: no AI model is configured, so this is a scripted answer. Ask your administrator to add a provider key.", "proposal_ids": [], "needs_human": false}'
+summary:
+  - '{"summary": "Demo mode: this summary is scripted, not written by a model.", "open_questions": [], "suggested_reply": "Thank you for your message. We will get back to you shortly."}'
+reorder_note:
+  - '{"explanation": "Demo mode: stock is below the reorder level (scripted note)."}'
+briefing:
+  - '{"bullets": ["Demo mode: this briefing is scripted.", "Check today''s appointments and open approvals."]}'
+procurement:
+  # Flow templates and per-run steps are resolved only by usecases/procurement_fake.py.
+  # Literal fake extraction leaves arbitrary prose unverified for staff to fill.
+  - |
+    {
+      "procurement": {
+        "steps": [
+          {
+            "kind": "tool_call",
+            "tool": "check_stock",
+            "arguments": {
+              "item_ids": "{{item_ids}}"
+            },
+            "reason": "Check current stock before requesting quotes"
+          },
+          {
+            "kind": "tool_call",
+            "tool": "list_low_stock",
+            "arguments": {},
+            "reason": "Use the inventory reorder suggestion"
+          },
+          {
+            "kind": "tool_call",
+            "tool": "list_suppliers_for_item",
+            "arguments": {
+              "item_id": "{{item_id}}"
+            },
+            "reason": "Read eligible supplier options"
+          },
+          {
+            "kind": "tool_call",
+            "tool": "propose_quote_request",
+            "arguments": {
+              "lines": "{{request_lines}}",
+              "supplier_ids": "{{supplier_ids}}",
+              "needed_by": "{{needed_by}}",
+              "reply_by": "{{reply_by}}",
+              "message": "Please provide your pricing and delivery information. Thank you."
+            },
+            "reason": "Invite listed suppliers with email to compare replenishment offers"
+          },
+          {
+            "kind": "final",
+            "message_to_staff": "Demo mode: review the quote-request proposal before contacting suppliers.",
+            "proposal_ids": [],
+            "needs_human": false
+          }
+        ]
+      },
+      "supplier_quote_extract": {
+        "lines": "{{extract_lines}}",
+        "currency": null,
+        "lead_time_days": null,
+        "notes": "Demo mode: review and enter the supplier values."
+      },
+      "procurement_compare": {
+        "quote_id": "{{top_quote_id}}",
+        "explanation": "The deterministic comparison ranks this offer first overall. Review the draft PO before ordering."
+      },
+      "supplier_followup": {
+        "body": "Hello, could you please share an update? Thank you."
+      }
+    }
+campaign_draft:
+  - '{"subject": "News from our shop (demo draft)", "body_markdown": "Demo mode: this campaign draft is scripted. Replace it with your own text."}'
+payment_followup:
+  - '{"text": "Hello, this is a friendly reminder that an invoice is still open. Thank you! (demo draft)"}'
+safety:
+  - '{"flagged": false, "category": "none"}'

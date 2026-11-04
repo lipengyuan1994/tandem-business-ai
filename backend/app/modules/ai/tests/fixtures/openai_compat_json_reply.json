@@ -1,0 +1,14 @@
+{
+  "id": "chatcmpl-fixture-001",
+  "object": "chat.completion",
+  "created": 1762182000,
+  "model": "example-model-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {"role": "assistant", "content": "{\"type\": \"final\", \"text\": \"Proposed a brake service for Ada\"}"},
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {"prompt_tokens": 412, "completion_tokens": 37, "total_tokens": 449}
+}
