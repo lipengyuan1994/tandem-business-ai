@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import EmailStr, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .smtp import parse_smtp_url
@@ -25,6 +26,16 @@ class Settings(BaseSettings):
 
     database_url: str
     database_migration_url: str | None = None
+
+    # Per-process budgets: one API (6 connections) + one worker (6), leaving 88 of
+    # PostgreSQL's default 100 for Keycloak, migrations, backups and administration.
+    api_db_pool_size: int = Field(default=4, ge=1, le=20)
+    api_db_max_overflow: int = Field(default=2, ge=0, le=10)
+    worker_db_pool_size: int = Field(default=6, ge=1, le=32)
+    worker_db_max_overflow: int = Field(default=0, ge=0, le=10)
+    db_pool_timeout_seconds: int = Field(default=10, ge=1, le=60)
+    db_statement_timeout_ms: int = Field(default=30_000, ge=1, le=300_000)
+    db_idle_transaction_timeout_ms: int = Field(default=60_000, ge=1, le=300_000)
 
     data_profile: Literal["standard", "regulated"] = "standard"
     regulated_host_baa: str = Field(default="", max_length=200)
@@ -70,6 +81,13 @@ class Settings(BaseSettings):
     egress_allowlist: str = ""
     local_inference_hosts: str = ""
     ai_daily_token_budget_per_business: int = 2_000_000
+    ai_daily_cost_limit_usd: Decimal = Field(default=Decimal("5.00"), ge=0, decimal_places=6, allow_inf_nan=False)
+    ai_monthly_cost_limit_usd: Decimal = Field(default=Decimal("50.00"), ge=0, decimal_places=6, allow_inf_nan=False)
+    ai_max_concurrent_calls: int = Field(default=2, ge=1, le=32)
+    ai_public_intake_per_hour: int = Field(default=30, ge=0)
+    ai_public_intake_max_pending: int = Field(default=30, ge=0)
+    ai_public_daily_token_budget_per_business: int = Field(default=200_000, ge=0)
+    ai_budget_notification_email: EmailStr | Literal[""] = ""
     # AI layer (docs/roadmap/ai/contracts.md §2). A missing or unreadable routes file disables AI; the app still starts.
     ai_routes_file: str = "/config/ai-routes.yaml"
     ai_fake_script_file: str = ""
@@ -77,7 +95,16 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr = Field(default=SecretStr(""), repr=False)
     anthropic_api_key: SecretStr = Field(default=SecretStr(""), repr=False)
     gemini_api_key: SecretStr = Field(default=SecretStr(""), repr=False)
-    worker_concurrency: int = Field(default=4, ge=1, le=32)
+    worker_concurrency: int = Field(default=4, ge=2, le=32)
+    worker_ai_concurrency: int = Field(default=2, ge=1, le=31)
+    worker_shutdown_grace_seconds: float = Field(default=100, ge=0, le=300)
+
+    @model_validator(mode="after")
+    def validate_worker_capacity(self) -> Settings:
+        if self.worker_ai_concurrency >= self.worker_concurrency:
+            raise ValueError("WORKER_AI_CONCURRENCY must be less than WORKER_CONCURRENCY")
+        return self
+
     log_level: str = "info"
 
     @property

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import io
 import json
 import uuid
-import zipfile
+from collections.abc import Generator
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
@@ -21,7 +20,7 @@ from app.platform.config import get_settings, is_regulated
 from app.platform.context import Context
 from app.platform.crud import rows_affected
 from app.platform.errors import Conflict, Invalid
-from app.platform.export import dump_models
+from app.platform.export import BATCH, ExportTables, export_tables, stream_models, stream_zip
 from app.platform.ids import new_id
 from app.platform.models import DomainEvent, EventDelivery, IdempotencyKey, Job
 from app.platform.registry import ErasureTarget, get_registry
@@ -132,26 +131,19 @@ def enqueue_test_email(db: Session, ctx: Context, recipient: str) -> uuid.UUID:
 EXPORT_FORMAT_VERSION = 1
 
 
-def build_export(db: Session, ctx: Context) -> tuple[bytes, dict[str, Any]]:
+def build_export(db: Session, ctx: Context, *, exported_at: datetime) -> Generator[bytes]:
     """A ZIP with one JSON file per table, grouped by module, plus a manifest (one business only)."""
     ctx.require(P.DATA_MANAGE)
     registry = get_registry()
-    buffer = io.BytesIO()
     manifest: dict[str, Any] = {
         "format_version": EXPORT_FORMAT_VERSION,
-        "exported_at": clock.now().isoformat(),
+        "exported_at": exported_at.isoformat(),
         "business_id": str(ctx.business_id),
         "modules": {},
     }
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-        for module, handler in registry.export_handlers.items():
-            tables = handler(db, ctx)
-            manifest["modules"][module] = {table: len(rows) for table, rows in tables.items()}
-            for table, rows in tables.items():
-                archive.writestr(
-                    f"{module}/{table}.json", json.dumps(rows, indent=2, ensure_ascii=False, sort_keys=True)
-                )
-        archive.writestr("manifest.json", json.dumps(manifest, indent=2, sort_keys=True))
+    yield from stream_zip(
+        ((module, handler(db, ctx, streaming=True)) for module, handler in registry.export_handlers.items()), manifest
+    )
     audit.record(
         db,
         ctx,
@@ -161,7 +153,6 @@ def build_export(db: Session, ctx: Context) -> tuple[bytes, dict[str, Any]]:
         summary="Full data export downloaded",
         changes={"tables": sum(len(t) for t in manifest["modules"].values())},
     )
-    return buffer.getvalue(), manifest
 
 
 def erase_customer(db: Session, ctx: Context, customer_id: uuid.UUID, confirm_name: str) -> ErasureRequest:
@@ -263,19 +254,20 @@ def _erase_platform(db: Session, ctx: Context, target: ErasureTarget) -> dict[st
     }
 
 
-def export_own(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
+def export_own(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
     """admin_ops and the kernel's business-owned rows. Queue tables have no row-level security: filter explicitly."""
-    tables = dump_models(db, ctx, [ErasureRequest, Job, DomainEvent])
-    tables["event_deliveries"] = [
+    tables = stream_models(db, ctx, [ErasureRequest, Job, DomainEvent])
+    tables["event_deliveries"] = (
         {"event_id": str(d.event_id), "subscriber": d.subscriber, "status": d.status, "attempts": d.attempts,
          "done_at": d.done_at.isoformat() if d.done_at else None}
         for d in db.scalars(
             select(EventDelivery)
             .join(DomainEvent, DomainEvent.id == EventDelivery.event_id)
             .where(DomainEvent.business_id == ctx.business_id)
+            .execution_options(yield_per=BATCH)
         )
-    ]  # fmt: skip
-    return tables
+    )  # fmt: skip
+    return export_tables(tables, streaming=streaming)
 
 
 def list_erasures(db: Session, ctx: Context) -> list[ErasureRequest]:

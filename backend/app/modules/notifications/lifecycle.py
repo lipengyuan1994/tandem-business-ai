@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterator
 from typing import Any
 
 from sqlalchemy import and_, case, func, or_, select, update
@@ -12,7 +13,7 @@ from sqlalchemy.sql import ColumnElement
 from app.platform import clock
 from app.platform.context import Context
 from app.platform.crud import rows_affected
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import DeliveryAttempt, InAppNotification, OutboxMessage
@@ -48,12 +49,18 @@ def links(db: Session, ctx: Context, target: ErasureTarget) -> set[uuid.UUID]:
     }
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    tables = dump_models(db, ctx, [OutboxMessage, DeliveryAttempt, InAppNotification])
-    for row in tables["outbox_messages"]:
-        if isinstance(row.get("variables"), dict):
-            row["variables"] = {k: v for k, v in row["variables"].items() if k not in SECRET_VARIABLES}
-    return tables
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(db, ctx, [OutboxMessage, DeliveryAttempt, InAppNotification])
+    rows = tables["outbox_messages"]
+
+    def safe_rows() -> Iterator[dict[str, Any]]:
+        for row in rows:
+            if isinstance(row.get("variables"), dict):
+                row["variables"] = {k: v for k, v in row["variables"].items() if k not in SECRET_VARIABLES}
+            yield row
+
+    tables["outbox_messages"] = safe_rows()
+    return export_tables(tables, streaming=streaming)
 
 
 def erase(db: Session, ctx: Context, target: ErasureTarget) -> dict[str, int]:

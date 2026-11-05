@@ -12,7 +12,8 @@
 # --demo seeds synthetic businesses and writes login passwords only on the VM. --domain auto requires --demo
 # and resolves to <dashed-ipv4>.sslip.io (third-party DNS for demos/tests only). No terminal is needed with --demo.
 # Secrets come from the environment only (VULTR_API_KEY, REGISTRY_TOKEN, OBJECT_STORAGE_ACCESS_KEY,
-# OBJECT_STORAGE_SECRET_KEY). Local secrets stay in ./install-<name>/.env (mode 600) and the generated SSH key.
+# OBJECT_STORAGE_SECRET_KEY, optional VULTR_INFERENCE_API_KEY). --ai-routes FILE supplies the operator's AI routes.
+# Local secrets stay in ./install-<name>/.env (mode 600) and the generated SSH key.
 # --dry-run prints every step and runs nothing: no Vultr call, no files, no SSH.
 set -euo pipefail
 
@@ -22,7 +23,7 @@ deploy="$(cd "$here/.." && pwd)"
 name="" domain="" region=sjc plan=vhp-4c-8gb-amd registry="" registry_user="" version=0.1.0
 owner_email="" owner_name="" business_name="" slug="" timezone=""
 object_storage_url="" bucket="" env_dir="$deploy/terraform/envs/demo" out_root="$PWD"
-admin_cidrs=() close_ssh=false dry_run=false resume=false demo=false auto_domain=false
+admin_cidrs=() close_ssh=false dry_run=false resume=false demo=false auto_domain=false ai_routes=""
 
 usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit "${1:-64}"; }
 
@@ -48,6 +49,7 @@ while [ $# -gt 0 ]; do
     --out-dir) out_root="${2:?}"; shift ;;
     --dry-run) dry_run=true ;;
     --resume) resume=true ;;
+    --ai-routes) ai_routes="${2:?}"; shift ;;
     -h | --help) usage 0 ;;
     *) echo "unknown option: $1" >&2; usage ;;
   esac
@@ -143,6 +145,12 @@ else
   note "a real run requires VULTR_API_KEY, REGISTRY_TOKEN, OBJECT_STORAGE_ACCESS_KEY, OBJECT_STORAGE_SECRET_KEY in the environment"
 fi
 
+# Validate before creating files or cloud resources; never echo file contents or validation values.
+if [ -n "$ai_routes" ]; then
+  "$here/install-ai.sh" validate "$ai_routes"
+  note "AI route file validated locally"
+fi
+
 step 2/8 "Generate this installation's secrets and SSH key into $out"
 if $resume && ! $dry_run && [ -e "$out/.env" ]; then
   note "--resume: reusing $out/.env"
@@ -182,6 +190,15 @@ else
     else
       note "print RESTIC_PASSWORD once for offline storage, then wait for confirmation"
     fi
+  fi
+fi
+
+# Apply an explicitly supplied inference key on fresh installs and resumes without exposing its value.
+if [ -n "${VULTR_INFERENCE_API_KEY:-}" ]; then
+  if $dry_run; then
+    note "write the inference key privately to both .env copies and add api.vultrinference.com to EGRESS_ALLOWLIST"
+  else
+    "$here/install-ai.sh" set-key "$out/.env"
   fi
 fi
 
@@ -258,14 +275,25 @@ if ! $dry_run; then
   scp "${ssh_opts[@]}" -q "$out/.env" "smb@$ip:/opt/smb/.env"
   remote chmod 600 /opt/smb/.env
 fi
-# AI stays disabled until a provider key is set in .env; an existing ai-routes.yaml is never overwritten.
-remote "cd /opt/smb && { [ -f config/ai-routes.yaml ] || cp config/ai-routes.example.yaml config/ai-routes.yaml; }"
+# Only an explicit --ai-routes replaces the operator's route file, including on --resume.
+if [ -n "$ai_routes" ]; then
+  if $dry_run; then
+    note "upload the supplied AI route file to /opt/smb/config/ai-routes.yaml"
+  else
+    scp "${ssh_opts[@]}" -q "$ai_routes" "smb@$ip:/opt/smb/config/ai-routes.yaml"
+    remote chmod 644 /opt/smb/config/ai-routes.yaml
+  fi
+else
+  remote "cd /opt/smb && { [ -f config/ai-routes.yaml ] || cp config/ai-routes.example.yaml config/ai-routes.yaml; }"
+fi
 note "docker login ${registry%%/*} with the read-only registry token (sent over stdin)"
 if ! $dry_run; then
   # shellcheck disable=SC2029
   printf '%s' "$REGISTRY_TOKEN" | ssh "${ssh_opts[@]}" "smb@$ip" "$(printf 'docker login %q -u %q --password-stdin' "${registry%%/*}" "$registry_user")" >/dev/null
 fi
 remote "cd /opt/smb && docker compose pull && docker compose up -d"
+# shellcheck disable=SC2016 # Evaluate the clock state on the VM, never on the installer host.
+remote 'test "$(timedatectl show --property=NTPSynchronized --value)" = yes && systemctl is-active --quiet smb-watchdog.timer'
 
 step 6/8 "Wait for the API, then create businesses and logins"
 note "wait for https://$domain/api/v1/readyz (certificate issuance can take a minute)"
@@ -320,6 +348,7 @@ fi
 
 step 7/8 "Smoke test and first backup to Object Storage"
 remote "cd /opt/smb && docker compose exec -T backup backup.sh --kind install"
+remote "cd /opt/smb && ./wait-backup-healthy.sh docker compose"
 remote "cd /opt/smb && ./smoke.sh https://$domain --compose-dir /opt/smb"
 
 step 8/8 "Finish"

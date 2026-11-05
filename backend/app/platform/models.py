@@ -171,3 +171,11 @@ class RateLimit(Base):
     key: Mapped[str] = mapped_column(String(200), primary_key=True)
     window_start: Mapped[datetime] = mapped_column(primary_key=True)
     count: Mapped[int] = mapped_column(BigInteger)
+
+
+class JobDedupe(Base):
+    """Compact permanent receipt: retention must never replay an already accepted action."""
+
+    __tablename__ = "job_dedupe"
+    key: Mapped[str] = mapped_column(String(300), primary_key=True)
+    job_id: Mapped[uuid.UUID] = mapped_column()

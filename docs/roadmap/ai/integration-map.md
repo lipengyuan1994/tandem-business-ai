@@ -51,6 +51,8 @@ follow `marketing/lifecycle.py`).
 | `list_low_stock` | `inventory.list_below_reorder(db, ctx)` | `ReorderSuggestion`: item_id, item_name, available, reorder_point, target_level, suggested, explanation |
 | `today_summary` **(PR-01)** | `dashboard.today_summary(db, ctx) -> TodaySummary` | agenda count and next 5, waiting conversations, pending approvals, low-stock items, delivery issues |
 | `list_overdue_invoices` **(PR-01)** | `sales.list_overdue_invoices(db, ctx, *, as_of: date | None = None, limit: int = 50) -> list[OverdueInvoice]` | id, number, customer_id, bill_to_name, due_date, days_overdue, total_minor, currency, version, last_reminder_at (the DTO also has `bill_to_email`; the **tool drops it** — addresses stay server-side) |
+| Payment follow-up point read | `sales.get_overdue_invoice(db, ctx, invoice_id, *, lock=False, as_of=None) -> OverdueInvoice | None` | Same fields as the overdue DTO; indexed business-scoped lookup. With `lock=True`, cooldown, pending proposals and the expected draft version are checked under the invoice lock in the proposal transaction. |
+| Payment follow-up scan page | `sales.overdue_invoice_page(db, ctx, *, after=None, limit=500) -> list[OverdueInvoice]` | Business-local overdue DTOs in bounded keyset pages ordered by `(due_date, id)`; used only to enqueue one deduplicated non-transactional job per invoice, without inference. |
 | `list_suppliers_for_item` **(PQ-01)** | `purchasing.list_suppliers_for_item(db, ctx, item_id) -> list[SupplierOption]` | supplier_id, supplier_name, has_email, last_price_minor, currency, lead_time_days, on_time_rate (0–1 or None), orders_count |
 | `get_quote_request` **(PQ-01)** | `purchasing.get_quote_request(db, ctx, quote_request_id) -> QuoteRequestOut` | lines, needed_by, invited suppliers with status, received quotes |
 | `compare_quotes` **(PQ-01)** | `purchasing.compare_quotes(db, ctx, quote_request_id) -> QuoteComparison` | ranked quotes with score and score components (deterministic) |
@@ -66,6 +68,13 @@ follow `marketing/lifecycle.py`).
 | Procurement scan | **(PQ-01)** `purchasing.list_quote_requests_due(db, ctx, *, as_of: date | None = None) -> list[QuoteRequestDue]` | requests with status `sent` whose reply-by has passed or whose invites are all answered, and no PO yet |
 | Procurement duplicate guard | **(AI-12)** `purchasing.find_open_quote_request(db, ctx, item_id) -> UUID | None` | first sent request containing the tenant's item; validates item ownership; drafts/closed/cancelled do not block |
 | Procurement chase | **(PQ-01)** `purchasing.list_unanswered_invites(db, ctx, *, as_of: date | None = None) -> list[UnansweredInvite]` | invite id, quote_request_id, supplier_id, supplier_name, reply_by, days_overdue, last_followup_at |
+| Procurement target job/tool | **(Review A)** `purchasing.get_late_purchase_order(db, ctx, purchase_order_id, *, as_of: date | None = None) -> LatePO | None` | scoped point read; same late/open eligibility as the list; requires purchasing read |
+| Procurement invite job/tool | **(Review A)** `purchasing.get_unanswered_invite(db, ctx, quote_request_id, supplier_id, *, as_of: date | None = None) -> UnansweredInvite | None` | scoped point read; same overdue/live eligibility as the list; requires purchasing read |
+
+The hourly procurement scan enqueues `ai.procurement_followup` once per business/target/hour (payload: either
+`purchase_order_id` or `quote_request_id` + `supplier_id`). Its non-transactional handler reloads only that target,
+then runs one bounded follow-up completion with the existing rolling three-day proposal guard. A target failure is
+retried independently by the job worker; the scan performs no inference.
 
 Context note for intake: the inbound message text is `get_message_context(...).body`; fence it as untrusted. Business
 facts: `org.get_business_brief(db, ctx) -> BusinessBrief` (id, slug, name, timezone, currency, locale) and
@@ -166,3 +175,11 @@ for m in ["conversations","crm","catalog","scheduling","inventory","org","sales"
         if f.__module__.startswith("app.modules"): print(f"{m}.{n}{inspect.signature(f)}")
 EOF
 ```
+
+### Second-review batch B public additions (2026-11-04 UTC)
+
+| Need | Public function | Caller |
+|---|---|---|
+| Outcome marker existence without reading history | `conversations.has_internal_note_marker(db, ctx, conversation_id, marker) -> bool` (thread-read permission; business/thread index; suffix escaped) | Intake outcome note |
+| Complete active service context | `catalog.list_active_service_requirements(db, ctx) -> list[ServiceRequirements]` (catalog-read permission; durations, prices and parts; active only) | Intake trusted facts |
+| Refuse expired hold binding | `scheduling.bind_hold(db, ctx, hold_id, proposal_id)` also checks expiry under the hold row lock | Booking proposal |

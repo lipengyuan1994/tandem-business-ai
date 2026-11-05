@@ -1,6 +1,6 @@
 # Runbook: upgrade and roll back
 
-Time: 5–10 minutes. Brief downtime (seconds to a minute) while containers restart. Read [README.md](README.md) first for the placeholders and conventions.
+Reserve a **15-minute maintenance window**, longer for large migrations or third-party upgrades. API/worker shutdown can take 120 seconds before migration and container restarts. Read [README.md](README.md) first for the placeholders and conventions.
 
 ## What an upgrade changes
 
@@ -13,7 +13,7 @@ Database changes are **expand/contract**: a release adds things the previous rel
 1. Decide the target version `<new-version>` (for example `0.1.1`). It is **not** necessarily the next number: check what runs now with `vm$ cat /opt/smb/VERSION`. Do not go to a lower number than the current one (use the restore runbook if you must go back).
 2. Read the release notes for `<new-version>`: the project's `CHANGELOG.md` (until one exists, ask the developers; do not upgrade without notes). Look for "migration" and "manual step". Manual steps marked "before" are done before you start; those marked "after" after step 7 below.
 3. The three images (`smb-api`, `smb-web`, `smb-backup`) of `<new-version>` must exist in the registry ([install.md](install.md) section 2).
-4. Choose a quiet time and tell the owner.
+4. Announce a maintenance window to the owner and users; pause writes, visitor intake and new jobs before migration. Take a manual safety backup and pre-pull the target images, then stop API and worker (`docker compose stop api worker`) and allow their 120-second grace to drain in-flight work. Keep them stopped while migrating. The script starts them again or rolls back on failure; quiesce any other writers too. Do not promise zero downtime.
 5. Check the VM can still pull from the registry (Vultr registry credentials have a validity period): `vm$ cd /opt/smb && docker compose pull` re-pulls the current version. If it says "unauthorized", create a new read-only credential and `docker login` again ([rotate-secrets.md](rotate-secrets.md)).
 
 ## Upgrade
@@ -28,10 +28,10 @@ vm$ ./upgrade.sh <new-version>
 
 `upgrade.sh` does, in order, and stops at the first problem:
 
-1. Takes a backup now (tagged `pre-upgrade`) and waits for it. If that backup fails, nothing else happens.
+1. Takes a backup now (tagged `pre-upgrade`), then waits up to 120 seconds for Docker to report the backup service healthy. If the backup fails or health does not arrive in time, the version is left unchanged and smoke does not run.
 2. Writes the new `VERSION` into `.env` (and `/opt/smb/VERSION`).
 3. `docker compose pull` (never set `SKIP_PULL=1` on a VM; that variable exists only for local rehearsals with locally built images).
-4. Runs the database migration (`docker compose run --rm migrate`).
+4. Runs the database migration (`docker compose run --rm migrate`). **The script does not drain writers for you:** use the maintenance procedure above before invoking it; migration locks can block old code otherwise.
 5. Hands the volumes of the web container (Caddy) to its unprivileged user. Nothing happens when they already belong to it; see "The release in which the web container stops running as root" below.
 6. `docker compose up -d`, waits up to 5 minutes for every service to be healthy.
 7. Runs `smoke.sh`.
@@ -64,7 +64,7 @@ vm$ cp compose.yml compose.yml.previous && mv compose.yml.new compose.yml
 vm$ ./upgrade.sh <new-version>
 ```
 
-The notes also list any other changed file (`smoke.sh`, `upgrade.sh`, `restore.sh`, `postgres-init.sh`, the realm file): copy those from `/tmp/stage-<new-version>/` the same way before the upgrade.
+The notes also list any other changed file (`smoke.sh`, `upgrade.sh`, `restore.sh`, `wait-backup-healthy.sh`, `postgres-init.sh`, the realm file): copy those from `/tmp/stage-<new-version>/` the same way before the upgrade. Updated upgrade/restore scripts require `wait-backup-healthy.sh` alongside them; install it with executable permissions (`chmod 755 /opt/smb/wait-backup-healthy.sh`).
 
 If the upgrade fails, the automatic rollback starts the **old images under the new `compose.yml`**. Put the old file back and re-apply it:
 
@@ -75,6 +75,10 @@ vm$ ./smoke.sh https://<domain> --compose-dir /opt/smb     # wait a minute first
 ```
 
 (`--remove-orphans` removes containers of services that only the new file had.) A change of a pinned third-party image (PostgreSQL, Keycloak) is only ever made together with release notes that say whether going back is possible; if they say it is not, restore from the backup instead ([backup-restore.md](backup-restore.md)).
+
+## AI configuration across upgrades
+
+Upgrades preserve `/opt/smb/config/ai-routes.yaml`; staging excludes the operator's file. A missing file is initialized from the example, which alone does not enable AI. To enable AI on an existing install, follow [the install runbook's existing-install steps](install.md#enable-ai-on-an-existing-installation): upload the reviewed routes, set `VULTR_INFERENCE_API_KEY` and add `api.vultrinference.com` to `EGRESS_ALLOWLIST` in **both** `/opt/smb/.env` and your local `install-<name>/.env`, keep both files mode 600, then run `docker compose up -d api worker` from `/opt/smb`. Keep existing egress hosts. `install.sh --resume --ai-routes FILE` is the explicit installer override for a route file; `upgrade.sh` does not replace it.
 
 ## The release in which the web container stops running as root
 
@@ -123,3 +127,10 @@ Signs: the previous version is also unhealthy, or data looks wrong. Do not repea
 ## Several versions behind
 
 Upgrade one release at a time, in order (`0.1.1`, then `0.1.2`), unless the release notes of the later version say it can be skipped to. The ordered list of releases is the project's `CHANGELOG.md`.
+
+
+## 0.1.1 host monitoring and maintenance
+
+Before this release, stage the new `compose.yml`, `smoke.sh`, `watchdog.sh`, `watchdog.py`, and `install-host-ops.sh` alongside the other release scripts. Keep a copy of the preceding deployment files. The PostgreSQL idle-transaction timeout (60 seconds) requires container recreation, so this release needs the announced maintenance window. API and worker now have a 120-second shutdown grace. No batch F database migration is needed.
+
+Existing VMs **do not get systemd units from `upgrade.sh`**: after staging, run `/opt/smb/install-host-ops.sh` once as root through the Vultr console. It bounds journald, enables and verifies NTP, and installs/enables the watchdog timer; it leaves SSH/UFW for the explicit review in [access](access.md). Add the optional empty `ALERT_WEBHOOK_URL=` to both protected environment copies, set your destination, and verify receipt with `watchdog.sh --test` as described in [monitoring](monitoring.md). Start one maintenance run after the new backup image is running, and confirm both prune/check status entries. Preserve the preceding release's image tags and the `MIGRATION_VERSION` image when pruning.

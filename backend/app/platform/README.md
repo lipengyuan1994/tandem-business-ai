@@ -49,3 +49,5 @@ has its own connection pool. The opt-in client bypasses environment proxies so t
 destination. Default clients (and a local client with no configured hosts) retain their existing transport behavior.
 
 Database engines hide bound parameters. Logging suppresses database exception details (including driver/chained messages), retains frame locations and exception types, and redacts rendered exceptions before output.
+
+Production settings, connection budgets, worker lanes/drain, and daily retention: [OPERATIONS.md](OPERATIONS.md).

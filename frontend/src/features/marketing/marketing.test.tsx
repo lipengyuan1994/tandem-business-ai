@@ -3,12 +3,14 @@ import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import type { AudiencePreview, CampaignDetail } from "@/api/types"
+import { mockStatus, ON, RUN } from "@/features/ai/testing"
 import { meWith, mockMe, renderApp } from "@/test/app"
 import { server } from "@/test/server"
 
 const CID = "00000000-0000-7000-8000-0000000000c9"
 const SEG = "00000000-0000-7000-8000-0000000000e9"
 const PERMS = ["marketing.campaign.read", "marketing.campaign.write", "catalog.item.read"]
+const AI_PERMS = [...PERMS, "ai.assistant.use"]
 const REV = { id: "r1", revision_no: 1, subject: "Spring service offer", body_markdown: "10% off a tune-up.\n\nBook online.", created_by_kind: "staff", created_at: "2026-11-05T17:00:00Z" }
 
 function campaign(over: Partial<CampaignDetail> = {}): CampaignDetail {
@@ -130,6 +132,142 @@ describe("marketing", () => {
     await userEvent.type(screen.getByLabelText("Add an e-mail address"), "x@example.com")
     await userEvent.click(screen.getByRole("button", { name: "Add" }))
     await waitFor(() => expect(added).toEqual({ value: "x@example.com", reason: "manual" }))
+  })
+})
+
+describe("campaign AI draft", () => {
+  it.each(["ai.assistant.use", "marketing.campaign.write"])("hides drafting without %s", async (permission) => {
+    mockMe(meWith(...AI_PERMS.filter((p) => p !== permission)))
+    mockStatus()
+    mockCampaign(campaign())
+    const { queryClient } = renderApp(`/marketing/${CID}`)
+    await screen.findByLabelText("Subject")
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0))
+    expect(screen.queryByRole("button", { name: "Draft with AI" })).not.toBeInTheDocument()
+  })
+
+  it.each(["ai.not_configured", "ai.disabled_by_policy", "ai.budget_exceeded"])("hides drafting when AI is unavailable: %s", async (reason) => {
+    mockMe(meWith(...AI_PERMS))
+    mockStatus({ ...ON, enabled: false, reason })
+    mockCampaign(campaign())
+    const { queryClient } = renderApp(`/marketing/${CID}`)
+    await screen.findByLabelText("Subject")
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0))
+    expect(screen.queryByRole("button", { name: "Draft with AI" })).not.toBeInTheDocument()
+  })
+
+  it.each(["approved", "sending", "sent", "cancelled"] as const)("hides drafting for a %s campaign", async (status) => {
+    mockMe(meWith(...AI_PERMS))
+    mockStatus()
+    mockCampaign(campaign({ status }))
+    const { queryClient } = renderApp(`/marketing/${CID}`)
+    expect(await screen.findByLabelText("Subject")).toBeDisabled()
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0))
+    expect(screen.queryByRole("button", { name: "Draft with AI" })).not.toBeInTheDocument()
+  })
+
+  it("creates and reloads the saved assistant revision, guarding edits while pending", async () => {
+    mockMe(meWith(...AI_PERMS))
+    mockStatus()
+    let saved = campaign({ purpose: "Invite riders for a service" })
+    mockCampaign(saved)
+    let requestBody: unknown
+    let csrf: string | null = null
+    let posts = 0
+    let release!: () => void
+    const pending = new Promise<void>((resolve) => { release = resolve })
+    const revision = { ...REV, id: "r2", revision_no: 2, subject: "Keep your bike ready", body_markdown: "Visit us for a friendly service.", created_by_kind: "assistant" }
+    server.use(
+      http.get(`*/api/v1/marketing/campaigns/${CID}`, () => HttpResponse.json(saved)),
+      http.post(`*/api/v1/ai/campaigns/${CID}/draft`, async ({ request }) => {
+        posts++
+        requestBody = await request.json()
+        csrf = request.headers.get("X-CSRF-Token")
+        await pending
+        saved = campaign({ current_revision: revision, revisions: [REV, revision] })
+        return HttpResponse.json({ run_id: RUN, revision_id: revision.id })
+      }),
+    )
+    renderApp(`/marketing/${CID}`)
+    const button = await screen.findByRole("button", { name: "Draft with AI" })
+    expect(button).not.toHaveAttribute("aria-haspopup")
+    expect(screen.getByLabelText("What is this campaign for? (optional)")).toHaveValue("Invite riders for a service")
+    await userEvent.click(button)
+    await waitFor(() => expect(posts).toBe(1))
+    expect(screen.getByRole("button", { name: "Drafting…" })).toBeDisabled()
+    expect(screen.getByLabelText("Subject")).toBeDisabled()
+    expect(screen.getByLabelText("Message")).toBeDisabled()
+    expect(screen.getByLabelText("What is this campaign for? (optional)")).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Submit for approval" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Cancel campaign" })).toBeDisabled()
+    release()
+    await waitFor(() => expect(screen.getByLabelText("Subject")).toHaveValue(revision.subject))
+    expect(screen.getByLabelText("Message")).toHaveValue(revision.body_markdown)
+    expect(await screen.findByText(/AI draft saved/)).toHaveAttribute("role", "status")
+    expect(screen.getByText(/Revision 2 by the assistant/)).toHaveTextContent(revision.subject)
+    expect(requestBody).toEqual({ purpose: "Invite riders for a service" })
+    expect(csrf).toBe("csrf-test-token")
+    expect(posts).toBe(1)
+    expect(await screen.findByRole("button", { name: "Draft with AI" })).toBeEnabled()
+  })
+
+  it.each(["Subject", "Message"])("preserves unsaved %s edits and explains why drafting is disabled", async (label) => {
+    mockMe(meWith(...AI_PERMS))
+    mockStatus()
+    mockCampaign(campaign())
+    let posts = 0
+    server.use(http.post(`*/api/v1/ai/campaigns/${CID}/draft`, () => { posts++; return HttpResponse.json({ run_id: RUN, revision_id: "r2" }) }))
+    renderApp(`/marketing/${CID}`)
+    const button = await screen.findByRole("button", { name: "Draft with AI" })
+    const field = screen.getByLabelText(label)
+    await userEvent.type(field, " unsaved")
+    expect(button).toBeDisabled()
+    expect(button).toHaveAccessibleDescription("Save your message edits before drafting with AI.")
+    await userEvent.click(button)
+    expect(posts).toBe(0)
+    expect(field).toHaveValue(`${label === "Subject" ? REV.subject : REV.body_markdown} unsaved`)
+    await userEvent.clear(field)
+    await userEvent.type(field, label === "Subject" ? REV.subject : REV.body_markdown)
+    expect(button).toBeEnabled()
+  })
+
+  it("confirms drafting in review before withdrawing the approval and restores focus", async () => {
+    mockMe(meWith(...AI_PERMS))
+    mockStatus()
+    mockCampaign(campaign({ status: "in_review", proposal_id: "p1" }))
+    let posts = 0
+    server.use(http.post(`*/api/v1/ai/campaigns/${CID}/draft`, () => { posts++; return HttpResponse.json({ run_id: RUN, revision_id: "r2" }) }))
+    renderApp(`/marketing/${CID}`)
+    const button = await screen.findByRole("button", { name: "Draft with AI" })
+    await userEvent.click(button)
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(/The approval request will be withdrawn/)).toBeInTheDocument()
+    expect(posts).toBe(0)
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }))
+    await waitFor(() => expect(button).toHaveFocus())
+    expect(posts).toBe(0)
+    await userEvent.click(button)
+    await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Edit and withdraw" }))
+    await waitFor(() => expect(posts).toBe(1))
+  })
+
+  it.each([
+    [429, "ai.budget_exceeded", "Today's AI limit has been used up."],
+    [503, "ai.provider_unavailable", "The AI service did not answer."],
+    [409, "ai.not_configured", "AI is not set up on this installation yet."],
+    [409, "ai.disabled_by_policy", "AI is turned off by your privacy settings."],
+    [502, "ai.invalid_model_output", "The AI could not produce a usable draft that passes safety checks."],
+  ])("explains %s %s without losing the saved message", async (status, code, message) => {
+    mockMe(meWith(...AI_PERMS))
+    mockStatus()
+    mockCampaign(campaign())
+    server.use(http.post(`*/api/v1/ai/campaigns/${CID}/draft`, () => HttpResponse.json({ status, code, title: "AI request failed" }, { status: Number(status) })))
+    renderApp(`/marketing/${CID}`)
+    await userEvent.click(await screen.findByRole("button", { name: "Draft with AI" }))
+    expect(await screen.findByRole("alert")).toHaveTextContent(String(message))
+    expect(screen.getByLabelText("Subject")).toHaveValue(REV.subject)
+    expect(screen.getByLabelText("Message")).toHaveValue(REV.body_markdown)
+    expect(screen.getByRole("button", { name: "Draft with AI" })).toBeEnabled()
   })
 })
 

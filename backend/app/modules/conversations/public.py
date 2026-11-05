@@ -23,6 +23,40 @@ def get_message_context(db: Session, ctx: Context, message_id: uuid.UUID) -> Mes
     return service.get_message_context(db, ctx, message_id)
 
 
+def has_internal_note_marker(
+    db: Session,
+    ctx: Context,
+    conversation_id: uuid.UUID,
+    marker: str,
+) -> bool:
+    """Scoped existence lookup using the thread index; never materializes message history.
+
+    Accepts historical notes as well as newly written ones. Marker matching escapes SQL LIKE metacharacters.
+    """
+    from sqlalchemy import select
+
+    from app.platform.crud import require_scoped
+
+    from .models import Conversation, Message
+
+    ctx.require("conversations.thread.read")
+    require_scoped(db, ctx, Conversation, conversation_id, "conversations.conversation_not_found")
+    return (
+        db.scalar(
+            select(Message.id)
+            .where(
+                Message.business_id == ctx.business_id,
+                Message.conversation_id == conversation_id,
+                Message.direction == "internal",
+                Message.author_kind == "assistant",
+                Message.body.endswith(marker, autoescape=True),
+            )
+            .limit(1)
+        )
+        is not None
+    )
+
+
 def send_reply(
     db: Session, ctx: Context, conversation_id: uuid.UUID, body: str, *, proposal_id: uuid.UUID | None = None
 ) -> MessageOut:
@@ -85,6 +119,7 @@ __all__ = [
     "count_open_by_status",
     "get_message_context",
     "get_thread",
+    "has_internal_note_marker",
     "issue_visitor_token",
     "limit_public_creation",
     "link_customer",

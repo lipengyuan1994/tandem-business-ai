@@ -6707,7 +6707,9 @@ export interface operations {
     summarize_conversation_api_v1_ai_conversations__id__summary_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
             path: {
                 id: string;
             };
@@ -6753,6 +6755,15 @@ export interface operations {
             };
             /** @description Conflict (version mismatch or business rule) */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Input exceeds the configured token estimate */
+            413: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6944,7 +6955,9 @@ export interface operations {
     send_copilot_message_api_v1_ai_copilot_threads__id__messages_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
             path: {
                 id: string;
             };
@@ -6985,6 +6998,15 @@ export interface operations {
             };
             /** @description Not found (also returned for records of another business) */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7105,7 +7127,9 @@ export interface operations {
     extract_procurement_reply_api_v1_ai_procurement_quote_requests__id__extract_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
             path: {
                 id: string;
             };
@@ -7155,6 +7179,15 @@ export interface operations {
             };
             /** @description Conflict (version mismatch or business rule) */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Input exceeds the configured token estimate */
+            413: {
                 headers: {
                     [name: string]: unknown;
                 };

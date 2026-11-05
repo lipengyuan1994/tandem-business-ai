@@ -51,6 +51,26 @@ def book(db: Session, ctx: Context, req: BookingRequest) -> AppointmentOut:
 
 
 def bind_hold(db: Session, ctx: Context, hold_id: uuid.UUID, proposal_id: uuid.UUID) -> None:
+    from sqlalchemy import select
+
+    from app.platform import clock
+    from app.platform.errors import Conflict
+
+    from .models import Appointment
+
+    ctx.require("scheduling.appointment.write")
+    # Read the scalar under a row lock: an ORM object loaded earlier in this session may be stale. The lock
+    # remains held while the service validates the state/proposal and binds, including idempotent bindings.
+    expires_at = db.scalar(
+        select(Appointment.hold_expires_at)
+        .where(
+            Appointment.business_id == ctx.business_id,
+            Appointment.id == hold_id,
+        )
+        .with_for_update()
+    )
+    if expires_at is None or expires_at <= clock.now():
+        raise Conflict("scheduling.hold_not_bindable")
     service.bind_hold(db, ctx, hold_id, proposal_id)
 
 

@@ -13,3 +13,6 @@ and bind its hold in the same caller-owned transaction.
 
 The `approvals.proposal_closed` subscriber releases bound holds for every outcome except `succeeded`.
 The existing expiry jobs continue to release expired holds.
+
+The public binding boundary also checks `hold_expires_at > now` under the hold's row lock. Expired holds cannot be
+bound, including before the expiry job runs and on repeated binding to the same proposal.

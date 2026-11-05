@@ -7,7 +7,6 @@ refer to them; it removes everything that identifies the person.
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
@@ -16,7 +15,7 @@ from app.platform import audit, clock
 from app.platform.context import Context
 from app.platform.crud import rows_affected
 from app.platform.errors import NotFound
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import ConsentRecord, ContactPoint, Customer, CustomerNote, CustomerTag, Tag, TimelineEntry
@@ -24,8 +23,11 @@ from .models import ConsentRecord, ContactPoint, Customer, CustomerNote, Custome
 TOMBSTONE = "Erased customer"
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    return dump_models(db, ctx, [Customer, ContactPoint, ConsentRecord, CustomerNote, Tag, CustomerTag, TimelineEntry])
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(
+        db, ctx, [Customer, ContactPoint, ConsentRecord, CustomerNote, Tag, CustomerTag, TimelineEntry]
+    )
+    return export_tables(tables, streaming=streaming)
 
 
 def erasure_target(db: Session, ctx: Context, customer_id: uuid.UUID) -> ErasureTarget:

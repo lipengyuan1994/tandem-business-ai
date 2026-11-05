@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 if TYPE_CHECKING:
     from app.platform.context import Context
+    from app.platform.export import ExportTables
 
 
 @dataclass(frozen=True)
@@ -99,6 +100,10 @@ class PublicBusinessResolver(Protocol):
     def __call__(self, slug: str) -> UUID | None: ...
 
 
+class ExportHandler(Protocol):
+    def __call__(self, db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables: ...
+
+
 @dataclass(frozen=True)
 class CronSpec:
     name: str
@@ -118,7 +123,7 @@ class Registry:
     session_resolver: SessionResolver | None = None
     public_business_resolver: PublicBusinessResolver | None = None
     # Data lifecycle (M18). Dicts keep insertion order = module registration order (dependencies first).
-    export_handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)  # (db, ctx) -> {table: rows}
+    export_handlers: dict[str, ExportHandler] = field(default_factory=dict)  # (db, ctx) -> {table: rows}
     erasure_handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)  # (db, ctx, target) -> {what: count}
     erasure_checks: dict[str, Callable[..., Any]] = field(
         default_factory=dict
@@ -165,9 +170,7 @@ class Registry:
         self._check()
         self.subscribers.setdefault(event_type, {})[subscriber] = handler
 
-    def add_export_handler(
-        self, module: str, handler: Callable[[Session, Context], dict[str, list[dict[str, Any]]]]
-    ) -> None:
+    def add_export_handler(self, module: str, handler: ExportHandler) -> None:
         self._check()
         self.export_handlers[module] = handler
 
@@ -211,7 +214,11 @@ class Registry:
         self.public_routes.add(path)
 
     def freeze(self) -> None:
-        self._frozen = True
+        from app.platform.retention import register
+
+        if not self._frozen:
+            register(self)
+            self._frozen = True
 
     @property
     def frozen(self) -> bool:

@@ -5,6 +5,7 @@ transient errors (contracts §6, architecture §8). Nothing ever falls back to a
 from __future__ import annotations
 
 import threading
+import time
 from typing import Any
 
 import structlog
@@ -14,6 +15,7 @@ from app.modules.org import public as org
 from app.platform.config import get_settings
 from app.platform.context import Context
 
+from ..model_calls import complete_attempt
 from ..schemas import Policy
 from ..settings import API_KEY_ENVS, ai_settings, api_key
 from .anthropic import AnthropicAdapter
@@ -23,6 +25,7 @@ from .routes import Limits, ModelClass, ProviderCfg, RouteEntry, RoutesFile, loa
 from .types import Adapter, ChatRequest, ChatResult, JsonMode, ProviderError
 
 log = structlog.get_logger(__name__)
+_monotonic = time.monotonic
 
 
 class PolicyBlocked(Exception):
@@ -86,10 +89,17 @@ class Router:
         if not entries:
             raise PolicyBlocked(model_class, policy)
         last: ProviderError | None = None
-        for entry in entries:
-            attempt = req.model_copy(update={"model": entry.model, "json_mode": json_mode_for(entry, req)})
+        started = _monotonic()
+        deadline = started + req.timeout_s
+        for index, entry in enumerate(entries):
+            remaining = deadline - (started if index == 0 else _monotonic())
+            if remaining <= 0:
+                raise ProviderError("timeout", "request deadline exceeded")
+            attempt = req.model_copy(
+                update={"model": entry.model, "json_mode": json_mode_for(entry, req), "timeout_s": remaining}
+            )
             try:
-                return self.adapters[entry.provider].chat(attempt), entry
+                result = complete_attempt(self.adapters[entry.provider], entry, attempt)
             except ProviderError as exc:
                 if not exc.transient:
                     raise
@@ -98,6 +108,10 @@ class Router:
                     kind=exc.kind,
                 )  # fmt: skip
                 last = exc
+                continue
+            if _monotonic() >= deadline:
+                raise ProviderError("timeout", "request deadline exceeded")
+            return result, entry
         raise ProviderError(
             "unavailable", f"all {len(entries)} route(s) failed", last.retry_after_s if last is not None else None
         )

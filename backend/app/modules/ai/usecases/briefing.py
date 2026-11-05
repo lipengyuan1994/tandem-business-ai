@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import uuid
@@ -15,7 +16,7 @@ from app.platform import clock
 from app.platform.context import Context
 from app.platform.db import transaction
 
-from ..agent.contexts import staff_ctx_factory
+from ..agent.contexts import staff_ctx_factory, staff_permissions
 from ..agent.prompts import load_prompt
 from ..agent.protocol import ContextBlock
 from ..gateway.router import Router
@@ -30,13 +31,22 @@ _NUMBER_WORD = re.compile(
     r"\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|"
     r"fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|"
     # Ordinals ("first", "second") are left out: they are ordinary words ("first thing", "wait a second").
-    r"hundred|thousand|million|billion|trillion)\b",
+    r"hundred|thousand|million|billion|trillion|dozens?|hal(?:f|ves)|quarters?|couple|pairs?|scores?|twice|thrice|double|triple|quadruple|fifths?|sixths?|sevenths?|eighths?|ninths?|tenths?)\b",
     re.IGNORECASE,
 )
 
 
+_PERCENT = re.compile(r"(?:[+-]?(?:\d+(?:\.\d+)?|\.\d+)|[a-z]+(?:[ -][a-z]+)*)\s*(?:%|per\s*cent\b|percent\b)", re.I)
+
+
 def validate_numbers(output: str, facts: str) -> None:
     """Reject numeric tokens or English number words absent from the exact facts supplied to the model."""
+
+    def percentages(text: str) -> set[str]:
+        return {re.sub(r"\s*(?:%|per\s*cent|percent)$", "%", p.lower()) for p in _PERCENT.findall(text)}
+
+    if not percentages(output) <= percentages(facts):
+        raise ValueError("Percentages must appear with their unit in the supplied facts.")
     if not set(_NUMBER.findall(output)) <= set(_NUMBER.findall(facts)) or not {
         w.lower() for w in _NUMBER_WORD.findall(output)
     } <= {w.lower() for w in _NUMBER_WORD.findall(facts)}:
@@ -53,7 +63,8 @@ def run(ctx: Context, *, router: Router | None = None) -> BriefingOut:
     assert ctx.business_id is not None and ctx.user_id is not None
     factory = staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "briefing")
     hour = clock.now().strftime("%Y-%m-%dT%H")
-    trigger_key = f"briefing:{ctx.user_id}:{hour}"
+    fingerprint = hashlib.sha256("\n".join(sorted(staff_permissions(ctx.permissions, "briefing"))).encode()).hexdigest()
+    trigger_key = f"briefing:{ctx.user_id}:{hour}:{fingerprint}"
     with transaction(ctx) as db:
         cached = db.scalar(select(AiRun).where(
             AiRun.business_id == ctx.business_id, AiRun.use_case == "briefing", AiRun.trigger_key == trigger_key,

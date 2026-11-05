@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import Session
@@ -11,14 +10,15 @@ from sqlalchemy.orm import Session
 from app.platform import clock
 from app.platform.context import Context
 from app.platform.crud import rows_affected
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import Appointment, AvailabilityException, AvailabilityRule, Resource, ResourceService
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    return dump_models(db, ctx, [Resource, ResourceService, AvailabilityRule, AvailabilityException, Appointment])
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(db, ctx, [Resource, ResourceService, AvailabilityRule, AvailabilityException, Appointment])
+    return export_tables(tables, streaming=streaming)
 
 
 def links(db: Session, ctx: Context, target: ErasureTarget) -> set[uuid.UUID]:

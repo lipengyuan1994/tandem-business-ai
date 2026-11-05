@@ -21,6 +21,15 @@ Public API (`db, ctx` first; caller owns the transaction):
   date first (ID breaks ties). An explicit `as_of` overrides today. DTOs include the bill-to email, version,
   days overdue and nullable `last_reminder_at`. Zero/negative limits return no rows.
 
+- `get_overdue_invoice(db, ctx, invoice_id, *, lock=False, as_of=None) -> OverdueInvoice | None`
+  requires `sales.document.read`; scoped indexed point read with the same business-local eligibility as the list.
+  With `lock=True`, holds the invoice row lock through the caller's transaction, including cooldown/version/pending
+  checks and proposal creation. Returns `None` for another business, a non-overdue invoice, or a non-invoice document.
+
+- `overdue_invoice_page(db, ctx, *, after: tuple[date, UUID] | None = None, limit=500) -> list[OverdueInvoice]`
+  requires `sales.document.read`; keyset-paginated overdue scan (max 500 per page), ordered by due date and ID.
+  Feed the final DTO's `(due_date, id)` back as `after`; scans need no inference or repeated full-list reloads.
+
 Manual payment follow-up (PR-01): `/invoices?overdue=true` filters before cursor pagination using the business-local
 date; status/customer filters still apply. `POST /invoices/{id}/reminders {body, version}` requires
 `sales.document.write` and the existing staff proposal-create permission, and returns a proposal reference

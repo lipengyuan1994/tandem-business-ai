@@ -10,3 +10,6 @@ returns `conversation_id`, `channel`, `author_kind`, `body`, `customer_id`, `vis
 
 Visitor contacts are server-side workflow context. This helper does not expose a new HTTP endpoint, write records,
 or invoke an inference service.
+
+`has_internal_note_marker(db, ctx, conversation_id, marker) -> bool` requires thread-read permission and checks an
+assistant internal-note suffix with a scoped, indexed thread query returning at most one id; it never loads history.

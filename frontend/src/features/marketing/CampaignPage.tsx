@@ -18,6 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { toastError } from "@/lib/errors"
 import { ApiProblem } from "@/lib/problem"
+import { useCampaignDraft } from "@/features/ai/api"
+import { CampaignDraftControl } from "./CampaignDraftControl"
 import { useAddRevision, useAudiencePreview, useCampaign, useCancelCampaign, useSubmitCampaign } from "./hooks"
 
 const REASONS = ["no_consent", "suppressed", "no_contact", "archived"] as const
@@ -25,13 +27,14 @@ const REASONS = ["no_consent", "suppressed", "no_contact", "archived"] as const
 export function CampaignPage() {
   const { t } = useTranslation()
   const { campaignId } = useParams({ from: "/app/marketing/$campaignId" })
-  const { businessTimeZone } = useSession()
+  const { businessTimeZone, permissions } = useSession()
   const campaign = useCampaign(campaignId)
   const [offset, setOffset] = useState(0)
   const preview = useAudiencePreview(campaign.data?.segment_id, offset)
   const addRevision = useAddRevision(campaignId)
   const submit = useSubmitCampaign(campaignId)
   const cancel = useCancelCampaign(campaignId)
+  const aiDraft = useCampaignDraft(campaignId)
   const [draft, setDraft] = useState<{ subject: string; body: string } | null>(null)
   const [confirmEdit, setConfirmEdit] = useState(false)
   const [blocked, setBlocked] = useState<string | null>(null)
@@ -44,7 +47,8 @@ export function CampaignPage() {
   const editable = c.status === "draft" || c.status === "in_review"
   const subject = draft?.subject ?? current?.subject ?? ""
   const body = draft?.body ?? current?.body_markdown ?? ""
-  const changed = draft !== null && (draft.subject !== current?.subject || draft.body !== current?.body_markdown)
+  const changed = draft !== null && (draft.subject !== (current?.subject ?? "") || draft.body !== (current?.body_markdown ?? ""))
+  const busy = aiDraft.isPending || addRevision.isPending || submit.isPending || cancel.isPending
   const saveRevision = () => addRevision.mutate({ subject, body_markdown: body }, { onSuccess: () => { setDraft(null); setConfirmEdit(false) }, onError: (e) => toastError(e) })
 
   return (
@@ -69,17 +73,22 @@ export function CampaignPage() {
           <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (c.status === "in_review") setConfirmEdit(true); else saveRevision() }}>
             <div className="space-y-1">
               <Label htmlFor="cp-subject">{t("marketing.fields.subject")}</Label>
-              <Input id="cp-subject" value={subject} disabled={!editable} maxLength={200} onChange={(e) => setDraft({ subject: e.target.value, body })} />
+              <Input id="cp-subject" value={subject} disabled={!editable || aiDraft.isPending} maxLength={200} onChange={(e) => setDraft({ subject: e.target.value, body })} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="cp-body">{t("marketing.fields.body")}</Label>
-              <Textarea id="cp-body" rows={8} value={body} disabled={!editable} onChange={(e) => setDraft({ subject, body: e.target.value })} />
+              <Textarea id="cp-body" rows={8} value={body} disabled={!editable || aiDraft.isPending} onChange={(e) => setDraft({ subject, body: e.target.value })} />
             </div>
             <PermissionGate permission="marketing.campaign.write">
               {editable ? <p className="text-sm text-muted-foreground">{changed ? t("marketing.saveFirst") : t("marketing.editHint")}</p> : null}
-              {editable ? <Button type="submit" variant="outline" disabled={!changed || addRevision.isPending}>{t("marketing.saveRevision")}</Button> : null}
+              {editable ? <Button type="submit" variant="outline" disabled={!changed || busy}>{t("marketing.saveRevision")}</Button> : null}
             </PermissionGate>
           </form>
+          {editable && permissions.has("marketing.campaign.write") && permissions.has("ai.assistant.use") ? (
+            <CampaignDraftControl key={campaignId} purpose={c.purpose} inReview={c.status === "in_review"} changed={changed} busy={busy}
+              pending={aiDraft.isPending} error={aiDraft.error} saved={aiDraft.isSuccess}
+              onDraft={(purpose) => aiDraft.mutate({ purpose }, { onSuccess: () => setDraft(null) })} />
+          ) : null}
           <Card>
             <CardHeader><CardTitle className="text-sm">{t("marketing.previewOfMessage")}</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
@@ -124,13 +133,13 @@ export function CampaignPage() {
           <PermissionGate permission="marketing.campaign.write">
             <div className="flex flex-col gap-2">
               {c.status === "draft" ? (
-                <Button disabled={submit.isPending || preview.isFetching || !!preview.error || changed || (preview.data?.eligible_count ?? 0) === 0}
+                <Button disabled={busy || preview.isFetching || !!preview.error || changed || (preview.data?.eligible_count ?? 0) === 0}
                   onClick={() => submit.mutate(undefined, { onError: (e) => (e instanceof ApiProblem && e.code === "marketing.no_eligible_recipients" ? setBlocked(t("marketing.noRecipients")) : toastError(e)) })}>
                   {t("marketing.submit")}
                 </Button>
               ) : null}
               {c.status === "draft" ? <p className="text-sm text-muted-foreground">{preview.error || preview.isFetching ? t("marketing.previewRequired") : changed ? t("marketing.saveFirst") : !preview.data?.eligible_count ? t("marketing.noRecipients") : null}</p> : null}
-              {editable ? <Button variant="ghost" onClick={() => cancel.mutate(undefined, { onError: (e) => toastError(e) })}>{t("marketing.cancel")}</Button> : null}
+              {editable ? <Button variant="ghost" disabled={busy} onClick={() => cancel.mutate(undefined, { onError: (e) => toastError(e) })}>{t("marketing.cancel")}</Button> : null}
             </div>
           </PermissionGate>
         </aside>

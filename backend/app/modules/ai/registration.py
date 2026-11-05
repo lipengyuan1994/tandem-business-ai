@@ -20,9 +20,11 @@ def register(reg: Registry) -> None:
     reg.add_job("ai.procurement_request_quotes", jobs.procurement_request_quotes_job, transactional=False)
     reg.add_job("ai.procurement_compare", jobs.procurement_compare_job, transactional=False)
     reg.add_job("ai.procurement_scan", jobs.procurement_scan_job, transactional=False)
+    reg.add_job("ai.procurement_followup", jobs.procurement_followup_job, transactional=False)
     reg.add_cron("ai-procurement-scan", "ai.procurement_scan", every_seconds=3600, per_business=True)
     reg.add_job("ai.assistant_retention", jobs.assistant_retention_job, transactional=False)
     reg.add_cron("ai-assistant-retention", "ai.assistant_retention", every_seconds=86400, per_business=True)
+    reg.add_job("ai.payment_followup", jobs.payment_followup_job, transactional=False)
     reg.add_job("ai.payment_followup_scan", jobs.payment_followup_scan_job, transactional=False)
     reg.add_cron("ai-payment-followup-scan", "ai.payment_followup_scan", every_seconds=86400, per_business=True)
     check_routes_at_startup()  # APP_ENV=prod refuses a route file with a `fake` provider

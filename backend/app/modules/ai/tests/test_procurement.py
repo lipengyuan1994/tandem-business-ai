@@ -23,7 +23,7 @@ from app.modules.ai.tests.tool_helpers import Demo, assistant, seed_demo
 from app.modules.ai.usecases import procurement as p
 from app.modules.identity.testing import login_as
 from app.modules.purchasing import public as purchasing
-from app.platform import clock
+from app.platform import clock, jobs
 from app.platform.db import transaction
 from app.platform.errors import Invalid, NotFound
 from app.platform.registry import Registry, set_registry
@@ -81,6 +81,29 @@ def extract(demo: Demo, value: dict[str, Any], source: str, supplier: uuid.UUID 
         p.ExtractIn(supplier_id=supplier or request(demo).suppliers[0].supplier_id, text=source),
         router=fake_router_by_class(fast_extract=gw),
     )
+
+
+def run_followup_jobs(demo: Demo, owner_engine: Engine, registry: Registry, router: Router) -> None:
+    """Claim only ready procurement target jobs and exercise the real non-transactional worker handler."""
+    with owner_engine.begin() as db:
+        queued = (
+            db.execute(
+                text(
+                    "update jobs set status='running',attempts=attempts+1,locked_by='procurement-test' "
+                    "where business_id=:b and kind='ai.procurement_followup' and status='queued' and run_at<=:at "
+                    "returning *"
+                ),
+                {"b": demo.business, "at": clock.now()},
+            )
+            .mappings()
+            .all()
+        )
+    set_router_for_tests(router)
+    try:
+        for job in queued:
+            assert jobs.run_job(registry, dict(job))
+    finally:
+        reset_router_cache()
 
 
 def quote_script(
@@ -291,25 +314,30 @@ def test_compare_runs_when_all_answered_or_deadline(demo: Demo, registry: Regist
     assert not registry.jobs["ai.procurement_scan"].transactional
 
 
-def test_followup_once_per_three_days(demo: Demo, owner_engine: Engine) -> None:
+def test_followup_once_per_three_days(demo: Demo, owner_engine: Engine, registry: Registry) -> None:
     gw = FakeGateway(lambda _: '{"body":"Please send an update. Thank you."}')
     router = fake_router_by_class(writer=gw)
     p.scan(demo.business, router=router)
+    assert not rows(owner_engine, demo.business, "send_supplier_followup")
+    run_followup_jobs(demo, owner_engine, registry, router)
     first = len(rows(owner_engine, demo.business, "send_supplier_followup"))
     assert first > 0
     p.scan(demo.business, router=router)
+    run_followup_jobs(demo, owner_engine, registry, router)
     assert len(rows(owner_engine, demo.business, "send_supplier_followup")) == first
     start = clock.now()
     at = start + timedelta(days=2, hours=23, minutes=59)
     clock.set_clock(lambda: at)
     p.scan(demo.business, router=router)
+    run_followup_jobs(demo, owner_engine, registry, router)
     assert len(rows(owner_engine, demo.business, "send_supplier_followup")) == first
     at = start + timedelta(days=3)
     p.scan(demo.business, router=router)
+    run_followup_jobs(demo, owner_engine, registry, router)
     assert len(rows(owner_engine, demo.business, "send_supplier_followup")) > first
 
 
-def test_every_step_is_a_proposal_needing_approval(demo: Demo, owner_engine: Engine) -> None:
+def test_every_step_is_a_proposal_needing_approval(demo: Demo, owner_engine: Engine, registry: Registry) -> None:
     extract(demo, extract_value(demo), "USD 11.40; 3 days.")
     p.request_quotes(demo.items["Cable set"], demo.business, router=fake_router_by_class(agent=quote_script(demo)))
     top = comparison(demo).ranked[0]
@@ -320,8 +348,12 @@ def test_every_step_is_a_proposal_needing_approval(demo: Demo, owner_engine: Eng
             writer=FakeGateway([json.dumps({"quote_id": str(top.quote_id), "explanation": "Best overall score."})])
         ),
     )
-    p.scan(
-        demo.business, router=fake_router_by_class(writer=FakeGateway(lambda _: '{"body":"Please send an update."}'))
+    p.scan(demo.business)
+    run_followup_jobs(
+        demo,
+        owner_engine,
+        registry,
+        fake_router_by_class(writer=FakeGateway(lambda _: '{"body":"Please send an update."}')),
     )
     for action in ["record_supplier_quote", "send_quote_requests", "create_po_from_quote", "send_supplier_followup"]:
         proposed = rows(owner_engine, demo.business, action)
@@ -356,10 +388,20 @@ def test_request_quotes_endpoint_shape_and_permissions(demo: Demo, registry: Reg
     assert denied.post(f"/api/v1/ai/procurement/items/{demo.items['Cable set']}/request-quotes").status_code == 403
 
 
-@pytest.mark.parametrize("source", ["USD 11.40. Lead time 3.", "USD -11.40; lead time 3 days."])
-def test_extract_number_boundaries_and_sign(demo: Demo, source: str) -> None:
+@pytest.mark.parametrize(
+    ("source", "verified"),
+    [
+        ("USD 11.40. Lead time 3.", False),
+        ("USD 11.40. Lead time 3 days.", True),
+        ("USD -11.40; lead time 3 days.", False),
+    ],
+)
+def test_extract_number_boundaries_and_sign(demo: Demo, source: str, verified: bool) -> None:
     out = extract(demo, extract_value(demo), source)
-    assert out.verified is ("-11.40" not in source)
+    assert out.verified is verified
+    if "days" not in source:
+        assert out.extract.lines[0].unit_price == "11.40"
+        assert "lead_time_days" in out.unverified_fields and out.proposal_id is None
     if "-11.40" in source:
         assert out.extract.lines[0].unit_price is None and out.proposal_id is None
 
@@ -520,7 +562,9 @@ def test_followup_concurrent_scans_create_only_one_proposal(demo: Demo, owner_en
     assert len(rows(owner_engine, demo.business, "send_supplier_followup")) == 1
 
 
-def test_procurement_model_calls_hold_no_database_transaction(demo: Demo) -> None:
+def test_procurement_model_calls_hold_no_database_transaction(
+    demo: Demo, owner_engine: Engine, registry: Registry
+) -> None:
     from sqlalchemy import event
 
     from app.platform.db import get_engine
@@ -567,9 +611,12 @@ def test_procurement_model_calls_hold_no_database_transaction(demo: Demo) -> Non
                 )
             ),
         )
-        p.scan(
-            demo.business,
-            router=fake_router_by_class(writer=FakeGateway(lambda _: respond('{"body":"Please send an update."}'))),
+        p.scan(demo.business)
+        run_followup_jobs(
+            demo,
+            owner_engine,
+            registry,
+            fake_router_by_class(writer=FakeGateway(lambda _: respond('{"body":"Please send an update."}'))),
         )
     finally:
         event.remove(engine, "begin", begin)

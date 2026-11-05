@@ -10901,6 +10901,24 @@
               "title": "Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
           }
         ],
         "responses": {
@@ -10937,6 +10955,12 @@
               "application/problem+json": {}
             },
             "description": "Conflict (version mismatch or business rule)"
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Input exceeds the configured token estimate"
           },
           "422": {
             "content": {
@@ -11125,6 +11149,24 @@
               "title": "Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
           }
         ],
         "requestBody": {
@@ -11161,6 +11203,12 @@
               "application/problem+json": {}
             },
             "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
           },
           "422": {
             "content": {
@@ -11273,6 +11321,24 @@
               "title": "Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
           }
         ],
         "requestBody": {
@@ -11319,6 +11385,12 @@
               "application/problem+json": {}
             },
             "description": "Conflict (version mismatch or business rule)"
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Input exceeds the configured token estimate"
           },
           "422": {
             "content": {

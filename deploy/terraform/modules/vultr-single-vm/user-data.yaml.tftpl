@@ -1,6 +1,7 @@
 #cloud-config
 # First-boot setup for one SMB Operations VM (docs/roadmap/10-vultr-infrastructure.md#terraform-module). No secrets:
 # the application files, .env and registry login are uploaded later over SSH by deploy/scripts/install.sh.
+ssh_pwauth: false
 package_update: true
 package_upgrade: true
 packages:
@@ -10,6 +11,8 @@ packages:
   - jq
   - ufw
   - unattended-upgrades
+  - python3
+  - systemd-timesyncd
 
 users:
   - default
@@ -21,6 +24,48 @@ users:
       - ${ssh_public_key}
 
 write_files:
+  # First SSH drop-in wins over distribution/cloud defaults. Root remains key-only for provider recovery.
+  - path: /etc/ssh/sshd_config.d/00-smb.conf
+    permissions: "0644"
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PermitRootLogin prohibit-password
+  - path: /etc/systemd/journald.conf.d/60-smb.conf
+    permissions: "0644"
+    content: |
+      [Journal]
+      SystemMaxUse=256M
+      RuntimeMaxUse=64M
+      SystemKeepFree=1G
+      MaxRetentionSec=14day
+  - path: /etc/systemd/system/smb-watchdog.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=SMB host watchdog
+      After=network-online.target docker.service
+      ConditionPathExists=/opt/smb/watchdog.sh
+
+      [Service]
+      Type=oneshot
+      ExecStart=/opt/smb/watchdog.sh
+      TimeoutStartSec=240
+      UMask=0077
+  - path: /etc/systemd/system/smb-watchdog.timer
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Check SMB operations every five minutes
+
+      [Timer]
+      OnBootSec=5min
+      OnCalendar=*-*-* *:00/5:00
+      Persistent=true
+      AccuracySec=15s
+
+      [Install]
+      WantedBy=timers.target
   - path: /etc/apt/apt.conf.d/20auto-upgrades
     permissions: "0644"
     content: |
@@ -64,11 +109,20 @@ runcmd:
   # real control is that only the caddy container publishes ports.
   - ufw default deny incoming
   - ufw default allow outgoing
-  - ufw allow 22/tcp
+%{ for cidr in admin_cidrs ~}
+  - ufw allow from ${cidr} to any port 22 proto tcp
+%{ endfor ~}
   - ufw allow 80/tcp
   - ufw allow 443/tcp
   - ufw --force enable
+  - sshd -t
+  - systemctl reload ssh
+  - systemctl restart systemd-journald
+  - systemctl enable --now systemd-timesyncd
+  - timedatectl set-ntp true
+  - bash -c 'for i in $(seq 1 30); do [ "$(timedatectl show --property=NTPSynchronized --value)" = yes ] && exit 0; sleep 2; done; exit 1'
   - systemctl daemon-reload
+  - systemctl enable --now smb-watchdog.timer
   - systemctl enable smb.service
   - systemctl restart docker
   # Last: the installer waits for this file.

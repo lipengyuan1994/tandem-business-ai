@@ -9,7 +9,10 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
+from app.modules.scheduling import public as scheduling
+from app.platform import clock
 from app.platform.canonical import to_jsonable
 from app.platform.context import Context
 from app.platform.db import transaction
@@ -45,6 +48,34 @@ def tool_catalog(names: list[str]) -> list[dict[str, Any]]:
         {"name": t.name, "description": t.description, "arguments": t.args_model.model_json_schema()}
         for t in (get_tool(n) for n in names)
     ]
+
+
+# Additional permissions for data looked up by action tools. Keep this check in the executor as well as the
+# model catalogue: a guessed tool name and an idempotent replay must obey the same authorization rules.
+_LOOKUP_PERMISSIONS: dict[str, tuple[str, ...]] = {
+    "hold_slot": ("crm.customer.read", "catalog.item.read", "scheduling.appointment.read"),
+    "propose_booking": (
+        "scheduling.appointment.read",
+        "catalog.item.read",
+        "crm.customer.read",
+        "conversations.thread.read",
+    ),
+    "propose_reply": ("conversations.thread.read",),
+    "propose_reorder": ("inventory.stock.read",),
+    "propose_payment_reminder": ("sales.document.read",),
+    "propose_quote_request": ("purchasing.po.read", "inventory.stock.read"),
+    "propose_supplier_quote": ("purchasing.po.read",),
+    "propose_po_from_quote": ("purchasing.po.read",),
+    "propose_supplier_followup": ("purchasing.po.read",),
+}
+
+
+def required_permissions(tool: Tool) -> tuple[str, ...]:
+    return (tool.permission, *_LOOKUP_PERMISSIONS.get(tool.name, ()))
+
+
+def authorized_tools(ctx: Context, names: list[str]) -> list[str]:
+    return [name for name in names if name in _TOOLS and all(ctx.has(p) for p in required_permissions(_TOOLS[name]))]
 
 
 # ------------------------------------------------------------------------------------------- observations
@@ -122,8 +153,9 @@ def execute_tool(
     if name not in allowed or name not in _TOOLS:
         return error_observation("ai.tool_not_allowed", name)
     tool = _TOOLS[name]
-    if not ctx.has(tool.permission):
-        return error_observation("auth.permission_denied", tool.permission)
+    for permission in required_permissions(tool):
+        if not ctx.has(permission):
+            return error_observation("auth.permission_denied", permission)
     try:
         args = tool.args_model.model_validate(raw_args)
     except ValidationError as exc:
@@ -138,30 +170,95 @@ def execute_tool(
     return _execute_effect(ctx, tool, args, state)
 
 
+def _intake_claim_key(tool: Tool, state: RunState) -> str | None:
+    if tool.name not in {"propose_booking", "propose_reply"} or not state.trigger_key.startswith("intake:"):
+        return None
+    return effects.effect_key("intake_outcome", {}, trigger_key=state.trigger_key)
+
+
+def _live_hold(db: Session, ctx: Context, ref_id: uuid.UUID) -> bool:
+    try:
+        hold = scheduling.get_appointment(db, ctx, ref_id)
+    except DomainError:
+        return False
+    return hold.status == "held" and hold.hold_expires_at is not None and hold.hold_expires_at > clock.now()
+
+
+def _hold_key(
+    db: Session,
+    ctx: Context,
+    tool: Tool,
+    args: BaseModel,
+    state: RunState,
+    key: str,
+) -> tuple[str, effects.EffectRecord | None, bool]:
+    recorded = effects.find_effect(db, ctx, key)
+    while recorded is not None and tool.kind == "hold" and not _live_hold(db, ctx, recorded.ref_id):
+        # Expiry must be an observation, never a successful replay. Remember that observation in this run only;
+        # a restarted run will observe it once again before it can reacquire the slot.
+        if not state.holds.get(recorded.ref_id, {}).get("expired"):
+            state.holds[recorded.ref_id] = {"expired": True}
+            return key, recorded, True
+        key = effects.effect_key(f"{tool.name}:after:{recorded.ref_id}", args, trigger_key=state.trigger_key)
+        recorded = effects.find_effect(db, ctx, key)
+    return key, recorded, False
+
+
 def _execute_effect(ctx: Context, tool: Tool, args: BaseModel, state: RunState) -> dict[str, Any]:
     key = effects.effect_key(tool.name, args, trigger_key=state.trigger_key)
+    claim = _intake_claim_key(tool, state)
     if tool.kind == "propose" and key in state.proposals:
         return ok_observation({"proposal_id": state.proposals[key], "replayed": True})
     try:
         with transaction(ctx) as db:
-            recorded = effects.find_effect(db, ctx, key)
+            key, recorded, expired = _hold_key(db, ctx, tool, args, state, key)
+            if expired:
+                return error_observation("ai.hold_expired", "The hold expired or was released; call hold_slot again.")
             if recorded is not None:
                 return _replay(tool, args, state, recorded)
+            if claim is not None and any(
+                effect.kind == "proposal" for effect in effects.effects_for_trigger(db, ctx, state.trigger_key)
+            ):
+                # Also recognize effects created before shared claims were introduced. Exact retries already
+                # replayed above; a different proposal is refused regardless of the old proposal's status.
+                return error_observation("ai.intake_outcome_exists", "This inbound message already has a proposal.")
             data = tool.run(db, ctx, args, state)
             ref_id = uuid.UUID(str(data[_REF_FIELD[tool.kind]]))
             effects.record_effect(
-                db, ctx, run_id=state.run_id, trigger_key=state.trigger_key, effect_key=key,
-                kind=_EFFECT_KIND[tool.kind], ref_id=ref_id,
-            )  # fmt: skip
+                db,
+                ctx,
+                run_id=state.run_id,
+                trigger_key=state.trigger_key,
+                effect_key=key,
+                kind=_EFFECT_KIND[tool.kind],
+                ref_id=ref_id,
+            )
+            if claim is not None:
+                # A shared unique key for booking OR reply, in the proposal transaction. Losing concurrent
+                # transactions roll back the proposal, binding and normal effect together.
+                effects.record_effect(
+                    db,
+                    ctx,
+                    run_id=state.run_id,
+                    trigger_key=state.trigger_key,
+                    effect_key=claim,
+                    kind="proposal",
+                    ref_id=ref_id,
+                )
     except DomainError as exc:
         return error_observation(exc.code, exc.detail)
     except IntegrityError:
-        # Another attempt recorded the same effect first; this transaction (and its hold or proposal) rolled back.
+        # The losing transaction is rolled back before inspecting the winner's committed effects.
         with transaction(ctx) as db:
             recorded = effects.find_effect(db, ctx, key)
-        if recorded is None:
-            raise
-        return _replay(tool, args, state, recorded)
+            if recorded is not None:
+                if tool.kind == "hold" and not _live_hold(db, ctx, recorded.ref_id):
+                    state.holds[recorded.ref_id] = {"expired": True}
+                    return error_observation("ai.hold_expired", "The hold expired or was released; hold again.")
+                return _replay(tool, args, state, recorded)
+            if claim is not None and effects.find_effect(db, ctx, claim) is not None:
+                return error_observation("ai.intake_outcome_exists", "This inbound message already has a proposal.")
+        raise
     _remember(tool, args, state, key, ref_id)
     return ok_observation(data)
 

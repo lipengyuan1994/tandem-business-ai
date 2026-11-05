@@ -6,21 +6,21 @@ import asyncio
 import threading
 import uuid
 from collections.abc import AsyncGenerator, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Literal
 
 import structlog
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 from starlette.types import Receive, Scope, Send
 
 from app.platform import clock, ratelimit
 from app.platform.context import Context
 from app.platform.db import transaction
-from app.platform.errors import NotFound, Unauthenticated
+from app.platform.errors import Conflict, NotFound, RateLimited, Unauthenticated
 
 from .. import recording
 from ..agent.contexts import staff_ctx_factory, staff_permissions
@@ -30,11 +30,13 @@ from ..agent.runner import StopRun, run_agent
 from ..gateway.router import Router, load_router
 from ..gateway.routes import ModelClass, RouteEntry
 from ..gateway.types import ChatRequest, ChatResult
-from ..models import AssistantMessage, AssistantThread
+from ..models import AiRun, AssistantMessage, AssistantThread
 from ..schemas import Policy
-from ..tools.registry import get_tool
+from ..tools.registry import authorized_tools
+from .summary import Operation, claim_operation
 
 log = structlog.get_logger(__name__)
+_GENERATION_SLOTS = threading.BoundedSemaphore(4)
 
 # Every read tool, plus only the five U2 action tools. This is also the single source of staff-facing step text.
 STATUS_TEXT = {
@@ -97,12 +99,13 @@ def _staff(ctx: Context) -> tuple[uuid.UUID, uuid.UUID]:
     return ctx.business_id, ctx.user_id
 
 
-def _owned(db: Session, ctx: Context, thread_id: uuid.UUID) -> AssistantThread:
+def _owned(db: Session, ctx: Context, thread_id: uuid.UUID, *, lock: bool = False) -> AssistantThread:
     business_id, user_id = _staff(ctx)
-    thread = db.scalar(select(AssistantThread).where(
+    stmt = select(AssistantThread).where(
         AssistantThread.business_id == business_id, AssistantThread.user_id == user_id,
         AssistantThread.id == thread_id,
-    ))  # fmt: skip
+    )  # fmt: skip
+    thread = db.scalar(stmt.with_for_update() if lock else stmt)
     if thread is None:
         raise NotFound("ai.thread_not_found")
     return thread
@@ -138,44 +141,114 @@ def get_thread(ctx: Context, thread_id: uuid.UUID) -> CopilotThreadDetailOut:
         )
 
 
+def _next_message_time(db: Session, thread_id: uuid.UUID) -> datetime:
+    latest = db.scalar(select(func.max(AssistantMessage.created_at)).where(AssistantMessage.thread_id == thread_id))
+    return max(clock.now(), latest + timedelta(microseconds=1)) if latest is not None else clock.now()
+
+
 @dataclass(frozen=True)
 class PreparedMessage:
     ctx: Context
     thread_id: uuid.UUID
     spec: RunSpec
+    operation_id: uuid.UUID
+    replay: StepEvent | None = None
+    capacity: threading.BoundedSemaphore | None = None
+    released: threading.Event = field(default_factory=threading.Event)
+    release_lock: threading.Lock = field(default_factory=threading.Lock)
 
 
-def prepare_message(ctx: Context, thread_id: uuid.UUID, body: MessageCreate) -> PreparedMessage:
+def prepare_message(
+    ctx: Context, thread_id: uuid.UUID, body: MessageCreate, idempotency_key: str | None = None
+) -> PreparedMessage:
     """Ownership, validation and rate-limit errors happen before the HTTP stream starts."""
-    _staff(ctx)
+    business_id, user_id = _staff(ctx)
     prompt = load_prompt("copilot", 1)
     permissions = staff_permissions(ctx.permissions, "copilot")
-    tools = [name for name in STATUS_TEXT if get_tool(name).permission in permissions]
-    with transaction(ctx) as db:
-        thread = _owned(db, ctx, thread_id)
-        ratelimit.hit(db, f"ai:copilot:{ctx.user_id}", limit=30, window_seconds=3600)
-        message = AssistantMessage(
-            business_id=ctx.business_id, thread_id=thread_id, role="user", content=body.content,
-            created_at=clock.now(),
-        )  # fmt: skip
-        db.add(message)
-        thread.updated_at = clock.now()
-        db.flush()
-        recent = list(db.scalars(select(AssistantMessage).where(
-            AssistantMessage.business_id == ctx.business_id, AssistantMessage.thread_id == thread_id,
-        ).order_by(AssistantMessage.created_at.desc(), AssistantMessage.id.desc()).limit(10)))  # fmt: skip
-        blocks = [
-            # Model replies can quote customer/supplier tool data. Replaying them as trusted history would
-            # upgrade those instructions on the next staff turn. Only authenticated staff text is trusted.
-            ContextBlock(label=f"{m.role} message", source_id=m.id, text=m.content, untrusted=m.role == "assistant")
-            for m in reversed(recent)
-        ]
-        spec = RunSpec(
-            use_case="copilot", prompt=prompt, tools=tools,
-            task="Answer the latest staff message using the available tools and the thread history.",
-            context_blocks=blocks, trigger_type="api", trigger_key=f"copilot:{message.id}",
-        )  # fmt: skip
-    return PreparedMessage(ctx=ctx, thread_id=thread_id, spec=spec)
+    tools = authorized_tools(
+        staff_ctx_factory(business_id, user_id, permissions, "copilot")(uuid.uuid4()), list(STATUS_TEXT)
+    )
+    acquired = False
+    try:
+        with transaction(ctx) as db:
+            thread = _owned(db, ctx, thread_id, lock=True)
+            op = claim_operation(db, ctx, "copilot", thread_id, idempotency_key or str(uuid.uuid4()), body.model_dump())
+            replay = None
+            if op.status in {"succeeded", "failed"}:
+                run = db.get(AiRun, op.run_id) if op.run_id is not None else None
+                if run is None:
+                    raise Conflict(
+                        "ai.operation_interrupted",
+                        "This turn stopped before generation started.",
+                        operation_id=str(op.id),
+                    )
+                else:
+                    replay = StepEvent(
+                        kind="final" if op.status == "succeeded" else "error",
+                        run_id=run.id,
+                        text=run.result.get("text") if op.status == "succeeded" else None,
+                        error_code=run.error_code,
+                    )
+            elif (
+                db.scalar(
+                    select(Operation.id)
+                    .where(
+                        Operation.business_id == ctx.business_id,
+                        Operation.kind == "copilot",
+                        Operation.resource_id == thread_id,
+                        Operation.status == "active",
+                    )
+                    .limit(1)
+                )
+                is not None
+            ):
+                raise Conflict(
+                    "ai.thread_busy", "An answer is already being generated for this thread.", operation_id=str(op.id)
+                )
+            if replay is None:
+                ratelimit.hit(db, f"ai:copilot:{ctx.user_id}", limit=30, window_seconds=3600)
+                if not _GENERATION_SLOTS.acquire(blocking=False):
+                    raise RateLimited("ai.copilot_busy", retry_after_seconds=1)
+                acquired = True
+                op.status = "active"
+                message = AssistantMessage(
+                    business_id=ctx.business_id,
+                    thread_id=thread_id,
+                    role="user",
+                    content=body.content,
+                    created_at=_next_message_time(db, thread_id),
+                )
+                db.add(message)
+                thread.updated_at = clock.now()
+                db.flush()
+                op.message_id = message.id
+            message_id, operation_id = op.message_id, op.id
+            recent = list(db.scalars(select(AssistantMessage).where(
+                AssistantMessage.business_id == ctx.business_id, AssistantMessage.thread_id == thread_id,
+            ).order_by(AssistantMessage.created_at.desc(), AssistantMessage.id.desc()).limit(10)))  # fmt: skip
+            blocks = [
+                # Model replies can quote customer/supplier tool data. Replaying them as trusted history would
+                # upgrade those instructions on the next staff turn. Only authenticated staff text is trusted.
+                ContextBlock(label=f"{m.role} message", source_id=m.id, text=m.content, untrusted=m.role == "assistant")
+                for m in reversed(recent)
+            ]
+            spec = RunSpec(
+                use_case="copilot", prompt=prompt, tools=tools,
+                task="Answer the latest staff message using the available tools and the thread history.",
+                context_blocks=blocks, trigger_type="api", trigger_key=f"copilot:{message_id}",
+            )  # fmt: skip
+    except BaseException:
+        if acquired:
+            _GENERATION_SLOTS.release()
+        raise
+    return PreparedMessage(
+        ctx=ctx,
+        thread_id=thread_id,
+        spec=spec,
+        operation_id=operation_id,
+        replay=replay,
+        capacity=_GENERATION_SLOTS if acquired else None,
+    )
 
 
 class _DisconnectRouter(Router):
@@ -193,7 +266,30 @@ class _DisconnectRouter(Router):
 
 
 def run_message(prepared: PreparedMessage, emit: Callable[[StepEvent], None], stopped: threading.Event) -> None:
+    try:
+        _run_message(prepared, emit, stopped)
+    finally:
+        release_generation(prepared)
+
+
+def release_generation(prepared: PreparedMessage) -> None:
+    with prepared.release_lock:
+        if prepared.released.is_set() or prepared.capacity is None:
+            return
+        prepared.released.set()
+        try:
+            with transaction(prepared.ctx) as db:
+                op = db.scalar(select(Operation).where(Operation.id == prepared.operation_id).with_for_update())
+                if op is not None and op.status == "active":
+                    op.status = "failed"
+        finally:
+            prepared.capacity.release()
+
+
+def _run_message(prepared: PreparedMessage, emit: Callable[[StepEvent], None], stopped: threading.Event) -> None:
     """Worker only. Buffer the terminal event until the final message has committed."""
+    if stopped.is_set():
+        return
     business_id, user_id = _staff(prepared.ctx)
     factory = staff_ctx_factory(business_id, user_id, prepared.ctx.permissions, "copilot")
     run_ctx: Context | None = None
@@ -225,9 +321,17 @@ def run_message(prepared: PreparedMessage, emit: Callable[[StepEvent], None], st
                 db.add(AssistantMessage(
                     business_id=business_id, thread_id=prepared.thread_id, role="assistant",
                     content=result.final.message_to_staff, run_id=result.run_id, proposal_ids=result.proposal_ids,
-                    created_at=clock.now(),
+                    created_at=_next_message_time(db, prepared.thread_id),
                 ))  # fmt: skip
                 thread.updated_at = clock.now()
+                operation = db.get(Operation, prepared.operation_id)
+                assert operation is not None
+                operation.status, operation.run_id = "succeeded", result.run_id
+        with transaction(prepared.ctx) as db:
+            op = db.get(Operation, prepared.operation_id)
+            assert op is not None
+            op.status = "succeeded" if result.status == "succeeded" else "failed"
+            op.run_id = result.run_id
         if terminal is not None:
             emit(terminal)
     except Exception:
@@ -235,6 +339,10 @@ def run_message(prepared: PreparedMessage, emit: Callable[[StepEvent], None], st
         log.warning("ai_copilot_interrupted", run_id=str(run_ctx.ai_run_id) if run_ctx else None)
         if run_ctx is not None and run_ctx.ai_run_id is not None:
             recording.close_run(run_ctx, run_ctx.ai_run_id, "failed", error_code="ai.interrupted")
+            with transaction(prepared.ctx) as db:
+                op = db.get(Operation, prepared.operation_id)
+                assert op is not None
+                op.run_id = run_ctx.ai_run_id
             emit(StepEvent(kind="error", run_id=run_ctx.ai_run_id, error_code="ai.interrupted"))
         else:
             raise
@@ -242,18 +350,30 @@ def run_message(prepared: PreparedMessage, emit: Callable[[StepEvent], None], st
 
 async def stream_message(prepared: PreparedMessage) -> AsyncGenerator[str]:
     """A cancelled/disconnected StreamingResponse sets the worker's stop flag without waiting on inference."""
+    if prepared is not None and prepared.replay is not None:
+        replay = prepared.replay
+        yield f"event: {replay.kind}\ndata: {replay.model_dump_json()}\n\n"
+        return
     loop = asyncio.get_running_loop()
     queue: asyncio.Queue[StepEvent | None] = asyncio.Queue()
     stopped = threading.Event()
+    started = threading.Event()
+    ownership = threading.Lock()
 
     def put(event: StepEvent | None) -> None:
         if not stopped.is_set():
             loop.call_soon_threadsafe(queue.put_nowait, event)
 
     def worker() -> None:
+        with ownership:
+            if stopped.is_set():
+                return
+            started.set()
         try:
             run_message(prepared, put, stopped)
         finally:
+            if prepared is not None:
+                release_generation(prepared)
             put(None)
 
     future = loop.run_in_executor(None, worker)
@@ -266,7 +386,11 @@ async def stream_message(prepared: PreparedMessage) -> AsyncGenerator[str]:
         if future.done():
             future.result()
     finally:
-        stopped.set()
+        with ownership:
+            stopped.set()
+            future.cancel()
+            if not started.is_set() and prepared is not None:
+                release_generation(prepared)
 
 
 class CopilotResponse(StreamingResponse):
@@ -291,6 +415,13 @@ def retain_messages(ctx: Context) -> None:
     if ctx.business_id is None:
         raise ValueError("ai.assistant_retention requires a business")
     with transaction(ctx) as db:
+        old_messages = select(AssistantMessage.id).where(
+            AssistantMessage.business_id == ctx.business_id,
+            AssistantMessage.created_at < clock.now() - timedelta(days=90),
+        )
+        db.execute(
+            delete(Operation).where(Operation.business_id == ctx.business_id, Operation.message_id.in_(old_messages))
+        )
         db.execute(delete(AssistantMessage).where(
             AssistantMessage.business_id == ctx.business_id,
             AssistantMessage.created_at < clock.now() - timedelta(days=90),

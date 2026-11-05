@@ -21,3 +21,30 @@ Check the balance at any time: `GET https://api.vultr.com/v2/account` (`balance`
 |---|---|---|---|---|
 | 2026-11-03 | Credit applied | — | — | $200.00, pending $0.00 (checked via API) |
 | 2026-11-03 02:02 | Created | Container Registry `smbopsrqk49` (`sjc.vultrcr.com/smbopsrqk49`, private, Start Up plan) | $0.00/month | $200.00 |
+| 2026-11-03 02:40 | Pushed | Images `smb-api`, `smb-web`, `smb-backup` 0.1.0 (≈ 0.7 GB) to the registry | $0.00 | $200.00 |
+| 2026-11-03 02:41 | Created | Object Storage `smb-demo-backups` (sjc, Standard tier, id `a3b79260…`) | $18/month ≈ $0.025/hour | — |
+| 2026-11-03 02:50 | Creating | VM `smb-demo` (vhp-2c-4gb-amd, sjc) + firewall group + SSH key via install.sh --demo | $24/month ≈ $0.036/hour | — |
+| 2026-11-03 03:05 | Created (by install.sh) | VM `smb-demo` 45.63.85.83, `https://45-63-85-83.sslip.io` (vhp-2c-4gb-amd, sjc), firewall group (80/443 open, 22 only for the admin address), SSH key | $24/month ≈ $0.036/hour | see next row |
+| 2026-11-03 03:20 | Checked | Vultr account | — | pending charges $0.07 of $200.00 |
+| 2026-11-03 04:05 | Upgraded | VM to 0.1.1 with `upgrade.sh` (images 0.1.1 pushed, ≈ 0.7 GB more in the registry) | — | — |
+| 2026-11-03 04:10 | Checked | Vultr account after the first live intake on the VM | — | pending charges $0.14 of $200.00 |
+| 2026-11-04 05:20 | Upgraded | VM to 0.1.2 (images 0.1.2 pushed; registry now holds 3 versions ≈ 2 GB of the free 10 GB) | — | pending charges $0.2 of $200.00 |
+| 2026-11-04 06:30 | Upgraded | VM to 0.1.3 (images 0.1.3 pushed; registry ≈ 2.7 GB of 10 GB free tier) | — | pending charges $1.49 of $200.00 |
+| 2026-11-04 07:21 | Upgraded | VM to 0.1.4 (registry holds 0.1.0–0.1.4 ≈ 3.4 GB of the free 10 GB; delete old tags when space matters) | — | — |
+| 2026-11-04 07:35 | Closed | SSH rule removed from the VM's firewall (targeted Terraform apply); only 80/443 open | — | pending charges $1.65 of $200.00 |
+| 2026-11-04 12:10 | Updated | VM cloud-init `user_data` to the current template (in place, no reboot: uptime unchanged; cloud-init does not rerun, so it only affects a rebuild) | — | — |
+| 2026-11-04 12:15 | Opened, closed | SSH for 76.19.41.155/32 with `access.sh` to copy the demo logins file to `install-smb-demo/` (gitignored); `terraform plan` now shows no changes; only 80/443 open | — | pending charges $1.96 of $200.00 |
+| 2026-11-04 23:28 | Opened, closed | SSH for 76.19.41.155/32 (about 10 minutes) for the P6-08 restore drill and the P6-06 egress test; one manual backup (≈ 0.9 MB) to Object Storage; `terraform plan` no changes afterwards; only 80/443 open | — | pending charges $2.65 of $200.00 |
+
+## Running resources (2026-11-04 12:15 UTC)
+
+| Resource | Cost | Keep? |
+|---|---|---|
+| VM `smb-demo` (vhp-2c-4gb-amd) | $24/month | Owner decides: it is the live demo. Destroy with `docs/runbooks/teardown.md` when not needed |
+| Object Storage `smb-demo-backups` (Standard) | $18/month | Needed while the VM's backups matter |
+| Container Registry `smbopsrqk49` | free | Yes |
+| Serverless Inference | per token (≈ $1.5 so far, mostly evals) | Yes; budget ceilings in the app (`AI_DAILY_COST_LIMIT_USD`, `AI_MONTHLY_COST_LIMIT_USD`) |
+
+At $42/month for the VM and storage, the remaining credit lasts about 4.5 months with today's eval-level AI use.
+Terraform state matches the VM (no pending changes, 2026-11-04 12:15). This VM predates the host-firewall hardening:
+its UFW still allows 22/tcp broadly, so the Vultr firewall group is the only SSH gate (see `docs/runbooks/access.md`).

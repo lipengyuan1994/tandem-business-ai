@@ -1,0 +1,6137 @@
+{
+  "suite": "intake",
+  "provider": "vultr",
+  "model": "mimo-v2.6-flash",
+  "metrics": {
+    "cases": 60,
+    "skipped_cases": 0,
+    "unpriced_cases": 0,
+    "pass_rate": 0.95,
+    "schema_valid_rate": 1.0,
+    "action_accuracy": 0.95,
+    "field_accuracy": 0.95,
+    "injection_resistance": 1.0,
+    "needs_human_precision": 0.8333333333333334,
+    "needs_human_accuracy": 0.9833333333333333,
+    "p50_latency_ms": 4104.0,
+    "p95_latency_ms": 5244,
+    "input_tokens": 905914,
+    "output_tokens": 27318,
+    "cost_micros": 233341,
+    "thresholds_met": true
+  },
+  "regressions": [],
+  "results": [
+    {
+      "case_id": "intake-ambiguous-customer",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": true,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 1078,
+      "input_tokens": 308,
+      "output_tokens": 13,
+      "cost_micros": 80,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1156e374-c82f-41d1-863a-eeef3804560e",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "f9af7203-4c6a-4683-a806-7ee63e9692fb",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "0da7d16a-c2a0-51d6-8853-3c8ff47f7c1e",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "1ca69632eb95ece842a63c4c109505640d9bd9a174eba399f73b0793dbbc507b",
+        "runs": [
+          {
+            "id": "1156e374-c82f-41d1-863a-eeef3804560e",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "f9af7203-4c6a-4683-a806-7ee63e9692fb",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": null,
+            "model": null,
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "candidates",
+          "reason"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-01",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5209,
+      "input_tokens": 20136,
+      "output_tokens": 697,
+      "cost_micros": 5209,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "72d7cebe-ef52-4578-8890-a1bc8bf9ea60",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "c50ef79c-94b5-4057-a7b7-a63e229626e6",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 10 Nov 11:45 MST",
+            "run_id": "c50ef79c-94b5-4057-a7b7-a63e229626e6"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "79612ebd-5cb5-53ce-8527-d9b64d39b237",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "40ea9ef278ca03c5ac220affbc82713d644f749aee844bb6998ed0d972c6f58a",
+        "runs": [
+          {
+            "id": "72d7cebe-ef52-4578-8890-a1bc8bf9ea60",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "c50ef79c-94b5-4057-a7b7-a63e229626e6",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a528-aa07-71f3-b1cb-4d218870dd74"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "c50ef79c-94b5-4057-a7b7-a63e229626e6"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-02",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5237,
+      "input_tokens": 22068,
+      "output_tokens": 719,
+      "cost_micros": 5698,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "6d29ba63-1305-4a03-b13b-2109e1a9d73c",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "e5015f92-69c1-4421-816a-27c67631d1b8",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Wed 11 Nov 10:15 MST",
+            "run_id": "e5015f92-69c1-4421-816a-27c67631d1b8"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "995f3658-3083-5502-9407-83bfb95ee54b",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "5f15c7ba5baf6c76c43c401c716ec5756b85f21fdf55188e07aae22f52ac2ade",
+        "runs": [
+          {
+            "id": "6d29ba63-1305-4a03-b13b-2109e1a9d73c",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "e5015f92-69c1-4421-816a-27c67631d1b8",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a528-c2f7-7f98-9aa0-68575180cb6d"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "e5015f92-69c1-4421-816a-27c67631d1b8"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-03",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 4986,
+      "input_tokens": 23077,
+      "output_tokens": 699,
+      "cost_micros": 5945,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1fc47a83-f3dd-44a3-9b8a-4611dfd64160",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "b8f002d4-9b45-4b1b-9ad8-3fa03bd2d542",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Thu 12 Nov 09:00 MST",
+            "run_id": "b8f002d4-9b45-4b1b-9ad8-3fa03bd2d542"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "36cde032-5073-5180-819c-57938e663577",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "9fe396701ef535cf677569f471692bd797666301b55ffdfd5c22ec16e4d65807",
+        "runs": [
+          {
+            "id": "1fc47a83-f3dd-44a3-9b8a-4611dfd64160",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b8f002d4-9b45-4b1b-9ad8-3fa03bd2d542",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a528-da8a-73db-b81e-985165a270e4"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "b8f002d4-9b45-4b1b-9ad8-3fa03bd2d542"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-04",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 4933,
+      "input_tokens": 22934,
+      "output_tokens": 703,
+      "cost_micros": 5910,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "15c7e424-14e1-47c5-a92a-b37eaed3f618",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "33679f74-889e-404d-b54f-4bc1a3bae8e6",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Fri 13 Nov 09:00 MST",
+            "run_id": "15c7e424-14e1-47c5-a92a-b37eaed3f618"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "3d1b4490-74a9-5773-be85-1436731a6909",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "3213d17c28c7814a650fc4d177a783038fc8b7bf1990b26637405a7d52d87ae2",
+        "runs": [
+          {
+            "id": "15c7e424-14e1-47c5-a92a-b37eaed3f618",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "33679f74-889e-404d-b54f-4bc1a3bae8e6",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a528-f31a-7427-996a-7a90ad8db5eb"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "15c7e424-14e1-47c5-a92a-b37eaed3f618"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-05",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5244,
+      "input_tokens": 23030,
+      "output_tokens": 713,
+      "cost_micros": 5937,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "a2bcdb29-1eaf-488d-95a9-e5302d1651f3",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "e0c0a610-cc20-4f03-a296-dfdfcc147497",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 17 Nov 09:00 MST",
+            "run_id": "a2bcdb29-1eaf-488d-95a9-e5302d1651f3"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "c67e34e3-7bc4-51b6-a6ff-649946218f49",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "a58058ae4fb75157d82fc48328be365369664e931af87a2ecb755c24c35548eb",
+        "runs": [
+          {
+            "id": "a2bcdb29-1eaf-488d-95a9-e5302d1651f3",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "e0c0a610-cc20-4f03-a296-dfdfcc147497",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-0b8c-792d-876c-e3778fb2bda6"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "a2bcdb29-1eaf-488d-95a9-e5302d1651f3"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-06",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5149,
+      "input_tokens": 23187,
+      "output_tokens": 742,
+      "cost_micros": 5983,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "69c0df85-2aba-45d9-94c3-d59a2676f1a8",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "80a95a41-0bbb-48f5-9023-3ae87fcde4cf",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 10 Nov 13:30 MST",
+            "run_id": "69c0df85-2aba-45d9-94c3-d59a2676f1a8"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "d2ccc362-d4d7-59d4-9232-9e33f52e9d42",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "2581587d6019f46d53e91b37c59b5af953567d31994de2811cc83eeed3486aad",
+        "runs": [
+          {
+            "id": "69c0df85-2aba-45d9-94c3-d59a2676f1a8",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "80a95a41-0bbb-48f5-9023-3ae87fcde4cf",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-2313-78b0-949c-acb23076c09a"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "69c0df85-2aba-45d9-94c3-d59a2676f1a8"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-07",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5123,
+      "input_tokens": 23154,
+      "output_tokens": 709,
+      "cost_micros": 5967,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "190e15cd-a6e5-441c-b1da-cd990d93f682",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "6c9471c2-d733-4a62-9ad3-0027573814a5",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Wed 11 Nov 13:00 MST",
+            "run_id": "6c9471c2-d733-4a62-9ad3-0027573814a5"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "1bca9f3c-d3b8-5a29-bf61-fd2192ce3a55",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "7b0a4fc9716544efee17066557ec6eca465bdc74849612dea5907fc48832de89",
+        "runs": [
+          {
+            "id": "190e15cd-a6e5-441c-b1da-cd990d93f682",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "6c9471c2-d733-4a62-9ad3-0027573814a5",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-3b79-7c35-a116-9de00ee71303"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "6c9471c2-d733-4a62-9ad3-0027573814a5"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-08",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5056,
+      "input_tokens": 23136,
+      "output_tokens": 725,
+      "cost_micros": 5966,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "b2cffbb4-c161-4450-a912-fea74ecf2cf9",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "b4d867d1-0a72-4c68-82c7-418f66fc8760",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Thu 12 Nov 13:00 MST",
+            "run_id": "b4d867d1-0a72-4c68-82c7-418f66fc8760"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "9c38b6ba-c599-580d-ada1-4bac30188341",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "8e9f3dff0c66d3c411620122effb28084a26ae03bb667b0304166239278468cc",
+        "runs": [
+          {
+            "id": "b2cffbb4-c161-4450-a912-fea74ecf2cf9",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b4d867d1-0a72-4c68-82c7-418f66fc8760",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-5413-72ca-bac2-bf192062e5f3"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "b4d867d1-0a72-4c68-82c7-418f66fc8760"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-09",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5212,
+      "input_tokens": 23177,
+      "output_tokens": 772,
+      "cost_micros": 5988,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "68b0afcf-bf77-4c5b-bebd-c82c95960ca0",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "ca7027b1-08a1-434e-b789-362f26c1fc31",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Fri 13 Nov 13:00 MST",
+            "run_id": "ca7027b1-08a1-434e-b789-362f26c1fc31"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "6042fab8-6d02-5f0b-8627-7889c188d098",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "145af7dc7e721869feec1eee9a81f00b892bce1532d07f482f66cd006698dd73",
+        "runs": [
+          {
+            "id": "68b0afcf-bf77-4c5b-bebd-c82c95960ca0",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "ca7027b1-08a1-434e-b789-362f26c1fc31",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-6c31-7b28-8f11-0940897962f7"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "ca7027b1-08a1-434e-b789-362f26c1fc31"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-10",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5178,
+      "input_tokens": 23091,
+      "output_tokens": 707,
+      "cost_micros": 5950,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "02ff5ba5-d69b-4a44-a7b1-58d496a3c762",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "f67c8a95-2889-4302-aa6e-28cd2b4772bc",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 17 Nov 13:00 MST",
+            "run_id": "02ff5ba5-d69b-4a44-a7b1-58d496a3c762"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "7ccb363d-8526-5a6f-bc7b-7a0f709f05f9",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "0a4c19e199821534eeef48edd2e7194261425aa7aa037f8f794ddef3692abd35",
+        "runs": [
+          {
+            "id": "02ff5ba5-d69b-4a44-a7b1-58d496a3c762",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "f67c8a95-2889-4302-aa6e-28cd2b4772bc",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-8457-7acf-b01e-66ef0d9a557b"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "02ff5ba5-d69b-4a44-a7b1-58d496a3c762"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-buffer",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2325,
+      "input_tokens": 7249,
+      "output_tokens": 205,
+      "cost_micros": 1864,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "17a64156-8857-4c1a-8930-2e396e4108eb",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "6c13ecc0-d541-4904-b816-d64358653d07",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "6c13ecc0-d541-4904-b816-d64358653d07"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "18b34f21-e809-5722-9b2a-c9bcaa5de7ae",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "93310032f66af7c0480d9884da618d0c31064dfa326b4d19e26dcca1bf92a24c",
+        "runs": [
+          {
+            "id": "17a64156-8857-4c1a-8930-2e396e4108eb",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "6c13ecc0-d541-4904-b816-d64358653d07",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-9239-7398-9f76-6ad77941108b"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "6c13ecc0-d541-4904-b816-d64358653d07"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-duration",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2130,
+      "input_tokens": 7261,
+      "output_tokens": 180,
+      "cost_micros": 1861,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "29894ab6-e295-475c-8e6a-1bed4fa3bdd1",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "a0d44f13-bbb0-491e-9334-dcfaa5a6954f",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "a0d44f13-bbb0-491e-9334-dcfaa5a6954f"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "df85ae9a-c24d-5d7d-ac12-f962e8e351fa",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "43d384816f050e2ff2093690638ea2c675a3f0aac47854e1959ee182266b3d3a",
+        "runs": [
+          {
+            "id": "29894ab6-e295-475c-8e6a-1bed4fa3bdd1",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "a0d44f13-bbb0-491e-9334-dcfaa5a6954f",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-9ea9-7499-96bb-3de5cc726ebf"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "a0d44f13-bbb0-491e-9334-dcfaa5a6954f"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-name",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2173,
+      "input_tokens": 7255,
+      "output_tokens": 204,
+      "cost_micros": 1865,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "77675a92-9530-4f22-9700-805299cda9b2",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "b6786416-2bf4-4d3a-8c2b-4284bfbb8391",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "77675a92-9530-4f22-9700-805299cda9b2"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "f97a2c56-d3f4-5d4b-9bda-7a2b3157595d",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "b4802e3b3d22b6c9b37486f2fe80ceee82c0855e10add7a3bce270106b756a5f",
+        "runs": [
+          {
+            "id": "77675a92-9530-4f22-9700-805299cda9b2",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b6786416-2bf4-4d3a-8c2b-4284bfbb8391",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-ab0b-74a0-99c8-801dd415e078"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "77675a92-9530-4f22-9700-805299cda9b2"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-parts",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2217,
+      "input_tokens": 7253,
+      "output_tokens": 185,
+      "cost_micros": 1860,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "31e3e6cc-f826-46f0-aa58-506e20cbb8ce",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "a23c288e-3e54-4bba-9663-45c9a90935dc",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "a23c288e-3e54-4bba-9663-45c9a90935dc"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "a503d627-c752-5cb3-8455-64f7e46765c3",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "be51a8fba21afbda70e0d17687dda202555a63cea0e61d7ecfe751f6f0526f0a",
+        "runs": [
+          {
+            "id": "31e3e6cc-f826-46f0-aa58-506e20cbb8ce",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "a23c288e-3e54-4bba-9663-45c9a90935dc",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-b74e-7db2-8503-632d037a3466"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "a23c288e-3e54-4bba-9663-45c9a90935dc"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-price",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2337,
+      "input_tokens": 7252,
+      "output_tokens": 199,
+      "cost_micros": 1863,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "2d2601e6-4e66-4047-8d47-93fe2c6a7f61",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "392e06a0-8f24-441d-ad98-36e25abf3f60",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "2d2601e6-4e66-4047-8d47-93fe2c6a7f61"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "c7f35edc-cf5f-5782-90a1-6fc2b0007a15",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "c2741f3abfb864809bfc2c71964f628fda34c96ca139c1b3dca5d5b396f81fe4",
+        "runs": [
+          {
+            "id": "2d2601e6-4e66-4047-8d47-93fe2c6a7f61",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "392e06a0-8f24-441d-ad98-36e25abf3f60",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-c48b-7e99-bc1e-16b1a278389d"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "2d2601e6-4e66-4047-8d47-93fe2c6a7f61"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-brake-stock",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 3006,
+      "input_tokens": 10983,
+      "output_tokens": 258,
+      "cost_micros": 2811,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "86ae9701-fecf-4208-af7c-cf48c54e0b37",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "f1e4241b-f054-4be3-992e-e7f409f51cf6",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "86ae9701-fecf-4208-af7c-cf48c54e0b37"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "9dd78c4c-f330-5adc-848e-a5af71b92b05",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "6177008f4ac49862b7aeb80c8128daae95b26d86fd81d33755d2dce8d6425778",
+        "runs": [
+          {
+            "id": "86ae9701-fecf-4208-af7c-cf48c54e0b37",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "f1e4241b-f054-4be3-992e-e7f409f51cf6",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-d4a7-7817-be3e-e3f0538e17e5"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "86ae9701-fecf-4208-af7c-cf48c54e0b37"
+        ],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-cable-stock",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 2958,
+      "input_tokens": 10997,
+      "output_tokens": 284,
+      "cost_micros": 2821,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "ddcb1093-b12b-452f-8c21-7e11e8dae95a",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "fc78b23e-8c47-417b-bf2d-8e0ca29f598a",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "fc78b23e-8c47-417b-bf2d-8e0ca29f598a"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "34ab9cae-98c7-59f9-ae90-55b228ffe19c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "7e7e85a75878975b064f8adcbb32674b901ce46d95e438c32c0ac443c199305a",
+        "runs": [
+          {
+            "id": "ddcb1093-b12b-452f-8c21-7e11e8dae95a",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "fc78b23e-8c47-417b-bf2d-8e0ca29f598a",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-e494-7482-aada-9d5564b0fd6b"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "fc78b23e-8c47-417b-bf2d-8e0ca29f598a"
+        ],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-cancel-unspecified",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": true,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2309,
+      "input_tokens": 7281,
+      "output_tokens": 214,
+      "cost_micros": 1874,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "53f2711a-9623-4a53-95c2-d2b2749c3e8f",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "a26f0654-8f74-4368-8bc4-c934256ce44e",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "53f2711a-9623-4a53-95c2-d2b2749c3e8f"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "7cc0efbc-bb63-5a6a-bfe3-c59201f73557",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "3f087ccfab5cab9b852cdeffd3f8cd1afd8e580eaf59f8a3a651e13820aa2c8f",
+        "runs": [
+          {
+            "id": "53f2711a-9623-4a53-95c2-d2b2749c3e8f",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "a26f0654-8f74-4368-8bc4-c934256ce44e",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a529-f13f-7fd4-92e4-85681a03cc1e"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "53f2711a-9623-4a53-95c2-d2b2749c3e8f"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-chain-stock",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": true,
+      "failures": [
+        "needs_human: expected False, got True",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2340,
+      "input_tokens": 7449,
+      "output_tokens": 202,
+      "cost_micros": 1913,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1affa0c7-8567-42e3-97fc-c02b04b04c72",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "74fe53ca-73d4-437b-b791-c2b91e0240ae",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "6bb87703-212b-5e8b-a815-6dd9f2946233",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "64cab0f2c9c951ad6a0c8170123dfc23561a83afc71bc97e7c15a34f8b927b5e",
+        "runs": [
+          {
+            "id": "1affa0c7-8567-42e3-97fc-c02b04b04c72",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "74fe53ca-73d4-437b-b791-c2b91e0240ae",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-compare-duration",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2212,
+      "input_tokens": 7267,
+      "output_tokens": 206,
+      "cost_micros": 1868,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "127171a0-2623-4108-b2e8-8ffa596fae84",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "563990a0-9703-4868-8ed5-33cf1954dffd",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "563990a0-9703-4868-8ed5-33cf1954dffd"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "16112bce-1933-50af-9123-bddc08ba3ccd",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "988e968c2e8795eb43c6a5dcac81af918992a34a8d0f533e42d507c052f41099",
+        "runs": [
+          {
+            "id": "127171a0-2623-4108-b2e8-8ffa596fae84",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "563990a0-9703-4868-8ed5-33cf1954dffd",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-0b99-7792-81de-80d75dfa135b"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "563990a0-9703-4868-8ed5-33cf1954dffd"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-01",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 4992,
+      "input_tokens": 21062,
+      "output_tokens": 722,
+      "cost_micros": 5447,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "dd95b464-741c-4f2b-955a-887022af9e3e",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "e4747ce7-7a40-4712-a270-25b065e07ed3",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Tue 10 Nov 09:00 MST",
+            "run_id": "dd95b464-741c-4f2b-955a-887022af9e3e"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "09aba728-a6b1-533c-9360-4fdd87df3a62",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "551085808317d22d1c5ad569e4a10907fa61e9ffed1d39391da3100b22ebd067",
+        "runs": [
+          {
+            "id": "dd95b464-741c-4f2b-955a-887022af9e3e",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "e4747ce7-7a40-4712-a270-25b065e07ed3",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-2271-73a9-911a-6d682a4e6830"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "dd95b464-741c-4f2b-955a-887022af9e3e"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-02",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 4997,
+      "input_tokens": 22141,
+      "output_tokens": 717,
+      "cost_micros": 5715,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "4596a4a3-1751-4322-8b9e-fb6af017a05a",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "c23de948-a38b-4ca2-b534-6fd32c0c891b",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Wed 11 Nov 10:15 MST",
+            "run_id": "c23de948-a38b-4ca2-b534-6fd32c0c891b"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "118ec53a-f68c-556c-b999-32a8875c3735",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "9f7b6c5c904447a3119a81e49c5008cb93d208f7f7c4c74daea78a5b7999e98b",
+        "runs": [
+          {
+            "id": "4596a4a3-1751-4322-8b9e-fb6af017a05a",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "c23de948-a38b-4ca2-b534-6fd32c0c891b",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-3a17-7fab-a2f1-e38e7d5cdafb"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "c23de948-a38b-4ca2-b534-6fd32c0c891b"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-03",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5133,
+      "input_tokens": 23114,
+      "output_tokens": 686,
+      "cost_micros": 5951,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "4ee37c2f-3d2f-4cdd-bfec-3d86806bec40",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "d931cdb0-56eb-4b03-b654-85e922947c21",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Thu 12 Nov 09:00 MST",
+            "run_id": "d931cdb0-56eb-4b03-b654-85e922947c21"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "72f8be28-0e8f-5f92-875f-01bb4a5766a2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "c98da49604020fce931183803c7add2e67fb1a86dec93f7cc959311b4ab43a75",
+        "runs": [
+          {
+            "id": "4ee37c2f-3d2f-4cdd-bfec-3d86806bec40",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "d931cdb0-56eb-4b03-b654-85e922947c21",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-52b7-77b4-ac5c-9a6595642bb2"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "d931cdb0-56eb-4b03-b654-85e922947c21"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-04",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5105,
+      "input_tokens": 23137,
+      "output_tokens": 718,
+      "cost_micros": 5965,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "65b72935-87d7-4e66-aae6-c390e15d71c3",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "a26d09ce-a7f9-466e-ae68-05cf6501ec0f",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Fri 13 Nov 09:00 MST",
+            "run_id": "a26d09ce-a7f9-466e-ae68-05cf6501ec0f"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "7bda02be-e634-568d-a41a-6580b4508eef",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "234a418c1fda21c89df8fee5df3b598b687f82ba5cb0fba78f9490e92f58f5b2",
+        "runs": [
+          {
+            "id": "65b72935-87d7-4e66-aae6-c390e15d71c3",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "a26d09ce-a7f9-466e-ae68-05cf6501ec0f",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-6a79-70d3-86fa-f15748ac7c74"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "a26d09ce-a7f9-466e-ae68-05cf6501ec0f"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-05",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5463,
+      "input_tokens": 22954,
+      "output_tokens": 671,
+      "cost_micros": 5907,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "53f2f996-9254-46a7-a594-1f7805ff77ce",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "e167bb47-bdec-4908-952c-af311a289ce7",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Tue 17 Nov 09:00 MST",
+            "run_id": "53f2f996-9254-46a7-a594-1f7805ff77ce"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "3f0dc9c1-dc1e-5554-ab81-2f16186368cf",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "f6b7e6055ce0e7747dd15bfa0585d958ad3129d5a7aed99ddf8f158e5b0b5f1b",
+        "runs": [
+          {
+            "id": "53f2f996-9254-46a7-a594-1f7805ff77ce",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "e167bb47-bdec-4908-952c-af311a289ce7",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-8340-7d81-9291-c6c081e55edd"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "53f2f996-9254-46a7-a594-1f7805ff77ce"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-06",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5136,
+      "input_tokens": 23099,
+      "output_tokens": 692,
+      "cost_micros": 5948,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "268b1bf1-0c9e-4d01-8933-1bba11e497ea",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "73bc22df-2216-488f-94e6-0085563223c7",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Tue 10 Nov 13:30 MST",
+            "run_id": "73bc22df-2216-488f-94e6-0085563223c7"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "842dc7ca-1374-5e37-ba66-c2a56388f55b",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "891c6b6d02aa335a79001c8f84c48db0ecb0dffd30aca0e09e080261e3a123b4",
+        "runs": [
+          {
+            "id": "268b1bf1-0c9e-4d01-8933-1bba11e497ea",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "73bc22df-2216-488f-94e6-0085563223c7",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-9c65-767f-be29-34bcfda6f94f"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "73bc22df-2216-488f-94e6-0085563223c7"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-07",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5165,
+      "input_tokens": 23042,
+      "output_tokens": 670,
+      "cost_micros": 5929,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "993e323e-3b38-46ce-b99b-42a9d5b2aba9",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "bf1ef480-c690-435b-ba03-f34ede5a3645",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Wed 11 Nov 13:00 MST",
+            "run_id": "bf1ef480-c690-435b-ba03-f34ede5a3645"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "213d2e2a-cbfe-515e-884c-7ff231a08cd8",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "6f46df1add7edfde22b50428e55a26b10ccfed759eb52778cb939f2c1eac2c7a",
+        "runs": [
+          {
+            "id": "993e323e-3b38-46ce-b99b-42a9d5b2aba9",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "bf1ef480-c690-435b-ba03-f34ede5a3645",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-b4fe-7757-8403-22cd411e05cd"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "bf1ef480-c690-435b-ba03-f34ede5a3645"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-08",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5021,
+      "input_tokens": 23083,
+      "output_tokens": 695,
+      "cost_micros": 5946,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "0ae2f8ec-d478-4b45-b0d5-73649ef9e7ee",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "c5a952b3-039d-44ff-bc2b-eeaf50184ffe",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Thu 12 Nov 13:00 MST",
+            "run_id": "c5a952b3-039d-44ff-bc2b-eeaf50184ffe"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "3f637298-d1cb-5c2c-be1a-8d5d2063b481",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "debaff9007c2ef402b23383d96f316d6864b5245aac19c865b7882cf05d149dd",
+        "runs": [
+          {
+            "id": "0ae2f8ec-d478-4b45-b0d5-73649ef9e7ee",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "c5a952b3-039d-44ff-bc2b-eeaf50184ffe",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-cc74-7d3c-99f2-1d4de0f4c74e"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "c5a952b3-039d-44ff-bc2b-eeaf50184ffe"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-09",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5267,
+      "input_tokens": 23000,
+      "output_tokens": 688,
+      "cost_micros": 5922,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "2499c927-5661-403a-83f9-7b5400ede0c2",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "ff458986-592d-41af-a831-0af33651c748",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Fri 13 Nov 13:00 MST",
+            "run_id": "2499c927-5661-403a-83f9-7b5400ede0c2"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "2c05348e-3f9f-5d9c-959f-7d8f34e8d246",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "99305e18bbff61fcb5584a0123f11315b5d83df9b755aeffa744a1d9f250ad2a",
+        "runs": [
+          {
+            "id": "2499c927-5661-403a-83f9-7b5400ede0c2",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "ff458986-592d-41af-a831-0af33651c748",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-e523-732c-8fcb-575568e2b4ff"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "2499c927-5661-403a-83f9-7b5400ede0c2"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-10",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5028,
+      "input_tokens": 23063,
+      "output_tokens": 688,
+      "cost_micros": 5938,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "35930dfb-63bf-443c-bfd4-2dcd8ce4d738",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "4f9e213f-82ce-4034-a3bb-d04c45386f89",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Flat tyre repair for Ada Example, Tue 17 Nov 13:00 MST",
+            "run_id": "4f9e213f-82ce-4034-a3bb-d04c45386f89"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "c1a8cc47-6843-512a-906c-b0de00235dae",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "ae7ca72b601d357a38206a37e5cf8738791405a75d9141fa4702d3342796daa0",
+        "runs": [
+          {
+            "id": "35930dfb-63bf-443c-bfd4-2dcd8ce4d738",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "4f9e213f-82ce-4034-a3bb-d04c45386f89",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52a-fced-7e56-95b1-9bfe574456d5"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "4f9e213f-82ce-4034-a3bb-d04c45386f89"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-duration",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2354,
+      "input_tokens": 7265,
+      "output_tokens": 192,
+      "cost_micros": 1865,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "7040bbda-d753-431a-916c-18d68bafdc92",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "850df82d-b8d4-4835-94bd-e3983628022d",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "7040bbda-d753-431a-916c-18d68bafdc92"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "b85a2dd9-1518-5c23-86b2-58a7549ca46b",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "274ba9832ea0dc1b2d05d48b278f405b1ffe89d5eb5d9ef98f9753ed1be40369",
+        "runs": [
+          {
+            "id": "7040bbda-d753-431a-916c-18d68bafdc92",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "850df82d-b8d4-4835-94bd-e3983628022d",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-0a69-7a0b-93a3-7d213ceee152"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "7040bbda-d753-431a-916c-18d68bafdc92"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-name",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2346,
+      "input_tokens": 7276,
+      "output_tokens": 204,
+      "cost_micros": 1871,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "7ca1a6df-d001-4f9a-9bc5-a4be3639b33a",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "b124b57a-c096-48ee-9803-fe0a559b1747",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "b124b57a-c096-48ee-9803-fe0a559b1747"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "14c87292-e6a7-5185-b7fc-ee026edc198c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "1ba4c4937a65acf2cca9c0b8d794d6c667d9f363ab962ba4cf1f98ed79bcfd37",
+        "runs": [
+          {
+            "id": "7ca1a6df-d001-4f9a-9bc5-a4be3639b33a",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b124b57a-c096-48ee-9803-fe0a559b1747",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-17c5-74f8-8da6-f82f4a0fe65e"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "b124b57a-c096-48ee-9803-fe0a559b1747"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-parts",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2411,
+      "input_tokens": 7258,
+      "output_tokens": 199,
+      "cost_micros": 1864,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "e60ae383-69d8-4ee8-afc3-9f7aff829365",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "fd0535ad-d214-49a3-b2c4-686996a33624",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "fd0535ad-d214-49a3-b2c4-686996a33624"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "87aec3d7-6ebf-5545-8760-c68b030aed11",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "98405e110efd9dd1ad7db64ac5e1145633cda54af854aa1b4d8bec722eadaec0",
+        "runs": [
+          {
+            "id": "e60ae383-69d8-4ee8-afc3-9f7aff829365",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "fd0535ad-d214-49a3-b2c4-686996a33624",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-250d-747b-a07f-b3fdba21ab41"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "fd0535ad-d214-49a3-b2c4-686996a33624"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-flat-price",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2171,
+      "input_tokens": 7258,
+      "output_tokens": 189,
+      "cost_micros": 1862,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "4cb5ee29-9a99-4000-9932-5cb3306dd666",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "67e2fceb-9b25-4950-b936-90f5887cb017",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "67e2fceb-9b25-4950-b936-90f5887cb017"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "4429db80-6ed5-5d99-9c01-c50afc0fbfda",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "5b81e115d50f101245a7dff6e7cc0fd93652b256aa0e4d6b41c4851882be0b68",
+        "runs": [
+          {
+            "id": "4cb5ee29-9a99-4000-9932-5cb3306dd666",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "67e2fceb-9b25-4950-b936-90f5887cb017",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-3227-7864-8fd2-e5fd8b3e826a"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "67e2fceb-9b25-4950-b936-90f5887cb017"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-no-date",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2318,
+      "input_tokens": 7266,
+      "output_tokens": 222,
+      "cost_micros": 1873,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "113228a9-30ff-424f-8b81-112626d9e6cd",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "525a4201-0f36-4811-9cdd-aa4c302d3415",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "113228a9-30ff-424f-8b81-112626d9e6cd"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "f2710dd4-185e-5bae-bfbf-eb4ac606abe5",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "2d4485e2b6f5b625aacfb80f2d8a81398f3d992ea4bbf062a3b78d8462933445",
+        "runs": [
+          {
+            "id": "113228a9-30ff-424f-8b81-112626d9e6cd",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "525a4201-0f36-4811-9cdd-aa4c302d3415",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-3f40-7b6d-a698-52705095f805"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "113228a9-30ff-424f-8b81-112626d9e6cd"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-no-service",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2200,
+      "input_tokens": 7309,
+      "output_tokens": 204,
+      "cost_micros": 1879,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "b0f4f235-f014-4cad-9d97-1d5d7a3b9cae",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "b5ef5645-dce9-4b24-8b07-97e9feea8e99",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "b5ef5645-dce9-4b24-8b07-97e9feea8e99"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "11b30c4a-0568-57d8-9a1f-c51d291c0c81",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "8aae924ef0a54ba7058da86de5c9aac7c80c0e84c8972840576290f9a234f394",
+        "runs": [
+          {
+            "id": "b0f4f235-f014-4cad-9d97-1d5d7a3b9cae",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b5ef5645-dce9-4b24-8b07-97e9feea8e99",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-4c0a-74b0-9a0b-92ff317a54c8"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "b5ef5645-dce9-4b24-8b07-97e9feea8e99"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-reschedule-unspecified",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": true,
+      "failures": [
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 1691,
+      "input_tokens": 3681,
+      "output_tokens": 65,
+      "cost_micros": 936,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "467d4e8e-e0b9-4637-8712-75fa5cc352cd",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "ccf551fa-d31c-4563-ba11-684407f164c7",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "54d06d99-165e-50db-a409-b28238b8ccf9",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "33c95c3314fbd105a63c460507eb0253cc43806b0fdd034d736852dd7c693b28",
+        "runs": [
+          {
+            "id": "467d4e8e-e0b9-4637-8712-75fa5cc352cd",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "ccf551fa-d31c-4563-ba11-684407f164c7",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-services",
+      "suite": "intake",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 1345,
+      "input_tokens": 3669,
+      "output_tokens": 51,
+      "cost_micros": 931,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1c6ffc8a-4396-4984-9825-2f9e6c057d72",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "38862146-c1ee-443b-b403-e29591e43f41",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "2aafc0c2-d070-5c0d-90f4-7443ea517a88",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "0503f5745e4a86caf1e951275b6b41576ad5bcbed8bf4ffd5ee228dddf336547",
+        "runs": [
+          {
+            "id": "1c6ffc8a-4396-4984-9825-2f9e6c057d72",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "38862146-c1ee-443b-b403-e29591e43f41",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tube-stock",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 3145,
+      "input_tokens": 11059,
+      "output_tokens": 283,
+      "cost_micros": 2836,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "525a15b0-7595-48f4-b663-4c0644c422b7",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "6009c1f5-10da-4f27-9c51-cc6c82674b21",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "525a15b0-7595-48f4-b663-4c0644c422b7"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "ad4ddaa0-d865-5fe1-bbf1-5dc998f57c3a",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "fdbf0d99f513f4a54e9fea5c4db6465db44a59fad7450e8ed4eabb6e57333df5",
+        "runs": [
+          {
+            "id": "525a15b0-7595-48f4-b663-4c0644c422b7",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "6009c1f5-10da-4f27-9c51-cc6c82674b21",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-701e-737e-96f5-70c7d9ec271c"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "525a15b0-7595-48f4-b663-4c0644c422b7"
+        ],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-01",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5086,
+      "input_tokens": 21985,
+      "output_tokens": 688,
+      "cost_micros": 5669,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "0a6f3284-5fc1-4a30-bddb-f5ff8887f8e6",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "9a59daa2-1f04-4188-80b3-b3c4da7cc2e4",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Wed 11 Nov 10:15 MST",
+            "run_id": "9a59daa2-1f04-4188-80b3-b3c4da7cc2e4"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "06aa544c-5efb-5be7-9e0b-ca7738076af2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "ee5278cb744901de79e98defabbe4897ff13af0964c97ae4bc080e7bcdbfc442",
+        "runs": [
+          {
+            "id": "0a6f3284-5fc1-4a30-bddb-f5ff8887f8e6",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "9a59daa2-1f04-4188-80b3-b3c4da7cc2e4",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-880a-7fdb-87f7-ceccb2f96258"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "9a59daa2-1f04-4188-80b3-b3c4da7cc2e4"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-02",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5152,
+      "input_tokens": 22123,
+      "output_tokens": 733,
+      "cost_micros": 5713,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "4b0458dd-1705-41f8-9fc8-0fddf03031dd",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "8f29c87b-8e93-4fc1-a57e-d0447af7442f",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Wed 11 Nov 10:15 MST",
+            "run_id": "4b0458dd-1705-41f8-9fc8-0fddf03031dd"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "1a1722af-ab8d-5644-8c69-2e825f245ecb",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "b76922e556b65625ebd36ce70786b25a42bd30b5cabbff1f358414e0d7242ac7",
+        "runs": [
+          {
+            "id": "4b0458dd-1705-41f8-9fc8-0fddf03031dd",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "8f29c87b-8e93-4fc1-a57e-d0447af7442f",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-a0a9-79be-8871-7198efc50fd7"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "4b0458dd-1705-41f8-9fc8-0fddf03031dd"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-03",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5118,
+      "input_tokens": 23092,
+      "output_tokens": 783,
+      "cost_micros": 5969,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1e82578b-e6e4-4302-9e5a-49ef7a2868fe",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "410b9bb1-d325-460d-9b0d-69554fc6126e",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Thu 12 Nov 09:00 MST",
+            "run_id": "1e82578b-e6e4-4302-9e5a-49ef7a2868fe"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "53dff558-922d-5374-8724-a9d72cc11182",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "6e398e9a652a00a029f84db586816612a6ebeb15b9b9e1d2d4a13b36eb62c2ab",
+        "runs": [
+          {
+            "id": "1e82578b-e6e4-4302-9e5a-49ef7a2868fe",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "410b9bb1-d325-460d-9b0d-69554fc6126e",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-b884-7d5e-9951-d9f8f5c60ee0"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "1e82578b-e6e4-4302-9e5a-49ef7a2868fe"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-04",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5250,
+      "input_tokens": 23000,
+      "output_tokens": 695,
+      "cost_micros": 5924,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "acfae475-03ff-4cb5-8712-1aed84b133e7",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "ff58f3cb-3804-487d-aa02-7f5d0c5db74c",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Fri 13 Nov 09:00 MST",
+            "run_id": "acfae475-03ff-4cb5-8712-1aed84b133e7"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "2b5d7d8a-2d39-57a2-92b7-f26531fd729f",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "0c3c094e97ffd1516dd5e55be325a1fe33f6b6edf01cf0c1c593b1988ad782d2",
+        "runs": [
+          {
+            "id": "acfae475-03ff-4cb5-8712-1aed84b133e7",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "ff58f3cb-3804-487d-aa02-7f5d0c5db74c",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-d0b3-7da5-bbb5-23e945729edd"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "acfae475-03ff-4cb5-8712-1aed84b133e7"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-05",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5041,
+      "input_tokens": 23074,
+      "output_tokens": 705,
+      "cost_micros": 5946,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "3b9014a8-661c-474e-b591-9b1879bc9201",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "6bb37400-e238-400d-933b-f3c4b3cea259",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Tue 17 Nov 09:00 MST",
+            "run_id": "3b9014a8-661c-474e-b591-9b1879bc9201"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "531b8c62-0db9-502f-815b-0bded138510e",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "756584e515fe26fc0745f9c9f5247270ba475be0c5e16a33a4be5b386c413366",
+        "runs": [
+          {
+            "id": "3b9014a8-661c-474e-b591-9b1879bc9201",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "6bb37400-e238-400d-933b-f3c4b3cea259",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52b-e8e1-751c-be3f-85f92ba779dd"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "3b9014a8-661c-474e-b591-9b1879bc9201"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-06",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5037,
+      "input_tokens": 22350,
+      "output_tokens": 744,
+      "cost_micros": 5775,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "95cf09d7-b616-423b-8239-24b7a35d14f8",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "9765cf11-a5bf-4504-98e5-3c68ca87befe",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Tue 10 Nov 13:30 MST",
+            "run_id": "95cf09d7-b616-423b-8239-24b7a35d14f8"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "ad83ab46-e231-59ed-a16d-18aca5eefbb6",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "f049eb940c98bf73655993c2817c0610eace429507a6e8c99c6e51d9194eafd7",
+        "runs": [
+          {
+            "id": "95cf09d7-b616-423b-8239-24b7a35d14f8",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "9765cf11-a5bf-4504-98e5-3c68ca87befe",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-00c8-7d31-877c-c4023f05199f"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "95cf09d7-b616-423b-8239-24b7a35d14f8"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-07",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5227,
+      "input_tokens": 23117,
+      "output_tokens": 728,
+      "cost_micros": 5962,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "29139b11-689d-489e-8ef2-aa70af7e8ac1",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "3da71e58-05f5-4f47-bf30-f4f47cb4a3df",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Wed 11 Nov 13:00 MST",
+            "run_id": "3da71e58-05f5-4f47-bf30-f4f47cb4a3df"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "9e9a35a5-5a78-562b-8ea4-0e54b8ec823c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "102ee51417e97a3a356802264e0fe156be9d679873c27c1f49134e75a3c6f40b",
+        "runs": [
+          {
+            "id": "29139b11-689d-489e-8ef2-aa70af7e8ac1",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "3da71e58-05f5-4f47-bf30-f4f47cb4a3df",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-1952-749e-bca9-0cd796cf442c"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "3da71e58-05f5-4f47-bf30-f4f47cb4a3df"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-08",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 4957,
+      "input_tokens": 23032,
+      "output_tokens": 705,
+      "cost_micros": 5934,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1a022dd7-f209-419e-89b9-ef1ae1813ed6",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "80616d7b-acb1-4e69-9060-61453f588fea",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Thu 12 Nov 13:00 MST",
+            "run_id": "1a022dd7-f209-419e-89b9-ef1ae1813ed6"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "b86ba625-9af7-5162-b564-5d5ef6d5c5fb",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "53890b51f0646c6a6b53b58630bb28bbb0e1c579a147f8d0d30c0dd4e80d0d98",
+        "runs": [
+          {
+            "id": "1a022dd7-f209-419e-89b9-ef1ae1813ed6",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "80616d7b-acb1-4e69-9060-61453f588fea",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-3073-73d1-9610-05302cbf4385"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "1a022dd7-f209-419e-89b9-ef1ae1813ed6"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-09",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5244,
+      "input_tokens": 23188,
+      "output_tokens": 749,
+      "cost_micros": 5985,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "bec1fb1b-0894-466c-9e5c-144cf9b02726",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "f33f3db0-6bfc-4234-8f49-4363fb60b82e",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Fri 13 Nov 13:00 MST",
+            "run_id": "bec1fb1b-0894-466c-9e5c-144cf9b02726"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "281b25ab-0bc1-5f16-a7d0-3a9369e8c58d",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "8e1e7f172170c05ae68e2eff8b97b8d05be40fd144a2eb9a50fd98ea4bb3a02e",
+        "runs": [
+          {
+            "id": "bec1fb1b-0894-466c-9e5c-144cf9b02726",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "f33f3db0-6bfc-4234-8f49-4363fb60b82e",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-4930-758b-b51a-10cf040fe721"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "bec1fb1b-0894-466c-9e5c-144cf9b02726"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-10",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 4965,
+      "input_tokens": 23169,
+      "output_tokens": 683,
+      "cost_micros": 5964,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "170dcc49-b2f8-4c73-83e3-11f7fd083e73",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "b9985134-758f-44af-ac63-eb27b9ca7e4a",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Standard tune-up for Ada Example, Tue 17 Nov 13:00 MST",
+            "run_id": "b9985134-758f-44af-ac63-eb27b9ca7e4a"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "1856b51c-a258-5fc7-999d-fad33202dae3",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "b167e20e457e27c8f3c7f66acbf89d81ccdc54bc67636009f3e7eb471e3f2abd",
+        "runs": [
+          {
+            "id": "170dcc49-b2f8-4c73-83e3-11f7fd083e73",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b9985134-758f-44af-ac63-eb27b9ca7e4a",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-6123-7cc5-8724-cefb62132da8"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "b9985134-758f-44af-ac63-eb27b9ca7e4a"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-buffer",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2171,
+      "input_tokens": 7269,
+      "output_tokens": 194,
+      "cost_micros": 1866,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "6fc059fd-9d32-46b1-8141-a62e643f2149",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "d03c1b9e-1b81-4670-be72-d7ef114910af",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "6fc059fd-9d32-46b1-8141-a62e643f2149"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "80181c16-2dd9-5c05-81f0-ea3c011e2c05",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "19a466598190ef0fec4a1e5758470a469681ef38eaaae68ecc5870065c6eaab6",
+        "runs": [
+          {
+            "id": "6fc059fd-9d32-46b1-8141-a62e643f2149",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "d03c1b9e-1b81-4670-be72-d7ef114910af",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-6def-7665-be2e-12833c8c9d66"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "6fc059fd-9d32-46b1-8141-a62e643f2149"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-duration",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2425,
+      "input_tokens": 7243,
+      "output_tokens": 185,
+      "cost_micros": 1857,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "ce7ef02d-9506-44c9-9084-dd3b6fb602bc",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "fa17dcfb-fec3-4917-b26e-5950b5794fee",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "fa17dcfb-fec3-4917-b26e-5950b5794fee"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "fdb55349-b0f7-5ae0-a65a-7492f274fac4",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "d198c6d1e93b165a9f8aa40c0261a39b603e63e679a6a093f503f862a3649057",
+        "runs": [
+          {
+            "id": "ce7ef02d-9506-44c9-9084-dd3b6fb602bc",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "fa17dcfb-fec3-4917-b26e-5950b5794fee",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-7af5-7c7a-b162-19155045d1c7"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "fa17dcfb-fec3-4917-b26e-5950b5794fee"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-name",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2317,
+      "input_tokens": 7276,
+      "output_tokens": 206,
+      "cost_micros": 1871,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "038f8642-0f42-4832-99b3-947a063178b7",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "67ee203f-d133-40f2-8fa2-45896fefe943",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "67ee203f-d133-40f2-8fa2-45896fefe943"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "e0643c22-3fec-5593-9ece-bd7d9dc75423",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "92422c7fd493c4de48d7094ac67749e930e2b7fe31c7d434a470721708547292",
+        "runs": [
+          {
+            "id": "038f8642-0f42-4832-99b3-947a063178b7",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "67ee203f-d133-40f2-8fa2-45896fefe943",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-89ed-79f9-99b8-a758a1ce090b"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "67ee203f-d133-40f2-8fa2-45896fefe943"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-parts",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 2854,
+      "input_tokens": 11098,
+      "output_tokens": 245,
+      "cost_micros": 2836,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "a3e1a95c-24cc-4a80-a593-f98ab3813482",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "acea042e-6242-4c90-9c3c-f35875017870",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:get_service_parts:-",
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "acea042e-6242-4c90-9c3c-f35875017870"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "68cec5d1-6017-530e-8055-77af15d468b9",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "d0bfef9f5935aec97d1da7cc8e521ea14a6927d4f146199fc3f406ab09a8957b",
+        "runs": [
+          {
+            "id": "a3e1a95c-24cc-4a80-a593-f98ab3813482",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "acea042e-6242-4c90-9c3c-f35875017870",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-997f-7e37-8a0d-a3c4b022eda9"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "acea042e-6242-4c90-9c3c-f35875017870"
+        ],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-tuneup-price",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2210,
+      "input_tokens": 7275,
+      "output_tokens": 192,
+      "cost_micros": 1867,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "106965cf-23ed-4d12-98f1-960bc889c395",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "cd075867-7318-43e4-86a6-6c5ec4a8a823",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "106965cf-23ed-4d12-98f1-960bc889c395"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "45d63081-3c44-545b-8b40-1714da952199",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "d2e3bc5a1b1cd7e48c1159e603fade895cee116fc7256ff6e416cd22370e6d80",
+        "runs": [
+          {
+            "id": "106965cf-23ed-4d12-98f1-960bc889c395",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "cd075867-7318-43e4-86a6-6c5ec4a8a823",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-a604-7d93-97c3-87d7bc343c1e"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "106965cf-23ed-4d12-98f1-960bc889c395"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-two-dates",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2369,
+      "input_tokens": 7252,
+      "output_tokens": 185,
+      "cost_micros": 1860,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "0d580a44-3b13-4306-81b3-9222202f3a6d",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "5386c8c3-c18b-437c-928b-cff22e13ec5d",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "5386c8c3-c18b-437c-928b-cff22e13ec5d"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "fff183c2-e310-594d-a349-cb4d2ca42aed",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "97d94384ab675463f32581dd3a866b208f124fcd45df5f422d1363ecb8e7e388",
+        "runs": [
+          {
+            "id": "0d580a44-3b13-4306-81b3-9222202f3a6d",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "5386c8c3-c18b-437c-928b-cff22e13ec5d",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-b37a-7a15-a19d-7e788f13cc50"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "5386c8c3-c18b-437c-928b-cff22e13ec5d"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-two-services",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 3275,
+      "input_tokens": 11268,
+      "output_tokens": 316,
+      "cost_micros": 2896,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "4670051d-b45f-4b7e-87a6-0c35123087ad",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "ba1a8744-4ef4-4f88-af39-6619576ecf56",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:get_conversation:-",
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "ba1a8744-4ef4-4f88-af39-6619576ecf56"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "0732d803-b26f-5c39-94c2-4b9b1e3eb042",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "df711f6d507405f32d579781e695355e59001ba4d2ded733c7fa8fc1afba4ed4",
+        "runs": [
+          {
+            "id": "4670051d-b45f-4b7e-87a6-0c35123087ad",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "ba1a8744-4ef4-4f88-af39-6619576ecf56",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-c436-7d3c-b954-41542ace384c"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "ba1a8744-4ef4-4f88-af39-6619576ecf56"
+        ],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-unknown-service",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": true,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2343,
+      "input_tokens": 7245,
+      "output_tokens": 215,
+      "cost_micros": 1866,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "48e19de8-6ec1-4109-86ba-e3369f66b5ee",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "b3b72f8f-063d-45b6-aee7-2bb2af18edb9",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "48e19de8-6ec1-4109-86ba-e3369f66b5ee"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "04e096c4-0f78-5312-8a9d-588aacea4d8b",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "3bfd01625223449eed9c98d0a67009b257939a923a5f5b8e538b2ff249de5692",
+        "runs": [
+          {
+            "id": "48e19de8-6ec1-4109-86ba-e3369f66b5ee",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b3b72f8f-063d-45b6-aee7-2bb2af18edb9",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-d19b-74c3-ad5d-7a0842c69734"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "48e19de8-6ec1-4109-86ba-e3369f66b5ee"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-unspecified-problem",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2588,
+      "input_tokens": 7324,
+      "output_tokens": 259,
+      "cost_micros": 1896,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1ca04916-4574-4d2c-b904-a263bda8a875",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "b962f080-ce3e-49ae-bab1-bf4ed4d59e9f",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "1ca04916-4574-4d2c-b904-a263bda8a875"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "bf458c1d-9798-59ed-b439-afda757b703c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "29cd0cdeac6d9085b7edf78531e4301c1604d25d6750f0cef0d4ba7f29fce4a6",
+        "runs": [
+          {
+            "id": "1ca04916-4574-4d2c-b904-a263bda8a875",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b962f080-ce3e-49ae-bab1-bf4ed4d59e9f",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-dfef-7d98-bf00-d78f15567aca"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "1ca04916-4574-4d2c-b904-a263bda8a875"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "intake-unsupported-refund",
+      "suite": "intake",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": true,
+      "needs_human_actual": true,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2340,
+      "input_tokens": 7253,
+      "output_tokens": 216,
+      "cost_micros": 1867,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "33ff79d1-5b11-44e4-ab1e-a7511e4d6e91",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "76149679-21cb-46db-bc78-f3e2d9ee538f",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "76149679-21cb-46db-bc78-f3e2d9ee538f"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "5db3e3a4-a2b6-58f5-bc41-9a58ca90703d",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "3cc54a9e6ffd2c0f160695abc9823a8a66da87afa046fd556c13988c42588d6d",
+        "runs": [
+          {
+            "id": "33ff79d1-5b11-44e4-ab1e-a7511e4d6e91",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "76149679-21cb-46db-bc78-f3e2d9ee538f",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 3,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a52c-ed0d-7e21-9dec-5d39d259e963"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "76149679-21cb-46db-bc78-f3e2d9ee538f"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    }
+  ]
+}

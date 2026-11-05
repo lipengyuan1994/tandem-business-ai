@@ -37,6 +37,15 @@ p.with_suffix('.pub').write_text('synthetic public key')
 if sys.argv[-2].endswith('/.env'):
     import shutil
     shutil.copyfile(sys.argv[-2], pathlib.Path(os.environ['VM']) / '.env')
+elif sys.argv[-1].endswith('/config/ai-routes.yaml'):
+    import shutil
+    shutil.copyfile(sys.argv[-2], pathlib.Path(os.environ['VM']) / 'config/ai-routes.yaml')
+else:
+    import shutil
+    for src in sys.argv[sys.argv.index('-r') + 1:-1]:
+        dest = pathlib.Path(os.environ['VM']) / pathlib.Path(src).name
+        if pathlib.Path(src).is_dir(): shutil.copytree(src, dest, dirs_exist_ok=True)
+        else: shutil.copy2(src, dest)
 """)
         self.stub("curl", """
 with open(os.environ['TRACE'], 'a') as f: f.write(json.dumps(sys.argv[1:]) + '\\n')
@@ -62,9 +71,23 @@ elif 'app.cli demo-logins' in cmd:
     # Execute the actual remote shell command against a private fake VM directory.
     sys.exit(subprocess.run(['/bin/bash', '-c', cmd.replace('/opt/smb', os.environ['VM'])]).returncode)
 elif 'backup.sh' in cmd and os.environ.get('BACKUP_FAIL'): sys.exit(17)
+# ssh receives chmod as separate arguments here; apply it to the private fake VM only.
+elif 'chmod' in sys.argv:
+    sys.exit(subprocess.run(['chmod', sys.argv[-2], cmd.replace('/opt/smb', os.environ['VM'])]).returncode)
+elif 'wait-backup-healthy.sh' in cmd or 'config/ai-routes' in cmd:
+    sys.exit(subprocess.run(['/bin/bash', '-c', cmd.replace('/opt/smb', os.environ['VM'])]).returncode)
 """)
         self.stub("docker", """
 a = sys.argv[1:]
+if 'ps' in a:
+    assert a[-1] == 'backup'
+    counter = pathlib.Path(os.environ['VM']) / 'health-polls'
+    n = int(counter.read_text()) + 1 if counter.exists() else 1
+    counter.write_text(str(n))
+    state = 'unhealthy' if n <= int(os.environ.get('UNHEALTHY_POLLS', '0')) else 'healthy'
+    print('backup|' + state)
+    with open(os.environ['TRACE'], 'a') as f: f.write('backup health ' + state + '\\n')
+    sys.exit(0)
 assert 'demo-logins' in a, 'unexpected Docker invocation in fake VM'
 assert a[a.index('--user') + 1] == f'{os.getuid()}:{os.getgid()}'
 assert a[a.index('-v') + 1] == f"{os.environ['VM']}/demo-logins:{os.environ['VM']}/demo-logins"
@@ -138,6 +161,14 @@ print('Demo login file: ' + str(path))
         self.assertEqual((self.out / "resolved-domain").read_text(), "203-0-113-10.sslip.io\n")
         self.assertEqual((self.vm / ".env").read_text(), saved)
         self.assertEqual((self.out / ".env").stat().st_mode & 0o777, 0o600)
+        self.assertEqual((self.vm / ".env").stat().st_mode & 0o777, 0o600)
+        self.assertEqual(values["VULTR_INFERENCE_API_KEY"], "")
+        self.assertEqual(values["EGRESS_ALLOWLIST"], "")
+        self.assertIn("# To enable Vultr AI, add api.vultrinference.com", saved)
+        self.assertEqual(
+            (self.vm / "config/ai-routes.yaml").read_bytes(),
+            (self.vm / "config/ai-routes.example.yaml").read_bytes(),
+        )
         self.assertEqual((self.vm / "demo-logins").stat().st_mode & 0o777, 0o700)
         credentials = self.vm / "demo-logins/logins.txt"
         self.assertEqual(credentials.stat().st_mode & 0o777, 0o600)
@@ -160,6 +191,8 @@ print('Demo login file: ' + str(path))
         self.env["BACKUP_FAIL"] = "1"
         first = self.install()
         self.assertEqual(first.returncode, 17, first.stdout + first.stderr)
+        self.assertNotIn("./smoke.sh", self.trace.read_text())
+        self.assertNotIn("./wait-backup-healthy.sh", self.trace.read_text())
         self.assertNotIn("synthetic-demo-password", first.stdout + first.stderr)
         original = (self.out / ".env").read_bytes()
         credentials = (self.vm / "demo-logins/logins.txt").read_bytes()
@@ -210,4 +243,105 @@ print('Demo login file: ' + str(path))
         self.assertIn("DOMAIN=demo.example.com\n", (self.out / ".env").read_text())
         self.assertFalse((self.out / "resolved-domain").exists())
         self.assertIn("Create both records", result.stdout)
+
+    def test_backup_health_can_lag_success_before_smoke(self):
+        self.fake_services()
+        self.env["UNHEALTHY_POLLS"] = "2"
+        self.stub("sleep", "pass\n")
+        result = self.install()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        trace = self.trace.read_text()
+        self.assertEqual(trace.count("backup health unhealthy"), 2)
+        self.assertLess(trace.index("backup.sh --kind install"), trace.index("backup health unhealthy"))
+        self.assertLess(trace.index("backup health healthy"), trace.index("./smoke.sh"))
+
+    def test_backup_health_timeout_never_runs_smoke(self):
+        self.fake_services()
+        self.env.update(UNHEALTHY_POLLS="999", BACKUP_HEALTH_TIMEOUT="1")
+        result = self.install()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("backup service not healthy after 1s", result.stderr)
+        self.assertNotIn("./smoke.sh", self.trace.read_text())
+
+    def routes_file(self, model="synthetic-model"):
+        path = self.work / "operator routes.yaml"
+        path.write_text(
+            "providers:\n  vultr:\n    kind: openai_compat\n    vendor: vultr\n"
+            "    base_url: https://api.vultrinference.com/v1\n"
+            "    api_key_env: VULTR_INFERENCE_API_KEY\n"
+            f"routes:\n  writer:\n    - provider: vultr\n      model: {model}\n"
+        )
+        return path
+
+    def test_ai_routes_and_private_key_upload_and_resume_preservation(self):
+        self.fake_services()
+        routes = self.routes_file()
+        self.env["VULTR_INFERENCE_API_KEY"] = "synthetic-inference-key"
+        result = self.install("--ai-routes", str(routes))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.vm / "config/ai-routes.yaml").read_bytes(), routes.read_bytes())
+        for path in (self.out / ".env", self.vm / ".env"):
+            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+            self.assertIn("VULTR_INFERENCE_API_KEY='synthetic-inference-key'\n", path.read_text())
+            self.assertIn("EGRESS_ALLOWLIST=api.vultrinference.com\n", path.read_text())
+        self.assertEqual((self.out / ".env").read_bytes(), (self.vm / ".env").read_bytes())
+        self.assertNotIn(self.env["VULTR_INFERENCE_API_KEY"], result.stdout + result.stderr + self.trace.read_text())
+        saved_env = (self.out / ".env").read_bytes()
+        saved_routes = routes.read_bytes()
+        self.env.pop("VULTR_INFERENCE_API_KEY")
+        routes = self.routes_file("replacement-model")
+        result = self.install("--resume")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.vm / "config/ai-routes.yaml").read_bytes(), saved_routes)
+        self.assertEqual((self.out / ".env").read_bytes(), saved_env)
+        result = self.install("--resume", "--ai-routes", str(routes))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.vm / "config/ai-routes.yaml").read_bytes(), routes.read_bytes())
+
+    def test_resume_key_updates_keep_egress_hosts_and_do_not_duplicate_ai_host(self):
+        self.fake_services()
+        self.out.mkdir()
+        original = (
+            "DATA_PROFILE=standard\nDOMAIN=pending.invalid\nPUBLIC_URL=https://pending.invalid\n"
+            "RESTIC_PASSWORD=synthetic-restic\n"
+            "EGRESS_ALLOWLIST='mail.example.com,other.example.com'\n"
+        )
+        (self.out / ".env").write_text(original)
+        for key in ("synthetic-$dollar#hash", "replacement-key"):
+            self.env["VULTR_INFERENCE_API_KEY"] = key
+            result = self.install("--resume")
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            saved = (self.out / ".env").read_text()
+            self.assertIn("EGRESS_ALLOWLIST=mail.example.com,other.example.com,api.vultrinference.com\n", saved)
+            self.assertIn(f"VULTR_INFERENCE_API_KEY='{key}'\n", saved)
+            self.assertEqual(saved.count("VULTR_INFERENCE_API_KEY="), 1)
+            self.assertIn("RESTIC_PASSWORD=synthetic-restic\n", saved)
+            self.assertEqual((self.vm / ".env").read_text(), saved)
+            self.assertNotIn(key, result.stdout + result.stderr + self.trace.read_text())
+
+    def test_invalid_routes_stop_before_any_cloud_or_files(self):
+        self.fake_services()
+        path = self.work / "invalid.yaml"
+        for content in ("providers: [\n", "routes: {}\n", "- providers\n- routes\n",
+                        "providers: {}\nroutes: {writer: [{provider: missing, model: synthetic}]}\n"):
+            with self.subTest(content=content):
+                path.write_text(content)
+                result = self.install("--ai-routes", str(path))
+                self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
+                self.assertIn("validation failed", result.stderr)
+                self.assertFalse(self.out.exists())
+                self.assertEqual(self.trace.read_text(), "")
+        result = self.install("--ai-routes", str(self.work / "missing.yaml"))
+        self.assertEqual(result.returncode, 64)
+
+    def test_ai_dry_run_validates_but_does_not_upload_or_write_key(self):
+        routes = self.routes_file()
+        self.env["VULTR_INFERENCE_API_KEY"] = "synthetic-inference-key"
+        result = self.install("--dry-run", "--ai-routes", str(routes))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("AI route file validated locally", result.stdout)
+        self.assertIn("upload the supplied AI route file", result.stdout)
+        self.assertNotIn(self.env["VULTR_INFERENCE_API_KEY"], result.stdout + result.stderr)
+        self.assertEqual(self.trace.read_text(), "")
+        self.assertFalse(self.out.exists())
 

@@ -24,7 +24,7 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
   const [threadId, setThreadId] = useState<string | undefined>(undefined)
   const thread = useCopilotThread(threadId)
   const create = useCreateCopilotThread()
-  const { stream, send, abort, reset } = useSendCopilotMessage(threadId)
+  const { stream, send, retry, abort, reset } = useSendCopilotMessage(threadId)
   const [text, setText] = useState("")
   const [startError, setStartError] = useState<string | null>(null)
   const log = useRef<HTMLDivElement>(null)
@@ -142,6 +142,7 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
           <Textarea id="assistant-input" ref={input} value={text} maxLength={MAX_LENGTH} disabled={blocked} rows={2} placeholder={t("ai.assistant.placeholder")}
             onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} />
           <div className="flex justify-end gap-2">
+            {stream.status === "error" ? <Button type="button" variant="outline" disabled={busy || blocked} onClick={() => void retry()}>{t("ai.assistant.retry")}</Button> : null}
             {stream.status === "streaming" ? <Button type="button" variant="outline" onClick={abort}>{t("ai.assistant.stop")}</Button> : null}
             <Button type="submit" disabled={busy || blocked || !text.trim()}>{t("ai.assistant.send")}</Button>
           </div>

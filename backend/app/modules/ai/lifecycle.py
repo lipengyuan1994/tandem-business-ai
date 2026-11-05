@@ -6,15 +6,13 @@ Run steps hold no customer text (ids, tool names, counts, error codes) and effec
 
 from __future__ import annotations
 
-from typing import Any
-
 from sqlalchemy import ColumnElement, case, false, func, literal, or_, select, update
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
 from app.platform.crud import rows_affected
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import AiEffect, AiRun, AiRunStep, AiUsageDaily, AssistantMessage, AssistantThread
@@ -23,8 +21,9 @@ TABLES = [AiRun, AiRunStep, AiEffect, AiUsageDaily, AssistantThread, AssistantMe
 ERASED = "[erased]"
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    return dump_models(db, ctx, TABLES)
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(db, ctx, TABLES)
+    return export_tables(tables, streaming=streaming)
 
 
 def _linked_run(target: ErasureTarget) -> ColumnElement[bool]:

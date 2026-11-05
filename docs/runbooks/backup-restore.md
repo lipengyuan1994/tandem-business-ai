@@ -15,7 +15,9 @@ vm$ cd /opt/smb
 vm$ docker compose exec backup backup.sh --status
 ```
 
-Two thresholds exist: the `backup` container shows `(healthy)` while the last success is under **26 hours** old (a missed run or two is tolerated); the schedule expects a success every **6 hours**. So `(healthy)` with a `last_success` older than 7 hours means something failed recently: read `docker compose logs --tail 50 backup`. `"result": "error"` is urgent. List snapshots (newest last):
+The container is healthy only when the latest backup attempt succeeded and its last success is at most **7 hours** old (the schedule is every **6 hours**). A failed attempt or an older backup is urgent: read `docker compose logs --tail 50 backup`.
+
+`--status` also includes independent `maintenance.prune` and `maintenance.check` objects with `result`, `last_attempt`, and `last_success`. A failed prune/check preserves its previous success timestamp and stays visible until that operation succeeds; it never replaces backup status. The [watchdog](monitoring.md) alerts on failure, missing status, or maintenance success older than 8 days. After updating the backup image, run `docker compose exec backup backup.sh --maintenance` once during a quiet window to initialize these fields. Weekly scheduling is unchanged; a random 5% check does not prove complete repository coverage. List snapshots (newest last):
 
 ```bash
 vm$ docker compose exec backup restic snapshots
@@ -40,6 +42,8 @@ vm$ ./restore.sh --drill latest
 ```
 
 It restores the newest snapshot into scratch databases named `smb_drill` and `keycloak_drill` (it **replaces** any database with those names: do not use them for anything else; the live databases are never touched), prints the migration revision and the number of tables and rows, and compares every table's row count with the live database.
+
+Read details with `vm$ docker compose exec backup cat /state/restore-last.json`: a JSON array covering both databases of the last drill or real restore. Each entry includes `database`, `snapshot`, `target`, `tables`, `rows`, `counts_identical_to_source` (`true`/`false`, or `null` when no comparison was requested), `swapped`, `restore_seconds`, `total_seconds`, and `at`. Differing counts still produce an entry with `false`; per-table differences are printed above on stderr during the drill. Each run replaces the previous details; a failed run can contain only the databases that reached comparison.
 
 **Pass criteria:** the command finishes without "DRILL FAILED"; the output shows the restored tables, rows and migration; and the only tables whose counts differ from live are busy technical ones (`jobs`, `oidc_login_states`, `sessions`, `rate_limits`, `domain_events`, `event_deliveries`, `audit_events` on a busy system). A difference in a business table (for example `customers`, `appointments`, `stock_movements`) bigger than the few records people created in the minute since the manual backup, or any "DRILL FAILED" line, is a failure: repeat; if it persists, escalate with the output of the drill and `backup.sh --status` ([README.md](README.md), "Who to call"). A passing drill proves the **new** snapshot works; older snapshots are only as good as the backup that wrote them. Equal row counts show nothing is missing wholesale; they do not prove every value is right.
 

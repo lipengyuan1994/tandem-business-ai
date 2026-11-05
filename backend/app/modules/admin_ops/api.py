@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import closing
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 
-from app.platform import ratelimit
+from app.platform import clock, ratelimit
 from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import error_responses
+from app.platform.export import ExportResponse
 from app.platform.permissions import require
 
 from . import permissions as P
@@ -39,13 +44,27 @@ def system(ctx: Context = Depends(require(P.SYSTEM_READ))) -> SystemStatus:
 def export_data(ctx: Context = Depends(require(P.DATA_MANAGE))) -> Response:
     with transaction(ctx) as db:
         ratelimit.hit(db, f"export:{ctx.business_id}", limit=5, window_seconds=3600)
-        data, manifest = service.build_export(db, ctx)
-    stamp = manifest["exported_at"][:10]
-    return Response(
-        data,
-        media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="export-{stamp}.zip"', "Cache-Control": "no-store"},
+    exported_at = clock.now()
+    return ExportResponse(
+        _export_chunks(ctx, exported_at),
+        headers={
+            "Content-Disposition": f'attachment; filename="export-{exported_at.date().isoformat()}.zip"',
+            "Cache-Control": "no-store",
+        },
     )
+
+
+def _export_chunks(ctx: Context, exported_at: datetime) -> Generator[bytes]:
+    # Keep only one chunk ahead. A complete ZIP is never delivered unless the
+    # audit transaction committed; disconnect/error unwinds both iterators.
+    pending: bytes | None = None
+    with transaction(ctx) as db, closing(service.build_export(db, ctx, exported_at=exported_at)) as chunks:
+        for chunk in chunks:
+            if pending is not None:
+                yield pending
+            pending = chunk
+    if pending is not None:
+        yield pending
 
 
 def _out(r: ErasureRequest) -> ErasureOut:

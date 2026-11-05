@@ -7,6 +7,7 @@ so nothing is published if the business change rolls back. Subscribers must be i
 from __future__ import annotations
 
 import traceback
+from collections.abc import Callable
 from typing import Any, ClassVar
 from uuid import UUID
 
@@ -124,10 +125,11 @@ def deliver(registry: Registry, d: dict[str, Any]) -> bool:
         return False
 
 
-def deliver_pending(registry: Registry, limit: int = 100) -> int:
+def deliver_pending(registry: Registry, limit: int = 100, *, on_progress: Callable[[], None] | None = None) -> int:
     done = 0
     while done < limit and (d := _claim()) is not None:
-        deliver(registry, d)
+        if deliver(registry, d) and on_progress is not None:
+            on_progress()
         done += 1
     return done
 

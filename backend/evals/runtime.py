@@ -118,7 +118,7 @@ def validate_cases(cases: list[Case], path: Path = seed_module.DEFAULT_FIXTURES)
         if email is not None and not email.endswith("@example.com"):
             raise ValueError(f"{case.id}: visitor email must use example.com")
         names = _reference_names(document, case.business)
-        for proposal in case.expect.proposals:
+        for proposal in (p for alternative in case.expect.proposal_sets for p in alternative):
             fields = [(k, v) for k, v in proposal.payload.items() if k in names]
             fields += [("item", line["item"]) for line in proposal.payload.get("lines", []) if "item" in line]
             for kind, name in fields:
@@ -300,6 +300,14 @@ class LiveRuntime:
                 business_id=business,
                 permissions=permissions,
             )
+            if case.suite == "copilot":
+                # Seed staff identities are shared across cases, unlike business IDs.
+                # Reset only this user's copilot quota; the real limiter still runs.
+                with self.owner_engine.begin() as db:
+                    db.execute(
+                        text("delete from rate_limits where key=:key"),
+                        {"key": f"ai:copilot:{user}"},
+                    )
             timezone = next(b["timezone"] for b in document["tables"]["businesses"] if b["id"] == case.business)
             state = CaseState(business, list(ids.values()), ctx, timezone)
             if case.suite in {"intake", "injection", "timezones", "summary"}:
@@ -366,6 +374,18 @@ class LiveRuntime:
     def _normalize(self, payload: dict[str, Any], state: CaseState) -> tuple[dict[str, Any], bool]:
         payload = copy.deepcopy(payload)
         foreign = False
+        if payload.get("resource_id"):
+            # No public single-resource lookup exists. Observe only this case's
+            # business, as for proposal inspection; a foreign/unknown ID fails closed.
+            with self.owner_engine.connect() as observer:
+                resource = observer.execute(
+                    text("select name from resources where business_id=:b and id=:id"),
+                    {"b": state.business_id, "id": payload["resource_id"]},
+                ).scalar_one_or_none()
+            if resource is None:
+                foreign = True
+            else:
+                payload["resource"] = resource
         try:
             with transaction(state.ctx) as db:
                 if payload.get("service_id"):

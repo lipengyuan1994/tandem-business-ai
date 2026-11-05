@@ -31,18 +31,20 @@ if $drill; then
   say "DRILL: restoring snapshot $snapshot into scratch databases (live data is not touched)"
   started=$(date +%s)
   differ=false
+  details_args=()
   for db in smb keycloak; do
     rc=0
-    "${compose[@]}" exec -T backup restore-db.sh --db "$db" --snapshot "$snapshot" --target "${db}_drill" --compare-with "$db" >/dev/null || rc=$?
+    "${compose[@]}" exec -T backup restore-db.sh --db "$db" --snapshot "$snapshot" --target "${db}_drill" --compare-with "$db" ${details_args[@]+"${details_args[@]}"} >/dev/null || rc=$?
     case "$rc" in
       0) ;;
       10) differ=true ;;
       *) say "DRILL FAILED: restoring $db exited with status $rc (snapshot unreadable, repository unreachable or restore error)"; exit 1 ;;
     esac
+    details_args=(--append-details)
   done
-  say "drill finished in $(($(date +%s) - started)) s; details: docker compose exec backup cat /state/restore-last.json"
-  $differ && say "row counts differ from the live databases: expected if data changed since the snapshot was taken"
+  say "drill finished in $(($(date +%s) - started)) s; details for both databases: docker compose exec backup cat /state/restore-last.json"
   say "scratch databases smb_drill and keycloak_drill remain; drop them with: docker compose exec postgres psql -U postgres -c 'drop database smb_drill'"
+  if $differ; then say "row counts differ from the live databases: per-table differences were printed above on stderr; expected if data changed since the snapshot was taken"; fi
   exit 0
 fi
 
@@ -59,10 +61,12 @@ say "safety backup of the current state"
 say "stopping api, worker, keycloak and caddy"
 "${compose[@]}" stop caddy api worker keycloak
 
+details_args=()
 for db in smb keycloak; do
   say "restoring $db from $snapshot"
   # --no-deps: do not restart keycloak (a dependency of backup) while the databases are being swapped.
-  "${compose[@]}" run --rm -T --no-deps backup restore-db.sh --db "$db" --snapshot "$snapshot" --target "${db}_restore" --swap >/dev/null
+  "${compose[@]}" run --rm -T --no-deps backup restore-db.sh --db "$db" --snapshot "$snapshot" --target "${db}_restore" --swap ${details_args[@]+"${details_args[@]}"} >/dev/null
+  details_args=(--append-details)
 done
 
 # Realm import skips an existing realm. Check restored client secrets against the current app environment before
@@ -87,6 +91,7 @@ say "applying migrations of the installed version to the restored database"
 "${compose[@]}" run --rm -T --no-deps migrate
 say "starting the stack"
 "${compose[@]}" up -d
+"$here/wait-backup-healthy.sh" "${compose[@]}"
 public_url=$(grep '^PUBLIC_URL=' .env | head -1 | cut -d= -f2)
 smoke="$here/smoke.sh"
 [ -x "$smoke" ] || smoke="$dir/smoke.sh"

@@ -45,6 +45,8 @@ mkdir -p "$(dirname "$out")"
       HTTPS_PORT=*) echo "HTTPS_PORT=${https_port:-443}" ;;
       HTTP_PORT=*) echo "HTTP_PORT=${http_port:-80}" ;;
       APP_ENV=*) echo "APP_ENV=${app_env:-prod}" ;;
+      EGRESS_ALLOWLIST=) echo "# To enable Vultr AI, add api.vultrinference.com to EGRESS_ALLOWLIST (keep existing hosts)."; echo "$line" ;;
+      ALERT_WEBHOOK_URL=) echo "# Configure the operator alert destination; test with watchdog.sh --test."; echo "$line" ;;
       RESTIC_REPOSITORY=*) if $local_backup; then echo "RESTIC_REPOSITORY=/state/restic-repo"; else echo "$line"; fi ;;
       APP_SECRET_KEY=*) echo "APP_SECRET_KEY=$(secret 32)" ;;
       *=CHANGE_ME_*) echo "${line%%=*}=$(secret 24)" ;;

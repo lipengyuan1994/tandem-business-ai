@@ -2,6 +2,7 @@
 # Restore one database from a restic snapshot into a NEW database, verify it, and optionally swap it into place.
 # Runs inside the smb-backup container as the PostgreSQL superuser (restore needs CREATE DATABASE and extensions).
 #   restore-db.sh --db smb --snapshot latest --target smb_restore [--compare-with smb] [--swap]
+# --append-details adds this database to the current run's JSON array; otherwise starts a new details file.
 # Never overwrites an existing database in place: --swap renames the live database aside first.
 # Exit codes: 0 ok, 10 restored but row counts differ from --compare-with, anything else = failure.
 # Environment: PGHOST, POSTGRES_PASSWORD, RESTIC_* as for backup.sh, BACKUP_STATE_DIR.
@@ -13,7 +14,7 @@ PGUSER="${PGUSER:-postgres}"
 PGPASSWORD="${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required for restore}"
 export PGHOST PGUSER PGPASSWORD
 
-db="" snapshot=latest target="" compare_with="" swap=false
+db="" snapshot=latest target="" compare_with="" swap=false append_details=false
 while [ $# -gt 0 ]; do
   case "$1" in
     --db) db="${2:?}"; shift ;;
@@ -21,6 +22,7 @@ while [ $# -gt 0 ]; do
     --target) target="${2:?}"; shift ;;
     --compare-with) compare_with="${2:?}"; shift ;;
     --swap) swap=true ;;
+    --append-details) append_details=true ;;
     *) echo "unknown option: $1" >&2; exit 64 ;;
   esac
   shift
@@ -50,6 +52,7 @@ started=$(date +%s)
 work="${STATE_DIR:?}/work/restore-$$"
 mkdir -p "$work"
 trap 'rm -rf "${work:?}"' EXIT
+if ! $append_details; then printf '[]\n' >"$STATE_DIR/restore-last.json"; fi
 
 log "fetching $db.dump from snapshot $snapshot"
 restic restore "${snapshot}:$STATE_DIR/work/dumps" --target "$work" --include "$db.dump" --quiet >&2
@@ -73,7 +76,32 @@ tables=$(printf '%s\n' "$counts" | grep -c . || true)
 total=$(printf '%s\n' "$counts" | awk -F'|' '{s+=$2} END {print s+0}')
 log "restored: $tables tables, $total rows, migration ${version:-n/a}"
 
-compared=null
+write_details() {
+  local finished
+  finished=$(date +%s)
+  jq -n --arg db "$db" --arg snapshot "$snapshot" --arg target "$target" --arg version "$version" \
+    --argjson tables "$tables" --argjson rows "$total" --argjson compared "$compared" --argjson swapped "$swapped" \
+    --argjson restore_seconds "$((restored_at - started))" --argjson total_seconds "$((finished - started))" \
+    --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    '{at: $at, database: $db, snapshot: $snapshot, target: $target, migration: $version, tables: $tables, rows: $rows,
+      counts_identical_to_source: $compared, swapped: $swapped, restore_seconds: $restore_seconds, total_seconds: $total_seconds}' \
+    >"$work/details.json"
+  jq --slurpfile entry "$work/details.json" '. + $entry' "$STATE_DIR/restore-last.json" >"$work/summary.json"
+  mv "$work/summary.json" "$STATE_DIR/restore-last.json"
+  cat "$work/details.json"
+}
+
+finish_restore() {
+  local rc=$?
+  trap - EXIT
+  write_details
+  rm -rf "${work:?}"
+  exit "$rc"
+}
+
+compared=null swapped=false
+# Record all outcomes from the comparison onward, including mismatch and swap failure, preserving their status.
+trap finish_restore EXIT
 if [ -n "$compare_with" ]; then
   if diff <(row_counts "$compare_with") <(printf '%s\n' "$counts") >/dev/null; then
     compared=true
@@ -85,9 +113,9 @@ if [ -n "$compare_with" ]; then
   fi
 fi
 
-swapped=false
-if # Exit 10 = restored fine but the row counts differ from --compare-with (callers decide whether that matters).
-if [ "$compared" = false ]; then exit 10; fi && $swap; then
+# Exit 10 = restored fine but counts differ. Never promote such a restore, even when --swap was requested.
+if [ "$compared" = false ]; then exit 10; fi
+if $swap; then
   suffix=$(date -u +%Y%m%d%H%M%S)
   log "swapping: $db -> ${db}_pre_restore_$suffix, $target -> $db (api, worker and keycloak must be stopped)"
   psql_q --dbname postgres --command "select pg_terminate_backend(pid) from pg_stat_activity where datname in ('$db', '$target') and pid <> pg_backend_pid()" >/dev/null
@@ -97,15 +125,3 @@ if [ "$compared" = false ]; then exit 10; fi && $swap; then
   psql_q --dbname postgres --command "alter database \"$target\" rename to \"$db\""
   swapped=true
 fi
-
-finished=$(date +%s)
-mkdir -p "$STATE_DIR"
-jq -n --arg db "$db" --arg snapshot "$snapshot" --arg target "$target" --arg version "$version" \
-  --argjson tables "$tables" --argjson rows "$total" --argjson compared "$compared" --argjson swapped "$swapped" \
-  --argjson restore_seconds "$((restored_at - started))" --argjson total_seconds "$((finished - started))" \
-  --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  '{at: $at, database: $db, snapshot: $snapshot, target: $target, migration: $version, tables: $tables, rows: $rows,
-    counts_identical_to_source: $compared, swapped: $swapped, restore_seconds: $restore_seconds, total_seconds: $total_seconds}' \
-  >"$STATE_DIR/restore-last.json"
-cat "$STATE_DIR/restore-last.json"
-[ "$compared" != false ]

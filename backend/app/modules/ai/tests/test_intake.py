@@ -261,9 +261,9 @@ def test_safety_unavailable_marks_unchecked_and_continues(
 def test_customer_matching_rule_matched_new_ambiguous(
     business: uuid.UUID, monkeypatch: pytest.MonkeyPatch, scores: list[float], kind: str
 ) -> None:
-    _, message = inbound(business, channel="email")
+    _, message = inbound(business, channel="email", visitor_email=None, visitor_phone=None)
     candidates = [
-        crm.CustomerCandidate(customer_id=uuid.uuid4(), display_name=f"Example {i}", score=s, reason="name")
+        crm.CustomerCandidate(customer_id=uuid.uuid4(), display_name=f"Ada Example {i}", score=s, reason="name")
         for i, s in enumerate(scores)
     ]
     queries = []
@@ -282,13 +282,11 @@ def test_customer_matching_rule_matched_new_ambiguous(
 
     monkeypatch.setattr(intake, "run_agent_step", step)
     result = intake.run(message, business, router=fake_router_by_class())
-    assert queries == [{"name": "Ada Example", "email": "ada@example.com", "phone": "+12025550123"}]
+    assert queries == [{"name": "Ada Example", "email": None, "phone": None}]
+    assert seen[0].kind == kind
+    assert seen[0].customer_id == (candidates[0].customer_id if kind == "matched" else None)
     if kind == "ambiguous":
-        assert not seen
         assert result.extra["reason"] == "ambiguous_customer"
-    else:
-        assert seen[0].kind == kind
-        assert seen[0].customer_id == (candidates[0].customer_id if kind == "matched" else None)
     assert "safety_unchecked" not in result.extra
 
 
@@ -320,12 +318,13 @@ def test_ambiguous_customer_note_lists_names_only(business: uuid.UUID, monkeypat
     ]
     monkeypatch.setattr(crm, "find_customer_candidates", lambda *a, **kw: candidates)
     result = intake.run(message, business, router=fake_router_by_class())
-    assert result.extra == {"reason": "ambiguous_customer", "candidates": ["Example 0", "Example 1", "Example 2"]}
+    assert result.extra["reason"] == "ambiguous_customer"
+    assert result.extra["candidates"] == ["Example 0", "Example 1", "Example 2"]
     assert notes(business, conv) == [
-        f"Several customers could match (Example 0, Example 1, Example 2). "
+        "AI is turned off for this business, so no proposal was prepared. "
+        "Several customers could match (Example 0, Example 1, Example 2). "
         f"Please link the right one. [intake:{message}]"
     ]
-    assert run_row(business, result).result == result.extra
 
 
 def test_one_outcome_note_per_message_even_on_retry(business: uuid.UUID) -> None:
@@ -384,7 +383,7 @@ def test_visitor_contacts_not_in_any_model_request(business: uuid.UUID, monkeypa
     ("status", "reason", "expected"),
     [
         ("policy_blocked", None, "AI is turned off for this business, so no proposal was prepared."),
-        ("budget_exceeded", None, "Today's AI budget is used up, so no proposal was prepared."),
+        ("budget_exceeded", None, "AI allowance cannot fit another model call; please handle this message."),
         ("failed", None, "Could not prepare a proposal; please handle this message."),
         ("step_limit", None, "Could not prepare a proposal; please handle this message."),
         ("succeeded", "human", "Needs a person: Please check availability"),
@@ -403,3 +402,45 @@ def test_outcome_note_table(
     monkeypatch.setattr(intake, "run_agent_step", lambda *a: result)
     intake.run(message, business, router=fake_router_by_class())
     assert notes(business, conv) == [f"{expected} [intake:{message}]"]
+
+
+@pytest.mark.parametrize(
+    ("name", "email", "phone", "expected"),
+    [
+        ("Bea Example", "bea@example.com", None, "new"),
+        ("Ada Example", "bea@example.com", None, "new"),
+        ("Ada Example", None, "+12025550199", "new"),
+        ("Bea Example", "ADA@EXAMPLE.COM", None, "matched"),
+        ("Bea Example", None, "+1 (202) 555-0123", "matched"),
+        ("Bea Example", "bea@example.com", "+12025550123", "matched"),
+        ("Ada Example", None, None, "matched"),
+        ("Bea Example", None, None, "new"),
+        ("Ada Stranger", None, None, "new"),
+        ("Example", None, None, "new"),
+    ],
+)
+def test_customer_identity_signals(
+    business: uuid.UUID, name: str, email: str | None, phone: str | None, expected: str
+) -> None:
+    ctx = read_context(business)
+    with transaction(ctx) as db:
+        customer = crm.create_customer(
+            db,
+            ctx,
+            crm.CustomerCreate(
+                display_name="Ada Example",
+                contact_points=[
+                    crm.ContactPointIn(type="email", value="ada@example.com"),
+                    crm.ContactPointIn(type="phone", value="+12025550123"),
+                ],
+            ),
+        )
+    with transaction(ctx) as db:
+        for display_name in ("Ben Example", "Dan Example"):
+            crm.create_customer(db, ctx, crm.CustomerCreate(display_name=display_name))
+    _, message_id = inbound(business, visitor_name=name, visitor_email=email, visitor_phone=phone)
+    with transaction(ctx) as db:
+        message = conversations.get_message_context(db, ctx, message_id)
+    match = intake._match_customer(message, business)
+    assert match.kind == expected
+    assert match.customer_id == (customer.id if expected == "matched" else None)

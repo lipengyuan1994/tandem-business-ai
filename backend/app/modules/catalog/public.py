@@ -51,6 +51,27 @@ def get_service_requirements(db: Session, ctx: Context, service_id: uuid.UUID) -
     return service.requirements(db, ctx, service_id)
 
 
+def list_active_service_requirements(db: Session, ctx: Context) -> list[ServiceRequirements]:
+    """All active services and their typed requirements for trusted intake context (no contact data)."""
+    from sqlalchemy import select
+
+    from .models import CatalogItem
+
+    ctx.require("catalog.item.read")
+    ids = list(
+        db.scalars(
+            select(CatalogItem.id)
+            .where(
+                CatalogItem.business_id == ctx.business_id,
+                CatalogItem.kind == "service",
+                CatalogItem.status == "active",
+            )
+            .order_by(CatalogItem.name, CatalogItem.id)
+        )
+    )
+    return [get_service_requirements(db, ctx, item_id) for item_id in ids]
+
+
 __all__ = [
     "CatalogItemOut",
     "PublicServiceOut",
@@ -60,6 +81,7 @@ __all__ = [
     "get_item",
     "get_items",
     "get_service_requirements",
+    "list_active_service_requirements",
     "search_items",
 ]
 

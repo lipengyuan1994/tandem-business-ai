@@ -2,6 +2,7 @@
 # Static checks of everything under deploy/ (part of `make check`; needs no cloud account and starts no stack):
 # scripts (shellcheck), Compose validity and published ports, Caddyfile, realm template, Terraform, cloud-init schema.
 # DEPLOY_CHECK_NO_DOWNLOADS=1 uses installed tools/cached providers and skips checks that install packages.
+# DEPLOY_CHECK_OFFLINE=1 also forbids Docker/network/listeners and reports skipped runtime/schema checks.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,6 +11,17 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "${tmp:?}"' EXIT
 fail=0
 no_downloads="${DEPLOY_CHECK_NO_DOWNLOADS:-0}"
+offline="${DEPLOY_CHECK_OFFLINE:-0}"
+# An explicitly offline run must not discover Docker or Caddy in regression imports (some tests start listeners).
+# Keep only native Python and local static-check tools, plus the OS utilities. No environment file is read.
+if [ "$offline" = 1 ]; then
+  mkdir "$tmp/bin"
+  for tool in python3 shellcheck jq; do
+    tool_path=$(command -v "$tool" || true)
+    [ -z "$tool_path" ] || ln -s "$tool_path" "$tmp/bin/$tool"
+  done
+  export PATH="$tmp/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+fi
 ok() { printf '  ok    %s\n' "$1"; }
 bad() { printf '  FAIL  %s\n' "$1" >&2; fail=1; }
 skip() { printf '  skip  %s\n' "$1"; }
@@ -22,9 +34,15 @@ if command -v shellcheck >/dev/null; then
 else skip "shellcheck not installed"; fi
 
 # --- deployment regressions (live HTTP tests self-skip when native Caddy is absent) ---
-if python3 -I -m unittest discover -s "$deploy/tests" -p 'test_*.py' >"$tmp/tests.log" 2>&1; then ok "deployment regressions (live Caddy tests self-skip if unavailable)"; else cat "$tmp/tests.log"; bad "deployment regressions"; fi
+if python3 -I -m unittest discover -s "$deploy/tests" -p 'test_*.py' >"$tmp/tests.log" 2>&1; then
+  ok "deployment regressions (live Caddy tests self-skip if unavailable)"
+  grep -E '^Ran |^OK' "$tmp/tests.log"
+else cat "$tmp/tests.log"; bad "deployment regressions"; fi
 
 # --- Compose ---
+if [ "$offline" = 1 ]; then
+  skip "Docker Compose resolution, Caddy runtime, Terraform provider and cloud-init schema (offline mode; YAML regressions still run)"
+else
 "$here/gen-env.sh" --domain localhost --https-port 8443 --http-port 8080 --local-backup --out "$tmp/.env" >/dev/null
 for file in compose.prod.yml compose.backup-test.yml; do
   if VERSION=0.0.0 docker compose -f "$deploy/compose/$file" --env-file "$tmp/.env" config --quiet 2>"$tmp/err"; then ok "compose config: $file"; else bad "compose config: $file: $(head -3 "$tmp/err")"; fi
@@ -79,7 +97,7 @@ if command -v terraform >/dev/null; then
     terraform -chdir="$deploy/terraform/envs/demo" validate >/dev/null 2>"$tmp/err"; then ok "terraform validate (no plan or apply)"; else bad "terraform validate: $(head -3 "$tmp/err")"; fi
 
   # --- cloud-init ---
-  echo 'templatefile("../../modules/vultr-single-vm/user-data.yaml.tftpl", { ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLE0 example" })' |
+  echo 'templatefile("../../modules/vultr-single-vm/user-data.yaml.tftpl", { ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLE0 example", admin_cidrs = ["203.0.113.7/32", "2001:db8::/64"] })' |
     terraform -chdir="$deploy/terraform/envs/demo" console -no-color | sed '1d;$d' >"$tmp/user-data.yaml"
   if grep -v '^[[:space:]]*#' "$tmp/user-data.yaml" | grep -qiE 'secret|api[_-]?key|token|password[:=]|CHANGE_ME'; then bad "cloud-init template contains secret-like text"; else ok "cloud-init template contains no secrets"; fi
   if [ "$no_downloads" = 1 ]; then
@@ -91,6 +109,8 @@ if command -v terraform >/dev/null; then
     else bad "cloud-init schema"; fi
   else skip "cloud-init schema (pull ubuntu:24.04 once to enable; it downloads cloud-init on each run)"; fi
 else skip "terraform not installed"; fi
+
+fi # offline
 
 # --- installer dry run ---
 if "$here/install.sh" --dry-run --name check --domain check.example.com --registry r.example.com/smb --registry-user u \

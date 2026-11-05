@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import Session
@@ -13,15 +12,16 @@ from app.platform import clock
 from app.platform.context import Context
 from app.platform.crud import rows_affected
 from app.platform.errors import Invalid
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import Conversation, Message, VisitorToken
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
     """Visitor tokens are credentials, not data, and are not exported."""
-    return dump_models(db, ctx, [Conversation, Message])
+    tables = stream_models(db, ctx, [Conversation, Message])
+    return export_tables(tables, streaming=streaming)
 
 
 def _conversation_ids(db: Session, ctx: Context, target: ErasureTarget) -> list[uuid.UUID]:

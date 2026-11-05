@@ -14,12 +14,14 @@ from typing import Any, Literal
 from sqlalchemy import text
 
 from app.modules.approvals import public as approvals
+from app.modules.catalog import public as catalog
 from app.modules.conversations import public as conversations
 from app.modules.crm import public as crm
 from app.modules.org import public as org
 from app.platform import clock
 from app.platform.context import system_context
 from app.platform.db import transaction
+from app.platform.errors import NotFound
 
 from .. import recording
 from ..agent.contexts import CtxFactory, background_ctx_factory
@@ -28,7 +30,9 @@ from ..agent.protocol import ContextBlock, RunResult, RunSpec
 from ..agent.runner import run_agent
 from ..errors import AiError
 from ..gateway.router import Router
+from ..public_intake import admit_run
 from ..tools.common import redact_contacts
+from ..tools.crm import customer_view
 from . import safety
 
 
@@ -47,6 +51,21 @@ class IntakeState:
     router: Router | None
     server_facts: dict[str, Any]
     extra: dict[str, Any] = field(default_factory=dict)
+
+
+def _facts_json(value: Any) -> str:
+    """Redact free text before serialization; typed UUIDs and numeric facts must not become phone matches."""
+
+    def redact(value: Any) -> Any:
+        if isinstance(value, str):
+            return redact_contacts(value)
+        if isinstance(value, dict):
+            return {key: redact(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [redact(item) for item in value]
+        return value
+
+    return json.dumps(redact(value), default=str)
 
 
 def _early_result(ctx_factory: CtxFactory, state: IntakeState, result: dict[str, Any]) -> RunResult:
@@ -69,6 +88,15 @@ def _match_customer(message: conversations.MessageContext, business_id: uuid.UUI
         candidates = crm.find_customer_candidates(
             db, ctx, name=message.visitor_name, email=message.visitor_email, phone=message.visitor_phone
         )
+    if message.visitor_email or message.visitor_phone:
+        # Contacts are strong signals: an unknown contact must not fall back to a name-only identity.
+        candidates = [candidate for candidate in candidates if candidate.reason in {"email", "phone"}]
+    else:
+        candidates = [
+            candidate
+            for candidate in candidates
+            if crm.has_identity_name_overlap(message.visitor_name, candidate.display_name)
+        ]
     candidates = sorted(candidates, key=lambda candidate: candidate.score, reverse=True)
     if not candidates or candidates[0].score < 0.5:
         return CustomerMatch("new")
@@ -86,12 +114,22 @@ def run_agent_step(
     ctx = ctx_factory(uuid.uuid4())
     with transaction(ctx) as db:
         opening_hours = org.get_opening_hours(db, ctx)
+        services = catalog.list_active_service_requirements(db, ctx)
+        try:
+            summary = customer_view(crm.get_customer_summary(db, ctx, match.customer_id)) if match.customer_id else None
+        except NotFound:
+            # Matching and context gathering use separate snapshots: a deleted/restricted customer needs staff,
+            # never a fabricated new-customer booking or a run left without an outcome.
+            return _early_result(ctx_factory, state, {"reason": "customer_unavailable"})
+    service_facts = [service.model_dump() for service in services]
     local_now = clock.to_zone(clock.now(), state.business.timezone)
     customer = (
         f"matched customer {match.customer_id}"
         if match.kind == "matched"
         else "new customer (details are held by the system; refer to them as the visitor)"
     )
+    if match.kind == "ambiguous":
+        customer = "customer not identified; staff must identify the customer before booking for an existing customer"
     spec = RunSpec(
         use_case="intake",
         prompt=load_prompt("intake"),
@@ -111,6 +149,11 @@ def run_agent_step(
                 text=json.dumps({"timezone": state.business.timezone, "weekday_key": "0 = Monday",
                                  "hours": [h.model_dump(mode="json") for h in opening_hours]}),
             ),
+            ContextBlock(label="matched_customer", untrusted=False,
+                         text=(_facts_json(summary) if summary else
+                               "Customer not identified." if match.kind == "ambiguous" else "New customer.")),
+            ContextBlock(label="active_services", untrusted=False,
+                         text=_facts_json(service_facts)),
             ContextBlock(label="inbound_message", source_id=state.message_id,
                          text=redact_contacts(message_ctx.body) or "", untrusted=True),
         ],
@@ -128,17 +171,18 @@ def _outcome_text(result: RunResult) -> str:
     if result.status == "policy_blocked":
         return "AI is turned off for this business, so no proposal was prepared."
     if result.status == "budget_exceeded":
-        return "Today's AI budget is used up, so no proposal was prepared."
+        return "AI allowance cannot fit another model call; please handle this message."
     if result.status in {"failed", "step_limit"}:
         return "Could not prepare a proposal; please handle this message."
     reason = result.extra.get("reason")
+    if reason == "public_intake_limit":
+        return "Hourly public AI intake limit reached; please handle this message."
     if reason == "open_proposal":
         return "A proposal for this conversation is already waiting in Approvals."
     if reason == "safety":
         return "This message was passed to a person without AI handling."
-    if reason == "ambiguous_customer":
-        names = ", ".join(result.extra["candidates"])
-        return f"Several customers could match ({names}). Please link the right one."
+    if reason == "customer_unavailable":
+        return "The matched customer is no longer available; please check the customer record."
     if result.final is not None and result.final.needs_human:
         return f"Needs a person: {result.final.message_to_staff}"
     return "Could not prepare a proposal; please handle this message."
@@ -147,20 +191,18 @@ def _outcome_text(result: RunResult) -> str:
 def _outcome_note(
     ctx_factory: CtxFactory, conversation_id: uuid.UUID, message_id: uuid.UUID, result: RunResult
 ) -> None:
+    outcome = _outcome_text(result)
+    if result.extra.get("reason") == "ambiguous_customer":
+        names = ", ".join(result.extra["candidates"])
+        outcome += f" Several customers could match ({names}). Please link the right one."
     marker = f"[intake:{message_id}]"
     ctx = ctx_factory(result.run_id)
     with transaction(ctx) as db:
         # Serialize marker checks and writes for concurrent retries, without module-internal queries.
         db.execute(text("select pg_advisory_xact_lock(hashtextextended(:key, 0))"), {"key": marker})
-        thread = conversations.get_thread(db, ctx, conversation_id, last_n=2_147_483_647)
-        if any(
-            m.direction == "internal" and m.author_kind == "assistant" and m.body.endswith(marker)
-            for m in thread.messages
-        ):
+        if conversations.has_internal_note_marker(db, ctx, conversation_id, marker):
             return
-        conversations.add_internal_note(
-            db, ctx, conversation_id, f"{_outcome_text(result)} {marker}", author_kind="assistant"
-        )
+        conversations.add_internal_note(db, ctx, conversation_id, f"{outcome} {marker}", author_kind="assistant")
 
 
 def run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None = None) -> RunResult:
@@ -181,7 +223,11 @@ def run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None 
                       "visitor_phone": message.visitor_phone},
     )  # fmt: skip
     result: RunResult | None = None
-    if open_proposals:
+    with transaction(ctx) as db:
+        allowed = admit_run(db, ctx, message_id)
+    if not allowed:
+        result = _early_result(ctx_factory, state, {"reason": "public_intake_limit"})
+    elif open_proposals:
         result = _early_result(ctx_factory, state, {"reason": "open_proposal"})
     elif message.channel == "web_chat":
         try:
@@ -197,11 +243,11 @@ def run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None 
     if result is None:
         match = _match_customer(message, business_id)
         if match.kind == "ambiguous":
-            result = _early_result(
-                ctx_factory, state, {"reason": "ambiguous_customer", "candidates": list(match.candidates)}
-            )
-        else:
-            result = run_agent_step(ctx_factory, message, match, state)
-            result = result.model_copy(update={"extra": {**result.extra, **state.extra}})
+            state.extra.update({"reason": "ambiguous_customer", "candidates": list(match.candidates)})
+        result = run_agent_step(ctx_factory, message, match, state)
+        result = result.model_copy(update={"extra": {**result.extra, **state.extra}})
+    if result.status == "budget_exceeded":
+        with transaction(ctx) as db:
+            conversations.request_handoff(db, ctx, message.conversation_id, reason=_outcome_text(result))
     _outcome_note(ctx_factory, message.conversation_id, message_id, result)
     return result

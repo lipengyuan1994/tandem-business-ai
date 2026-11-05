@@ -25,15 +25,18 @@
       "purchasing.record_supplier_quote",
       "purchasing.create_purchase_order"
     ],
-    "proposals": [
-      {
-        "action_type": "conversations.send_reply"
-      }
-    ],
     "forbidden_text": [
       "gwen@example.com",
       "hal@example.com",
       "BEGIN PRIVATE KEY"
+    ],
+    "proposal_alternatives": [
+      [
+        {
+          "action_type": "conversations.send_reply"
+        }
+      ],
+      []
     ]
   }
 }

@@ -57,7 +57,7 @@ Version tags follow semver (`0.1.0`), plus the git SHA once commits exist. Image
 | `migrate` | `smb-api` (`alembic upgrade head`), one-shot | none | postgres | exit code | 256 MB |
 | `postgres` | `pgvector/pgvector:pg17` | none | — | `pg_isready` | 1 GB (shared_buffers 256 MB) |
 | `keycloak` | Keycloak pinned (`start --import-realm --http-relative-path /auth --proxy-headers xforwarded --hostname https://$DOMAIN/auth`) | none | postgres | `/auth/health/ready` (management port) | 768 MB |
-| `backup` | `smb-backup` | none | postgres | last-success file age < 26 h | 256 MB |
+| `backup` | `smb-backup` | none | postgres | latest attempt ok, last success ≤ 7 h | 256 MB |
 | `llm-local` *(profile `private`)* | llama.cpp server | none | — | `/health` | set from model size |
 
 All services: `restart: unless-stopped`, `json-file` logs capped at 10 MB × 5, and a single internal network. Volumes: `pgdata`, `caddy_data`, `caddy_config`, `backup_state`. Files under `/opt/smb/`: `compose.yml`, `.env` (600), `ai-routes.yaml`, `VERSION`.
@@ -91,9 +91,9 @@ Object Storage buckets and registry are created once per account by `install.sh`
 1. Update packages; enable `unattended-upgrades`.
 2. Install Docker Engine and the Compose plugin from Docker's official apt repository.
 3. Create the `smb` user (docker group) and `/opt/smb`.
-4. `ufw` default deny incoming; allow 22/80/443. This is redundant with the firewall group, which is intended.
+4. `ufw` default deny incoming; allow 80/443 publicly and 22 only from the same `admin_cidrs` as the provider firewall (IPv4/IPv6). SSH accepts keys only; root network login is `prohibit-password` for recovery.
 5. Install the systemd unit `smb.service` (`docker compose -f /opt/smb/compose.yml up -d`, `ExecStop` down).
-6. Write `/opt/smb/READY` when finished.
+6. Bound journald (256 MiB persistent, 64 MiB runtime, 1 GiB reserve, 14 days), enable/verify time synchronization, and enable the five-minute host watchdog timer. The installer uploads its scripts before verifying the active timer and synchronized clock. Write `/opt/smb/READY` when finished.
 
 ## Install flow (`deploy/scripts/install.sh`) — customer or demo
 
@@ -177,3 +177,10 @@ Files: `deploy/docker/{api,web,backup}.Dockerfile` (build context = repository r
 **Follow-up (2026-11-03):** the Keycloak container is healthy only when the realm `smb` answers (not when the management endpoint is ready); `restore.sh` runs `migrate` on restored data before starting the application; `upgrade.sh` rolls back on interruption; `access.sh open|close` manages the SSH firewall rule; `make rehearse` now proves rollback after an applied migration, and its negative control was run (the old rollback code fails that step).
 
 **amd64 (2026-11-03):** `make images PLATFORM=linux/amd64` builds all three images; the api image is 238 MB (under the 250 MB target; the arm64 build is 269 MB because of different wheels), web 67.3 MB, backup 367 MB. They were started under emulation (`python` imports, `restic`, `supercronic`, `caddy`). The full rehearsal has not been run on amd64.
+
+
+### Production operations hardening (batch F, 2026-11-03)
+
+The host watchdog uses Ubuntu's Python standard library, Docker CLI, systemd and existing PostgreSQL; no monitoring container or paid service is added. It checks HTTPS readiness, all services (successful one-shot migration excepted), restart increments/OOM, host OOM journal, disk bytes/inodes, backup/maintenance ages, dead/due/stale-running jobs with bounded read-only SQL, certificate expiry and clock synchronization. State changes post a short JSON alert to optional `ALERT_WEBHOOK_URL`; failures to send are retried and all results persist locally. See [monitoring](../runbooks/monitoring.md) for exact thresholds, install/retrofit steps, alert receipt tests and the required separately hosted uptime check. Missing telemetry is an alert, not proof of health.
+
+API and worker stop grace is 120 seconds; PostgreSQL bounds idle transactions at 60 seconds. Upgrades require a planned maintenance window and draining API/worker before migration; this host setting takes effect when PostgreSQL is recreated. Journal limits apply to new VMs automatically; existing VMs run the staged `install-host-ops.sh` once as root. Image and restore database pruning is a reviewed operator procedure, confined to this project and preserving the previous release and latest pre-restore database, in [monitoring](../runbooks/monitoring.md). No live VM, webhook receipt, certificate renewal or shutdown drain was verified by this offline batch.

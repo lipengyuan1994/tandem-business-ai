@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import Literal
 
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
@@ -18,19 +19,27 @@ _engine: Engine | None = None
 _session_factory: sessionmaker[Session] | None = None
 
 
-def configure_engine(url: str | None = None, **kwargs: object) -> Engine:
+def configure_engine(url: str | None = None, *, process: Literal["api", "worker"] = "api", **kwargs: object) -> Engine:
     """Create (or replace) the global engine. Tests call this with the test database URL."""
     global _engine, _session_factory
     if _engine is not None:
         _engine.dispose()
-    _engine = create_engine(
-        url or get_settings().database_url,
-        pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=10,
-        hide_parameters=True,
-        **kwargs,
-    )
+    settings = get_settings()
+    options: dict[str, object] = {
+        "pool_pre_ping": True,
+        "pool_size": getattr(settings, f"{process}_db_pool_size"),
+        "max_overflow": getattr(settings, f"{process}_db_max_overflow"),
+        "pool_timeout": settings.db_pool_timeout_seconds,
+        "hide_parameters": True,
+        "connect_args": {
+            "options": (
+                f"-c statement_timeout={settings.db_statement_timeout_ms} "
+                f"-c idle_in_transaction_session_timeout={settings.db_idle_transaction_timeout_ms}"
+            )
+        },
+    }
+    options.update(kwargs)
+    _engine = create_engine(url or settings.database_url, **options)
     _session_factory = sessionmaker(_engine, expire_on_commit=False)
     return _engine
 

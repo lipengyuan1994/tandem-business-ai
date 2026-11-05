@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 from sqlalchemy import Text, cast, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import ActionProposal, ApprovalDecision, ExecutionAttempt, ProposalRevision
@@ -17,8 +16,9 @@ from .models import ActionProposal, ApprovalDecision, ExecutionAttempt, Proposal
 OPEN = ("pending_review", "approved", "executing")
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    return dump_models(db, ctx, [ActionProposal, ProposalRevision, ApprovalDecision, ExecutionAttempt])
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(db, ctx, [ActionProposal, ProposalRevision, ApprovalDecision, ExecutionAttempt])
+    return export_tables(tables, streaming=streaming)
 
 
 def _mentions(ids: list[uuid.UUID]):  # type: ignore[no-untyped-def]

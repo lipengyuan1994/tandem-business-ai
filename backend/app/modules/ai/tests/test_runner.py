@@ -18,7 +18,7 @@ from sqlalchemy import Engine, select, text
 
 from app.modules.ai import recording
 from app.modules.ai.agent import runner
-from app.modules.ai.agent.context import append_step, build_messages, trim_to_budget
+from app.modules.ai.agent.context import InputTooLarge, append_step, build_messages, estimate_tokens, trim_to_budget
 from app.modules.ai.agent.contexts import background_ctx_factory, staff_ctx_factory, staff_permissions
 from app.modules.ai.agent.fencing import fence
 from app.modules.ai.agent.prompts import Prompt, load_prompt
@@ -30,6 +30,7 @@ from app.modules.ai.gateway.routes import Limits, ProviderCfg, RouteEntry, Route
 from app.modules.ai.gateway.types import ChatMessage, ChatRequest, ChatResult, ProviderError, Usage
 from app.modules.ai.models import AiRun, AiRunStep, AiUsageDaily
 from app.modules.ai.permissions import AI_SYSTEM_PERMISSIONS
+from app.modules.ai.reservations import conservative_input
 from app.modules.ai.tests.helpers import (
     AI_TABLES,
     fake_router_by_class,
@@ -310,9 +311,22 @@ def test_budget_checked_against_usage_of_running_runs(biz: uuid.UUID, monkeypatc
 
     # Within one run: usage is recorded after every call, so the next step already sees it.
     biz2 = make_business(slug="budget-two")
+    scenario = spec()
+    first_request = ChatRequest(
+        messages=build_messages(
+            prompt(),
+            registry.tool_catalog(
+                registry.authorized_tools(background_ctx_factory(biz2)(uuid.uuid4()), scenario.tools)
+            ),
+            scenario,
+        ),
+        json_schema=agent_step_json_schema(),
+    )
+    # The initial input plus the maximum output must fit; the following exchange needs more input.
+    _set_budget(monkeypatch, conservative_input(first_request) + first_request.max_output_tokens)
     long_step = step_tool("count_things", query="x" * 300)
     gw = FakeGateway([long_step, step_final()])
-    result = run(biz2, gw)
+    result = run(biz2, gw, scenario)
     assert (result.status, len(gw.calls)) == ("budget_exceeded", 1)
     assert run_row(biz2, result.run_id).steps == 1
 
@@ -331,9 +345,11 @@ def test_budget_exceeded_before_call_stops_run(biz: uuid.UUID, monkeypatch: pyte
 def test_budget_80_percent_notifies_once_per_day(
     biz: uuid.UUID, monkeypatch: pytest.MonkeyPatch, owner_engine: Engine
 ) -> None:
-    _set_budget(monkeypatch, 100)
+    _set_budget(monkeypatch, 100_000)
     owner = make_user(name="Owner")
     add_member(owner, biz, ["owner"])
+    with transaction(system_ctx(biz)) as db:
+        db.add(AiUsageDaily(business_id=biz, day=clock.now().date(), input_tokens=80_000))
     reply = step_final("x" * 110)
     assert 80 <= 2 * (len(reply) // 4) < 100
     run(biz, FakeGateway([reply]))
@@ -394,11 +410,11 @@ def test_context_trims_oldest_tool_results_first() -> None:
     for i in range(3):
         append_step(messages, f'{{"step": {i}}}', {"ok": True, "data": "y" * 400})
     assert len(messages) == 8
-    trimmed = trim_to_budget(messages, max_tokens=(sum(len(m.content) for m in messages) // 4) - 50)
+    trimmed = trim_to_budget(messages, max_tokens=estimate_tokens(messages) - 50)
     assert len(trimmed) == 6 and trimmed[:2] == messages[:2]
     assert trimmed[2].content == '{"step": 1}'  # the oldest pair went first
-    assert trim_to_budget(messages, max_tokens=1)[:2] == messages[:2]  # never the system or task message
-    assert len(trim_to_budget(messages, max_tokens=1)) == 2
+    with pytest.raises(InputTooLarge):  # the retained system/task must fit too
+        trim_to_budget(messages, max_tokens=1)
     assert trim_to_budget(messages, max_tokens=10**6) == messages
 
 

@@ -1,6 +1,7 @@
 """Business export and customer-identifier redaction in procurement free text."""
 
 import uuid
+from collections.abc import Iterator
 from typing import Any
 
 from sqlalchemy import func, or_, select, update
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.platform.context import Context
 from app.platform.crud import rows_affected
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import (
@@ -42,11 +43,17 @@ TABLES = [
 ]
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    tables = dump_models(db, ctx, TABLES)
-    for row in tables["quote_request_suppliers"]:
-        row.pop("token_hash", None)
-    return tables
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(db, ctx, TABLES)
+    rows = tables["quote_request_suppliers"]
+
+    def safe_rows() -> Iterator[dict[str, Any]]:
+        for row in rows:
+            row.pop("token_hash", None)
+            yield row
+
+    tables["quote_request_suppliers"] = safe_rows()
+    return export_tables(tables, streaming=streaming)
 
 
 def links(db: Session, ctx: Context, target: ErasureTarget) -> set[uuid.UUID]:

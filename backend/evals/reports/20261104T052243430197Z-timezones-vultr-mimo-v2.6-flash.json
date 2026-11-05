@@ -1,0 +1,1061 @@
+{
+  "suite": "timezones",
+  "provider": "vultr",
+  "model": "mimo-v2.6-flash",
+  "metrics": {
+    "cases": 10,
+    "skipped_cases": 0,
+    "unpriced_cases": 0,
+    "pass_rate": 1.0,
+    "schema_valid_rate": 1.0,
+    "action_accuracy": 1.0,
+    "field_accuracy": 1.0,
+    "injection_resistance": 1.0,
+    "needs_human_precision": null,
+    "needs_human_accuracy": 1.0,
+    "p50_latency_ms": 5040.0,
+    "p95_latency_ms": 5512,
+    "input_tokens": 190794,
+    "output_tokens": 6802,
+    "cost_micros": 49404,
+    "thresholds_met": true
+  },
+  "regressions": [],
+  "results": [
+    {
+      "case_id": "timezones-denver-afternoon",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5512,
+      "input_tokens": 22184,
+      "output_tokens": 709,
+      "cost_micros": 5724,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "85e491c2-391e-4d5f-a70b-a14820fa4860",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "edebd6c5-366b-40c3-8962-73f0aefb8f6d",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 10 Nov 14:00 MST",
+            "run_id": "edebd6c5-366b-40c3-8962-73f0aefb8f6d"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "6ae65d1e-25b4-509f-9669-409c9985b59f",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "ef311fd219138c131f9a3a0a350bf352e454d43e635278a3b8bf63f14fdf034a",
+        "runs": [
+          {
+            "id": "85e491c2-391e-4d5f-a70b-a14820fa4860",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "edebd6c5-366b-40c3-8962-73f0aefb8f6d",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a501-9497-7a6a-bcf3-79a4a72ce13f"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "edebd6c5-366b-40c3-8962-73f0aefb8f6d"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-denver-dst-after",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5295,
+      "input_tokens": 22033,
+      "output_tokens": 657,
+      "cost_micros": 5674,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "323dffcb-3e1a-4b37-93a8-9150039513a7",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "7f2a74cf-aa20-49af-b756-9418ab632c47",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 03 Nov 09:00 MST",
+            "run_id": "7f2a74cf-aa20-49af-b756-9418ab632c47"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "0ba6c99f-9e07-5c66-b170-fa34cc769434",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "e2c416f712a8e6c2eccd2035c5fe822b5a4064d34716af3840e4702dd1e8054e",
+        "runs": [
+          {
+            "id": "323dffcb-3e1a-4b37-93a8-9150039513a7",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-01T09:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "7f2a74cf-aa20-49af-b756-9418ab632c47",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-01T09:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a501-ad24-71ad-b269-3d71cb7254cf"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "7f2a74cf-aa20-49af-b756-9418ab632c47"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-denver-dst-before",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5323,
+      "input_tokens": 22029,
+      "output_tokens": 695,
+      "cost_micros": 5681,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "520664e2-cb71-450e-bd27-cdf7f5996934",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "ed6a7e48-a090-42fb-97e8-07e8cd998f5b",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 03 Nov 09:00 MST",
+            "run_id": "ed6a7e48-a090-42fb-97e8-07e8cd998f5b"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "c20f15a6-010e-5059-b7eb-b9435b1f240f",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "04cf592c7bb2884ab9a18b8bcd407af57f50b5285a8f2b101b8963ede26aefb0",
+        "runs": [
+          {
+            "id": "520664e2-cb71-450e-bd27-cdf7f5996934",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-10-30T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "ed6a7e48-a090-42fb-97e8-07e8cd998f5b",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-10-30T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a501-c708-70c9-8aa4-6dbfb46c11c6"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "ed6a7e48-a090-42fb-97e8-07e8cd998f5b"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-denver-next-tuesday",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5113,
+      "input_tokens": 19098,
+      "output_tokens": 690,
+      "cost_micros": 4948,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "b46231fb-0aae-4183-8b17-edffc0985bfa",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "f9c744b1-2330-48bf-ad33-04afb973fa11",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 10 Nov 11:45 MST",
+            "run_id": "f9c744b1-2330-48bf-ad33-04afb973fa11"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "c5a4ada5-3f00-58da-b2c2-710a7f568373",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "cc3d7c5fab78a32c2302e411ba9737116346dc9e85fe098dc4cd0c3f8fb136e9",
+        "runs": [
+          {
+            "id": "b46231fb-0aae-4183-8b17-edffc0985bfa",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "f9c744b1-2330-48bf-ad33-04afb973fa11",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a501-e050-78c7-ba73-a98366899bd9"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "f9c744b1-2330-48bf-ad33-04afb973fa11"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-denver-spring-before",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 5205,
+      "input_tokens": 22102,
+      "output_tokens": 709,
+      "cost_micros": 5702,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "979ea9c0-6f54-4318-9f35-9f0ca275124c",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:check_stock:-",
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "9cf49de7-58f0-4d04-9b4f-008ce04fba70",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Tue 16 Mar 09:00 MDT",
+            "run_id": "979ea9c0-6f54-4318-9f35-9f0ca275124c"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "178a0561-4faa-5a1b-9626-c21f12ff09ba",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "9e32a8eff12f622e82c299676edc98758efe1d8e1691107fb83cb617a32173f0",
+        "runs": [
+          {
+            "id": "979ea9c0-6f54-4318-9f35-9f0ca275124c",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2027-03-12T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "9cf49de7-58f0-4d04-9b4f-008ce04fba70",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2027-03-12T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a501-f997-7777-baff-068b1a4ed746"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "979ea9c0-6f54-4318-9f35-9f0ca275124c"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-afternoon",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 4,
+      "latency_ms": 4609,
+      "input_tokens": 17006,
+      "output_tokens": 613,
+      "cost_micros": 4405,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "38ccdd1b-1a29-49c3-8301-3b477781ea99",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "6defc68a-f2d3-47bf-ab0f-29ac334f8f3f",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Garden design consultation for Gwen Example, Wed 11 Nov 13:00 GMT",
+            "run_id": "38ccdd1b-1a29-49c3-8301-3b477781ea99"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "f8546110-7d55-55d3-92bb-f9e5244b69bc",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "05ec75ff041f527cb7f5cefecea84d0e6f3544aa213e9f4049d93b371028cb88",
+        "runs": [
+          {
+            "id": "38ccdd1b-1a29-49c3-8301-3b477781ea99",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "6defc68a-f2d3-47bf-ab0f-29ac334f8f3f",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a502-0f0b-7abd-ae16-9cf4f50c5c2d"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "38ccdd1b-1a29-49c3-8301-3b477781ea99"
+        ],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-dst-after",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 4,
+      "latency_ms": 4775,
+      "input_tokens": 16963,
+      "output_tokens": 629,
+      "cost_micros": 4398,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "004f0186-1a69-4939-bf7f-6363f658ef72",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "c1e46fe8-ab7e-40b2-bc9c-2fbc4a0eac41",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Garden design consultation for Gwen Example, Wed 28 Oct 09:00 GMT",
+            "run_id": "c1e46fe8-ab7e-40b2-bc9c-2fbc4a0eac41"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "c7aa347b-89a3-5eea-8188-b72081d5cef2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "c7bcc69d487c8b0ec6cca4ab8592f23361c3f78f81b8915c7a0bb7a95b410a79",
+        "runs": [
+          {
+            "id": "004f0186-1a69-4939-bf7f-6363f658ef72",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-10-25T02:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "c1e46fe8-ab7e-40b2-bc9c-2fbc4a0eac41",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-10-25T02:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a502-26a1-74d0-be55-cb1a304ad0d7"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "c1e46fe8-ab7e-40b2-bc9c-2fbc4a0eac41"
+        ],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-dst-before",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 4,
+      "latency_ms": 4967,
+      "input_tokens": 17031,
+      "output_tokens": 717,
+      "cost_micros": 4438,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "26ce69fd-37e1-407b-ace8-c4c2775410e4",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "a90401f8-b237-4ed3-9ae7-6b9c3498d08b",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Garden design consultation for Gwen Example, Mon 26 Oct 09:00 GMT",
+            "run_id": "a90401f8-b237-4ed3-9ae7-6b9c3498d08b"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "9d9a0684-28c7-5d48-9829-4ff4029eb9b2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "0eb080ee16165a217cea265cfb178557fcb3e8d63f8003c777b8af59df00e456",
+        "runs": [
+          {
+            "id": "26ce69fd-37e1-407b-ace8-c4c2775410e4",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-10-23T12:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "a90401f8-b237-4ed3-9ae7-6b9c3498d08b",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-10-23T12:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a502-3edb-71f6-bc98-5387f21e0295"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "a90401f8-b237-4ed3-9ae7-6b9c3498d08b"
+        ],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-next-wednesday",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 4,
+      "latency_ms": 4826,
+      "input_tokens": 15355,
+      "output_tokens": 680,
+      "cost_micros": 4009,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "5a9b0a08-7864-41a9-96cb-77f9d7f3e2c0",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "dd5a6941-5556-485b-8326-df0a95688dbc",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Garden design consultation for Gwen Example, Wed 11 Nov 09:00 GMT",
+            "run_id": "5a9b0a08-7864-41a9-96cb-77f9d7f3e2c0"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "bdf70930-b8fb-5686-9ec5-726f16043cf5",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "ddfb5cbb80a034c5feff843ba8c18cd54ed29784e639359b0ab89d4a4b95b140",
+        "runs": [
+          {
+            "id": "5a9b0a08-7864-41a9-96cb-77f9d7f3e2c0",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "dd5a6941-5556-485b-8326-df0a95688dbc",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a502-561f-7556-83d5-2e9c5be5cb0e"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "5a9b0a08-7864-41a9-96cb-77f9d7f3e2c0"
+        ],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "timezones-london-spring-before",
+      "suite": "timezones",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 4,
+      "latency_ms": 4894,
+      "input_tokens": 16993,
+      "output_tokens": 703,
+      "cost_micros": 4425,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "40922cdb-6a2d-4360-bbc8-da8608a8591c",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "81afe6bf-c2ea-4152-a881-b9afa792aa6c",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Garden design consultation for Gwen Example, Mon 29 Mar 09:00 BST",
+            "run_id": "81afe6bf-c2ea-4152-a881-b9afa792aa6c"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "a2147881-a870-5dd3-9052-2b1ca93f6b74",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "035e09990c6e843edc038eff3c4a36b0416c669b3d7860d26318b0df76fc5815",
+        "runs": [
+          {
+            "id": "40922cdb-6a2d-4360-bbc8-da8608a8591c",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2027-03-26T12:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "81afe6bf-c2ea-4152-a881-b9afa792aa6c",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 2,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2027-03-26T12:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1a502-6e1a-7aca-a313-2f831e55fca3"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "81afe6bf-c2ea-4152-a881-b9afa792aa6c"
+        ],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    }
+  ]
+}

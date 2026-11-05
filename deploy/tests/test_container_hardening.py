@@ -152,7 +152,8 @@ env = dict(line.split('=', 1) for line in pathlib.Path('.env').read_text().split
 with open(os.environ['TRACE'], 'a') as f:
     f.write(('UP version=' + env['VERSION'] if 'up' in a else ' '.join(a)) + '\\n')
 if 'config' in a: print('migrate\\napi\\nworker\\nbackup\\ncaddy')
-elif 'ps' in a: print('api|Up (healthy)\\nworker|Up (healthy)\\nbackup|Up (healthy)\\ncaddy|Up (healthy)')
+elif 'ps' in a:
+    print('backup|healthy' if a[-1] == 'backup' else 'api|Up (healthy)\\nworker|Up (healthy)\\nbackup|Up (healthy)\\ncaddy|Up (healthy)')
 elif 'chown' in a and os.environ.get('CHOWN_FAIL'): sys.exit(1)
 """,
         )

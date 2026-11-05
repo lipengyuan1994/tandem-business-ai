@@ -12,7 +12,7 @@ STATE_DIR="${BACKUP_STATE_DIR:-/state}"
 STATUS_FILE="$STATE_DIR/backup-status.json"
 SUCCESS_FILE="$STATE_DIR/last-success"
 WORK_DIR="${STATE_DIR:?}/work/dumps"
-HEALTH_MAX_AGE_SECONDS="${BACKUP_HEALTH_MAX_AGE_SECONDS:-93600}" # 26 hours
+HEALTH_MAX_AGE_SECONDS="${BACKUP_HEALTH_MAX_AGE_SECONDS:-25200}" # 7 hours
 STALE_AFTER_SECONDS="${BACKUP_STALE_AFTER_SECONDS:-21600}"       # 6 hours
 PGHOST="${PGHOST:-postgres}"
 export PGHOST
@@ -78,11 +78,43 @@ run_backup() {
   log "ok: snapshot $snapshot ($kind), smb $smb_bytes bytes, keycloak $kc_bytes bytes, $((finished - started)) s"
 }
 
+# Maintenance is independent of backup success: neither overwrites the other's health.
+maintenance_status() { # operation result
+  local operation="$1" result="$2" file="$STATE_DIR/$1-status.json" tmp="$STATE_DIR/$1-status.json.tmp"
+  local last_success=null
+  if [ -s "$file" ]; then last_success=$(jq -c '.last_success // null' "$file"); fi
+  if [ "$result" = ok ]; then last_success="\"$(now)\""; fi
+  jq -n --arg result "$result" --arg attempt "$(now)" --argjson success "$last_success" \
+    '{result: $result, last_attempt: $attempt, last_success: $success}' >"$tmp"
+  mv "$tmp" "$STATE_DIR/$operation-status.json"
+}
+
 run_maintenance() {
-  ensure_repository
-  restic forget --host smb --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet
-  restic check --read-data-subset=5%
+  local failed=0
+  if ensure_repository && restic forget --host smb --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune --quiet; then
+    maintenance_status prune ok
+  else
+    maintenance_status prune error
+    failed=1
+  fi
+  # Check even if pruning failed, retaining independent results for both operations.
+  if restic check --read-data-subset=5%; then
+    maintenance_status check ok
+  else
+    maintenance_status check error
+    failed=1
+  fi
+  [ "$failed" = 0 ] || { log "maintenance failed (see --status)"; return 1; }
   log "maintenance ok"
+}
+
+combined_status() {
+  local backup='{"result":"never_run"}' prune='{"result":"never_run"}' check='{"result":"never_run"}'
+  [ ! -s "$STATUS_FILE" ] || backup=$(cat "$STATUS_FILE")
+  [ ! -s "$STATE_DIR/prune-status.json" ] || prune=$(cat "$STATE_DIR/prune-status.json")
+  [ ! -s "$STATE_DIR/check-status.json" ] || check=$(cat "$STATE_DIR/check-status.json")
+  jq -n --argjson backup "$backup" --argjson prune "$prune" --argjson check "$check" \
+    '$backup + {maintenance: {prune: $prune, check: $check}}'
 }
 
 main() {
@@ -100,11 +132,12 @@ main() {
   case "$mode" in
     healthcheck)
       age=$(age_of_last_success)
-      [ "$age" -ge 0 ] && [ "$age" -le "$HEALTH_MAX_AGE_SECONDS" ]
+      [ "$age" -ge 0 ] && [ "$age" -le "$HEALTH_MAX_AGE_SECONDS" ] &&
+        [ -s "$STATUS_FILE" ] && jq -e '.result == "ok"' "$STATUS_FILE" >/dev/null
       return
       ;;
     status)
-      if [ -s "$STATUS_FILE" ]; then cat "$STATUS_FILE"; else echo '{"result":"never_run"}'; fi
+      combined_status
       return
       ;;
   esac

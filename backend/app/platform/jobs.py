@@ -24,7 +24,7 @@ from app.platform import clock
 from app.platform.context import system_context
 from app.platform.db import system_transaction, transaction
 from app.platform.ids import new_id
-from app.platform.models import Job
+from app.platform.models import Job, JobDedupe
 from app.platform.registry import JobHandler, NonTransactionalJobHandler, Registry
 
 log = structlog.get_logger(__name__)
@@ -43,6 +43,13 @@ def enqueue(
     max_attempts: int = 8,
 ) -> UUID:
     """Insert a job. With an existing `dedupe_key` this is a no-op returning the existing job's id."""
+    # Serialise cleanup/enqueue for a key, including its first use. Tombstones keep
+    # the original id after payload retention expires; callers still get a no-op.
+    if dedupe_key is not None:
+        db.execute(text("select pg_advisory_xact_lock(hashtextextended(:key, 0))"), {"key": f"job:{dedupe_key}"})
+        previous = db.scalar(select(JobDedupe.job_id).where(JobDedupe.key == dedupe_key))
+        if previous is not None:
+            return previous
     values: dict[str, Any] = {
         "id": new_id(),
         "kind": kind,
@@ -66,6 +73,8 @@ CLAIM_SQL = text(
     update jobs set status = 'running', locked_by = :worker, locked_until = :now + make_interval(mins => :lock_min),
                     attempts = attempts + 1, updated_at = :now
      where id = (select id from jobs where status = 'queued' and run_at <= :now
+                  and (:lane = 'all' or (:lane = 'ai' and kind like 'ai.%')
+                       or (:lane = 'non_ai' and kind not like 'ai.%'))
                   order by priority, run_at for update skip locked limit 1)
     returning id, business_id, kind, payload, attempts, max_attempts, locked_by
     """
@@ -77,9 +86,13 @@ def backoff(attempts: int) -> timedelta:
     return timedelta(seconds=base * random.uniform(0.8, 1.2))  # noqa: S311 - jitter, not security
 
 
-def claim(worker: str) -> dict[str, Any] | None:
+def claim(worker: str, *, lane: str = "all") -> dict[str, Any] | None:
     with system_transaction() as db:
-        row = db.execute(CLAIM_SQL, {"worker": worker, "now": clock.now(), "lock_min": LOCK_MINUTES}).mappings().first()
+        row = (
+            db.execute(CLAIM_SQL, {"worker": worker, "now": clock.now(), "lock_min": LOCK_MINUTES, "lane": lane})
+            .mappings()
+            .first()
+        )
         return dict(row) if row else None
 
 

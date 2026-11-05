@@ -10,11 +10,12 @@ import uuid
 from datetime import timedelta
 from typing import Any
 
-from pydantic import AwareDatetime, BaseModel
+from pydantic import AwareDatetime, BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from app.modules.crm import public as crm
 from app.modules.scheduling import public as scheduling
+from app.platform import clock
 from app.platform.context import Context
 
 from .base import RunState, Tool
@@ -25,14 +26,23 @@ MAX_SLOT_WINDOW = timedelta(days=14)
 MAX_SLOTS = 10
 
 
-class FindSlotsArgs(ToolArgs):
+class BoundedWindow(ToolArgs):
+    @field_validator("earliest", "latest", "start", "end", check_fields=False)
+    @classmethod
+    def near_now(cls, value: Any) -> Any:
+        if abs(value - clock.now()) > timedelta(days=366):
+            raise ValueError("date must be within one year of now")
+        return value
+
+
+class FindSlotsArgs(BoundedWindow):
     service_id: uuid.UUID
     earliest: AwareDatetime
     latest: AwareDatetime
     resource_id: uuid.UUID | None = None
 
 
-class ListAppointmentsArgs(ToolArgs):
+class ListAppointmentsArgs(BoundedWindow):
     start: AwareDatetime
     end: AwareDatetime
     customer_id: uuid.UUID | None = None

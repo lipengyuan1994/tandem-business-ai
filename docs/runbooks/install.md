@@ -79,7 +79,7 @@ What it does, and what you must do at each pause:
 4. **DNS (your action)**: it prints the VM's IPv4 and IPv6 addresses. At your DNS provider create `A <domain> → IPv4` and `AAAA <domain> → IPv6` (TTL 300 seconds). The installer waits up to 30 minutes for the **A** record to resolve to the VM's IPv4. It does not check the AAAA record, so check it yourself: `dig +short AAAA <domain>` must print the printed IPv6 address. **If the AAAA record is wrong, delete it** (a wrong AAAA breaks HTTPS for visitors who have IPv6; no AAAA record is fine). Resolvers keep old answers for the record's TTL (300 seconds if you followed the advice), so re-check after that time before trusting the HTTPS result.
 5. **First boot and upload**: waits for cloud-init to install Docker (`/opt/smb/READY`), uploads the stack and `.env`, logs in to the registry, pulls the images and starts everything.
 6. **Bootstrap**: waits for `https://<domain>/api/v1/readyz` (Caddy fetches a Let's Encrypt certificate on first request; this needs DNS to be correct), then creates the business and the owner's login in Keycloak. It delivers the **temporary password immediately on the controlling terminal**, before backup, smoke test or firewall changes; redirected installer output does not contain it. Use an interactive terminal and store the password when it appears. Without a controlling terminal, bootstrap refuses to create credentials.
-7. **Smoke test and first backup**: runs a backup to Object Storage and `smoke.sh`.
+7. **Smoke test and first backup**: runs a backup to Object Storage, waits up to 120 seconds for Docker to report the backup service healthy, then runs `smoke.sh`. A successful backup can precede Docker's next healthcheck; the wait handles that delay. A timeout stops the install before smoke; inspect backup logs and `docker compose ps` before resuming.
 8. **Finish** prints the owner's first-login instructions. With `--close-ssh` it also closes port 22 again. **Do not use `--close-ssh` if you want to follow section 6 right away**: the checks there need SSH. Close it later with `deploy/scripts/access.sh close --name <name>`. Without the flag, SSH stays open for your address until you close it ([access.md](access.md)).
 
 When the installer has finished (or you give up), clear the secrets from your terminal: `unset VULTR_API_KEY REGISTRY_TOKEN OBJECT_STORAGE_ACCESS_KEY OBJECT_STORAGE_SECRET_KEY`, or close the window.
@@ -104,6 +104,38 @@ Replace the registry, bucket and admin address with your values. Add `--dry-run`
 The demo path runs `seed`, then the `demo-logins` command described below for Morgan and Riley. Login passwords stay in `/opt/smb/demo-logins/logins.txt` on the VM (folder mode 700, file mode 600); the installer prints only its location and never prints or copies its contents. The restic password also stays in the private `.env`, with no printout or pause: store that file safely offline so backups remain restorable. Sign-in still requires TOTP. Backups to Object Storage, smoke tests, firewall configuration and optional `--close-ssh` run as usual. Retrieve the login file privately before closing SSH, or reopen SSH with [access.md](access.md).
 
 If interrupted, repeat the same command with `--resume`. It reuses the saved domain and secrets; when both demo businesses already exist it skips seed and reruns the idempotent `demo-logins` checks without resetting passwords. Those checks still refuse businesses whose name or seeded identity does not match the fixtures. If only one business was seeded before an interruption, seed refuses to overwrite existing data; inspect that partial seed before retrying.
+
+### Optional: enable Vultr AI during installation
+
+AI settings are optional; omitting them keeps the existing default behavior. Add `--ai-routes /path/to/operator-routes.yaml` to the install command to upload that file as `/opt/smb/config/ai-routes.yaml`. Supply a reviewed route file with the desired models and a Vultr provider using `https://api.vultrinference.com/v1` and `api_key_env: VULTR_INFERENCE_API_KEY`; put only the environment variable name in the route file, never the key itself. The installer validates locally with the backend loader when `backend/.venv` exists. Otherwise it requires Python with the project's existing PyYAML and checks YAML syntax and the `providers` and `routes` mappings. Invalid or unreadable files stop the install before provisioning. This validation also runs with `--dry-run`.
+
+Read the inference key privately before running the installer:
+
+```bash
+$ read -rs VULTR_INFERENCE_API_KEY && export VULTR_INFERENCE_API_KEY
+```
+
+When that variable is nonempty, the installer writes it to the local `install-<name>/.env` and the VM's `/opt/smb/.env`, both mode 600, and adds `api.vultrinference.com` to `EGRESS_ALLOWLIST` while keeping existing hosts. It never prints the key. Clear the shell variable afterwards with `unset VULTR_INFERENCE_API_KEY`.
+
+On `--resume`, an existing route file is preserved unless you pass `--ai-routes` again. Without the key environment variable, saved AI credentials and egress settings are preserved too. A normal upgrade also preserves the operator's route file. Keep any manual `.env` edits equal in both copies before resuming, because the installer uploads the local copy.
+
+### Enable AI on an existing installation
+
+Open SSH for your address if needed ([access.md](access.md)). Upload a reviewed route file from your computer, then edit both environment files privately:
+
+```bash
+$ scp -i install-<name>/id_ed25519 /path/to/operator-routes.yaml smb@<ip>:/opt/smb/config/ai-routes.yaml
+$ ${EDITOR:-vi} install-<name>/.env
+$ chmod 600 install-<name>/.env
+$ ssh -i install-<name>/id_ed25519 smb@<ip>
+vm$ ${EDITOR:-vi} /opt/smb/.env
+vm$ chmod 600 /opt/smb/.env
+vm$ chmod 644 /opt/smb/config/ai-routes.yaml
+vm$ cd /opt/smb
+vm$ docker compose up -d api worker
+```
+
+In **both** `.env` copies, set `VULTR_INFERENCE_API_KEY` to the same inference key (use a single-quoted value to keep dollar signs literal). Add `api.vultrinference.com` to the comma-separated `EGRESS_ALLOWLIST`; keep any existing hosts. Do not paste keys into shell commands or logs. The route file, key and allowed host are all needed; restarting with `up -d` recreates api/worker when their environment changes. A configured route still needs the selected model to be available and the business's AI policy to allow it. Verify a real AI action in the application separately; local YAML validation and smoke do not prove inference connectivity.
 
 ## 5. First login (the owner)
 

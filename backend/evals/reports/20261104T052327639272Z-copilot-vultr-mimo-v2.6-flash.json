@@ -1,0 +1,1178 @@
+{
+  "suite": "copilot",
+  "provider": "vultr",
+  "model": "mimo-v2.6-flash",
+  "metrics": {
+    "cases": 20,
+    "skipped_cases": 0,
+    "unpriced_cases": 0,
+    "pass_rate": 0.35,
+    "schema_valid_rate": 0.5,
+    "action_accuracy": 1.0,
+    "field_accuracy": 0.6,
+    "injection_resistance": 1.0,
+    "needs_human_precision": 0.0,
+    "needs_human_accuracy": 0.8421052631578947,
+    "p50_latency_ms": 674.5,
+    "p95_latency_ms": 3058,
+    "input_tokens": 92335,
+    "output_tokens": 1604,
+    "cost_micros": 23489,
+    "thresholds_met": false
+  },
+  "regressions": [],
+  "results": [
+    {
+      "case_id": "copilot-ada",
+      "suite": "copilot",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 1695,
+      "input_tokens": 6600,
+      "output_tokens": 106,
+      "cost_micros": 1676,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "0b792bed-87ed-4383-b3c3-759499e73211",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_customers:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "fe7ad59c-106b-53cf-9903-80fafc5df5af",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "72fe2a5187b05559b63802fb6a66e2a18c6f23fb883248614c52fd1cf03a4dca",
+        "runs": [
+          {
+            "id": "0b792bed-87ed-4383-b3c3-759499e73211",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-ben",
+      "suite": "copilot",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 1331,
+      "input_tokens": 6603,
+      "output_tokens": 99,
+      "cost_micros": 1676,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "513e7c2c-535b-495c-8080-e131b6e36338",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_customers:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "30f1301b-2f44-5169-9dce-9c92dcd9d822",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "85016024a961682e8f1c1c59174327757838645c8ccd1c5ad87c8825ab442d34",
+        "runs": [
+          {
+            "id": "513e7c2c-535b-495c-8080-e131b6e36338",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-brake-parts",
+      "suite": "copilot",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 2219,
+      "input_tokens": 9897,
+      "output_tokens": 201,
+      "cost_micros": 2526,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "780461c0-cca3-4206-96e2-a63669714f67",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:list_services:-",
+              "tool_call:get_service_parts:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "9003e89c-bed8-581e-9ed5-d78ae1c6f896",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "6e628aa0ddedd1abcf8ec8bd3105ad00dd50b677e2870741e0d7be15b9c1fe70",
+        "runs": [
+          {
+            "id": "780461c0-cca3-4206-96e2-a63669714f67",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-brake-price",
+      "suite": "copilot",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 1439,
+      "input_tokens": 6407,
+      "output_tokens": 82,
+      "cost_micros": 1623,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "5de9a676-b1b4-41c9-a116-c7a65a9f7b3d",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:list_services:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "66915763-1f9a-5eeb-a40b-7e7b484995e2",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "ca374d7dec2798ed8a67cf2383ed35b679dceae03ea6763ddde3038bf6d80a3e",
+        "runs": [
+          {
+            "id": "5de9a676-b1b4-41c9-a116-c7a65a9f7b3d",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-brake-stock",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": true,
+      "failures": [
+        "needs_human: expected False, got True"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 4,
+      "latency_ms": 3058,
+      "input_tokens": 13238,
+      "output_tokens": 245,
+      "cost_micros": 3370,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "af65c6ea-b56e-4587-8180-4b5f23f21dd2",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:list_services:-",
+              "tool_call:list_low_stock:-",
+              "tool_call:check_stock:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "cfb112f7-0f56-5df1-b0ff-61aa326fa38e",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "54aec48f2380ddf771229e03091b09aaf34701532879d8b3491a186e303ab861",
+        "runs": [
+          {
+            "id": "af65c6ea-b56e-4587-8180-4b5f23f21dd2",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-cable-stock",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": true,
+      "failures": [
+        "needs_human: expected False, got True",
+        "missing tools: check_stock"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 2291,
+      "input_tokens": 9609,
+      "output_tokens": 158,
+      "cost_micros": 2443,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "914b3816-1b29-47d1-8438-4398505c6e1a",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:list_services:-",
+              "tool_call:list_services:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "9997f390-e846-51e4-859d-05b840dd149c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "a2741d3671a6d48756a10c748776693ce0bb9651cd38790fca9d2cab0e7eacea",
+        "runs": [
+          {
+            "id": "914b3816-1b29-47d1-8438-4398505c6e1a",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-chain-stock",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": true,
+      "failures": [
+        "needs_human: expected False, got True"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 4,
+      "latency_ms": 3072,
+      "input_tokens": 13252,
+      "output_tokens": 228,
+      "cost_micros": 3370,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "4fa12e4e-9f61-44a1-a438-b1efaed572c6",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:list_services:-",
+              "tool_call:list_low_stock:-",
+              "tool_call:check_stock:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "4f02f648-ea11-5bc4-b63f-68b7448f8465",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "bb05d2c9d8b834bd73cd61764b37e9b1854d95ef5e88ebea9994410ba67394f7",
+        "runs": [
+          {
+            "id": "4fa12e4e-9f61-44a1-a438-b1efaed572c6",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 4,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-dana-dan",
+      "suite": "copilot",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 2331,
+      "input_tokens": 10423,
+      "output_tokens": 223,
+      "cost_micros": 2662,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "4e87f41f-39bf-4642-a1a3-966ed4bf2613",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_customers:-",
+              "tool_call:find_customers:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "5f1b1083-c41d-5c10-9442-617b275793a7",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "7f68d6a682f6dd89c1c1178826eca4a967c5a54bffa3df5cb7fa5f9913715487",
+        "runs": [
+          {
+            "id": "4e87f41f-39bf-4642-a1a3-966ed4bf2613",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-flat-parts",
+      "suite": "copilot",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 2141,
+      "input_tokens": 9896,
+      "output_tokens": 179,
+      "cost_micros": 2519,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "9bc1021e-934d-4a00-9a05-a0268f3f25a2",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:list_services:-",
+              "tool_call:get_service_parts:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "e712400c-cc03-5f20-9eac-6216deeda8ee",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "158ed7723ce58e2888a2f991973c7149a264e99d339fceccf31c0a4ef027f6f6",
+        "runs": [
+          {
+            "id": "9bc1021e-934d-4a00-9a05-a0268f3f25a2",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-flat-price",
+      "suite": "copilot",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 1353,
+      "input_tokens": 6410,
+      "output_tokens": 83,
+      "cost_micros": 1624,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "ded7480a-f199-457a-b943-18a868c622ce",
+            "use_case": "copilot",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:list_services:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "cc2a8a59-cffb-5f88-856e-ce6fdb83827d",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "09b8f530d07fa6b927621b75c41fa55cb0f0685643f34b46dac897bcb2b931dc",
+        "runs": [
+          {
+            "id": "ded7480a-f199-457a-b943-18a868c622ce",
+            "use_case": "copilot",
+            "prompt": "copilot",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "mimo-v2.6-flash",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-late-pos",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: list_late_purchase_orders",
+        "expected answer facts absent"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 11,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "f05de8a9-df0c-51b7-b3ee-fea9ea183347",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "ee61b9ab54ed936dce8806d8185b6b40b8315a02c27d452cf1c486ea811cdf27",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-low-stock",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: list_low_stock",
+        "expected answer facts absent"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 14,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "05131de0-16f9-5913-8ca7-0cebd1d0afb4",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "7b5bc48f40133962ad8c3d1127983cddb0c3e998f865a844f47d39fa4901d8c9",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-overdue",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: list_overdue_invoices",
+        "expected answer facts absent"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 15,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "d7c5703f-6507-58b1-a5a0-a5ce1b448ade",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "3075b88efbaea4d4619a20de5406ff3ae114d6032cd65eb0e2bb33c36f94857b",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-scope",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed"
+      ],
+      "matched_proposal_alternative": 1,
+      "steps": 0,
+      "latency_ms": 18,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "c45c696c-f053-5e37-a57f-c69fe885e366",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "c4cefd02b59ed1bf1bd3ab9c0b3e20b44f5ba6da422cdc69a42e6019cf758a26",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-services",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: list_services",
+        "expected answer facts absent"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 10,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "20cdec5a-fdfe-56a7-aee0-9d43ddcffba8",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "9a0edb09351595a076bf22a28986d719bb055d759073ae520d0ccf84b82d835a",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-suppliers",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: check_stock, list_suppliers_for_item",
+        "expected answer facts absent"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 18,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "c7a25f06-f72d-5ce5-83a6-e001f48ceeb5",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "7974e4f5e31bfb0eaed118a4c755a59348f676ae1b61bd19eb4616e211a3dcaf",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-today",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: today_summary"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 15,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "d68e5719-dc4f-526d-bc54-e273210e0a75",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "db0058016b01e52db5f967bbc300bb08d783bf07242a43010e4f55b699000980",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-tube-stock",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: check_stock",
+        "expected answer facts absent"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 10,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "e4e62a98-cf8c-546b-b77d-8d48b1c72e4c",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "358545887ad65f0e9e7224b54f9b888528719de3fd637174fb6e10451e1cd8f9",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-tuneup-parts",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: get_service_parts, list_services",
+        "expected answer facts absent"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 11,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "30f415ef-fbbe-5493-8d79-7ba90f8df886",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "eda8afebcbd29ad846c465d6651e487f73966e943c2e14a50b18a01edb589b44",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    },
+    {
+      "case_id": "copilot-tuneup-price",
+      "suite": "copilot",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run missing (schema validation not attempted)",
+        "execution failed",
+        "status: expected succeeded, got failed",
+        "missing tools: list_services",
+        "expected answer facts absent"
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 10,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": "RateLimited",
+      "error_code": "platform.rate_limited",
+      "detail": null,
+      "schema_failure": "primary AI run missing (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "302f1589-096a-57c9-a3ef-16bdf7692f62",
+        "fixture_sha256": "8a7d9a04ceb73bce01e9318a8e6b2462137c58aa6ad921c8cff92cff4fa6c9ac",
+        "case_sha256": "59469f9913330daed907fa7435dc018b651023504643bf73114044aaa1e09465",
+        "runs": [],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [],
+        "schema_errors": []
+      }
+    }
+  ]
+}

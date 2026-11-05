@@ -13,7 +13,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -24,7 +24,8 @@ from app.modules.purchasing import public as purchasing
 from app.platform import clock, jobs
 from app.platform.context import Context
 from app.platform.db import transaction
-from app.platform.errors import DomainError, Invalid
+from app.platform.errors import Conflict, DomainError, Invalid
+from app.platform.money import currency_exponent
 
 from ..agent.contexts import CtxFactory, background_ctx_factory, staff_ctx_factory
 from ..agent.prompts import load_prompt
@@ -42,6 +43,7 @@ from ..tools.base import RunState
 from ..tools.common import cite, qty, redact_contacts
 from ..tools.registry import execute_tool, get_tool
 from .procurement_fake import script_router
+from .summary import Operation, claim_operation
 
 REQUEST_TOOLS = ["check_stock", "list_low_stock", "list_suppliers_for_item", "propose_quote_request"]
 _NUMBER = re.compile(r"(?<![\w.])[-+]?\d+(?:[.,]\d+|[ '\u00a0\u202f\u2019]\d{3})*(?!\w|[.,]\d)")
@@ -239,9 +241,34 @@ def request_quotes(
     return RequestQuotesOut(run_id=result.run_id, proposal_ids=result.proposal_ids)
 
 
-def _decimal(raw: str) -> Decimal:
+def _model_number(raw: str) -> str:
+    """Remove only boundary affixes; never extract a number from arbitrary model prose."""
+    currency = r"(?:\b[A-Z]{3}\b|[$€£¥])"
+    text = re.sub(rf"^{currency}\s*|\s*{currency}$", "", raw.strip(), flags=re.I).strip()
+    text = re.sub(
+        r"\s*(?:\beach|\bper\s+[^\W\d_]+|/\s*[^\W\d_]+|\ba\s+piece|"
+        r"\bpairs?|\bunits?|\bpcs|\bitems?|\bdays?)\s*$",
+        "",
+        text,
+        flags=re.I,
+    ).strip()
+    return re.sub(rf"^{currency}\s*|\s*{currency}$", "", text, flags=re.I).strip()
+
+
+class _SupplierQuoteExtract(SupplierQuoteExtract):
+    """Tolerate model day suffixes before the shared schema parses its integer field."""
+
+    @field_validator("lead_time_days", mode="before")
+    @classmethod
+    def normalize_days(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return str(_decimal(_model_number(value)))
+        return value
+
+
+def _decimal(raw: str, currency: str | None = None) -> Decimal:
     text = re.sub(r"[ '\u00a0\u202f\u2019$€£¥]", "", raw.strip())
-    text = re.sub(r"^(USD|EUR|GBP|JPY|CAD|AUD)\s*|\s*(USD|EUR|GBP|JPY|CAD|AUD)$", "", text, flags=re.I)
+    text = re.sub(r"^[A-Z]{3}\s*|\s*[A-Z]{3}$", "", text, flags=re.I)
     sign = -1 if text.startswith("-") else 1
     text = text.removeprefix("-").removeprefix("+")
     if not re.fullmatch(r"\d+(?:[.,]\d+)*", text):
@@ -254,7 +281,12 @@ def _decimal(raw: str) -> Decimal:
             raise ValueError("invalid grouping")
         text = whole.replace(grouping, "") + "." + fraction
     elif "," in text:
-        text = text.replace(",", "") if re.fullmatch(r"\d{1,3}(?:,\d{3})+", text) else text.replace(",", ".")
+        decimal_comma = currency is not None and currency_exponent(currency) == 3 and text.count(",") == 1
+        text = (
+            text.replace(",", "")
+            if not decimal_comma and re.fullmatch(r"\d{1,3}(?:,\d{3})+", text)
+            else text.replace(",", ".")
+        )
     elif text.count(".") > 1:
         if not re.fullmatch(r"\d{1,3}(?:\.\d{3})+", text):
             raise ValueError("invalid grouping")
@@ -288,6 +320,43 @@ def _supplier_data(text: str) -> str:
     )
 
 
+def _price_numbers(source: str, currency: str) -> set[Decimal]:
+    """Only adjacent price markers establish price evidence; unrelated counts cannot support it."""
+    codes = rf"\b(?:{re.escape(currency)}|USD|EUR|GBP|JPY|KWD|CAD|AUD|CNY|CHF)\b"
+    before = re.compile(rf"(?:{codes}|[$€£¥@]|\b(?:price|unit|each|per))\s*[:=]?\s*$", re.I)
+    after = re.compile(rf"^\s*(?:{codes}|[$€£¥]|\b(?:each|per)\b|/\s*(?:unit|item|piece)\b)", re.I)
+    values: set[Decimal] = set()
+    for match in _NUMBER.finditer(source):
+        prefix = source[: match.start()]
+        if re.search(rf"\b(?:line\s+)?total\s*[:=]?\s*(?:{codes}|[$€£¥])?\s*$", prefix, re.I):
+            continue
+        if before.search(source[: match.start()]) or after.search(source[match.end() :]):
+            try:
+                values.add(_decimal(match.group(), currency))
+            except ValueError:
+                pass
+    return values
+
+
+def _lead_days(source: str) -> set[Decimal]:
+    values: set[Decimal] = set()
+    for match in _NUMBER.finditer(source):
+        unit = re.match(r"\s*(days?|weeks?)\b", source[match.end() :], re.I)
+        if unit:
+            try:
+                values.add(_decimal(match.group()) * (7 if unit[1].lower().startswith("week") else 1))
+            except ValueError:
+                pass
+    return values
+
+
+def _price_minor(raw: str, currency: str) -> int:
+    amount = _decimal(raw, currency) * 10 ** currency_exponent(currency)
+    if amount < 0 or amount != amount.to_integral_value():
+        raise ValueError("unit price must be exact nonnegative minor units")
+    return int(amount)
+
+
 def _verify(
     value: SupplierQuoteExtract, request: purchasing.QuoteRequestOut, source: str, default_currency: str
 ) -> list[str]:
@@ -299,31 +368,48 @@ def _verify(
     source = _supplier_data(source)
     numbers = _source_numbers(source)
     unverified = []
+    # A rejected supplied currency must never become an authorized business-currency fallback.
+    if value.currency is not None:
+        symbol = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}.get(default_currency)
+        if not (
+            re.fullmatch(r"[A-Z]{3}", value.currency)
+            and (
+                re.search(r"\b" + re.escape(value.currency) + r"\b", source, re.I)
+                or (value.currency == default_currency and symbol is not None and symbol in source)
+            )
+        ):
+            value.currency = None
+            unverified.append("currency")
+    currency = value.currency or default_currency
+    prices = _price_numbers(source, currency)
     for index, line in enumerate(value.lines):
         for name in ("unit_price", "quantity_available"):
             raw = getattr(line, name)
             if raw is None and name != "unit_price":
                 continue
             try:
-                number = _decimal(raw) if raw is not None else None
-                good = number in numbers and number is not None and number >= 0
-                if name == "unit_price":
-                    good = (
-                        good
-                        and number is not None
-                        and number >= 0
-                        and number * 100 == (number * 100).to_integral_value()
-                    )
+                if raw is not None:
+                    raw = _model_number(raw)
+                    setattr(line, name, raw)
+                number = _decimal(raw, currency if name == "unit_price" else None) if raw is not None else None
+                good = number in (prices if name == "unit_price" else numbers) and number is not None and number >= 0
+                if name == "unit_price" and raw is not None:
+                    _price_minor(raw, currency)
             except ValueError:
                 good = False
             if not good:
                 setattr(line, name, None)
                 unverified.append(f"lines.{index}.{name}")
-    if value.lead_time_days is None or value.lead_time_days < 0 or Decimal(value.lead_time_days) not in numbers:
+    if (
+        value.lead_time_days is None
+        or value.lead_time_days < 0
+        or Decimal(value.lead_time_days) not in _lead_days(source)
+    ):
         value.lead_time_days = None
         unverified.append("lead_time_days")
     if value.min_quantity is not None:
         try:
+            value.min_quantity = _model_number(value.min_quantity)
             good = _decimal(value.min_quantity) in numbers and _decimal(value.min_quantity) > 0
         except ValueError:
             good = False
@@ -336,14 +422,6 @@ def _verify(
         if not any(re.search(r"(?<!\d)" + re.escape(f) + r"(?!\d)", source) for f in forms):
             value.valid_until = None
             unverified.append("valid_until")
-    if value.currency is not None:
-        symbol = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}.get(default_currency)
-        if not (
-            re.search(r"\b" + re.escape(value.currency) + r"\b", source, re.I)
-            or (value.currency == default_currency and symbol is not None and symbol in source)
-        ):
-            value.currency = None
-            unverified.append("currency")
     if not _source_numbers(value.notes) <= numbers:
         value.notes = ""
         unverified.append("notes")
@@ -415,7 +493,54 @@ def _recent_followup(db: Session, business_id: uuid.UUID, key: str) -> bool:
     )
 
 
-def extract_reply(ctx: Context, request_id: uuid.UUID, body: ExtractIn, *, router: Router | None = None) -> ExtractOut:
+def extract_reply(
+    ctx: Context,
+    request_id: uuid.UUID,
+    body: ExtractIn,
+    *,
+    router: Router | None = None,
+    idempotency_key: str | None = None,
+) -> ExtractOut:
+    operation_id = None
+    if idempotency_key is not None:
+        with transaction(ctx) as db:
+            purchasing.get_quote_request(db, ctx, request_id)
+            operation = claim_operation(
+                db, ctx, "procurement_extract", request_id, idempotency_key, body.model_dump(mode="json")
+            )
+            if operation.status == "active":
+                raise Conflict("ai.operation_in_progress", operation_id=str(operation.id))
+            operation_id = operation.id
+            if operation.status == "succeeded":
+                recorded = db.get(AiRun, operation.run_id)
+                assert recorded is not None
+                return ExtractOut(
+                    run_id=recorded.id,
+                    extract=SupplierQuoteExtract.model_validate(recorded.result),
+                    proposal_id=operation.proposal_id,
+                    verified=operation.details["verified"],
+                    unverified_fields=operation.details["unverified_fields"],
+                )
+            operation.status = "active"
+    try:
+        result = _extract_reply(ctx, request_id, body, router=router, operation_id=operation_id)
+        if operation_id is not None:
+            with transaction(ctx) as db:
+                saved = db.get(Operation, operation_id)
+                assert saved is not None
+                saved.status, saved.proposal_id = "succeeded", result.proposal_id
+        return result
+    finally:
+        if operation_id is not None:
+            with transaction(ctx) as db:
+                saved = db.get(Operation, operation_id)
+                if saved is not None and saved.status == "active":
+                    saved.status = "idle"
+
+
+def _extract_reply(
+    ctx: Context, request_id: uuid.UUID, body: ExtractIn, *, router: Router | None, operation_id: uuid.UUID | None
+) -> ExtractOut:
     factory = _factory(ctx)
     read_ctx = factory(uuid.uuid4())
     with transaction(read_ctx) as db:
@@ -428,38 +553,65 @@ def extract_reply(ctx: Context, request_id: uuid.UUID, body: ExtractIn, *, route
     def validate(value: SupplierQuoteExtract) -> None:
         fields[:] = _verify(value, request, body.text, currency)
         # Bound every convertible value using the existing propose-tool schema, before recording a successful run.
-        if all(line.unit_price is not None for line in value.lines) and value.lead_time_days is not None:
+        if (
+            "currency" not in fields
+            and all(line.unit_price is not None for line in value.lines)
+            and value.lead_time_days is not None
+        ):
             get_tool("propose_supplier_quote").args_model.model_validate(
-                _quote_args(request_id, body.supplier_id, value)
+                _quote_args(request_id, body.supplier_id, value, currency)
             )
 
-    key = f"procurement:extract:{request_id}:{body.supplier_id}:{uuid.uuid4()}"
-    run_id, value = complete(
-        factory,
-        use_case="procurement",
-        prompt=load_prompt("supplier_quote_extract"),
-        facts=[
-            ContextBlock(
-                label="request_lines",
-                source_id=request_id,
-                text=_json([r.model_dump(mode="json") for r in request.lines]),
-                untrusted=True,
+    key = f"procurement:extract:{request_id}:{body.supplier_id}:{operation_id or uuid.uuid4()}"
+    cached = None
+    if operation_id is not None:
+        with transaction(ctx) as db:
+            operation = db.get(Operation, operation_id)
+            assert operation is not None
+            recorded = db.get(AiRun, operation.run_id) if operation.run_id is not None else None
+            if recorded is not None and recorded.status == "succeeded":
+                cached = (recorded.id, SupplierQuoteExtract.model_validate(recorded.result), operation.details)
+    if cached is not None:
+        run_id, value, details = cached
+        verified, fields = details["verified"], details["unverified_fields"]
+        currency = details["default_currency"]
+    else:
+        run_id, value = complete(
+            factory,
+            use_case="procurement",
+            prompt=load_prompt("supplier_quote_extract"),
+            facts=[
+                ContextBlock(
+                    label="request_lines",
+                    source_id=request_id,
+                    text=_json([r.model_dump(mode="json") for r in request.lines]),
+                    untrusted=True,
+                ),
+                ContextBlock(label="supplier_reply", source_id=body.supplier_id, text=body.text, untrusted=True),
+            ],
+            output_model=_SupplierQuoteExtract,
+            trigger_type="api",
+            trigger_key=key,
+            router=script_router(
+                router,
+                "supplier_quote_extract",
+                {
+                    "extract_lines": [{"item_id": str(r.item_id), "unit_price": None} for r in request.lines],
+                },
             ),
-            ContextBlock(label="supplier_reply", source_id=body.supplier_id, text=body.text, untrusted=True),
-        ],
-        output_model=SupplierQuoteExtract,
-        trigger_type="api",
-        trigger_key=key,
-        router=script_router(
-            router,
-            "supplier_quote_extract",
-            {
-                "extract_lines": [{"item_id": str(r.item_id), "unit_price": None} for r in request.lines],
-            },
-        ),
-        validate=validate,
-    )
-    verified = value.lead_time_days is not None and all(line.unit_price is not None for line in value.lines)
+            validate=validate,
+        )
+        verified = (
+            "currency" not in fields
+            and value.lead_time_days is not None
+            and all(line.unit_price is not None for line in value.lines)
+        )
+        if operation_id is not None:
+            with transaction(ctx) as db:
+                operation = db.get(Operation, operation_id)
+                assert operation is not None
+                operation.run_id = run_id
+                operation.details = {"verified": verified, "unverified_fields": fields, "default_currency": currency}
     proposal_id = None
     if verified:
         proposal_id = _propose(
@@ -467,28 +619,33 @@ def extract_reply(ctx: Context, request_id: uuid.UUID, body: ExtractIn, *, route
             run_id,
             key,
             "propose_supplier_quote",
-            _quote_args(request_id, body.supplier_id, value),
+            _quote_args(request_id, body.supplier_id, value, currency),
             {"supplier_reply": redact_contacts(body.text, 450)},
             request_id,
         )
+    # Callers get the public model, not the internal normalising subclass (same fields and JSON).
+    extract = SupplierQuoteExtract.model_validate(value.model_dump())
     return ExtractOut(
-        run_id=run_id, extract=value, verified=verified, unverified_fields=fields, proposal_id=proposal_id
+        run_id=run_id, extract=extract, verified=verified, unverified_fields=fields, proposal_id=proposal_id
     )
 
 
-def _quote_args(request_id: uuid.UUID, supplier_id: uuid.UUID, value: SupplierQuoteExtract) -> dict[str, Any]:
+def _quote_args(
+    request_id: uuid.UUID, supplier_id: uuid.UUID, value: SupplierQuoteExtract, default_currency: str
+) -> dict[str, Any]:
+    currency = value.currency or default_currency
     return dict(
         quote_request_id=str(request_id),
         supplier_id=str(supplier_id),
         lines=[
             dict(
                 item_id=str(r.item_id),
-                unit_price_minor=int(_decimal(r.unit_price or "0") * 100),
+                unit_price_minor=_price_minor(r.unit_price or "0", currency),
                 quantity_available=str(_decimal(r.quantity_available)) if r.quantity_available is not None else None,
             )
             for r in value.lines
         ],
-        currency=value.currency,
+        currency=currency,
         lead_time_days=value.lead_time_days,
         min_quantity=str(_decimal(value.min_quantity)) if value.min_quantity is not None else None,
         valid_until=value.valid_until.isoformat() if value.valid_until is not None else None,
@@ -633,7 +790,32 @@ def _followup(
         )
 
 
+def followup(
+    business_id: uuid.UUID,
+    *,
+    purchase_order_id: uuid.UUID | None = None,
+    quote_request_id: uuid.UUID | None = None,
+    supplier_id: uuid.UUID | None = None,
+    router: Router | None = None,
+) -> uuid.UUID | None:
+    """One job, one fresh target, one bounded completion; missing or no-longer-due targets are harmless."""
+    if (purchase_order_id is None) == (quote_request_id is None) or (
+        quote_request_id is not None and supplier_id is None
+    ):
+        raise ValueError("one purchase order or a request and supplier is required")
+    ctx = background_ctx_factory(business_id)(uuid.uuid4())
+    with transaction(ctx) as db:
+        target: purchasing.LatePO | purchasing.UnansweredInvite | None
+        if purchase_order_id is not None:
+            target = purchasing.get_late_purchase_order(db, ctx, purchase_order_id)
+        else:
+            assert quote_request_id is not None and supplier_id is not None
+            target = purchasing.get_unanswered_invite(db, ctx, quote_request_id, supplier_id)
+    return _followup(business_id, target, router=router) if target is not None else None
+
+
 def scan(business_id: uuid.UUID, *, router: Router | None = None) -> None:
+    """Discover and enqueue only. Inference belongs to independently retried per-target jobs."""
     ctx = background_ctx_factory(business_id)(uuid.uuid4())
     with transaction(ctx) as db:
         for due in purchasing.list_quote_requests_due(db, ctx):
@@ -646,6 +828,36 @@ def scan(business_id: uuid.UUID, *, router: Router | None = None) -> None:
             )
         late = purchasing.list_late_purchase_orders(db, ctx)
         unanswered = purchasing.list_unanswered_invites(db, ctx)
-    targets: list[purchasing.LatePO | purchasing.UnansweredInvite] = [*late, *unanswered]
-    for target in targets:
-        _followup(business_id, target, router=router)
+        since = clock.now() - timedelta(days=3)
+        # Do not consume a target's hourly job key while it is still in cooldown. Read effects once for the scan.
+        recent = {
+            key.rsplit(":", 1)[0]
+            for key in db.scalars(
+                select(AiEffect.trigger_key)
+                .join(AiRun, (AiRun.id == AiEffect.run_id) & (AiRun.business_id == AiEffect.business_id))
+                .where(
+                    AiEffect.business_id == business_id,
+                    AiEffect.trigger_key.startswith("procurement:followup:"),
+                    AiRun.finished_at > since,
+                )
+            )
+        }
+        targets: list[purchasing.LatePO | purchasing.UnansweredInvite] = [*late, *unanswered]
+        slot = int(clock.now().timestamp()) // 3600
+        for target in targets:
+            is_po = isinstance(target, purchasing.LatePO)
+            key = f"procurement:followup:{'po' if is_po else 'invite'}:{target.id}"
+            if key in recent or (target.last_followup_at is not None and target.last_followup_at > since):
+                continue
+            payload = (
+                {"purchase_order_id": str(target.id)}
+                if isinstance(target, purchasing.LatePO)
+                else {"quote_request_id": str(target.quote_request_id), "supplier_id": str(target.supplier_id)}
+            )
+            jobs.enqueue(
+                db,
+                "ai.procurement_followup",
+                payload,
+                business_id=business_id,
+                dedupe_key=f"procurement_followup:{business_id}:{'po' if is_po else 'invite'}:{target.id}:{slot}",
+            )

@@ -606,6 +606,14 @@
     "pickHint": "Select a conversation from the list to read and reply."
   },
   "marketing": {
+    "ai": {
+      "button": "Draft with AI",
+      "working": "Drafting…",
+      "purpose": "What is this campaign for? (optional)",
+      "unsaved": "Save your message edits before drafting with AI.",
+      "invalidDraft": "The AI could not produce a usable draft that passes safety checks. Nothing was changed. Try rewording the campaign purpose.",
+      "saved": "AI draft saved as a new revision. Review and edit the text before submitting for approval."
+    },
     "description": "E-mail campaigns to {{customers}} who agreed to receive them. Nothing is sent without an approval.",
     "new": "New campaign",
     "newHint": "Choose who should receive it and write the message. You can edit both before asking for approval.",
@@ -1088,6 +1096,13 @@
       "tool_not_allowed": "The AI tried something your role does not allow, so it stopped. Nothing was changed.",
       "interrupted": "The answer was cut off. Nothing was changed. Please ask again.",
       "rate_limited": "You have asked a lot of questions this hour. Please wait a little and try again.",
+      "thread_busy": "The assistant is already answering in this chat. Wait for that answer, then try again.",
+      "copilot_busy": "The assistant is busy with other requests. Wait a moment, then retry your message.",
+      "idempotency_key_reused": "This retry does not match the original request. Send it as a new request.",
+      "operation_in_progress": "Your request is still being processed. Wait a moment, then retry to check its result.",
+      "operation_interrupted": "This request stopped before the assistant started. Send your message again.",
+      "input_too_large": "There is too much information to process at once. Try a shorter message or a smaller task.",
+      "hold_expired": "The reserved time has expired. Ask the assistant to check availability again.",
       "generic": "The AI could not finish. Nothing was changed. Please try again."
     },
     "badge": {
@@ -1111,6 +1126,7 @@
       "placeholder": "For example: What is booked tomorrow?",
       "send": "Ask",
       "stop": "Stop",
+      "retry": "Retry message",
       "you": "You",
       "assistant": "Assistant",
       "working": "Working on it…",

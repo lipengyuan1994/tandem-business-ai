@@ -107,6 +107,10 @@ Public reads additionally expose `get_quote_request`, `list_suppliers_for_item`,
 `list_late_purchase_orders`, `list_quote_requests_due`, `list_unanswered_invites` and their DTOs.
 Due requests are sent, have no linked PO and either passed reply_by or have all invites answered.
 Unanswered invites are overdue, live invitations on sent requests; they carry followup timestamps.
+Scoped point reads for per-target AI jobs/tools: `get_late_purchase_order(db, ctx, purchase_order_id, *, as_of=None)`
+returns `LatePO | None`; `get_unanswered_invite(db, ctx, quote_request_id, supplier_id, *, as_of=None)` returns
+`UnansweredInvite | None`. Both require `purchasing.po.read`, apply the list reads' eligibility rules, and return
+None for missing, foreign-business or no-longer-eligible targets without loading other orders/invites.
 `open_quantities` still returns open supply; inventory does not depend on purchasing.
 
 Daily per-business cron `purchasing-expire-quote-invites` runs `purchasing.expire_quote_invites`,

@@ -22,6 +22,8 @@ class OperationsCase(unittest.TestCase):
         self.env = dict(
             os.environ, PATH=f"{self.bin}:{os.environ['PATH']}", TRACE=str(self.trace)
         )
+        self.env.pop("VULTR_INFERENCE_API_KEY", None)
+        self.env.pop("BACKUP_HEALTH_TIMEOUT", None)
 
     def stub(self, name, code):
         path = self.bin / name

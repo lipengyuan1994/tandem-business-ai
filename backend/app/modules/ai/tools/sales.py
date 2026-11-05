@@ -2,20 +2,23 @@
 propose_payment_reminder (AI-07).
 
 The DTO's `bill_to_email` is dropped: addresses stay server-side; the payment reminder executor looks them up itself.
-The reminder's invoice version comes from the overdue list, never from the model.
+The reminder uses a locked point read; background drafts carry the expected version server-side.
 """
 
 from __future__ import annotations
 
 import uuid
+from datetime import timedelta
 from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.modules.approvals import public as approvals
 from app.modules.sales import public as sales
+from app.platform import clock
 from app.platform.context import Context
-from app.platform.errors import NotFound
+from app.platform.errors import Conflict, NotFound
 from app.platform.money import money_text
 
 from .base import RunState, Tool
@@ -24,7 +27,6 @@ from .proposing import PlainText, gather, propose, tool_result
 
 READ = "sales.document.read"
 PROPOSE = "ai.assistant.use"
-OVERDUE_LOOKUP_LIMIT = 500
 
 
 def _list_overdue_invoices(db: Session, ctx: Context, args: BaseModel, state: RunState) -> dict[str, Any]:
@@ -50,10 +52,16 @@ class ProposePaymentReminderArgs(ToolArgs):
 
 def _propose_payment_reminder(db: Session, ctx: Context, args: BaseModel, state: RunState) -> dict[str, Any]:
     assert isinstance(args, ProposePaymentReminderArgs)
-    overdue = sales.list_overdue_invoices(db, ctx, limit=OVERDUE_LOOKUP_LIMIT)
-    invoice = next((i for i in overdue if i.id == args.invoice_id), None)
+    invoice = sales.get_overdue_invoice(db, ctx, args.invoice_id, lock=True)
     if invoice is None:
         raise NotFound("ai.overdue_invoice_not_found", detail="not an overdue invoice of this business")
+    expected = state.server_facts.get("invoice_version")
+    if expected is not None and invoice.version != expected:
+        raise Conflict("ai.invoice_changed")
+    if invoice.last_reminder_at is not None and invoice.last_reminder_at > clock.now() - timedelta(days=7):
+        raise Conflict("ai.reminder_cooldown")
+    if approvals.find_open_proposals(db, ctx, action_types=["sales.send_payment_reminder"], invoice_id=invoice.id):
+        raise Conflict("ai.reminder_pending")
     payload = {"invoice_id": str(invoice.id), "invoice_version": invoice.version, "body": args.text}
     amount = money_text(invoice.total_minor, invoice.currency)
     title = f"Payment reminder: {invoice.number}, {invoice.bill_to_name}, {amount}, {invoice.days_overdue} days overdue"

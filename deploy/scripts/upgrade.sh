@@ -69,6 +69,7 @@ say "upgrading $previous -> $new_version ($public_url)"
 
 say "1/5 backup before upgrade"
 "${compose[@]}" exec -T backup backup.sh --kind pre-upgrade
+"$here/wait-backup-healthy.sh" "${compose[@]}"
 
 set_version "$new_version" "$new_version"
 migration_version="$previous_migration"

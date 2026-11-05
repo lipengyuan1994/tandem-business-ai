@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
 from app.platform.crud import rows_affected
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import (
@@ -23,12 +21,13 @@ from .models import (
 )
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    return dump_models(
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(
         db,
         ctx,
         [StockLocation, StockLevel, StockMovement, StockReservation, ReorderRule, ReorderDraft, ReorderDraftLine],
     )
+    return export_tables(tables, streaming=streaming)
 
 
 def erase(db: Session, ctx: Context, target: ErasureTarget) -> dict[str, int]:

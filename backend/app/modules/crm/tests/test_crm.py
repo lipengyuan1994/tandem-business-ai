@@ -213,3 +213,24 @@ def test_permissions_isolation_and_idempotency(client: Any) -> None:
     assert first.status_code == again.status_code == 201 and first.json()["id"] == again.json()["id"]
     stale = owner.patch(f"/api/v1/crm/customers/{ada['id']}", json={"version": ada["version"] - 1, "timezone": "UTC"})
     assert stale.status_code == 409
+
+
+@pytest.mark.parametrize(
+    ("name", "candidate", "expected"),
+    [
+        ("Bea Example", "Ada Example", False),
+        ("Ada Stranger", "Ada Example", False),
+        ("Example", "Example", False),
+        ("Example Example", "Example", False),
+        (None, "Ada Example", False),
+        ("  ADA   example ", "Ada Example", True),
+        ("Ada Example", "Example, Ada", True),
+        ("Ada Middle Example", "Ada Example", True),
+        ("D Example", "Dan Example", True),
+        ("D Example", "Dana Example", True),
+        ("Bea Example", "Ben Example", False),
+        ("B Example", "Ada Example", False),
+    ],
+)
+def test_identity_name_overlap_requires_two_distinct_tokens(name: str | None, candidate: str, expected: bool) -> None:
+    assert crm.has_identity_name_overlap(name, candidate) is expected

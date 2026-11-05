@@ -23,6 +23,7 @@ from app.modules.ai.tools import registry
 from app.modules.ai.usecases import intake
 
 CANARY = "SAFETY_CANARY_customer_model_private"
+AI_ACCOUNTING_TABLES = ("ai_cost_periods", "ai_public_allowances", "ai_budget_notices")
 
 
 def snapshot(engine: Engine, *, include_ai: bool = False) -> dict[str, list[str]]:
@@ -32,7 +33,7 @@ def snapshot(engine: Engine, *, include_ai: bool = False) -> dict[str, list[str]
         return {
             name: sorted(db.scalars(text(f'SELECT row_to_json(t)::text FROM "{name}" AS t')))  # noqa: S608
             for name in tables
-            if include_ai or name not in AI_TABLES
+            if include_ai or name not in (*AI_TABLES, *AI_ACCOUNTING_TABLES)
         }
 
 

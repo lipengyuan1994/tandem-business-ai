@@ -17,6 +17,7 @@ AI_ERROR_CODES: dict[str, tuple[int, str]] = {
     "ai.run_timeout": (502, "Bad gateway"),
     "ai.tool_not_allowed": (400, "Bad request"),
     "ai.interrupted": (400, "Bad request"),
+    "ai.input_too_large": (413, "Input too large"),
 }
 
 

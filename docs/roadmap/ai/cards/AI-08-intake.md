@@ -35,10 +35,16 @@ replaces) so every path is tested without the real prompt.
   3. **Safety** (channel `web_chat` only): flagged → `conversations.request_handoff(reason="Message needs a person")`,
      early result `{"reason": "safety"}`; `None` **or any `AiError` from the screen** → continue with
      `extra={"safety_unchecked": True}` (the agent run will meet the same budget/provider problem and record it).
-  4. **Customer matching (frozen rule):** linked conversation → that customer; else `find_customer_candidates` with the
-     visitor's e-mail, phone, name: best score ≥ 0.8 **and** (no second or best − second ≥ 0.1) → matched; no candidate
-     with score ≥ 0.5 → new customer; otherwise ambiguous → early result
-     `{"reason": "ambiguous_customer", "candidates": [up to 3 display names]}` (the outcome note in step 6 lists them).
+  4. **Customer matching (frozen; changed 2026-11-04, owner-level decision by supervising tech lead):** linked
+     conversation → that customer. Otherwise exact normalized e-mail/phone matches take precedence: if a contact was
+     supplied, keep only CRM candidates with reason `email` or `phone`; no contact match → new regardless of name.
+     Without contact, exclude candidates unless `crm.has_identity_name_overlap` finds at least two distinct shared
+     name tokens (ignoring case, whitespace and punctuation). A surname or any other single token is insufficient.
+     Apply the existing score rule to retained candidates: best ≥ 0.8 **and** (no second or best − second ≥ 0.1) →
+     matched; no score ≥ 0.5 → new; otherwise ambiguous. Ambiguous visitors still run the agent with **customer not
+     identified**, no matched id/summary; retain `{"reason": "ambiguous_customer", "candidates": [up to 3 display names]}`
+     in result extras and append the candidate-linking note to the normal outcome in step 6. Stock/service replies
+     remain possible; existing-customer booking requires a hold for an identified customer. See contracts §10.
   5. Call `run_agent_step(ctx_factory, message_ctx, match, state)` — in this card a placeholder that returns a
      `RunResult` with `needs_human=True` and `extra={"placeholder": True}`; AI-08B replaces its body.
   6. **Outcome note** — exactly one internal note per message (`author_kind="assistant"`), text by this table
@@ -49,7 +55,7 @@ replaces) so every path is tested without the real prompt.
      | proposals created | "Prepared for approval: <titles from `RunResult.extra["proposal_titles"]`, joined by "; ">." |
      | `needs_human`, reason `open_proposal` | "A proposal for this conversation is already waiting in Approvals." |
      | `needs_human`, reason `safety` | "This message was passed to a person without AI handling." |
-     | `needs_human`, reason `ambiguous_customer` | "Several customers could match (<names>). Please link the right one." |
+     | reason `ambiguous_customer` (append to any outcome above/below) | "Several customers could match (<names>). Please link the right one." |
      | `needs_human` from the agent's final step | "Needs a person: <final.message_to_staff>" |
      | `policy_blocked` | "AI is turned off for this business, so no proposal was prepared." |
      | `budget_exceeded` | "Today's AI budget is used up, so no proposal was prepared." |
@@ -61,6 +67,12 @@ replaces) so every path is tested without the real prompt.
 `test_flagged_public_message_hands_off_without_agent_call`, `test_safety_unavailable_marks_unchecked_and_continues`,
 `test_customer_matching_rule_matched_new_ambiguous`, `test_ambiguous_customer_note_lists_names_only`,
 `test_one_outcome_note_per_message_even_on_retry`, `test_visitor_contacts_not_in_any_model_request`.
+
+Regression coverage (changed 2026-11-04): Bea Example with a new e-mail and a shared surname runs the agent as
+new; exact normalized e-mail/phone matches win; contact-free exact full names match; surname-only or first-name-only
+overlap does not count; ambiguous identities can prepare a stock reply while retaining the candidate note. Add
+`new-shared-surname-stock.yaml` and `new-shared-surname-booking.yaml` to the intake eval cases. This dated card entry
+records the EVENT correction within the task's restricted edit scope.
 
 ## Done when
 `make check` passes; `HANDOFF.md` rewritten (the placeholder and what AI-08B must replace).

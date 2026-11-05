@@ -6,7 +6,6 @@ Issued, paid and void invoices and credit notes keep their bill-to snapshots for
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
@@ -14,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.platform import audit
 from app.platform.context import Context
 from app.platform.crud import rows_affected
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import DocumentSequence, Invoice, InvoiceLine, Quote, QuoteLine, SalesOrder, SalesOrderLine
@@ -22,8 +21,9 @@ from .models import DocumentSequence, Invoice, InvoiceLine, Quote, QuoteLine, Sa
 TABLES = [DocumentSequence, Quote, QuoteLine, SalesOrder, SalesOrderLine, Invoice, InvoiceLine]
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    return dump_models(db, ctx, TABLES)
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(db, ctx, TABLES)
+    return export_tables(tables, streaming=streaming)
 
 
 def links(db: Session, ctx: Context, target: ErasureTarget) -> set[uuid.UUID]:

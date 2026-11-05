@@ -68,5 +68,6 @@ resource "vultr_instance" "this" {
   # The provider base64-encodes user_data itself. The template contains no secrets (see user-data.yaml.tftpl).
   user_data = templatefile("${path.module}/user-data.yaml.tftpl", {
     ssh_public_key = trimspace(var.ssh_public_key)
+    admin_cidrs    = var.admin_cidrs
   })
 }

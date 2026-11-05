@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
@@ -70,13 +71,21 @@ def get_usage(ctx: Context = Depends(require(P.SETTINGS_READ))) -> UsageOut:
     summary="Summarize a conversation and propose a reply",
     responses={
         **error_responses(401, 403, 404, 409, 429),
+        413: {
+            "description": "Input exceeds the configured token estimate",
+            "content": {"application/problem+json": {}},
+        },
         502: {"description": "Invalid model output"},
         503: {"description": "Provider unavailable"},
     },
 )
-def summarize_conversation(id: uuid.UUID, ctx: Context = Depends(require(P.ASSISTANT_USE))) -> summary.SummaryOut:
+def summarize_conversation(
+    id: uuid.UUID,
+    ctx: Context = Depends(require(P.ASSISTANT_USE)),
+    idempotency_key: Annotated[str | None, Header(max_length=64, min_length=1)] = None,
+) -> summary.SummaryOut:
     ctx.require("conversations.thread.read")
-    return summary.run(ctx, id)
+    return summary.run(ctx, id, idempotency_key=idempotency_key)
 
 
 @router.get(
@@ -130,13 +139,16 @@ def get_copilot_thread(
 @router.post(
     "/copilot/threads/{id}/messages",
     response_class=StreamingResponse,
-    responses={**error_responses(401, 403, 404, 422, 429), 200: {"content": {"text/event-stream": {}}}},
+    responses={**error_responses(401, 403, 404, 409, 422, 429), 200: {"content": {"text/event-stream": {}}}},
     summary="Send a staff message and stream assistant steps, proposals and the final answer",
 )
 def send_copilot_message(
-    id: uuid.UUID, body: copilot.MessageCreate, ctx: Context = Depends(require(P.ASSISTANT_USE))
+    id: uuid.UUID,
+    body: copilot.MessageCreate,
+    ctx: Context = Depends(require(P.ASSISTANT_USE)),
+    idempotency_key: Annotated[str | None, Header(max_length=64, min_length=1)] = None,
 ) -> StreamingResponse:
-    prepared = copilot.prepare_message(ctx, id, body)
+    prepared = copilot.prepare_message(ctx, id, body, idempotency_key=idempotency_key)
     return copilot.CopilotResponse(prepared)
 
 
@@ -162,15 +174,22 @@ def request_procurement_quotes(
     response_model=procurement.ExtractOut,
     responses={
         **error_responses(401, 403, 404, 409, 422, 429),
+        413: {
+            "description": "Input exceeds the configured token estimate",
+            "content": {"application/problem+json": {}},
+        },
         502: {"description": "Invalid model output"},
         503: {"description": "Provider unavailable"},
     },
 )
 def extract_procurement_reply(
-    id: uuid.UUID, body: procurement.ExtractIn, ctx: Context = Depends(require(P.ASSISTANT_USE))
+    id: uuid.UUID,
+    body: procurement.ExtractIn,
+    ctx: Context = Depends(require(P.ASSISTANT_USE)),
+    idempotency_key: Annotated[str | None, Header(max_length=64, min_length=1)] = None,
 ) -> procurement.ExtractOut:
     ctx.require("purchasing.po.write")
-    return procurement.extract_reply(ctx, id, body)
+    return procurement.extract_reply(ctx, id, body, idempotency_key=idempotency_key)
 
 
 @router.post(

@@ -8,7 +8,7 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
   `result` (validated final output only). `ai_run_steps` (append-only) — per step: kind, tool, redacted arguments,
   short summary, tokens. No prompt or completion text is ever stored.
 - `ai_effects` (append-only) — holds and proposals a tool created, unique `(business_id, effect_key)`.
-- `ai_usage_daily` — tokens, cost, runs per business and UTC day (+ `notified_80_at`). `assistant_*` — copilot.
+- `ai_usage_daily` — tokens, cost, runs per business and UTC day (+ `notified_80_at`). `assistant_*` — copilot; `ai_operations` (migration `20261104_0400_ai_operations`) — scoped operation claims/IDs; `details` (migration `20261104_0500_ai_op_details`) preserves verification metadata.
 
 ## Public (`public.py`)
 - `status(db, ctx) -> AiStatus`: reason `ai.not_configured` (no/invalid routes file, or no `agent` route with a usable
@@ -33,7 +33,7 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
 - `structured.complete(ctx_factory, *, use_case, prompt, facts, output_model, trigger_type, trigger_key, router=None,
   validate=None) -> (run_id, value)`; raises `AiError`.
 - `agent/contexts.py`: `background_ctx_factory(business_id)`, `staff_ctx_factory(business_id, user_id, perms,
-  use_case)`. `agent/fencing.fence(block)`; `agent/context.py`: `build_messages`, `append_step`, `trim_to_budget`.
+  use_case)`. `agent/fencing.fence(block)`; `agent/context.py`: `build_messages`, `append_step`, `trim_to_budget` (schema-aware, enforced by `ModelCaller.call`, including repairs).
 - `recording.py`: `RunMeta`, `StepRecord`, `open_run`, `record_step`, `record_usage_now`, `close_run`,
   `close_stale_runs`, `record_early_result` (0-step run for decisions made in code; run id = `ctx.ai_run_id`).
 - `usage.py`: `effective_budget`, `check_budget`, `usage_today`, `usage_days`, `maybe_notify_80_percent`.
@@ -55,31 +55,26 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
   `usecases.intake.run(message_id, business_id)`: open-proposal guard, safety screen (`usecases.safety.screen`,
   prompt `prompts/safety.v1.md`), customer matching, agent step, one outcome note per message.
 
-## Other files
+Other files:
 - `permissions.py` (§3 sets), `errors.py` (`AiError`), `settings.py` (`ai_settings()`, `api_key(env)`),
-  `schemas.py` (`AiStatus`, `Policy`, `UseCaseId`, §11 outputs, `RunStatus`, `RunOut`, `UsageToday`, `UsageOut`),
-  `lifecycle.py` (export, erasure).
+  `schemas.py` (§11 outputs, run/usage DTOs), `lifecycle.py` (export, erasure).
 
 ## API (`/api/v1/ai`)
 `GET /status` (`ai.assistant.use`) → `AiStatus`; `GET /runs?cursor&use_case&status&limit` (`ai.settings.read`) →
 `Page[RunOut]` (no text); `GET /usage` (`ai.settings.read`) → `UsageOut{today, days (30, oldest first)}`.
 
-## Config
-`deploy/config/ai-routes.example.yaml` (placeholders), `ai-routes.dev.yaml` + `ai-fake-script.dev.yaml` (dev, no key).
-
+Config: `deploy/config/ai-routes.example.yaml` (placeholders), `ai-routes.dev.yaml` + `ai-fake-script.dev.yaml` (dev, no key).
 - Intake agent (AI-08B): prompt `intake.v1`, tools to read, hold and propose one booking or one question.
 - Copilot (U2, `usecases/copilot.py`): `/copilot/threads*` (own threads, `CopilotThreadOut`), SSE message stream,
   tools limited to the user's permissions, 30 runs/user/hour, cron + job `ai.assistant_retention` (90 days). Earlier
-  assistant answers are replayed fenced as untrusted.
+  assistant answers are replayed fenced as untrusted. One active turn/thread, four generations/process; optional operation keys.
 - Summary (U3) `POST /conversations/{id}/summary`; reorder note (U4) on `inventory.stock_below_reorder_level`
   (job `ai.reorder_note`); briefing (U6) `GET /briefing` per user per hour; numbers in writer output must appear in the
-  facts (code check, one repair).
+  facts (code check, one repair); cache identity includes effective permissions. Summary supports operation keys.
 - Procurement (U9, `usecases/procurement.py`): request quotes (job + `POST /procurement/items/{id}/request-quotes`),
-  extract a pasted supplier reply (`POST /procurement/quote-requests/{id}/extract`, numbers verified against the text),
+  extract a pasted supplier reply (`POST /procurement/quote-requests/{id}/extract`, numbers verified against the text; supports operation keys),
   compare and propose a PO (`ai.compare-trigger`), chase late orders/invites (cron `ai-procurement-scan`).
   `procurement_fake.py` only adapts the dev scripted provider (refused in production).
 - Evals: `backend/evals/` (130 cases, `AI_LIVE=1 make eval suite=…`); safety review `docs/security/2026-11-03-ai-review.md`.
-
-## Not yet
-Live runs and model selection (needs a Vultr Serverless Inference key: AI-04, AI-09 selection), U5 campaign draft and
-U10 payment follow-up (AI-15, optional).
+- Payment follow-up (U10): paged scan → deduplicated per-invoice jobs; proposals lock/recheck version, pending proposals
+  and cooldown. Live-provider verification remains owner-run.

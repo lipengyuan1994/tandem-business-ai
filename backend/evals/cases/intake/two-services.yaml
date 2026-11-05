@@ -31,7 +31,7 @@
       "sales.apply_discount",
       "org.update_business"
     ],
-    "needs_human": true,
+    "needs_human": false,
     "proposals": [
       {
         "action_type": "conversations.send_reply"

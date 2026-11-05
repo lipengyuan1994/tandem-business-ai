@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 
 from sqlalchemy.orm import Session
@@ -32,6 +33,21 @@ from .service import ConsentChanged, CustomerCreated
 def normalize_contact(kind: str, value: str) -> str:
     """The canonical form of an e-mail address or phone number (also used for suppression lists)."""
     return normalize(kind, value)
+
+
+def has_identity_name_overlap(name: str | None, candidate_name: str) -> bool:
+    """At least two distinct shared name tokens; a surname or any other single token is insufficient.
+
+    A one-letter visitor token counts when it is the initial of another candidate token ("D Example" overlaps
+    "Dan Example"; "Bea Example" does not overlap "Ben Example"). This identity check is separate from trigram search
+    ranking. Case, whitespace and punctuation are ignored.
+    """
+    visitor_tokens = set(re.findall(r"[^\W_]+", (name or "").casefold()))
+    candidate_tokens = set(re.findall(r"[^\W_]+", candidate_name.casefold()))
+    shared = visitor_tokens & candidate_tokens
+    remaining = candidate_tokens - shared
+    initials = {t for t in visitor_tokens - shared if len(t) == 1 and any(c.startswith(t) for c in remaining)}
+    return len(shared) + len(initials) >= 2
 
 
 def get_erasure_target(db: Session, ctx: Context, customer_id: uuid.UUID) -> ErasureTarget:
@@ -162,6 +178,7 @@ __all__ = [
     "get_customer_summary",
     "get_erasure_target",
     "get_timeline",
+    "has_identity_name_overlap",
     "is_restricted",
     "list_marketing_eligible",
     "lock_customers",

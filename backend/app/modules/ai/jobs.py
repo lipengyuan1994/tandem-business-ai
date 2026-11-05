@@ -54,9 +54,30 @@ def procurement_scan_job(ctx: Context, payload: dict[str, Any]) -> None:
     procurement.scan(ctx.business_id)
 
 
+def procurement_followup_job(ctx: Context, payload: dict[str, Any]) -> None:
+    from .usecases import procurement
+
+    if ctx.business_id is None:
+        raise ValueError("ai.procurement_followup requires a business")
+    procurement.followup(
+        ctx.business_id,
+        purchase_order_id=uuid.UUID(str(payload["purchase_order_id"])) if payload.get("purchase_order_id") else None,
+        quote_request_id=uuid.UUID(str(payload["quote_request_id"])) if payload.get("quote_request_id") else None,
+        supplier_id=uuid.UUID(str(payload["supplier_id"])) if payload.get("supplier_id") else None,
+    )
+
+
 def payment_followup_scan_job(ctx: Context, payload: dict[str, Any]) -> None:
     from .usecases import payment_followup
 
     if ctx.business_id is None:
         raise ValueError("ai.payment_followup_scan requires a business")
-    payment_followup.run(ctx.business_id)
+    payment_followup.scan(ctx.business_id)
+
+
+def payment_followup_job(ctx: Context, payload: dict[str, Any]) -> None:
+    from .usecases import payment_followup
+
+    if ctx.business_id is None:
+        raise ValueError("ai.payment_followup requires a business")
+    payment_followup.run_invoice(uuid.UUID(str(payload["invoice_id"])), ctx.business_id)

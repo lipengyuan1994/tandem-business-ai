@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
@@ -11,15 +9,18 @@ from app.modules.crm import public as crm
 from app.platform.context import Context
 from app.platform.crud import rows_affected
 from app.platform.errors import Invalid
-from app.platform.export import dump_models
+from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import AudienceMember, AudienceSnapshot, Campaign, CampaignRevision, Segment, Suppression
 from .service import _suppress
 
 
-def export(db: Session, ctx: Context) -> dict[str, list[dict[str, Any]]]:
-    return dump_models(db, ctx, [Segment, Campaign, CampaignRevision, AudienceSnapshot, AudienceMember, Suppression])
+def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
+    tables = stream_models(
+        db, ctx, [Segment, Campaign, CampaignRevision, AudienceSnapshot, AudienceMember, Suppression]
+    )
+    return export_tables(tables, streaming=streaming)
 
 
 def erase(db: Session, ctx: Context, target: ErasureTarget) -> dict[str, int]:

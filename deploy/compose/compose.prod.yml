@@ -47,6 +47,13 @@ x-ai-env: &ai-env
   GEMINI_API_KEY: ${GEMINI_API_KEY:-}
   LOCAL_INFERENCE_HOSTS: ${LOCAL_INFERENCE_HOSTS:-}
   AI_DAILY_TOKEN_BUDGET_PER_BUSINESS: ${AI_DAILY_TOKEN_BUDGET_PER_BUSINESS:-2000000}
+  AI_DAILY_COST_LIMIT_USD: ${AI_DAILY_COST_LIMIT_USD:-5.00}
+  AI_MONTHLY_COST_LIMIT_USD: ${AI_MONTHLY_COST_LIMIT_USD:-50.00}
+  AI_MAX_CONCURRENT_CALLS: ${AI_MAX_CONCURRENT_CALLS:-2}
+  AI_PUBLIC_INTAKE_PER_HOUR: ${AI_PUBLIC_INTAKE_PER_HOUR:-30}
+  AI_PUBLIC_INTAKE_MAX_PENDING: ${AI_PUBLIC_INTAKE_MAX_PENDING:-30}
+  AI_PUBLIC_DAILY_TOKEN_BUDGET_PER_BUSINESS: ${AI_PUBLIC_DAILY_TOKEN_BUDGET_PER_BUSINESS:-200000}
+  AI_BUDGET_NOTIFICATION_EMAIL: ${AI_BUDGET_NOTIFICATION_EMAIL:-}
 
 services:
   postgres:
@@ -55,7 +62,7 @@ services:
     # only needs root to chown the data directory and to switch user, and the volume already belongs to 999.
     user: "999:999"
     image: pgvector/pgvector:0.8.7-pg17-bookworm@sha256:ac08538c6f8b9904c33c8224c5e5706dbe760aca29db1d096972b4052c22a75d
-    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "max_connections=100"]
+    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "max_connections=100", "-c", "idle_in_transaction_session_timeout=60s"]
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
@@ -90,6 +97,7 @@ services:
 
   api:
     <<: *hardened
+    stop_grace_period: 120s
     image: ${REGISTRY:-smb}/smb-api:${VERSION}
     environment:
       <<: [*app-env, *ai-env]
@@ -105,6 +113,7 @@ services:
 
   worker:
     <<: *hardened
+    stop_grace_period: 120s
     image: ${REGISTRY:-smb}/smb-api:${VERSION}
     command: ["python", "-m", "app.worker"]
     environment:

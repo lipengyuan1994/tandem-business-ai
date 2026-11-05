@@ -295,7 +295,7 @@ validate (one repair) → record step → final: finish; tool_call: `execute_too
 | Situation | `status` | `error_code` |
 |---|---|---|
 | final step | `succeeded` | null (`needs_human` from the final step) |
-| early stop decided by code (ambiguous customer, safety flag, duplicate) | `succeeded` | null, `needs_human=true` |
+| early stop decided by code (safety flag, duplicate) | `succeeded` | null, `needs_human=true` |
 | steps exhausted | `step_limit` | `ai.step_limit` |
 | run wall clock exceeded | `failed` | `ai.run_timeout` |
 | budget exhausted | `budget_exceeded` | `ai.budget_exceeded` |
@@ -320,8 +320,13 @@ def build_messages(prompt: Prompt, tool_catalog: list[dict[str, Any]], spec: Run
     # [system(prompt.text + "\n\nTools:\n" + json(tool_catalog)), user(spec.task + "\n\n" + rendered blocks)]
 def append_step(messages: list[ChatMessage], step_json: str, observation: dict[str, Any]) -> None
     # assistant(step_json), user("Tool result:\n" + fence(observation as untrusted, label="tool_result"))
-def trim_to_budget(messages: list[ChatMessage], max_tokens: int) -> list[ChatMessage]
-    # estimate len(text)//4; drop the oldest tool-result pairs first; never the system message or the first user message
+def trim_to_budget(messages: list[ChatMessage], max_tokens: int,
+                   schema: dict[str, Any] | None = None) -> list[ChatMessage]
+    # shared UTF-8 bytes/4 estimate, including schema, roles and message overhead;
+    # drop oldest complete assistant/tool-result pairs first; preserve system, task, source records and repair pairs;
+    # raise InputTooLarge when the retained context cannot fit.
+# ModelCaller.call applies this before EVERY provider call (including structured completions and repairs).
+# Agent runs close with ai.input_too_large; structured callers raise AiError with HTTP 413.
 ```
 **Fencing (`fencing.fence(block: ContextBlock) -> str`):** untrusted text becomes
 `<untrusted source="{label}" id="{source_id}">\n{escaped}\n</untrusted>`; `escaped` replaces `<untrusted` and
@@ -401,6 +406,19 @@ def execute_tool(ctx: Context, name: str, raw_args: dict[str, Any], allowed: lis
 | `propose_supplier_followup(...)` | propose | ai.assistant.use | U9 |
 | `propose_payment_reminder(invoice_id, text)` | propose | ai.assistant.use | U10 |
 
+**Intake customer matching (frozen; changed 2026-11-04, owner-level decision by supervising tech lead).**
+A linked conversation keeps its customer. Otherwise CRM exact, normalized e-mail/phone matches take precedence:
+when either contact is supplied, rank only candidates with reason `email` or `phone`; if neither contact matches,
+treat the visitor as new regardless of name similarity. With no contact, retain only name candidates for which
+`crm.has_identity_name_overlap` finds at least two distinct shared tokens (case, whitespace and punctuation ignored).
+A surname or any other single shared token is insufficient. For the retained candidates, preserve the score rule:
+best ≥ 0.8 and (no second candidate or best − second ≥ 0.1) → matched; no score ≥ 0.5 → new; otherwise ambiguous.
+Ambiguity continues through the agent with **customer not identified**, without a matched customer id or summary;
+it does not block stock/service replies. Preserve `reason=ambiguous_customer` and up to three candidate display names
+in the intake result extras, and append the request to link the correct customer to the single staff outcome note,
+including when a reply proposal was prepared or the agent failed. Existing-customer booking still requires a hold
+for an identified customer. Visitor contacts remain server-owned facts and never enter model context.
+
 **Booking rules (frozen).** Existing customer: `hold_slot` first, then `propose_booking` with that `hold_id`; the tool
 creates the proposal and binds the hold to it (`scheduling.bind_hold`, PR-02) in one transaction. New customer: no hold
 (a hold needs a customer); `propose_booking` carries `customer: {"new": …}` built **by the tool** from
@@ -452,7 +470,54 @@ def usage_today(db: Session, ctx: Context) -> UsageToday
 def maybe_notify_80_percent(db: Session, ctx: Context) -> None  # first crossing per UTC day:
     # notifications.public.notify_users(...) to holders of ai.settings.read (identity.public.list_users_with_permission)
 ```
-Budget counts input + output tokens of the business's UTC day, updated per model call (§4).
+**Production hard-budget rules (ops review #3/#4, batch G, 2026-11-03):** these replace the
+check-then-record sequence described in §4/§8. `check_budget` remains a read-only status check;
+it does not authorize a model call.
+
+- Before **each provider attempt**, including fallback, repair, safety and structured-completion calls,
+  atomically reserve input plus maximum output tokens in `ai_usage_daily`. Input reservation uses
+  UTF-8 bytes (one token per byte), roles, framing, schema and 256 tokens of extra overhead, rather
+  than the smaller bytes/4 context estimate. Conditional updates reject calls that cannot fit with
+  `ai.budget_exceeded`. All allowance counters commit together before inference; no transaction
+  stays open across the provider call. Reservations count in usage screens and threshold notices.
+- Reserve the same attempt's cost, rounded **up** to micro-USD using route prices, in installation
+  counters `ai_cost_periods`. `AI_DAILY_COST_LIMIT_USD=5.00` and
+  `AI_MONTHLY_COST_LIMIT_USD=50.00` apply across all businesses. Limits accept non-negative USD
+  values with at most six decimal places. UTC calendar days/months reset the allowance naturally.
+  Migration `20261104_0600_ai_budgets` seeds these counters from existing daily spending.
+- Reconcile successful reported input/output usage and cost after every attempt, including a
+  response that arrived after its deadline. Failed/time-out attempts without usage, missing usage
+  represented by adapters as 0/0, and process crashes retain the **full reservation**. No automatic
+  refund guesses that a failed call was free. Reconciliation charges the original UTC day/month,
+  even if the call crosses midnight. Run counters include failed attempts. Configured route prices
+  must match provider billing; application ceilings cannot restrict a stolen provider key, traffic
+  outside the application or provider charges beyond the configured price/token model. Operators
+  must reconcile provider billing and configure provider-side restrictions separately.
+- `AI_MAX_CONCURRENT_CALLS=2` bounds active model attempts **per process**; saturation fails fast
+  with `ai.provider_unavailable`, before reserving or contacting the provider. Both agent and
+  structured calls share the cap. With one API and one worker, there can be four attempts across
+  the installation; the database ceilings are still shared. No additional wait queue is created.
+- `AI_PUBLIC_INTAKE_PER_HOUR=30` limits visitor/customer-triggered intake per business per UTC
+  clock hour, at event admission and again before execution (including old jobs/retries). Admission
+  is serialized per business and deduplicated for existing jobs. `AI_PUBLIC_INTAKE_MAX_PENDING=30`
+  bounds new admission against **queued and running** `ai.intake` jobs, including delayed retries.
+  Over-limit messages remain stored, receive one clear internal outcome note, and request staff
+  handoff without a safety or agent model call. Those handoff decisions remain terminal across
+  event redelivery, job retries and quota resets. Existing jobs are retained on upgrade and drain
+  under the execution quota. Staff copilot and summary never spend the public hourly allowance.
+- Public intake and its safety calls additionally share
+  `AI_PUBLIC_DAILY_TOKEN_BUDGET_PER_BUSINESS=200000`, capped at 25% of the business daily budget.
+  This leaves at least 75% of that token allowance unavailable to public intake. Staff may use
+  the remaining business allowance; all calls still share the installation financial ceilings.
+  Public quota settings may be zero to disable public AI while retaining messages for staff.
+- At 80% and 100%, deduplicated notices go to holders of `ai.settings.read` in the current business.
+  Notices cover business tokens and observed installation day/month cost, with separate scope
+  and period markers. Set optional `AI_BUDGET_NOTIFICATION_EMAIL` to queue the same notices via
+  `notifications.public.enqueue_message` to an operator address. Real delivery requires configured
+  SMTP; otherwise the outbox channel is explicitly simulated. Staff email discovery is unavailable
+  through the identity public API, so recipient addresses are not inferred or read from its tables.
+  The operator must independently verify receipt. Outbox delivery shares the worker/SMTP failure
+  boundary and does not replace an external operational pager.
 
 ## §13 Public API, jobs, subscribers, crons of module `ai`
 
@@ -509,17 +574,41 @@ class ExtractOut(BaseModel): run_id: uuid.UUID; extract: SupplierQuoteExtract; v
 ```
 **SSE:** each event `event: <kind>\ndata: <StepEvent JSON>\n\n`; ends after `final` or `error`; headers
 `Cache-Control: no-store`, `X-Accel-Buffering: no`; Caddy `flush_interval -1` for `/api/v1/ai/copilot/*` (AI-10).
-Rate limit: 30 copilot runs per user per hour.
+Rate limit: 30 copilot runs per user per hour. At most four submitted/running copilot generations per process;
+capacity exhaustion returns 429 `ai.copilot_busy` (with `Retry-After`). A second active turn in the same thread returns
+409 `ai.thread_busy` before inserting a message or opening SSE. The database claim covers multiple API processes;
+answers commit before that claim is released. Message timestamps are monotonic within a thread even if the clock moves
+backwards. Disconnect cancels pending executor work; a running worker retains its claim and capacity until it exits.
+
+**Client operation keys (second-review batch C).** Copilot message, conversation-summary and procurement-extraction POSTs accept an optional
+`Idempotency-Key` header of 1–64 characters. The namespace is business + authenticated user + endpoint + resource + key.
+`ai_operations` (forced business RLS) stores the request/permission digest, status, and existing run/message/proposal IDs;
+its `details` JSON stores server verification flags/field names and the original default currency for extraction retries
+(migration `20261104_0500_ai_op_details`). It stores no prompt, source text, or additional completion text. A changed request or permission set using the same key
+returns 409 `ai.idempotency_key_reused`; invalid header lengths return 422. A missing key starts a new operation.
+A completed summary or extraction retry returns the original response and proposal (including an unverified extraction
+with no proposal). An interrupted operation resumes its validated output and verification metadata with the same
+trigger/effect namespace; concurrent retries return 409 `ai.operation_in_progress` with the
+operation ID. A completed copilot retry replays its terminal SSE event with the original run ID, without another message,
+proposal or generation. An active copilot retry returns 409 `ai.thread_busy`; an interrupted turn replays its recorded
+error (409 `ai.operation_interrupted` with the operation ID if generation never started). The thread endpoint exposes
+the stored proposal IDs. Long source context or repair requests exceeding the configured
+input estimate (UTF-8 bytes/4 including schema and message overhead) fail with `ai.input_too_large` (413 for structured
+HTTP operations; error event for copilot). Source records/fences are never truncated mid-record.
+
+Extraction verification metadata is saved before proposal creation. Retrying a rejected supplied currency cannot turn
+it into an absent currency, and a changed business default cannot change the original operation’s currency conversion.
 
 ## §15 Errors
 
 ```python
 class AiError(DomainError):   # code is one of:
     "ai.disabled_by_policy", "ai.not_configured", "ai.budget_exceeded", "ai.provider_unavailable",
-    "ai.invalid_model_output", "ai.step_limit", "ai.run_timeout", "ai.tool_not_allowed", "ai.interrupted"
+    "ai.invalid_model_output", "ai.step_limit", "ai.run_timeout", "ai.tool_not_allowed", "ai.interrupted",
+    "ai.input_too_large"
 ```
 HTTP mapping: `disabled_by_policy`, `not_configured` → 409; `budget_exceeded` → 429; `provider_unavailable` → 503;
-`invalid_model_output`, `step_limit`, `run_timeout` → 502. Unverified extraction is **not** an error (`ExtractOut`).
+`invalid_model_output`, `step_limit`, `run_timeout` → 502; `input_too_large` → 413. Unverified extraction is **not** an error (`ExtractOut`).
 
 ## §16 Frontend (`frontend/src/features/ai/`)
 
@@ -527,6 +616,8 @@ HTTP mapping: `disabled_by_policy`, `not_configured` → 409; `budget_exceeded` 
 `useSendCopilotMessage(threadId)` (SSE via `fetch` + `ReadableStream`, CSRF header like other mutations),
 `useThreadSummary(conversationId)`, `useBriefing()`, `useCampaignDraft(campaignId)`, `useExtractSupplierQuote(requestId)`,
 `useRequestQuotes(itemId)`, `useAiRuns()`, `useAiUsage()`.
+The copilot client creates a UUID operation key per new message; its Retry message action reuses that key and body.
+The seven review error codes have plain-language copy under `ai.errors.*`.
 Components: `AssistantPanel` (slide-over, Ctrl/Cmd+J, streaming steps, proposal chips → `/approvals/$proposalId`, fixed
 line "AI can make mistakes; you approve every change"), `AiBadge` (proposals with `origin_kind === "assistant"`),
 `AiDisabledBanner`, `BriefingCard` (Today), `SummariseButton` (Inbox), `PasteSupplierReplyDialog` (Purchasing),

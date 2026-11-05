@@ -294,7 +294,7 @@ class ProposeSupplierFollowupArgs(ToolArgs):
 def _propose_supplier_followup(db: Session, ctx: Context, args: BaseModel, state: RunState) -> dict[str, Any]:
     assert isinstance(args, ProposeSupplierFollowupArgs)
     if args.purchase_order_id is not None:
-        po = next((p for p in purchasing.list_late_purchase_orders(db, ctx) if p.id == args.purchase_order_id), None)
+        po = purchasing.get_late_purchase_order(db, ctx, args.purchase_order_id)
         if po is None:
             raise NotFound("ai.late_order_not_found", detail="not a late purchase order of this business")
         if args.supplier_id is not None and args.supplier_id != po.supplier_id:
@@ -305,11 +305,8 @@ def _propose_supplier_followup(db: Session, ctx: Context, args: BaseModel, state
         facts: dict[str, Any] = {"number": po.number, "supplier": po.supplier_name, "days_late": po.days_late,
                                  "expected": day(po.expected_delivery_date)}  # fmt: skip
     else:
-        invite = next(
-            (i for i in purchasing.list_unanswered_invites(db, ctx)
-             if i.quote_request_id == args.quote_request_id and i.supplier_id == args.supplier_id),
-            None,
-        )  # fmt: skip
+        assert args.quote_request_id is not None and args.supplier_id is not None
+        invite = purchasing.get_unanswered_invite(db, ctx, args.quote_request_id, args.supplier_id)
         if invite is None:
             raise NotFound("ai.unanswered_invite_not_found", detail="no overdue, unanswered invite for that supplier")
         supplier_id, supplier_name, ref = invite.supplier_id, invite.supplier_name, invite.quote_request_id

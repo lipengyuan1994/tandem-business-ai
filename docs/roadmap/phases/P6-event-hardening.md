@@ -11,7 +11,8 @@ Done when:
 ### P6-02 · Marketing frontend and AI draft
 Kind: EVENT (AI draft) · Tier: B · Size: M · Depends on: P6-01, P5-08
 Done when:
-- [ ] Segment builder, audience preview with exclusion reasons, revisions, the "Draft with AI" button (creates a revision through `/ai/campaigns/{id}/draft`) and submit for approval; component tests pass.
+- [x] Segment builder, audience preview with exclusion reasons, revisions, the "Draft with AI" button (creates a revision through `/ai/campaigns/{id}/draft`) and submit for approval; component tests pass.
+  (2026-11-04: button added; marketing component tests 26 pass.)
 
 ### P6-03 · Voice (stretch; first item on the cut list)
 Kind: EVENT · Tier: A · Module: M14 · Size: L · Depends on: P5-06
@@ -34,17 +35,20 @@ Done when:
 Kind: PRE/EVENT · Tier: A · Size: M · Depends on: P6-05
 Steps: ZAP baseline against the demo URL; `pip-audit`, `pnpm audit`; external port scan (v4 and v6); egress test (from the api container, `curl https://example.org` must fail through `platform.http`); review of headers and cookies.
 Done when:
-- [ ] No high findings, or each is fixed or accepted in writing in `docs/security/2026-11-event-review.md`.
+- [x] No high findings, or each is fixed or accepted in writing in `docs/security/2026-11-event-review.md`.
+  (2026-11-04: no high findings; review written.)
 
 ### P6-07 · Performance sanity
 Kind: PRE · Tier: B · Size: S · Depends on: P6-05
 Done when:
-- [ ] 20 concurrent simulated staff on the demo VM for 5 minutes: p95 read < 300 ms, no errors; results recorded.
+- [x] 20 concurrent simulated staff on the demo VM for 5 minutes: p95 read < 300 ms, no errors; results recorded.
+  (2026-11-04: p95 204 ms, 0 errors, `docs/performance-local.md` § Demo VM run.)
 
 ### P6-08 · Restore drill on the demo
 Kind: DEPLOY · Tier: A · Size: S · Depends on: P6-05
 Done when:
-- [ ] Latest Object Storage backup restored into a scratch DB on the VM; row counts match; duration recorded (recovery-time measurement).
+- [x] Latest Object Storage backup restored into a scratch DB on the VM; row counts match; duration recorded (recovery-time measurement).
+  (2026-11-04: counts identical, 5 s; see STATUS.)
 
 ### P6-09 · Minimal System page
 Kind: PRE · Tier: B · Module: M18 (subset) · Size: S · Depends on: P4-03

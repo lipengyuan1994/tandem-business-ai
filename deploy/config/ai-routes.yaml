@@ -1,21 +1,20 @@
-# Live AI route file (contracts §6), first choice from the AI-04 probe (backend/evals/reports/2026-11-03-probe.md).
-# No secrets: the key comes from VULTR_INFERENCE_API_KEY in .env. Vultr only, so every business policy except
-# strict_private and regulated can use it. json_schema: true only where the probe showed schema-valid output.
-# Prices (USD per million tokens) are the Vultr catalog listing recorded in docs/roadmap/08-ai-layer.md; the live
-# catalog publishes no prices. The evals (AI-09) confirm or change the order.
+# Live AI route file (contracts §6). Chosen from the AI-04 probe (backend/evals/reports/2026-11-03-probe.md) and the
+# first live evals: glm-5.3-flash is a reasoning model that spends the 800-token output cap thinking and returns empty
+# output, and json_schema mode returns empty output for nested schemas on Vultr, so every class uses json_object mode
+# (the schema goes into the system message) and non-reasoning models. No secrets: the key comes from
+# VULTR_INFERENCE_API_KEY in .env. Prices (USD per million tokens) are the catalog listing in docs/roadmap/08-ai-layer.md.
 providers:
   vultr: {kind: openai_compat, base_url: "https://api.vultrinference.com/v1", api_key_env: VULTR_INFERENCE_API_KEY, hosted: true, vendor: vultr}
-routes:                               # ordered: the first healthy, policy-allowed entry wins
-  agent:                              # tool-call probe passed for all three
-    - {provider: vultr, model: glm-5.3-flash, json_schema: true, price_in_per_m: 0.35, price_out_per_m: 0.35}
-    - {provider: vultr, model: mimo-v2.6-flash, json_schema: true, price_in_per_m: 0.25, price_out_per_m: 0.25}
-    - {provider: vultr, model: deepseek-v4.1-flash-1017, json_schema: true, price_in_per_m: 0.60, price_out_per_m: 0.60}
+routes:
+  agent:
+    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
+    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}
   fast_extract:
-    - {provider: vultr, model: qwen3.8-flash-next, json_schema: true, price_in_per_m: 0.20, price_out_per_m: 0.20}
-    - {provider: vultr, model: glm-5.3-flash, json_schema: true, price_in_per_m: 0.35, price_out_per_m: 0.35}
+    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
+    - {provider: vultr, model: qwen3.8-flash-next, price_in_per_m: 0.20, price_out_per_m: 0.20}
   writer:
-    - {provider: vultr, model: deepseek-v4.1-flash-1017, json_schema: true, price_in_per_m: 0.60, price_out_per_m: 0.60}
-    - {provider: vultr, model: glm-5.3-flash, json_schema: true, price_in_per_m: 0.35, price_out_per_m: 0.35}
-  safety:                             # not probed with the SafetyVerdict schema yet: json_object mode
-    - {provider: vultr, model: nemotron-3.5-content-safety, price_in_per_m: 0.15, price_out_per_m: 0.15}
+    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}
+    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
+  safety:
+    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
 limits: {max_steps: 8, max_input_tokens_per_step: 12000, max_output_tokens_per_step: 800, run_timeout_s: 90, step_timeout_s: 30}

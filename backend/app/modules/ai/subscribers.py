@@ -14,12 +14,15 @@ from app.platform.context import Context
 from app.platform.errors import NotFound
 
 from .agent.contexts import background_ctx_factory
+from .public_intake import admit
 
 
 def intake_trigger(db: Session, ctx: Context, payload: dict[str, Any], event_id: uuid.UUID) -> None:
     if payload.get("author_kind") not in {"visitor", "customer"}:
         return
     message_id = uuid.UUID(str(payload["message_id"]))
+    if not admit(db, ctx, message_id):
+        return
     jobs.enqueue(
         db, "ai.intake", {"message_id": str(message_id)}, business_id=ctx.business_id,
         dedupe_key=f"intake:{message_id}",

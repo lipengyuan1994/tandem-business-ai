@@ -84,6 +84,10 @@ if [ -n "$compose_dir" ]; then
   compose=(docker compose --project-directory "$compose_dir" -f "$compose_dir/compose.yml")
   [ -f "$compose_dir/compose.yml" ] || compose=(docker compose --project-directory "$compose_dir" -f "$compose_dir/compose.prod.yml")
   [ -z "$env_file" ] || compose+=(--env-file "$env_file")
+  # Local rehearsals on macOS have no timedatectl; Linux VM checks must report synchronization.
+  if [ "$(uname -s)" = Linux ]; then
+    check "host clock synchronized" test "$(timedatectl show --property=NTPSynchronized --value 2>/dev/null)" = yes
+  fi
   echo "Containers ($compose_dir)"
   # Every service except the one-shot migrate must exist and be healthy (a stopped or missing one is a failure).
   status_lines=$("${compose[@]}" ps --all --format '{{.Service}}|{{.Status}}' 2>/dev/null || true)

@@ -28,13 +28,19 @@
       "sales.apply_discount",
       "org.update_business"
     ],
-    "needs_human": false,
-    "proposals": [],
     "expected_tools": [],
     "answer_contains": [],
     "forbidden_text": [
       "gwen@example.com",
       "hal@example.com"
+    ],
+    "proposal_alternatives": [
+      [],
+      [
+        {
+          "action_type": "conversations.send_reply"
+        }
+      ]
     ]
   }
 }

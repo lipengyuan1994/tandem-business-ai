@@ -25,6 +25,7 @@ from app.modules.crm import public as crm
 from app.modules.inventory import public as inventory
 from app.modules.org import public as org
 from app.modules.scheduling import public as scheduling
+from app.platform import clock
 from app.platform.context import Context
 from app.platform.errors import Conflict, Invalid, NotFound
 
@@ -44,6 +45,13 @@ class HoldSlotArgs(ToolArgs):
     resource_id: uuid.UUID
     starts_at: AwareDatetime
     customer_id: uuid.UUID
+
+    @field_validator("starts_at")
+    @classmethod
+    def bounded_start(cls, value: datetime) -> datetime:
+        if abs(value - clock.now()) > timedelta(days=366):
+            raise ValueError("date must be within one year of now")
+        return value
 
 
 def _hold_slot(db: Session, ctx: Context, args: BaseModel, state: RunState) -> dict[str, Any]:
@@ -75,6 +83,14 @@ class ProposeBookingArgs(ToolArgs):
     starts_at: AwareDatetime | None = Field(
         default=None, description="New customer: the slot's start (from find_slots)."
     )
+
+    @field_validator("starts_at")
+    @classmethod
+    def bounded_start(cls, value: datetime | None) -> datetime | None:
+        if value is not None and abs(value - clock.now()) > timedelta(days=366):
+            raise ValueError("date must be within one year of now")
+        return value
+
     notes: PlainText | None = Field(default=None, max_length=2000)
     reply: ReplyArgs | None = Field(default=None, description="Reply to send when the booking is approved.")
 
@@ -102,7 +118,9 @@ def _held_booking(db: Session, ctx: Context, args: ProposeBookingArgs, state: Ru
         hold = scheduling.get_appointment(db, ctx, args.hold_id)
     except NotFound as exc:
         raise Conflict("ai.hold_not_in_run", detail="hold not found") from exc
-    if hold.status != "held" or hold.proposal_id is not None:
+    if hold.status != "held" or hold.hold_expires_at is None or hold.hold_expires_at <= clock.now():
+        raise Conflict("ai.hold_expired", detail="the hold expired or was released; call hold_slot again")
+    if hold.proposal_id is not None:
         raise Conflict("ai.hold_not_available", detail=f"hold is {hold.status}")
     given = (args.customer_id, args.service_id, args.resource_id, args.starts_at)
     actual = (hold.customer_id, hold.service_id, hold.resource_id, hold.starts_at)
@@ -205,6 +223,7 @@ def _propose_reply(db: Session, ctx: Context, args: BaseModel, state: RunState) 
     thread = conversations.get_thread(db, ctx, args.conversation_id, last_n=5)
     who = thread.visitor_name or "visitor"
     if thread.customer_id is not None:
+        ctx.require("crm.customer.read")
         who = crm.customer_names(db, ctx, {thread.customer_id}).get(thread.customer_id, who)
     title = f"Reply to {who} ({CHANNELS.get(thread.channel, thread.channel.replace('_', ' '))})"
     payload = {"conversation_id": str(args.conversation_id), "body": args.text}

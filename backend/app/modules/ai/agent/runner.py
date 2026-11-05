@@ -7,6 +7,7 @@ records usage at once, validates the AgentStep (one repair), records the step, t
 
 from __future__ import annotations
 
+import json
 import time
 import uuid
 from collections.abc import Callable
@@ -23,11 +24,11 @@ from ..errors import AiError
 from ..gateway.router import PolicyBlocked, Router, effective_policy, load_router
 from ..gateway.routes import Limits, ModelClass
 from ..gateway.types import ChatMessage, ChatRequest, ChatResult, ProviderError
+from ..model_calls import budget_scope
 from ..schemas import Policy, RunStatus
 from ..tools.base import RunState
-from ..tools.registry import execute_tool, get_tool, tool_catalog
-from ..usage import check_budget
-from .context import append_step, build_messages, trim_to_budget
+from ..tools.registry import authorized_tools, execute_tool, get_tool, tool_catalog
+from .context import InputTooLarge, append_step, build_messages, trim_to_budget
 from .contexts import CtxFactory
 from .protocol import AGENT_STEP_ADAPTER, FinalStep, RunResult, RunSpec, StepEvent, ToolCallStep, agent_step_json_schema
 
@@ -101,10 +102,12 @@ class ModelCaller:
         if remaining <= 0:
             raise StopRun("failed", "ai.run_timeout")
         try:
-            with transaction(self.ctx) as db:
-                check_budget(db, self.ctx)
-        except AiError as exc:
-            raise StopRun("budget_exceeded", exc.code) from None
+            messages[:] = trim_to_budget(messages, self.limits.max_input_tokens_per_step, schema)
+        except InputTooLarge:
+            raise StopRun("failed", "ai.input_too_large") from None
+        remaining = self.remaining()
+        if remaining <= 0:
+            raise StopRun("failed", "ai.run_timeout")
         req = ChatRequest(
             messages=messages,
             json_schema=schema,
@@ -113,13 +116,20 @@ class ModelCaller:
             use_case=self.use_case,
         )
         try:
-            result, entry = self.router.complete(self.model_class, self.policy, req)  # no transaction open here
+            with budget_scope(self.ctx):
+                result, _entry = self.router.complete(self.model_class, self.policy, req)
+        except AiError as exc:
+            status: RunStatus = "budget_exceeded" if exc.code == "ai.budget_exceeded" else "failed"
+            raise StopRun(status, exc.code) from None
         except PolicyBlocked:
             raise StopRun("policy_blocked", blocked_code(self.router, self.model_class)) from None
         except ProviderError as exc:
+            if self.remaining() <= 0:
+                raise StopRun("failed", "ai.run_timeout") from None
             log.warning("ai_run_provider_failed", run_id=str(self.ctx.ai_run_id), kind=exc.kind)
             raise StopRun("failed", "ai.provider_unavailable") from None
-        recording.record_usage_now(self.ctx, entry, result)
+        if self.remaining() <= 0:
+            raise StopRun("failed", "ai.run_timeout")
         return result
 
 
@@ -132,6 +142,18 @@ def _rebuild_state(ctx: Context, spec: RunSpec, run_id: uuid.UUID) -> RunState:
         trigger_message_id=spec.trigger_message_id,
         server_facts=dict(spec.server_facts),
     )
+    if spec.use_case == "intake" and spec.trigger_message_id is not None:
+        with transaction(ctx) as db:
+            from app.modules.conversations import public as conversations
+
+            message = conversations.get_message_context(db, ctx, spec.trigger_message_id)
+            state.read_conversation_ids.add(message.conversation_id)
+        from ..tools.common import cite
+
+        for block in spec.context_blocks:
+            if block.label == "active_services" and not block.untrusted:
+                for service in json.loads(block.text):
+                    cite(state, "get_service_parts", uuid.UUID(service["service_id"]), service)
     with transaction(ctx) as db:
         for record in effects.effects_for_trigger(db, ctx, spec.trigger_key):
             if record.kind == "proposal":
@@ -161,88 +183,96 @@ def run_agent(
 
     recording.close_stale_runs(ctx, spec.trigger_key, limits.run_timeout_s)
     recording.open_run(ctx, meta)
-    state = _rebuild_state(ctx, spec, run_id)
-    proposal_ids: list[uuid.UUID] = []
-    proposal_titles: list[str] = []
-
-    def finish(status: RunStatus, error_code: str | None = None, final: FinalStep | None = None) -> RunResult:
-        needs_human = final.needs_human if final is not None else False
-        result: dict[str, Any] = {"proposal_ids": [str(p) for p in proposal_ids]}
-        if final is not None:
-            result.update(text=final.message_to_staff, needs_human=final.needs_human)
-        recording.close_run(ctx, run_id, status, error_code=error_code, needs_human=needs_human, result=result)
-        if final is not None and status == "succeeded":
-            emit(StepEvent(kind="final", run_id=run_id, text=final.message_to_staff))
-        else:
-            emit(StepEvent(kind="error", run_id=run_id, error_code=error_code))
-        return RunResult(
-            run_id=run_id, status=status, final=final, proposal_ids=list(proposal_ids), error_code=error_code,
-            extra={"proposal_titles": list(proposal_titles)},
-        )  # fmt: skip
-
-    if router is None:
-        return finish("policy_blocked", "ai.not_configured")
-    with transaction(ctx) as db:
-        policy = effective_policy(db, ctx)
-    if not router.allowed(model_class, policy):
-        return finish("policy_blocked", blocked_code(router, model_class))
-
-    caller = ModelCaller(ctx, router, model_class, policy, spec.use_case)
-    tools = [name for name in spec.tools if _registered(name)]
-    messages = build_messages(spec.prompt, tool_catalog(tools), spec)
-    schema = agent_step_json_schema()
-    step_no = 0
     try:
-        while step_no < limits.max_steps:
-            messages = trim_to_budget(messages, limits.max_input_tokens_per_step)
-            result = caller.call(messages, schema)
-            tokens = {"input_tokens": result.usage.input_tokens, "output_tokens": result.usage.output_tokens}
-            where = {"provider": result.provider, "model": result.model, "latency_ms": result.latency_ms}
-            try:
-                step = AGENT_STEP_ADAPTER.validate_json(result.text)
-            except ValidationError as exc:
-                step_no += 1
-                recording.record_step(ctx, run_id, recording.StepRecord(
-                    step_no=step_no, kind="repair", error_code="ai.invalid_model_output", **tokens, **where,
-                ))  # fmt: skip
-                if step_no >= limits.max_steps:
-                    raise StopRun("step_limit", "ai.step_limit") from None
-                retry = [
-                    *messages,
-                    ChatMessage(role="assistant", content=result.text),
-                    ChatMessage(role="user", content=repair_message(exc)),
-                ]
-                result = caller.call(retry, schema)
+        state = _rebuild_state(ctx, spec, run_id)
+        proposal_ids: list[uuid.UUID] = []
+        proposal_titles: list[str] = []
+
+        def finish(status: RunStatus, error_code: str | None = None, final: FinalStep | None = None) -> RunResult:
+            needs_human = final.needs_human if final is not None else False
+            result: dict[str, Any] = {"proposal_ids": [str(p) for p in proposal_ids]}
+            if final is not None:
+                result.update(text=final.message_to_staff, needs_human=final.needs_human)
+            recording.close_run(ctx, run_id, status, error_code=error_code, needs_human=needs_human, result=result)
+            if final is not None and status == "succeeded":
+                emit(StepEvent(kind="final", run_id=run_id, text=final.message_to_staff))
+            else:
+                emit(StepEvent(kind="error", run_id=run_id, error_code=error_code))
+            return RunResult(
+                run_id=run_id, status=status, final=final, proposal_ids=list(proposal_ids), error_code=error_code,
+                extra={"proposal_titles": list(proposal_titles)},
+            )  # fmt: skip
+
+        if router is None:
+            return finish("policy_blocked", "ai.not_configured")
+        with transaction(ctx) as db:
+            policy = effective_policy(db, ctx)
+        if not router.allowed(model_class, policy):
+            return finish("policy_blocked", blocked_code(router, model_class))
+
+        caller = ModelCaller(ctx, router, model_class, policy, spec.use_case)
+        tools = authorized_tools(ctx, spec.tools)
+        messages = build_messages(spec.prompt, tool_catalog(tools), spec)
+        schema = agent_step_json_schema()
+        step_no = 0
+        try:
+            while step_no < limits.max_steps:
+                result = caller.call(messages, schema)
                 tokens = {"input_tokens": result.usage.input_tokens, "output_tokens": result.usage.output_tokens}
                 where = {"provider": result.provider, "model": result.model, "latency_ms": result.latency_ms}
                 try:
                     step = AGENT_STEP_ADAPTER.validate_json(result.text)
-                except ValidationError:
+                except ValidationError as exc:
                     step_no += 1
                     recording.record_step(ctx, run_id, recording.StepRecord(
                         step_no=step_no, kind="repair", error_code="ai.invalid_model_output", **tokens, **where,
                     ))  # fmt: skip
-                    raise StopRun("failed", "ai.invalid_model_output") from None
-            step_no += 1
-            if isinstance(step, FinalStep):
-                recording.record_step(ctx, run_id, recording.StepRecord(step_no=step_no, kind="final", **tokens,
-                                                                        **where))  # fmt: skip
-                return finish("succeeded", None, step)
-            observation = _run_tool(ctx, spec, step, state, emit, run_id)
-            recording.record_step(ctx, run_id, recording.StepRecord(
-                step_no=step_no, kind="tool_call", tool=step.tool[:100] if _registered(step.tool) else None,
-                # Rejected arguments can contain arbitrary free-text keys, including nested keys. Only a
-                # successful schema-validated call has server-defined keys safe for metadata recording.
-                arguments_redacted=recording.redact_arguments(step.arguments) if observation.get("ok") else {},
-                result_summary=recording.summarize_observation(observation),
-                error_code=None if observation.get("ok") else str(observation.get("error"))[:100],
-                **tokens, **where,
-            ))  # fmt: skip
-            _collect_proposal(observation, proposal_ids, proposal_titles, emit, run_id)
-            append_step(messages, step.model_dump_json(), observation)
-        return finish("step_limit", "ai.step_limit")
-    except StopRun as stop:
-        return finish(stop.status, stop.error_code)
+                    if step_no >= limits.max_steps:
+                        raise StopRun("step_limit", "ai.step_limit") from None
+                    retry = [
+                        *messages,
+                        ChatMessage(role="assistant", content=result.text),
+                        ChatMessage(role="user", content=repair_message(exc)),
+                    ]
+                    result = caller.call(retry, schema)
+                    tokens = {"input_tokens": result.usage.input_tokens, "output_tokens": result.usage.output_tokens}
+                    where = {"provider": result.provider, "model": result.model, "latency_ms": result.latency_ms}
+                    try:
+                        step = AGENT_STEP_ADAPTER.validate_json(result.text)
+                    except ValidationError:
+                        step_no += 1
+                        recording.record_step(ctx, run_id, recording.StepRecord(
+                            step_no=step_no, kind="repair", error_code="ai.invalid_model_output", **tokens, **where,
+                        ))  # fmt: skip
+                        raise StopRun("failed", "ai.invalid_model_output") from None
+                step_no += 1
+                if caller.remaining() <= 0:
+                    raise StopRun("failed", "ai.run_timeout")
+                if isinstance(step, FinalStep):
+                    recording.record_step(ctx, run_id, recording.StepRecord(step_no=step_no, kind="final", **tokens,
+                                                                            **where))  # fmt: skip
+                    if caller.remaining() <= 0:
+                        raise StopRun("failed", "ai.run_timeout")
+                    return finish("succeeded", None, step)
+                observation = _run_tool(ctx, spec, step, state, emit, run_id, caller)
+                recording.record_step(ctx, run_id, recording.StepRecord(
+                    step_no=step_no, kind="tool_call", tool=step.tool[:100] if _registered(step.tool) else None,
+                    # Rejected arguments can contain arbitrary free-text keys, including nested keys. Only a
+                    # successful schema-validated call has server-defined keys safe for metadata recording.
+                    arguments_redacted=recording.redact_arguments(step.arguments) if observation.get("ok") else {},
+                    result_summary=recording.summarize_observation(observation),
+                    error_code=None if observation.get("ok") else str(observation.get("error"))[:100],
+                    **tokens, **where,
+                ))  # fmt: skip
+                _collect_proposal(observation, proposal_ids, proposal_titles, emit, run_id)
+                append_step(messages, step.model_dump_json(), observation)
+            return finish("step_limit", "ai.step_limit")
+        except StopRun as stop:
+            return finish(stop.status, stop.error_code)
+    except Exception:
+        recording.close_run(ctx, run_id, "failed", error_code="ai.internal_error")
+        log.warning("ai_run_failed_unexpectedly", run_id=str(run_id))
+        raise
 
 
 def _run_tool(
@@ -252,8 +282,11 @@ def _run_tool(
     state: RunState,
     emit: Callable[[StepEvent], None],
     run_id: uuid.UUID,
+    caller: ModelCaller,
 ) -> dict[str, Any]:
     emit(StepEvent(kind="step", run_id=run_id, tool=step.tool, status_text=status_text(step.tool)))
+    if caller.remaining() <= 0:
+        raise StopRun("failed", "ai.run_timeout")
     return execute_tool(ctx, step.tool, step.arguments, spec.tools, state)
 
 

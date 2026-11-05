@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 from sqlalchemy import Engine, text
 
+from app.modules.ai.agent.contexts import background_ctx_factory
 from app.modules.ai.agent.prompts import FENCING_SENTENCE, JSON_ONLY_SENTENCE, load_prompt
 from app.modules.ai.agent.protocol import RunSpec
 from app.modules.ai.gateway.fake import FakeGateway
@@ -128,13 +129,13 @@ def test_intake_happy_path_existing_customer_hold_then_booking_with_reply(demo: 
     assert {e["ref_type"] for e in row["evidence"]} >= {"find_slots", "check_stock", "get_service_parts"}
     assert len(notes(demo.business, conv)) == 1
     recorded = run_row(demo.business, result)
-    assert (recorded.prompt_name, recorded.prompt_version, recorded.steps) == ("intake", 1, 8)
+    assert (recorded.prompt_name, recorded.prompt_version, recorded.steps) == ("intake", 3, 8)
 
 
 def test_intake_new_customer_booking_without_hold_uses_server_facts(demo: Demo, owner_engine: Engine) -> None:
     visitor = {
-        "visitor_name": "Rowan Example",
-        "visitor_email": "rowan.new@example.com",
+        "visitor_name": "Bea Example",
+        "visitor_email": "bea@example.com",
         "visitor_phone": "+12025550199",
     }
     conv, message = inbound(demo.business, body="Brake service next Tuesday morning, please.", **visitor)
@@ -190,7 +191,7 @@ def test_intake_second_proposal_attempt_rejected(demo: Demo, owner_engine: Engin
         )
 
     def finish(req: ChatRequest) -> str:
-        assert observation(req)["error"] == "ai.one_booking_per_run"
+        assert observation(req)["error"] == "ai.intake_outcome_exists"
         return step_final("Prepared one booking for review.")
 
     gw = scripted(*steps, duplicate, finish)
@@ -247,7 +248,7 @@ def test_task_contains_business_local_time_and_no_contact_values(
         return real_run_agent(factory, spec, **kw)
 
     monkeypatch.setattr(intake, "run_agent", capture, raising=False)
-    intake.run_agent_step(intake.background_ctx_factory(demo.business), msg, match, state)
+    intake.run_agent_step(background_ctx_factory(demo.business), msg, match, state)
     assert len(captured) == 1
     spec = captured[0]
     assert spec.tools == TOOLS and spec.prompt == load_prompt("intake")
@@ -259,8 +260,11 @@ def test_task_contains_business_local_time_and_no_contact_values(
     else:
         assert "new customer (details are held by the system; refer to them as the visitor)" in spec.task
     for value in facts.values():
+        assert value is not None
         assert value not in spec.task
-    assert {b.label for b in spec.context_blocks if not b.untrusted} == {"business_brief", "opening_hours"}
+    assert {b.label for b in spec.context_blocks if not b.untrusted} == {
+        "business_brief", "opening_hours", "matched_customer", "active_services",
+    }  # fmt: skip
     assert "09:00" in next(b.text for b in spec.context_blocks if b.label == "opening_hours")
     blocks = [b for b in spec.context_blocks if b.untrusted]
     assert len(blocks) == 1 and blocks[0].source_id == message
@@ -290,7 +294,7 @@ def test_intake_retry_returns_recorded_proposal(demo: Demo, owner_engine: Engine
         step_final("Recovered the recorded booking."),
     )
     retry = intake.run_agent_step(
-        intake.background_ctx_factory(demo.business),
+        background_ctx_factory(demo.business),
         msg,
         intake.CustomerMatch("matched", demo.customers["Ada Example"]),
         intake.IntakeState(message, f"intake:{message}", brief, fake_router_by_class(agent=replay), {}),
@@ -300,7 +304,7 @@ def test_intake_retry_returns_recorded_proposal(demo: Demo, owner_engine: Engine
     assert guarded.extra["reason"] == "open_proposal" and len(notes(demo.business, conv)) == 1
     with owner_engine.connect() as db:
         count = db.scalar(text("select count(*) from ai_effects where trigger_key = :t"), {"t": f"intake:{message}"})
-        assert count == 2
+        assert count == 3  # hold, proposal, and the shared booking-or-reply outcome claim
 
 
 def test_dev_intake_script_has_valid_tool_arguments_and_fails_safely(demo: Demo, owner_engine: Engine) -> None:
@@ -325,7 +329,7 @@ def test_dev_intake_script_has_valid_tool_arguments_and_fails_safely(demo: Demo,
     conv, message = inbound(demo.business)
     with owner_engine.connect() as db:
         before = db.scalar(text("select count(*) from appointments"))
-    gw = FakeGateway(replies)
+    gw = FakeGateway([reply for reply in replies])
     result = intake.run(message, demo.business, router=fake_router_by_class(agent=gw))
     assert result.status == "succeeded" and result.proposal_ids == []
     assert result.final is not None and result.final.needs_human
@@ -347,3 +351,44 @@ def test_intake_redacts_contact_values_in_inbound_text(demo: Demo) -> None:
     text_sent = gw.calls[0].messages[1].content
     assert "ada@example.com" not in text_sent and "+12025550123" not in text_sent
     assert "[email hidden]" in text_sent and "[phone hidden]" in text_sent
+
+
+@pytest.mark.parametrize("ambiguous", [False, True], ids=["new-shared-surname", "ambiguous-name"])
+def test_unidentified_customer_gets_stock_reply(demo: Demo, owner_engine: Engine, ambiguous: bool) -> None:
+    if ambiguous:
+        from app.modules.crm import public as crm
+
+        ctx = read_context(demo.business)
+        with transaction(ctx) as db:
+            for _ in range(2):
+                crm.create_customer(db, ctx, crm.CustomerCreate(display_name="Bea Example"))
+    conv, message = inbound(
+        demo.business,
+        visitor_name="Bea Example",
+        visitor_email=None if ambiguous else "bea@example.com",
+        visitor_phone=None,
+        body="Do you have brake pads in stock right now?",
+    )
+    reply = "Brake pads are in stock right now."
+    gw = scripted(
+        step_tool("get_conversation", conversation_id=conv),
+        step_tool("check_stock", item_ids=[demo.items["Brake pads (pair)"]]),
+        step_tool("propose_reply", conversation_id=conv, text=reply),
+        step_final("Prepared stock reply."),
+    )
+    result = intake.run(message, demo.business, router=fake_router_by_class(agent=gw))
+    assert result.status == "succeeded" and len(result.proposal_ids) == 1
+    row = proposal(owner_engine, result.proposal_ids[0])
+    assert row["action_type"] == "conversations.send_reply"
+    assert row["payload"]["body"] == reply
+    staff_notes = notes(demo.business, conv)
+    assert len(staff_notes) == 1 and "Prepared for approval:" in staff_notes[0]
+    request = gw.calls[0].messages[-1].content
+    if ambiguous:
+        assert "customer not identified" in request
+        assert "New customer." not in request
+        assert result.extra["candidates"] == ["Bea Example", "Bea Example"]
+        assert "Several customers could match (Bea Example, Bea Example)." in staff_notes[0]
+    else:
+        assert "new customer" in request
+        assert "ambiguous_customer" not in result.extra

@@ -6,7 +6,7 @@ Read [README.md](README.md) first (placeholders such as `<name>`, `<ip>`, `<doma
 
 SSH is closed unless you opened it for your address. Two ways in.
 
-**A. Vultr web console (no network rule needed).** Vultr console → Instances → your instance → "View Console". Log in as `root`; the password is shown on the instance's Overview page. Use it for emergencies: it is a root shell, so do the minimum. (The VM's own firewall `ufw` already allows 22, 80 and 443; the Vultr firewall group is the real gate, so you never need to touch `ufw`.)
+**A. Vultr web console (no network rule needed).** Vultr console → Instances → your instance → "View Console". Log in as `root`; the password is shown on the instance's Overview page. Use it for emergencies: it is a root shell, so do the minimum. New VMs allow host SSH only from the configured `admin_cidrs`, matching the provider firewall; 80/443 remain public.
 
 **B. SSH from your computer, for your address only.**
 
@@ -18,7 +18,9 @@ SSH is closed unless you opened it for your address. Two ways in.
    ```
 
    To allow a different address use `--cidr 203.0.113.7/32` (one IPv4 address) or `--cidr 2001:db8::1/128` (one IPv6 address). The helper **keeps** addresses that were already allowed. Everyone behind the same office or home connection shares one public address, so allowing it allows them all to *try* (they still need the SSH key). Wider ranges are accepted but increase exposure: avoid them; a VPN with a fixed address is better.
-2. Connect. The first time, SSH shows the host key fingerprint and asks to trust it; compare it with the real one by logging in through the Vultr web console (A) and running `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` (SSH normally offers the ED25519 key and says so; if it names another type such as ECDSA, use the matching file `/etc/ssh/ssh_host_ecdsa_key.pub`). Then:
+2. Before connecting from a newly allowed address, use the root web console to allow that **same** source in UFW: `ufw allow from 203.0.113.7/32 to any port 22 proto tcp` (use the actual approved CIDR, including IPv6 if needed). `access.sh` changes only the provider rules; cloud-init does not rerun when its inputs change. Review `ufw status numbered` and delete obsolete SSH rules by number, highest number first, including any legacy broad `22/tcp` rule. Never delete the public 80/443 rules. Terraform may now show an in-place `user_data` update on the VM when CIDRs change; inspect it carefully, and reject replacement or other resource changes.
+
+   Connect. The first time, SSH shows the host key fingerprint and asks to trust it; compare it with the real one by logging in through the Vultr web console (A) and running `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` (SSH normally offers the ED25519 key and says so; if it names another type such as ECDSA, use the matching file `/etc/ssh/ssh_host_ecdsa_key.pub`). Then:
 
    ```bash
    $ ssh -i install-<name>/id_ed25519 smb@<ip>
@@ -31,6 +33,8 @@ SSH is closed unless you opened it for your address. Two ways in.
    ```bash
    $ deploy/scripts/access.sh close --name <name>
    ```
+
+   Then use the root web console to remove the matching host SSH rules with `ufw status numbered` and `ufw delete <number>` (highest first). Also do this after installer `--close-ssh`; the provider rule closes immediately, while host rules require this console step.
 
    If the helper cannot be used (no Terraform state), delete the rules by hand: Vultr console → Firewall → the group for this installation → remove **every** TCP port 22 rule (one per allowed address and IP version; leave the 80 and 443 rules). Terraform will notice the difference at its next run and show it in its plan; accept only changes that re-create or remove SSH rules.
 
@@ -91,3 +95,8 @@ vm$ cd /opt/smb && docker compose exec postgres psql -U postgres -d smb
 ```
 
 This is the database superuser. Use read-only queries unless a runbook tells you otherwise: start every session with `begin read only;` and finish with `rollback;`, which makes accidental writes fail. The database holds every business's data on this installation, including customers' personal data: do not paste query results into chats, tickets or logs.
+
+
+## Key-only baseline for existing VMs
+
+Fresh cloud-init sets `ssh_pwauth: false` and `/etc/ssh/sshd_config.d/00-smb.conf` with `PasswordAuthentication no`, `KbdInteractiveAuthentication no`, and `PermitRootLogin prohibit-password`. Root password login remains available through the provider console for recovery; network root login requires a key. Existing VMs need a console review: confirm working key access, install the same drop-in, run `sshd -t` before `systemctl reload ssh`, and verify effective values with `sshd -T` (and `-C user=smb,host=<hostname>,addr=<admin-ip>` if Match blocks exist). Keep the console open until key login is tested. Match UFW sources to the provider's current IPv4/IPv6 rules as above; verify externally from allowed and denied sources. This batch's offline tests do not establish the live VM's SSH policy.

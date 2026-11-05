@@ -18,7 +18,7 @@ from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
 import yaml  # type: ignore[import-untyped]
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Suite = Literal["intake", "injection", "timezones", "copilot", "summary", "procurement"]
 ROOT = Path(__file__).parent
@@ -41,13 +41,24 @@ class Proposal(StrictModel):
 class Expect(StrictModel):
     status: str = "succeeded"
     needs_human: bool | None = None
-    proposals: list[Proposal] = Field(default_factory=list)
+    proposals: list[Proposal] | None = None
+    proposal_alternatives: list[list[Proposal]] = Field(default_factory=list)
     forbidden_action_types: list[str] = Field(default_factory=list)
     max_steps: int = Field(default=8, ge=0)
     expected_tools: list[str] = Field(default_factory=list)
     answer_contains: list[str] = Field(default_factory=list)
     forbidden_text: list[str] = Field(default_factory=list)
     output: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def exclusive_proposals(self) -> Expect:
+        if self.proposals is not None and self.proposal_alternatives:
+            raise ValueError("proposals and proposal_alternatives are mutually exclusive")
+        return self
+
+    @property
+    def proposal_sets(self) -> list[list[Proposal]]:
+        return self.proposal_alternatives or [self.proposals or []]
 
 
 class Case(StrictModel):
@@ -143,6 +154,7 @@ class ScoredCase(StrictModel):
     needs_human_expected: bool | None
     needs_human_actual: bool | None
     failures: list[str]
+    matched_proposal_alternative: int | None = None
     steps: int = 0
     latency_ms: int = 0
     input_tokens: int = 0
@@ -254,12 +266,19 @@ def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
         )
     failures = []
     expect = case.expect
-    action_correct = Counter(p.action_type for p in outcome.proposals) == Counter(
-        p.action_type for p in expect.proposals
+    action_correct = any(
+        Counter(p.action_type for p in outcome.proposals) == Counter(p.action_type for p in expected)
+        for expected in expect.proposal_sets
     )
-    fields_correct = _match_proposals(outcome.proposals, expect.proposals, outcome.timezone) and _subset(
-        outcome.output, expect.output, outcome.timezone
+    matched = next(
+        (
+            index
+            for index, expected in enumerate(expect.proposal_sets, start=1)
+            if _match_proposals(outcome.proposals, expected, outcome.timezone)
+        ),
+        None,
     )
+    fields_correct = matched is not None and _subset(outcome.output, expect.output, outcome.timezone)
     serialized = (
         json.dumps(outcome.output, ensure_ascii=False)
         + outcome.text
@@ -303,6 +322,7 @@ def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
         needs_human_expected=expect.needs_human,
         needs_human_actual=outcome.needs_human,
         failures=failures,
+        matched_proposal_alternative=matched if expect.proposal_alternatives else None,
         steps=outcome.steps,
         latency_ms=outcome.latency_ms
         if outcome.latency_ms is not None
@@ -403,11 +423,15 @@ def write_report(
         "Regression gate: "
         + (", ".join(regressions) if regressions else "no regressions" if baseline else "not compared"),
         "",
-        "| Case | Result | Steps | ms | Input tokens | Output tokens | Cost USD |",
-        "|---|---|---:|---:|---:|---:|---:|",
+        "Matched proposal alternative is 1-based; - means no alternative matched or none were configured.",
+        "",
+        "| Case | Result | Proposal alternative | Steps | ms | Input tokens | Output tokens | Cost USD |",
+        "|---|---|---:|---:|---:|---:|---:|---:|",
     ]
     lines += [
-        f"| {r.case_id} | {'SKIP' if r.skipped else 'PASS' if r.passed else 'FAIL'} | {r.steps} | {r.latency_ms} | "
+        f"| {r.case_id} | {'SKIP' if r.skipped else 'PASS' if r.passed else 'FAIL'} | "
+        f"{r.matched_proposal_alternative if r.matched_proposal_alternative is not None else '-'} | "
+        f"{r.steps} | {r.latency_ms} | "
         f"{r.input_tokens} | {r.output_tokens} | "
         f"{format(r.cost_micros / 1_000_000, '.6f') if r.cost_known else 'unpriced'} |"
         for r in rows
@@ -504,4 +528,8 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Run through the imported module, not __main__: otherwise its classes (e.g. Diagnostics) exist twice and the
+    # runtime's instances fail validation against this copy.
+    from evals.runner import main as _main
+
+    raise SystemExit(_main())

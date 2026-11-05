@@ -134,7 +134,8 @@ a = sys.argv[1:]
 env = dict(line.split('=', 1) for line in pathlib.Path('.env').read_text().splitlines() if '=' in line)
 with open(os.environ['TRACE'], 'a') as f: f.write(' '.join(a) + '\\n')
 if 'config' in a: print('migrate\\napi\\nworker\\nbackup')
-elif 'ps' in a: print('api|(healthy)\\nworker|(healthy)')
+elif 'ps' in a:
+    print('backup|healthy' if a[-1] == 'backup' else 'api|(healthy)\\nworker|(healthy)\\nbackup|(healthy)')
 elif 'run' in a and 'migrate' in a:
     if os.environ.get('MIGRATION_FAIL'): sys.exit(1)
     pathlib.Path('schema').write_text(env.get('MIGRATION_VERSION', env['VERSION']))
@@ -211,6 +212,7 @@ elif 'psql' in a:
     db.create_function('sha256', 1, lambda b: hashlib.sha256(b).digest())
     db.create_function('encode', 2, lambda b, enc: b.hex())
     print(db.execute(sql).fetchone()[0])
+elif 'ps' in a: print('backup|healthy')
 """,
         )
         for rotated in ("0", "1", ""):

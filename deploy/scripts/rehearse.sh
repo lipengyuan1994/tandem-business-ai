@@ -85,6 +85,7 @@ assert get_settings().app_version == '$v1', get_settings().app_version
 print('backup', s.result, 'version', get_settings().app_version)" | tee -a "$log"
 
 step "smoke test"
+"$dir/wait-backup-healthy.sh" "${compose[@]}"
 "$dir/smoke.sh" https://localhost:8443 --compose-dir "$dir" --env-file "$dir/.env" | tee -a "$log"
 
 if ! $skip_e2e; then
@@ -174,7 +175,7 @@ COMPOSE_DIR="$dir" "$dir/restore.sh" --drill latest | tee -a "$log"
 t_restore=$(date +%s)
 COMPOSE_DIR="$dir" "$dir/restore.sh" latest --yes | tee -a "$log"
 note "real restore took $(($(date +%s) - t_restore)) s including the smoke test"
-"${compose[@]}" exec -T backup cat /state/restore-last.json | tee -a "$log"
+"${compose[@]}" exec -T backup cat /state/restore-last.json | tee -a "$log" # JSON array: both databases of the real restore
 
 step "final smoke test"
 "$dir/smoke.sh" https://localhost:8443 --compose-dir "$dir" | tee -a "$log"

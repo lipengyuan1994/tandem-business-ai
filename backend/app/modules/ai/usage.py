@@ -1,5 +1,7 @@
-"""Usage and budgets (contracts §12). The budget counts input + output tokens of the business's UTC day; usage rows are
-updated after every model call (recording.py), so a check also sees runs still in progress."""
+"""Usage and notices (contracts §12). Counters include committed in-flight reservations.
+
+Financial and token admission is enforced in reservations.py before each provider attempt.
+"""
 
 from __future__ import annotations
 
@@ -8,15 +10,15 @@ from datetime import UTC, date, timedelta
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.modules.identity import public as identity
-from app.modules.notifications import public as notifications
 from app.modules.org import public as org
 from app.platform import clock
+from app.platform.config import get_settings
 from app.platform.context import Context
 
+from .budget_models import CostPeriod
+from .budget_notices import notify
 from .errors import AiError
 from .models import AiUsageDaily
-from .permissions import SETTINGS_READ
 from .schemas import UsageDayOut, UsageToday
 from .settings import ai_settings
 
@@ -65,30 +67,40 @@ def check_budget(db: Session, ctx: Context) -> None:
 
 
 def maybe_notify_80_percent(db: Session, ctx: Context) -> None:
-    """First crossing of 80 % per UTC day: notify holders of ai.settings.read (at most once a day, also under
-    concurrent runs: the row update that sets `notified_80_at` is the guard)."""
+    """80%/100% per scope/period: in-app plus an optional operator outbox, atomically deduplicated."""
     today = usage_today(db, ctx)
-    if today.percent < NOTICE_PERCENT:
-        return
-    claimed = db.execute(
-        update(AiUsageDaily)
-        .where(
-            AiUsageDaily.business_id == ctx.business_id,
-            AiUsageDaily.day == utc_today(),
-            AiUsageDaily.notified_80_at.is_(None),
+    scopes = [("business", utc_today(), today.percent)]
+    s = get_settings()
+    for kind, period, limit in (
+        ("day", utc_today(), s.ai_daily_cost_limit_usd),
+        ("month", utc_today().replace(day=1), s.ai_monthly_cost_limit_usd),
+    ):
+        cost = (
+            db.scalar(select(CostPeriod.cost_micros).where(CostPeriod.kind == kind, CostPeriod.period == period)) or 0
         )
-        .values(notified_80_at=clock.now())
-        .returning(AiUsageDaily.id)
-    ).first()
-    if claimed is None:
-        return
-    users = [u.id for u in identity.list_users_with_permission(db, ctx, SETTINGS_READ)]
-    notifications.notify_users(
-        db, ctx, users, kind="ai.budget_80",
-        title=f"AI usage reached {min(today.percent, 100)} % of today's budget",
-        body="AI features stop for the rest of the UTC day when the budget is used up. "
-        "You can change the daily budget in the AI settings.",
-    )  # fmt: skip
+        scopes.append((f"installation_{kind}", period, _percent(cost, int(limit * 1_000_000))))
+    for scope, period, percent in scopes:
+        for threshold in (80, 100):
+            if percent >= threshold:
+                notify(
+                    db,
+                    ctx,
+                    scope,
+                    period,
+                    threshold,
+                    "Usage includes in-flight reservations. Calls that cannot fit are refused. "
+                    "Failed attempts without reported usage retain their full allowance.",
+                )
+    if today.percent >= NOTICE_PERCENT:
+        db.execute(
+            update(AiUsageDaily)
+            .where(
+                AiUsageDaily.business_id == ctx.business_id,
+                AiUsageDaily.day == utc_today(),
+                AiUsageDaily.notified_80_at.is_(None),
+            )
+            .values(notified_80_at=clock.now())
+        )
 
 
 def usage_days(db: Session, ctx: Context, days: int = 30) -> list[UsageDayOut]:

@@ -72,18 +72,19 @@ export function useSendCopilotMessage(threadId: string | undefined) {
   const qc = useQueryClient()
   const [stream, setStream] = useState<CopilotStream>(IDLE_STREAM)
   const controller = useRef<AbortController | null>(null)
+  const operation = useRef<{ threadId: string; content: string; key: string } | null>(null)
 
   useEffect(() => () => controller.current?.abort(), [])
 
   const reset = useCallback(() => {
     controller.current?.abort()
     controller.current = null
+    operation.current = null
     setStream(IDLE_STREAM)
   }, [])
 
-  const send = useCallback(async (content: string, threadOverride?: string) => {
-    const id = threadOverride ?? threadId
-    if (!id) return
+  const sendOperation = useCallback(async (content: string, id: string, operationKey: string) => {
+    operation.current = { threadId: id, content, key: operationKey }
     controller.current?.abort()
     const mine = new AbortController()
     controller.current = mine
@@ -92,6 +93,7 @@ export function useSendCopilotMessage(threadId: string | undefined) {
     let finished = false
     const headers = aiHeaders("POST", true)
     headers.set("Accept", "text/event-stream")
+    headers.set("Idempotency-Key", operationKey)
     try {
       const response = await globalThis.fetch(aiUrl(`/copilot/threads/${id}/messages`), {
         method: "POST",
@@ -115,7 +117,17 @@ export function useSendCopilotMessage(threadId: string | undefined) {
     // Show the saved conversation (which now holds the question, answer and proposals), then drop the live block.
     await Promise.all([qc.invalidateQueries({ queryKey: aiKeys.thread(id) }), qc.invalidateQueries({ queryKey: aiKeys.threads }), refreshAfterRun(qc)]).catch(() => undefined)
     if (current()) setStream((s) => (s.status === "error" ? s : { ...s, status: "done" }))
-  }, [qc, threadId])
+  }, [qc])
+
+  const send = useCallback(async (content: string, threadOverride?: string) => {
+    const id = threadOverride ?? threadId
+    if (id) await sendOperation(content, id, crypto.randomUUID())
+  }, [threadId, sendOperation])
+
+  const retry = useCallback(async () => {
+    const previous = operation.current
+    if (previous) await sendOperation(previous.content, previous.threadId, previous.key)
+  }, [sendOperation])
 
   const abort = useCallback(() => {
     controller.current?.abort()
@@ -124,7 +136,7 @@ export function useSendCopilotMessage(threadId: string | undefined) {
     if (threadId) void qc.invalidateQueries({ queryKey: aiKeys.thread(threadId) })
   }, [qc, threadId])
 
-  return { stream, send, abort, reset }
+  return { stream, send, retry, abort, reset }
 }
 
 /** One-click summary of an inbox conversation; also drafts a reply proposal. */
@@ -140,7 +152,7 @@ export function useBriefing(enabled: boolean) {
   return useQuery({ queryKey: aiKeys.briefing, enabled, staleTime: 5 * 60_000, queryFn: async () => unwrap(await api.GET("/api/v1/ai/briefing")) })
 }
 
-/** Campaign draft (AI-15). No screen uses this yet; it is here because §16 lists it. */
+/** Campaign page drafting (AI-15): the endpoint saves a revision; refresh marketing to display it. */
 export function useCampaignDraft(campaignId: string) {
   const qc = useQueryClient()
   return useMutation({

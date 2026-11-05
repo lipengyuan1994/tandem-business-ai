@@ -233,16 +233,29 @@ def test_fake_provider_cannot_be_built_in_production(monkeypatch: pytest.MonkeyP
 
 
 def test_budget_checked_between_malicious_model_steps(demo: Demo, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.modules.ai.agent.context import build_messages
     from app.modules.ai.agent.contexts import background_ctx_factory
+    from app.modules.ai.agent.protocol import agent_step_json_schema
     from app.modules.ai.agent.runner import run_agent
+    from app.modules.ai.gateway.types import ChatRequest
+    from app.modules.ai.reservations import conservative_input
     from app.modules.ai.tests.helpers import step_tool
     from app.modules.ai.tests.test_safety_pass_structural import run_spec
+    from app.modules.ai.tools.registry import tool_catalog
 
-    monkeypatch.setattr(get_settings(), "ai_daily_token_budget_per_business", 1)
-    gw = FakeGateway([step_tool("list_low_stock"), step_final()])
-    result = run_agent(
-        background_ctx_factory(demo.business), run_spec("list_low_stock"), router=fake_router_by_class(agent=gw)
+    scenario = run_spec("list_low_stock")
+    first_request = ChatRequest(
+        messages=build_messages(scenario.prompt, tool_catalog(scenario.tools), scenario),
+        json_schema=agent_step_json_schema(),
     )
+    # The first complete allowance fits; the subsequent tool exchange cannot reserve another one.
+    monkeypatch.setattr(
+        get_settings(),
+        "ai_daily_token_budget_per_business",
+        conservative_input(first_request) + first_request.max_output_tokens,
+    )
+    gw = FakeGateway([step_tool("list_low_stock"), step_final()])
+    result = run_agent(background_ctx_factory(demo.business), scenario, router=fake_router_by_class(agent=gw))
     assert result.status == "budget_exceeded" and result.error_code == "ai.budget_exceeded"
     assert len(gw.calls) == 1 and not result.proposal_ids
 

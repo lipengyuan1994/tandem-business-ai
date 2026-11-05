@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.approvals import public as approvals
 from app.modules.sales import public as sales
-from app.platform import clock
+from app.platform import clock, jobs
 from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import DomainError
@@ -27,8 +27,9 @@ from ..structured import complete
 from ..tools.base import RunState
 from ..tools.common import cite, redact_contacts
 from ..tools.registry import execute_tool, get_tool
+from .briefing import validate_numbers
 
-# The public overdue reader and the proposal tool both support at most 500 invoices.
+# Bound each scan page; generation jobs read one invoice by ID.
 _LIMIT = 500
 _COOLDOWN = timedelta(days=7)
 _RELATIVE_DATE = re.compile(
@@ -69,7 +70,8 @@ def _validate(value: PaymentReminderDraft, invoice: sales.OverdueInvoice) -> Non
     ]
     for token in sorted(allowed, key=len, reverse=True):
         rest = re.sub(r"(?<![\w.+-])" + re.escape(token) + r"(?!\w|[.,]\d)", "", rest)
-    if re.search(r"\d|[$€£¥]", rest) or _RELATIVE_DATE.search(rest) or _NUMBER_WORD.search(rest):
+    validate_numbers(rest, "")
+    if re.search(r"\d|[$€£¥%]", rest) or _RELATIVE_DATE.search(rest) or _NUMBER_WORD.search(rest):
         raise ValueError("Use only the exact invoice number, amount with ISO currency, ISO due date, or days overdue.")
     if re.search(r"\b(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY|INR|BHD|KWD)\b", rest):
         raise ValueError("Currency must occur only as part of the exact invoice amount.")
@@ -81,35 +83,65 @@ def run(business_id: uuid.UUID, *, router: Router | None = None) -> list[uuid.UU
     with transaction(read_ctx) as db:
         invoices = sales.list_overdue_invoices(db, read_ctx, limit=_LIMIT)
         invoices = [i for i in invoices if _eligible(i) and not _pending(db, read_ctx, i)]
-    proposed: list[uuid.UUID] = []
-    for invoice in invoices:
-        data = {
-            "number": invoice.number,
-            "bill_to_name": redact_contacts(invoice.bill_to_name),
-            "total": money_text(invoice.total_minor, invoice.currency),
-            "due_date": invoice.due_date.isoformat(),
-            "days_overdue": invoice.days_overdue,
-        }
-        trigger_key = f"payment_followup:{invoice.id}:{clock.now().astimezone(UTC).date().isoformat()}"
-        run_id, value = complete(
-            factory, use_case="payment_followup", prompt=load_prompt("payment_reminder"),
-            facts=[ContextBlock(label="invoice", source_id=invoice.id, text=json.dumps(data), untrusted=True)],
-            output_model=PaymentReminderDraft, trigger_type="cron", trigger_key=trigger_key,
-            router=router, validate=partial(_validate, invoice=invoice),
-        )  # fmt: skip
-        ctx = factory(run_id)
+    return [
+        proposal
+        for invoice in invoices
+        if (proposal := run_invoice(invoice.id, business_id, router=router)) is not None
+    ]
+
+
+def scan(business_id: uuid.UUID) -> None:
+    """No inference in the scan: each bounded, independently retryable invoice gets its own job."""
+    ctx = background_ctx_factory(business_id, use_case="payment_followup")(uuid.uuid4())
+    after = None
+    while True:
         with transaction(ctx) as db:
-            current = next((i for i in sales.list_overdue_invoices(db, ctx, limit=_LIMIT) if i.id == invoice.id), None)
-            if current is None or not _eligible(current) or _pending(db, ctx, current):
-                continue
-            # A new revision needs fresh drafting, even if the writer's text omitted the changed values.
-            if current.version != invoice.version or current != invoice:
-                continue
-        state = RunState(run_id=run_id, trigger_key=trigger_key)
-        cite(state, "list_overdue_invoices", invoice.id, data)
-        result = execute_tool(ctx, "propose_payment_reminder", {"invoice_id": str(invoice.id), "text": value.text},
-                              ["propose_payment_reminder"], state)  # fmt: skip
-        if not result["ok"]:
-            raise DomainError(result["error"], result.get("detail"))
-        proposed.append(uuid.UUID(str(result["data"]["proposal_id"])))
-    return proposed
+            invoices = sales.overdue_invoice_page(db, ctx, after=after, limit=_LIMIT)
+            for invoice in invoices:
+                if not _eligible(invoice) or _pending(db, ctx, invoice):
+                    continue
+                key = f"payment_followup:{business_id}:{invoice.id}:{clock.now().astimezone(UTC).date()}"
+                jobs.enqueue(
+                    db, "ai.payment_followup", {"invoice_id": str(invoice.id)}, business_id=business_id, dedupe_key=key
+                )
+        if len(invoices) < _LIMIT:
+            break
+        after = (invoices[-1].due_date, invoices[-1].id)
+
+
+def run_invoice(invoice_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None = None) -> uuid.UUID | None:
+    factory = background_ctx_factory(business_id, use_case="payment_followup")
+    ctx = factory(uuid.uuid4())
+    with transaction(ctx) as db:
+        invoice = sales.get_overdue_invoice(db, ctx, invoice_id)
+        if invoice is None or not _eligible(invoice) or _pending(db, ctx, invoice):
+            return None
+    data = {
+        "number": invoice.number,
+        "bill_to_name": redact_contacts(invoice.bill_to_name),
+        "total": money_text(invoice.total_minor, invoice.currency),
+        "due_date": invoice.due_date.isoformat(),
+        "days_overdue": invoice.days_overdue,
+    }
+    trigger_key = f"payment_followup:{invoice.id}:{clock.now().astimezone(UTC).date().isoformat()}"
+    run_id, value = complete(
+        factory, use_case="payment_followup", prompt=load_prompt("payment_reminder"),
+        facts=[ContextBlock(label="invoice", source_id=invoice.id, text=json.dumps(data), untrusted=True)],
+        output_model=PaymentReminderDraft, trigger_type="cron", trigger_key=trigger_key,
+        router=router, validate=partial(_validate, invoice=invoice),
+    )  # fmt: skip
+    ctx = factory(run_id)
+    state = RunState(run_id=run_id, trigger_key=trigger_key, server_facts={"invoice_version": invoice.version})
+    cite(state, "list_overdue_invoices", invoice.id, data)
+    result = execute_tool(ctx, "propose_payment_reminder", {"invoice_id": str(invoice.id), "text": value.text},
+                          ["propose_payment_reminder"], state)  # fmt: skip
+    if not result["ok"]:
+        if result["error"] in {
+            "ai.overdue_invoice_not_found",
+            "ai.invoice_changed",
+            "ai.reminder_cooldown",
+            "ai.reminder_pending",
+        }:
+            return None
+        raise DomainError(result["error"], result.get("detail"))
+    return uuid.UUID(str(result["data"]["proposal_id"]))

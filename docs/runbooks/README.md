@@ -33,3 +33,5 @@ Operating instructions for an SMB Operations installation. Each one can be follo
 **Secrets hygiene.** Do not type secrets into commands that other users could see in a process list or that your shell saves in its history. For API keys use `read -rs VULTR_API_KEY && export VULTR_API_KEY` (it asks without echoing). Files that legitimately hold secrets are the installation's `.env` (on the VM and your saved copy), both mode 600.
 
 **Who to call.** Write the name and phone number of the person responsible for this installation here, and in the owner's handover note, when you install: ______________________. The runbooks say "escalate" when a problem is beyond them; this is who that is.
+
+Host checks, alert delivery, external uptime ownership, journal retention, and project-only disk housekeeping: [monitoring.md](monitoring.md).
