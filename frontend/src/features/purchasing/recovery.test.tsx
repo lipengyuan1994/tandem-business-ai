@@ -9,7 +9,7 @@ import { server } from "@/test/server"
 import { OVERRIDE, READ, RECEIVE, WRITE, type PO, type Supplier } from "./model"
 
 const ROOT = "*/api/v1/purchasing"
-const supplier: Supplier = { id: "supplier-1", name: "Example Parts", email: "parts@example.com", phone: null, notes: null, version: 1, created_at: "2026-10-28T12:00:00Z", items: [] }
+const supplier: Supplier = { active: true, id: "supplier-1", name: "Example Parts", email: "parts@example.com", phone: null, notes: null, version: 1, created_at: "2026-10-28T12:00:00Z", items: [] }
 const po: PO = { id: "order-1", supplier_id: supplier.id, supplier_name: supplier.name, currency: "USD", status: "sent", number: "PO-2026-0001", approved_date: "2026-10-28", notes: null, total_minor: 12000, source_draft_id: null, source_quote_id: null, sent_at: null, expected_delivery_date: null, last_followup_at: null, version: 3, created_at: "2026-10-28T12:00:00Z", lines: [{ id: "line-1", catalog_item_id: "item-1", name: "Example pads", quantity: "10", unit_cost_minor: 1200, line_total_minor: 12000, position: 0, received_quantity: "0" }], receipts: [] }
 const delivered: PO = { ...po, version: 4, status: "partially_received", lines: po.lines!.map((line) => ({ ...line, received_quantity: "4" })), receipts: [{ id: "receipt-1", received_by: null, override_reason: null, created_at: "2026-10-28T12:30:00Z", lines: [{ po_line_id: "line-1", quantity: "4" }] }] }
 interface Submission { key: string | null; body: Schemas["ReceiptIn"] }

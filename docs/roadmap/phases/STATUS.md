@@ -106,7 +106,7 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P8-02](P8-production-v1.md) | SMTP adapter, templates, Keycloak SMTP | PRE (moved before kickoff) | A | — | DONE (2026-11-03; built by Codex GPT-6.1 Sol, verified here; Sol review: 3 findings fixed; Keycloak mail is a documented manual step; no real provider tested) |
 | — | **P10 AI workflows (owner approval 2026-11-05, ADR-020):** steps from [P10](P10-ai-workflows.md) §8. | — | — | — | — |
 | [P10-A0](P10-ai-workflows.md) | Autonomy engine, smallest slice: rule-approved reorder draft + Activity | EVENT | A | ADR-020 | DONE (2026-11-05): backend (Codex GPT-6.1 Sol, reviewed here) + Autonomy and Activity screens + notification fix; `make check` passed (1,583 backend, 309 frontend); demo rules start in shadow mode; not yet deployed |
-| [P10-A1](P10-ai-workflows.md) | Confirm in chat, PO delivery to supplier, outbox stop, Work queue | EVENT | A | P10-A0 | PLANNED |
+| [P10-A1](P10-ai-workflows.md) | Confirm in chat, PO delivery to supplier, outbox stop, Work queue | EVENT | A | P10-A0 | DONE (2026-11-05): confirm in chat (own thread, revision/hash, $500/order and $1,000/day), PO delivered to the supplier (`purchasing.send_po`), stoppable AI-sent mail (send delay, Stop), delivery states, Work queue and Exceptions; copilot live eval 83 %; `make check` and e2e passed; not yet deployed |
 | [P10-C1](P10-ai-workflows.md) | Hand-over enforced, knowledge base v1, grounded front-desk answers | EVENT | A/B | P10-A0 | PLANNED |
 | [P10-E0](P10-ai-workflows.md) | Local-model benchmark (P5-02) and local-only `regulated` routing | EVENT + DEPLOY | A | ADR-020 | PLANNED |
 | [P10-D](P10-ai-workflows.md) | Voice dictation (STT adapter, polish pass) | EVENT | B | — | PLANNED |

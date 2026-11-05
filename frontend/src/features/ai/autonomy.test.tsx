@@ -114,7 +114,7 @@ describe("autonomy settings", () => {
   })
 })
 
-const entry = (id: string, overrides: Partial<ActivityEntry> = {}): ActivityEntry => ({ id, proposal_id: `proposal-${id}`, rule_id: "rule-1", rule_version: 3, outcome: "acted", reasons: [], created_at: "2026-11-05T17:00:00Z", title: `Reorder ${id}`, action_type: ACTION, granted_by: ME.user.id, granted_by_name: "Morgan Example", status: "succeeded", failure_code: null, reorder_draft_id: "draft-1", result_link: "/api/v1/inventory/reorder-drafts/draft-1", ...overrides })
+const entry = (id: string, overrides: Partial<ActivityEntry> = {}): ActivityEntry => ({ id, proposal_id: `proposal-${id}`, rule_id: "rule-1", rule_version: 3, outcome: "acted", reasons: [], created_at: "2026-11-05T17:00:00Z", title: `Reorder ${id}`, delivery_state: "none", action_type: ACTION, granted_by: ME.user.id, granted_by_name: "Morgan Example", status: "succeeded", failure_code: null, reorder_draft_id: "draft-1", result_link: "/api/v1/inventory/reorder-drafts/draft-1", ...overrides })
 
 describe("AI Activity", () => {
   it("shows outcomes, plain reasons, business-local time, current result links and pagination", async () => {

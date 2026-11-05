@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.platform.registry import DeliveryState
+
 
 class Evidence(BaseModel):
     kind: Literal["message", "tool_result", "record", "note"]
@@ -50,6 +52,7 @@ class DecisionOut(BaseModel):
     decision: Literal["approve", "reject"]
     decided_by: uuid.UUID | None
     decided_by_kind: Literal["user", "policy"]
+    decided_via: Literal["approvals", "chat"]
     rule_id: uuid.UUID | None
     rule_version: int | None
     granted_by: uuid.UUID | None
@@ -90,6 +93,7 @@ class ProposalOut(BaseModel):
 
 
 class ProposalDetailOut(ProposalOut):
+    delivery_state: DeliveryState = "none"
     current_revision: RevisionOut
     revisions: list[RevisionOut]
     decisions: list[DecisionOut]
@@ -127,3 +131,23 @@ class ActionTypeOut(BaseModel):
     action_type: str
     approve_permission: str
     payload_schema: dict[str, Any]
+
+
+class ChatConfirmIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    revision_id: uuid.UUID
+    payload_hash: str = Field(min_length=64, max_length=64)
+
+
+class ChatCard(BaseModel):
+    id: uuid.UUID
+    title: str
+    action_type: str
+    preview: list[PreviewLineOut]
+    status: str
+    can_confirm: bool
+    cannot_confirm_reason: str | None
+    revision_id: uuid.UUID
+    payload_hash: str
+    delivery_state: DeliveryState
+    result: dict[str, uuid.UUID] = Field(default_factory=dict)

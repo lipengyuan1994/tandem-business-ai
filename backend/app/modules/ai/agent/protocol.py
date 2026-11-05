@@ -28,7 +28,16 @@ class FinalStep(BaseModel):
     kind: Literal["final"]
     message_to_staff: str = Field(max_length=1200)
     proposal_ids: list[uuid.UUID] = []
-    needs_human: bool = False
+    needs_human: bool = Field(
+        default=False,
+        description=(
+            "True for unresolved blockers requiring human intervention: missing permission or information, "
+            "second-person approval, or unresolved errors. This is not a recommendation or warning flag: "
+            "put advice and next steps in the answer text. False for complete answers, even when recommending "
+            "action about low stock or suppliers, and, in staff copilot, a proposal waiting only for the "
+            "requester's normal Confirm click."
+        ),
+    )
 
 
 AgentStep = Annotated[ToolCallStep | FinalStep, Field(discriminator="kind")]

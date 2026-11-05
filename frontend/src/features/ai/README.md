@@ -13,6 +13,8 @@ All copy is in `en.json` under `ai.*`; `AI can make mistakes; you approve every 
 | `PasteSupplierReplyButton` / `PasteSupplierReplyDialog` | quote request page while status is `sent` | `ai.assistant.use` + `purchasing.po.write` |
 | `AskAiQuotesButton` | inventory item page when stock is at or below the reorder point and 2+ suppliers with an e-mail address sell it | `ai.assistant.use` + `purchasing.po.read/write` |
 | `AutonomyPage` | `/ai/autonomy`, AI navigation | `org.settings.write` (save also needs `inventory.proposal.approve`) |
+| `ActionCard` + `DeliveryStatus` | saved chat proposals, Activity and proposal detail; revision-bound Confirm, local collapse, delivery countdown and confirmed Stop | backend card eligibility; Stop rechecks action approver / settings writer |
+| `WorkQueuePage` / `ExceptionsPage` | `/ai/work-queue`, `/ai/exceptions`, AI navigation | `approvals.proposal.read` |
 | `ActivityPage` | `/ai/activity`, AI navigation | `approvals.proposal.read`; result link also needs `inventory.reorder.read` |
 | `AiSettingsPage` | `/settings/ai` (tab "AI") | `ai.settings.read` (edit: `ai.settings.write` + `org.settings.write`) |
 | `AiDisabledBanner` | panel, summary dialog, paste dialog, settings | — (reads `GET /ai/status`) |
@@ -49,3 +51,11 @@ version/state (including forced shadow for new rules), a reload dialog on 409 an
 Activity uses cursor pagination, business-local time, plain-language outcomes/reasons and version-correct grantors.
 `autonomy.test.tsx` covers settings, permissions, pause, Activity and links; approvals tests cover policy attribution;
 notification tests cover the rule explanation. No model or provider calls are needed for these deterministic screens.
+
+P10-A1 uses generated `ChatCard`, `ChatConfirmIn`, `WorkItem`, `WorkPage`, `ExceptionPage`, and outbox types
+in `actions-api.ts`. Cards poll execution/delivery transitions; the scoped proposal outbox supplies Stop ids
+and `not_before` dates. Work queue uses `stop_until` (including retry scheduling), cursor pages and business-local
+instants; reply-by remains a calendar date. Exceptions has no total/count badge in this API version.
+Autonomy includes versioned `outbound_send_delay_seconds` (0–900 seconds, displayed in minutes, default 2).
+`actions.test.tsx` covers cards, refusal reasons, exact confirm payload, reload, delivery, Stop races, queues,
+permissions and settings through MSW. No provider calls or additional dependencies.

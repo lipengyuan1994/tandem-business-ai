@@ -15,6 +15,7 @@ from app.platform.registry import get_registry
 
 from . import permissions as P
 from . import service
+from .reading import delivery_state as service_delivery_state
 from .schemas import (
     ActionTypeOut,
     AttemptOut,
@@ -43,6 +44,7 @@ def _detail(db: Any, ctx: Context, proposal_id: uuid.UUID) -> ProposalDetailOut:
     base = _out(ctx, d["proposal"]).model_dump()
     return ProposalDetailOut(
         **base,
+        delivery_state=service_delivery_state(db, ctx, proposal_id),
         current_revision=RevisionOut.model_validate(d["current_revision"]),
         revisions=[RevisionOut.model_validate(r) for r in d["revisions"]],
         decisions=[

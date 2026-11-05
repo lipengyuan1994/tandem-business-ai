@@ -54,7 +54,7 @@ describe("proposal detail", () => {
   it("names the autonomy rule and grantor for a policy approval with no human decider", async () => {
     mockMe()
     const proposal = detail("succeeded")
-    proposal.decisions = [{ id: "decision-1", revision_id: REV.id, decision: "approve", decided_by: null, decided_by_kind: "policy", rule_id: "rule-1", rule_version: 3, granted_by: "grantor-1", granted_by_name: "Morgan Example", decided_by_name: "", roles_at_decision: ["owner"], comment: null, decided_at: "2026-11-05T17:00:00Z" }]
+    proposal.decisions = [{ id: "decision-1", revision_id: REV.id, decision: "approve", decided_by: null, decided_by_kind: "policy", decided_via: "approvals", rule_id: "rule-1", rule_version: 3, granted_by: "grantor-1", granted_by_name: "Morgan Example", decided_by_name: "", roles_at_decision: ["owner"], comment: null, decided_at: "2026-11-05T17:00:00Z" }]
     server.use(
       http.get("*/api/v1/approvals/action-types", () => HttpResponse.json([])),
       http.get("*/api/v1/notifications/outbox", () => HttpResponse.json([])),

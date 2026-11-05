@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import date, timedelta
+from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -12,6 +13,7 @@ from . import permissions as P
 from . import quote_reads, repository
 from .events import QuoteReceived
 from .models import PurchaseOrder, QuoteRequest, QuoteRequestSupplier
+from .planning import next_order_step
 from .quote_reads import (
     compare_quotes,
     find_open_quote_request,
@@ -31,6 +33,7 @@ from .schemas_quotes import (
     SupplierOption,
     UnansweredInvite,
 )
+from .work_queue import awaiting_suppliers as awaiting_supplier_items
 
 __all__ = [
     "LatePO",
@@ -40,6 +43,7 @@ __all__ = [
     "QuoteRequestOut",
     "SupplierOption",
     "UnansweredInvite",
+    "awaiting_supplier_items",
     "compare_quotes",
     "find_open_quote_request",
     "get_late_purchase_order",
@@ -49,7 +53,9 @@ __all__ = [
     "list_quote_requests_due",
     "list_suppliers_for_item",
     "list_unanswered_invites",
+    "next_order_step",
     "open_quantities",
+    "order_quantities",
 ]
 
 
@@ -124,3 +130,10 @@ def get_unanswered_invite(
         days_overdue=(day - request.reply_by).days,
         last_followup_at=invite.last_followup_at,
     )
+
+
+def order_quantities(db: Session, ctx: Context, purchase_order_id: uuid.UUID) -> dict[uuid.UUID, Decimal]:
+    """Current scoped document quantities; callers must not silently change an approve/send request."""
+    ctx.require(P.READ)
+    repository.order(db, ctx, purchase_order_id)
+    return {line.catalog_item_id: line.quantity for line in repository.lines(db, ctx, purchase_order_id)}

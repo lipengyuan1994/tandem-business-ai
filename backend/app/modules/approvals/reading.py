@@ -12,7 +12,7 @@ from app.modules.identity import public as identity
 from app.platform.context import Context
 from app.platform.errors import NotFound
 from app.platform.pagination import clamp_limit, decode_cursor, encode_cursor
-from app.platform.registry import get_registry
+from app.platform.registry import DeliveryState, get_registry
 
 from . import permissions as P
 from .models import ActionProposal, ApprovalDecision, ExecutionAttempt, ProposalRevision
@@ -197,9 +197,25 @@ def proposal_notification_state(db: Session, ctx: Context, proposal_id: uuid.UUI
     )
     return {
         "status": proposal.status,
+        "origin_kind": proposal.origin_kind,
+        "action_type": proposal.action_type,
         "decided_by_kind": decision.decided_by_kind if decision else None,
         "rule_id": decision.rule_id if decision else None,
         "rule_version": decision.rule_version if decision else None,
         "rule_level": snapshot.level if snapshot else None,
         "would_act": evaluation is not None and evaluation.outcome == "would_act",
     }
+
+
+def delivery_state(db: Session, ctx: Context, proposal_id: uuid.UUID) -> DeliveryState:
+    reader = get_registry().proposal_delivery_reader
+    return reader(db, ctx, proposal_id) if reader else "none"
+
+
+def outbound_authority(db: Session, ctx: Context, proposal_id: uuid.UUID) -> dict[str, Any] | None:
+    row = db.execute(
+        select(ActionProposal.action_type, ActionProposal.origin_kind).where(
+            ActionProposal.business_id == ctx.business_id, ActionProposal.id == proposal_id
+        )
+    ).first()
+    return dict(row._mapping) if row else None

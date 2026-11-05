@@ -143,13 +143,7 @@ def transition(db: Session, ctx: Context, row_id: uuid.UUID, version: int, actio
     ctx.require(P.APPROVE if action == "approve" else P.WRITE)
     row = repo.order(db, ctx, row_id, lock=True)
     check_version(row, version)
-    allowed = {
-        "approve": ("draft",),
-        "send": ("approved",),
-        "cancel": ("draft", "approved", "sent", "partially_received"),
-    }
-    if row.status not in allowed.get(action, ()):
-        raise Conflict("purchasing.invalid_transition")
+    check_transition(row, action)
     if action == "approve":
         today = clock.now().astimezone(ZoneInfo(org.get_business_brief(db, ctx).timezone)).date()
         row.number = repo.next_number(db, ctx, today.year)
@@ -186,3 +180,13 @@ def suggestions(db: Session, ctx: Context) -> list[PurchasingSuggestion]:
         )
         for s in inventory.list_below_reorder(db, ctx)
     ]
+
+
+def check_transition(row: PurchaseOrder, action: str) -> None:
+    allowed = {
+        "approve": ("draft",),
+        "send": ("approved",),
+        "cancel": ("draft", "approved", "sent", "partially_received"),
+    }
+    if row.status not in allowed.get(action, ()):
+        raise Conflict("purchasing.invalid_transition")

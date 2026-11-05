@@ -18,6 +18,7 @@ from .schemas import SupplierIn, SupplierItemIn, SupplierOut, SupplierUpdate
 def detail(db: Session, ctx: Context, row: Supplier) -> SupplierOut:
     return SupplierOut(
         id=row.id,
+        active=row.active,
         name=row.name,
         email=row.email,
         phone=row.phone,

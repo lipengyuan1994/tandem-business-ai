@@ -41,6 +41,7 @@ export function useCopilotThread(id: string | undefined) {
   return useQuery({
     queryKey: aiKeys.thread(id ?? ""),
     enabled: !!id,
+    refetchInterval: (q) => q.state.data?.messages.some((m) => m.proposals?.some((p) => ["approved", "executing"].includes(p.status) || ["scheduled", "sending"].includes(p.delivery_state))) ? 1500 : false,
     queryFn: async () => unwrap(await api.GET("/api/v1/ai/copilot/threads/{id}", { params: { path: { id: id! } } })),
   })
 }

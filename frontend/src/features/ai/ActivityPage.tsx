@@ -7,6 +7,7 @@ import { LocalTime } from "@/components/common/LocalTime"
 import { PageHeader } from "@/components/common/PageHeader"
 import { PermissionGate } from "@/components/common/PermissionGate"
 import { StatusBadge } from "@/components/common/StatusBadge"
+import { ProposalDelivery } from "./DeliveryStatus"
 import { useAutonomyActivity, type ActivityEntry } from "./autonomy-api"
 
 export function ActivityPage() {
@@ -24,7 +25,7 @@ function ActivityList() {
     { header: t("ai.activity.when"), cell: ({ row }) => <LocalTime iso={row.original.created_at} timeZone={businessTimeZone} pattern="d MMM yyyy HH:mm" /> },
     { header: t("ai.activity.action"), cell: ({ row: { original: entry } }) => <div className="space-y-1"><a className="record-link" href={`/approvals/${entry.proposal_id}`}>{entry.title}</a><p className="text-sm">{t(`ai.autonomy.actions.${entry.action_type.replaceAll(".", "_")}`, { defaultValue: entry.action_type })}</p></div> },
     { header: t("ai.activity.outcome"), cell: ({ row: { original: entry } }) => <div className="space-y-2"><span className="status-badge" data-tone={TONES[entry.outcome]}>{t(`ai.activity.outcomes.${entry.outcome}`)}</span>{entry.reasons.map((reason) => <p key={reason} className="text-sm">{t(`ai.activity.reasons.${reason}`, { defaultValue: t("ai.activity.unknownReason") })}</p>)}</div> },
-    { header: t("ai.activity.result"), cell: ({ row: { original: entry } }) => <div className="space-y-2"><StatusBadge status={entry.status} />
+    { header: t("ai.activity.result"), cell: ({ row: { original: entry } }) => <div className="space-y-2"><StatusBadge status={entry.status} /><ProposalDelivery proposalId={entry.proposal_id} state={entry.delivery_state} />
       {entry.failure_code ? <p className="text-sm">{t(`ai.activity.failures.${entry.failure_code.replaceAll(".", "_")}`, { defaultValue: t("ai.activity.failedHint") })}</p> : null}
       {entry.status === "succeeded" && entry.result_link && permissions.has("inventory.reorder.read") ? <a className="record-link" href={entry.result_link}>{t("ai.activity.draftCreated")}</a> : null}
     </div> },

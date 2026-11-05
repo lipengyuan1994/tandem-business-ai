@@ -239,6 +239,11 @@ def decide(
         and not org.get_settings(db, ctx).allow_self_approval
     ):
         raise Forbidden("approvals.self_approval_forbidden")
+    if decision == "approve" and proposal.origin_user_id == ctx.user_id:
+        from .chat import second_person
+
+        if second_person(db, ctx, spec, spec.payload_model.model_validate(revision.payload)):
+            raise Forbidden("approvals.second_person_required")
     assert ctx.user_id is not None and ctx.business_id is not None
     roles = sorted(identity.active_roles(db, ctx.user_id, ctx.business_id))
     record_decision(

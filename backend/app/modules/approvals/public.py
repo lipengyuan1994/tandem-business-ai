@@ -25,9 +25,14 @@ from .autonomy_service import (
 from .autonomy_service import (
     rule_out as autonomy_rule_out,
 )
+from .chat import card as chat_card
+from .chat import confirm as confirm_chat
+from .chat import origin_run_id as chat_origin_run_id
 from .events import ProposalClosed, ProposalCreated, ProposalDecided
-from .reading import proposal_notification_state
-from .schemas import Evidence, OpenProposal
+from .queue import fallback_items as fallback_queue_items
+from .queue import proposal_items as proposal_queue_items
+from .reading import outbound_authority, proposal_notification_state
+from .schemas import ChatCard, ChatConfirmIn, Evidence, OpenProposal
 
 
 class ProposalRef:
@@ -110,6 +115,8 @@ def count_pending(db: Session, ctx: Context, *, for_permissions: frozenset[str] 
 
 __all__ = [
     "ActivityPage",
+    "ChatCard",
+    "ChatConfirmIn",
     "Evidence",
     "ExecutionMeta",
     "ExecutorSpec",
@@ -126,13 +133,19 @@ __all__ = [
     "autonomy_activity",
     "autonomy_rule_out",
     "cancel_proposal",
+    "chat_card",
+    "chat_origin_run_id",
     "check_ai_proposal_allowed",
+    "confirm_chat",
     "count_pending",
     "create_proposal",
+    "fallback_queue_items",
     "find_open_proposals",
     "list_autonomy_rules",
+    "outbound_authority",
     "proposal_exists",
     "proposal_notification_state",
+    "proposal_queue_items",
     "put_autonomy_rule",
     "top_pending",
 ]

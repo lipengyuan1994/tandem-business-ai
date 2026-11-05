@@ -172,6 +172,11 @@ def execute(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UU
                 update(ExecutionAttempt).where(ExecutionAttempt.idempotency_key == key).values(acting_user_id=approver)
             )
             model = spec.payload_model.model_validate(revision.payload)
+            if decision.decided_via == "chat" or proposal.origin_user_id == approver:
+                from .chat import second_person
+
+                if second_person(db, ctx, spec, model):
+                    raise ApproverNotAuthorized("approvals.second_person_required")
             result = spec.run(
                 db, ctx, model, ExecutionMeta(proposal_id=proposal_id, revision_id=revision_id, idempotency_key=key)
             )

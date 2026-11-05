@@ -26,7 +26,7 @@ Use a sender verified by the provider. `smtps://user:replace-me@mail.example.com
 is the implicit TLS alternative. On 587 STARTTLS is the default. Plain mail is allowed only with explicit
 `starttls=false` and literal localhost/127.0.0.1/::1, for local tests. Invalid configuration prevents API/worker startup.
 An empty `SMTP_URL` leaves normal notifications simulated; a test e-mail is refused until SMTP is configured.
-"Normal notifications" are the marketing campaigns, the supplier quote requests and follow-ups, and the payment
+"Normal notifications" are the marketing campaigns, supplier purchase orders, quote requests and follow-ups, and payment
 reminders. All of them take one rule (`notifications.email_channel()`) when they are queued: without SMTP they go
 to the `simulated` channel, which the worker marks delivered and the screens label *Simulated*, so nothing leaves the
 machine and no delivery issue appears (a demo install needs no mail setup). With SMTP configured they use the real
@@ -87,3 +87,15 @@ Keycloak Email settings, recreate API/worker, then verify the application test, 
 flows above before revoking the old credential. If overlap is unavailable, perform these steps back to back;
 mail may pause during rotation. Never print either credential in an operational report. These steps require
 an authorized production operator; local protocol tests do not verify a production provider or Keycloak delivery.
+
+
+## Delayed AI mail and Stop (P10-A1)
+
+Assistant-origin proposal emails wait `outbound_send_delay_seconds` (default 120, configurable 0–900)
+before the outbox worker may claim them. This includes chat-confirmed and human-approved AI proposals;
+staff-origin/manual messages remain immediate. Queueing a PO marks it sent locally, not delivered.
+The Work queue exposes the scheduled time. The linked action's approver or owner/admin may stop a
+pending message; Stop competes with claim under the row lock. After claim it returns
+`notifications.too_late_to_stop`. A stopped message is `cancelled` in the outbox and `stopped` on the
+proposal, and never sends; stopping does not reverse the PO or any other committed local action.
+An `unknown` outcome still requires the existing out-of-band reconciliation described above.

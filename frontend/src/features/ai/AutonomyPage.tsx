@@ -17,6 +17,8 @@ import { ApiProblem } from "@/lib/problem"
 import { toastError } from "@/lib/errors"
 import { useAutonomyPause, useAutonomyRules, useSaveAutonomyRule, type AutonomyRule, type RuleInput } from "./autonomy-api"
 
+import { SendDelaySetting } from "./SendDelaySetting"
+
 const LEVELS = ["off", "draft", "ask", "act_notify", "act"] as const
 
 export function AutonomyPage() {
@@ -36,6 +38,7 @@ function AutonomySettings() {
     <PageHeader title={t("ai.autonomy.title")} description={t("ai.autonomy.description")} />
     {paused ? <p role="status" className="rounded-md border border-destructive p-4 font-medium">{t("ai.autonomy.paused")}</p> : null}
     <Button variant={paused ? "outline" : "destructive"} disabled={pause.isPending} onClick={() => paused ? pause.mutate(false, { onError: (error) => toastError(error) }) : setConfirmPause(true)}>{t(paused ? "ai.autonomy.resume" : "ai.autonomy.pause")}</Button>
+    <SendDelaySetting />
     {items.map((rule) => <RuleCard key={`${rule.action_type}:${rule.version}`} rule={rule} onReload={() => void rules.refetch()} />)}
     <ConfirmDialog open={confirmPause} onOpenChange={setConfirmPause} title={t("ai.autonomy.pause")} description={t("ai.autonomy.pauseHelp")} confirmLabel={t("ai.autonomy.confirmPause")} destructive pending={pause.isPending} onConfirm={() => pause.mutate(true, { onSuccess: () => setConfirmPause(false), onError: (error) => toastError(error) })} />
   </div>

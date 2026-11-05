@@ -1349,6 +1349,99 @@
       "unknownGrantor": "unavailable for this rule version",
       "empty": "No AI activity yet.",
       "emptyHelp": "When an autonomy rule evaluates an AI proposal, its shadow checks, automatic approvals, fallbacks and blocks will appear here alongside the current execution result."
+    },
+    "cards": {
+      "edit": "Edit",
+      "review": "Review proposal",
+      "notNow": "Not now",
+      "show": "Show action",
+      "reload": "Reload",
+      "confirmHint": "Use Confirm on the action card to approve. Typing “yes” does not approve an action.",
+      "reasons": {
+        "secondPerson": "Sent to the Approvals page for another approver.",
+        "dailyLimit": "The daily chat confirmation limit was reached. Review this on the Approvals page.",
+        "noPermission": "You don't have permission to approve this action.",
+        "changed": "This action has changed. Reload before confirming.",
+        "expired": "This proposal has expired.",
+        "notPending": "This proposal is no longer waiting for approval.",
+        "unavailable": "This action cannot be confirmed here. Review it on the Approvals page.",
+        "supplierInactive": "The supplier is inactive. Review this on the Approvals page.",
+        "supplierEmail": "The supplier needs an e-mail address before this can be sent.",
+        "alreadySent": "This purchase order was already sent."
+      },
+      "results": {
+        "created": "Purchase order created",
+        "approved": "Purchase order approved",
+        "sent": "Sent to supplier"
+      },
+      "failures": {
+        "purchasing_po_changed": "The purchase order changed before execution.",
+        "purchasing_supplier_inactive": "The supplier is inactive.",
+        "purchasing_supplier_email_required": "The supplier needs an e-mail address.",
+        "purchasing_po_already_sent": "The purchase order was already sent.",
+        "purchasing_po_not_approved": "The purchase order needs approval before sending.",
+        "approvals_not_authorized_to_approve": "Approval permission changed before execution.",
+        "approvals_second_person_required": "This action needs another approver.",
+        "purchasing_draft_changed": "The reorder draft changed before execution.",
+        "purchasing_preview_changed": "The supplier, items or prices changed before execution.",
+        "purchasing_version_conflict": "The purchase order changed before execution.",
+        "purchasing_invalid_transition": "The purchase order is no longer in the required state.",
+        "purchasing_supplier_item_required": "Choose a supplier that supplies these items.",
+        "purchasing_invalid_quote_source": "The source quote is no longer available for this order.",
+        "purchasing_preview_required": "The proposal needs a fresh preview before execution."
+      }
+    },
+    "delivery": {
+      "none": "Delivery: none",
+      "scheduled": "Delivery: Scheduled",
+      "sending": "Delivery: Sending",
+      "delivered": "Delivery: Delivered",
+      "failed": "Delivery: Failed",
+      "unknown": "Unknown (check with the recipient)",
+      "stopped": "Stopped",
+      "countdown": "Sending in {{time}}",
+      "stop": "Stop",
+      "stopTitle": "Stop this e-mail?",
+      "stopHelp": "This stops the queued e-mail. The completed action, including the purchase order, stays in place.",
+      "confirmStop": "Stop e-mail",
+      "tooLate": "Too late to stop: sending has started or the message has already finished. Check its delivery state.",
+      "noPermission": "You don't have permission to stop this e-mail.",
+      "stopError": "Could not stop this e-mail. Reload and check its delivery state.",
+      "setting": "Delay before AI-sent e-mails",
+      "minutes": "Delay (minutes)",
+      "settingHelp": "Wait 0–15 minutes before sending AI e-mails. Default: 2 minutes. You can stop a queued e-mail before sending starts.",
+      "invalidDelay": "Enter a delay from 0 to 15 minutes, in whole seconds.",
+      "saveDelay": "Save e-mail delay",
+      "stoppedNotice": "E-mail stopped."
+    },
+    "queues": {
+      "noAccess": "You don't have access to this AI queue.",
+      "item": "Item",
+      "state": "State / waiting on",
+      "timing": "Timing",
+      "age": "Age: {{age}}",
+      "waitingOn": "Waiting on: {{roles}}",
+      "approver": "an authorized approver",
+      "replyBy": "Reply by: {{date}}",
+      "kinds": {
+        "proposal": "Proposal awaiting approval",
+        "outbound_mail": "Outbound e-mail",
+        "supplier_quote": "Awaiting supplier reply",
+        "autonomy_fallback": "Autonomy fell back to review"
+      }
+    },
+    "workQueue": {
+      "title": "Work queue",
+      "description": "Proposals awaiting approval, scheduled e-mails and quote requests awaiting suppliers.",
+      "empty": "Nothing is waiting.",
+      "emptyHelp": "Pending actions and supplier replies will appear here."
+    },
+    "exceptions": {
+      "title": "Exceptions",
+      "description": "Failed executions, failed or uncertain deliveries. Autonomy fall-backs from the last 7 days.",
+      "empty": "No exceptions to review.",
+      "emptyHelp": "Execution and delivery problems will appear here.",
+      "reviewAutonomy": "Review Autonomy"
     }
   }
 }

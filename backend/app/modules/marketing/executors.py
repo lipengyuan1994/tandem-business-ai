@@ -72,5 +72,11 @@ def _run(db: Session, ctx: Context, p: ApproveCampaignPayload, meta: ExecutionMe
 
 
 APPROVE = ExecutorSpec(
-    "marketing.approve_campaign", ApproveCampaignPayload, P.PROPOSAL_APPROVE, _describe, _validate, _run
+    "marketing.approve_campaign",
+    ApproveCampaignPayload,
+    P.PROPOSAL_APPROVE,
+    _describe,
+    _validate,
+    _run,
+    second_person=True,
 )

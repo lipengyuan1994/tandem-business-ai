@@ -3,8 +3,18 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 
 class Input(BaseModel):
@@ -23,6 +33,7 @@ class SupplierItemIn(Input):
 
 
 class SupplierIn(Input):
+    active: bool = True
     name: str = Field(min_length=1, max_length=200)
     email: EmailStr | None = None
     phone: str | None = Field(default=None, max_length=60)
@@ -38,6 +49,7 @@ class SupplierIn(Input):
 
 
 class SupplierUpdate(Input):
+    active: bool | None = None
     version: int = Field(ge=1)
     name: str | None = Field(default=None, min_length=1, max_length=200)
     email: EmailStr | None = None
@@ -47,7 +59,7 @@ class SupplierUpdate(Input):
 
     @model_validator(mode="after")
     def nonnull_fields(self) -> SupplierUpdate:
-        for key in ("name", "items"):
+        for key in ("name", "items", "active"):
             if key in self.model_fields_set and getattr(self, key) is None:
                 raise ValueError(f"{key} cannot be null")
         if self.name is not None and not self.name.strip():
@@ -186,8 +198,22 @@ class ConversionSnapshot(Input):
     total_minor: int
 
 
+class RequestedDraftLine(Input):
+    item_id: uuid.UUID
+    quantity: Decimal = Field(gt=0, le=10000, max_digits=8, decimal_places=3)
+    reason_text: str = Field(max_length=300)
+
+
 class CreateFromDraftPayload(DraftConversion):
+    requested_lines: list[RequestedDraftLine] | None = Field(default=None, min_length=1, max_length=100)
     snapshot: ConversionSnapshot | None = None
+
+    @model_serializer(mode="wrap")
+    def serialize(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data: dict[str, Any] = handler(self)
+        if self.requested_lines is None:
+            data.pop("requested_lines", None)  # preserve hashes of previously reviewed, unchanged payloads
+        return data
 
 
 class ApprovePOPayload(VersionIn):

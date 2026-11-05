@@ -399,12 +399,13 @@ def execute_tool(ctx: Context, name: str, raw_args: dict[str, Any], allowed: lis
 | `propose_booking(...)` | propose | ai.assistant.use | U1 U2 |
 | `propose_reply(conversation_id, text)` | propose | ai.assistant.use | U1 U2 U3 |
 | `propose_customer(...)` | propose | ai.assistant.use | U2 |
-| `propose_reorder(item_ids, note)` | propose | ai.assistant.use | U2 U4 |
+| `propose_reorder(item_ids, note?, requested_quantities?)` | propose | ai.assistant.use | U2 U4 |
 | `propose_quote_request(...)` | propose | ai.assistant.use | U9 |
 | `propose_supplier_quote(...)` | propose | ai.assistant.use | U9 |
 | `propose_po_from_quote(...)` | propose | ai.assistant.use | U9 |
 | `propose_supplier_followup(...)` | propose | ai.assistant.use | U9 |
 | `propose_payment_reminder(invoice_id, text)` | propose | ai.assistant.use | U10 |
+| `propose_send_po(purchase_order_id? or draft_id+supplier_id, requested_quantities?)` | propose | ai.assistant.use + purchasing.po.read + inventory.stock.read | U2 |
 
 **Intake customer matching (frozen; changed 2026-11-04, owner-level decision by supervising tech lead).**
 A linked conversation keeps its customer. Otherwise CRM exact, normalized e-mail/phone matches take precedence:
@@ -698,3 +699,137 @@ proposal decisions expose `granted_by_name`; in-app notifications expose `body`.
 structured version/level snapshot. Historical rule levels and grantors resolve from the exact rule version, immutable
 policy decision, or rule-save audit (including the pre-part-2 summary format). Missing history remains explicitly
 unavailable; the current rule's grantor is never substituted for an older version. No database migration is needed.
+
+
+## P10-A1: confirm in chat, PO delivery, send delay
+
+Tier A / EVENT; ADR-020 decisions 1–2. Backend only. A0's autonomy allowlist stays unchanged.
+All mutations continue through proposal → immutable human/policy decision → existing executor job.
+
+**Executor contract.** `ExecutorSpec.second_person` defaults false and accepts a boolean or a
+transaction-local `(db, ctx, payload) -> bool`. Marketing campaign approval is always second-person.
+`purchasing.send_po` takes `purchase_order_id` and expected `version`; uses the manual send transition's
+approved-state/version checks, requires an active supplier with email, and refuses previously sent POs.
+Second-person is required above 50,000 minor units, in another business currency, or without a prior PO
+with `sent_at` for that supplier. Both normal self-approval and execution respect second-person rules.
+Creating POs has an executor-owned money-exposure callback; approvals never imports purchasing.
+Suppliers gain `active=true` (existing rows too), editable by the existing versioned supplier API.
+
+**PO mail.** One `purchase_order` outbox message and the existing sent transition commit atomically.
+The recipient comes from the supplier master; channel comes from `email_channel()` (simulated without
+SMTP). Text and escaped HTML contain business name, PO number/date, named lines, quantity, unit cost,
+line total, total/currency and default delivery location/address. Reply-To is the business public email.
+Internal PO/supplier notes never enter template variables. The outbox row carries proposal and PO ids.
+`sent` means locally executed/queued; delivery is reported separately. Stop does not revert the PO.
+
+**Explicit chat confirmation.** POST `/api/v1/ai/copilot/threads/{thread_id}/proposals/{proposal_id}/confirm`
+accepts only `{revision_id, payload_hash}`. Requires `ai.assistant.use`, own thread, an assistant-origin
+proposal with origin user=current user, and its copilot AI run linked to a saved message in that thread.
+The run's on-behalf-of user must also match. No model tool or typed yes can decide. Under the proposal
+lock require pending, unexpired, current revision/hash (409 `approvals.revision_changed`), current approve
+permission (403 `approvals.not_authorized_to_approve`), and no second-person requirement (403
+`approvals.second_person_required`). Invalid thread/proposal provenance returns 404. Revalidate the
+payload's business preconditions before approval. Record the usual immutable `decided_by_kind=user`
+decision with typed `decided_via=chat`; other decisions default to `approvals`. Only this explicit path
+bypasses `allow_self_approval=false`; ordinary decisions keep its existing behavior. Execution rechecks
+current authority and chat second-person eligibility before any effects.
+
+PO send/create confirmations enforce 50,000 minor units per order and 100,000 per business-local day,
+in business currency. Amounts use existing `total_minor` / priced conversion snapshots; the current purchasing
+model has no separate tax/shipping fields, and A1 does not add charge accounting. A scoped daily counter lock and scoped exposure reservations serialize concurrent
+confirms. The same source draft/quote/PO is charged its maximum reserved total once in a day across
+create→send, with atomic top-ups for increases; distinct orders share the cap. Reservations are not
+refunded after failure/stop. A failed confirmation rolls back the reservation and remains pending.
+Over daily cap returns 409 `approvals.chat_confirm_limit`; per-order/currency violation requires a
+second person. Counter/reservation tables have forced business RLS. This is separate from A0 rule caps.
+
+Thread message responses retain `proposal_ids` and add action cards: id, title, action_type, stored
+`describe` preview, status, `can_confirm`, nullable reason code, revision_id, payload_hash, delivery
+state and whitelisted execution result UUID references (draft/PO/outbox). Current cards/results enter
+subsequent copilot turns as fenced context so the chain can continue without manually locating ids. Eligibility is advisory/read-only, evaluated against current permission, payload and daily usage;
+confirmation checks everything again atomically. Expired/stale/missing proposals are never confirmable.
+
+**Send delay and stop.** Typed business setting `outbound_send_delay_seconds=120`, range 0–900.
+Notifications resolve proposal origin via approvals' public API. Executor-queued outbound email or
+simulated email for assistant-origin proposals gets nullable `not_before=now+delay` (zero is immediate),
+including human/chat/policy decisions. Staff-origin proposals and direct manual actions have no delay.
+Web-chat publication remains C1. Enqueue schedules the existing delivery job for the due time; claim
+checks both `not_before` and retry due time inside its row-lock transaction. Targeted claims wait
+for row locks so a rolled-back/rejected stop cannot lose the queued delivery job. Early attempts never send.
+POST `/api/v1/notifications/outbox/{id}/stop` requires the linked action's approve permission, or
+owner/admin (`org.settings.write`); explicit business scoping applies to this RLS-exempt table.
+Row-locked pending→cancelled competes with claim. Sending/terminal/unknown returns 409
+`notifications.too_late_to_stop`; already cancelled is idempotent. Stop is audited and publishes the
+existing delivery event. Unknown reconciliation/retry rules remain unchanged.
+
+Proposal detail, chat cards and A0 Activity expose delivery state
+`none|scheduled|sending|delivered|failed|unknown|stopped`. No messages→none; otherwise aggregate in
+priority order unknown, failed, sending, scheduled (pending), stopped (cancelled), delivered. Mixed
+terminal delivery/stop reports stopped. Notifications registers a scoped delivery reader in the platform
+registry, preserving the acyclic module graph. Execution status remains independent.
+
+**Read queues.** GET `/api/v1/ai/work-queue?limit&cursor` (`approvals.proposal.read`) returns a unified
+newest-first `(created_at,id)` page `{items,next_cursor}`: unexpired pending proposals (action/title,
+required approve permission and eligible roles, created/expires), pending outbound mail (stop_until =
+max of not_before/retry time, stop remains possible until claim), and unanswered sent quote invitations
+(supplier/request, reply_by due date). Public module readers explicitly scope every query.
+GET `/api/v1/ai/exceptions?limit&cursor` uses the same permission/order/page plus `{paused}` and includes
+failed proposals with failure codes, failed/unknown deliveries and `fell_back` evaluations from the last
+seven days. Existing proposal/delivery failures remain until resolved; only fallback history is time-bound.
+These endpoints expose identifiers and operational text, never supplier contacts or capability URLs.
+
+**Copilot.** `copilot.v2.md` retains v1. Purchasing proposal tools join the permission-filtered catalogue;
+the earlier U2 list was a scope restriction, while all existing lookup, evidence and numerical validation
+stays. `propose_send_po` proposes one next executor only: reorder draft→create PO→approve PO→send.
+It accepts a PO or draft/supplier reference; values/versions/prices come from public purchasing reads.
+No automatic cascade, approval tool or direct write is introduced. Background reorder quantities remain computed;
+staff quantity support is specified in the live-eval correction below.
+Synthetic eval cases cover order intent and should-ask/second-person behavior. Local FakeGateway tests
+verify proposal creation/eligibility; live provider evals and UI/type generation belong to the supervisor.
+
+
+### P10-A1 live-eval correction: staff quantities and needs_human (2026-11-05)
+
+Staff copilot requests may specify quantities instead of inventory suggestions. `propose_reorder` and
+`propose_send_po` accept optional `requested_quantities: [{item_id, quantity}]`; positive quantities have
+at most three decimal places and an upper bound of 10,000 per item. Items must exist in this business,
+be active stock-tracked products, and belong to the source draft for PO creation. The server supplies
+requester identity from the persisted copilot run, latest staff message and owned thread, never model arguments
+or untrusted supplier/customer history. Straightforward numeric requests next to item names (or a single
+item's order/quantity expression tied to its explicit record reference) are honored even if the model omits the optional argument; conflicting
+or unverifiable explicit arguments are refused instead of silently substituting a suggestion. Corrected,
+conflicting or negated quantity instructions require clarification. Stock statements are not order quantities.
+
+Tool results and immutable previews distinguish `Quantity requested by <staff>` from `Suggested N` and
+show the current suggestion separately. Reorder provenance uses existing reason_text storage; creating
+a PO from a draft may carry bounded requested_lines in its version/hash-bound payload, with costs and
+actual total frozen in the existing conversion snapshot. No stock/model recommendation is rewritten.
+Existing PO approval/send never silently changes its lines; a conflicting requested quantity is refused.
+The existing chat-confirm money checks price and reserve the actual requested quantity. No migration.
+
+Only copilot runs linked to the requester's persisted staff message and owned thread receive the staff quantity path. U4/background tools cannot
+supply explicit quantities and still require computed suggestions. An executor-owned autonomy condition
+callback checks actual payload quantities against current suggestions before any shadow/live cap reserve;
+non-suggested quantities stay pending with fell_back/quantity_not_suggested. The policy executor retains
+A0's locked, strict current-suggestion check, including after a rule decision or stock change. Human review
+or explicit chat confirmation may execute staff-requested quantities through the existing path.
+
+`copilot.v3.md` keeps v1/v2. FinalStep.needs_human's schema description matches the prompt: true only for
+an unresolved permission/information/second-person/error blocker requiring intervention beyond ordinary
+requester confirmation; false for complete grounded answers and proposals waiting for that user's Confirm.
+Proposal tool results include a fresh-identity `confirmation.can_confirm` / reason hint so the model can distinguish
+routine requester confirmation from a missing-permission or second-person blocker. No deterministic rewriting of
+model flags or live-model result is claimed. The mismatch eval now expects
+one reorder proposal for quantity 10 and needs_human=false; an additional no-quantity case expects the
+computed suggestion. Other existing cases retain their expectations. Supervisor reruns live evaluation.
+
+Second live-eval correction (2026-11-05): when staff did not request a quantity, a copilot reorder argument
+equal to the current computed suggestion is accepted as `Suggested N`, without staff-requested provenance.
+A different argument is refused with `ai.quantity_not_requested` and an actionable observation telling the
+model to retry `propose_reorder` without requested_quantities/quantity to use the current suggestion.
+Explicit staff quantities remain authoritative; background quantity arguments remain forbidden. Numeric copying
+also preserves “I need N item”; an unresolved number attached to the selected item requires clarification
+instead of entering suggestion recovery. Recognized stock facts remain separate from requested quantities.
+Prompt v3 is edited in place before release: pass quantity only when the user stated a number. needs_human is neither
+a recommendation nor a warning flag: put advice/next steps in the answer; a complete stock/supplier answer
+is false even if it recommends reordering. The final-step schema describes the same semantics.

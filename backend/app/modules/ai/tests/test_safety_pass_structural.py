@@ -47,7 +47,7 @@ def run_spec(tool: str) -> RunSpec:
 def test_every_write_path_is_hold_or_proposal(owner_engine: Engine) -> None:
     demo = seed_demo(owner_engine)
     tools = list(registry._TOOLS.values())
-    assert len(tools) == 26
+    assert len(tools) == 27
     assert {t.kind for t in tools} == {"read", "hold", "propose"}
     assert [t.name for t in tools if t.kind == "hold"] == ["hold_slot"]
     assert all(t.kind == "propose" for t in tools if t.name.startswith("propose_"))
@@ -111,6 +111,7 @@ def foreign_calls(d: Demo, engine: Engine) -> dict[str, dict[str, Any]]:
                                    "lead_time_days": 3},
         "propose_po_from_quote": {"quote_request_id": d.quote_request, "quote_id": quote},
         "propose_supplier_followup": {"purchase_order_id": po, "body": "Please review."},
+        "propose_send_po": {"purchase_order_id": po},
     })  # fmt: skip
     # A create-customer tool has no foreign-record argument. Its tenant-injection/disallowed tests run above.
     return args

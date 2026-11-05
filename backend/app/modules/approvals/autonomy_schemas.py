@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.platform.registry import DeliveryState
+
 Level = Literal["off", "draft", "ask", "act_notify", "act"]
 
 
@@ -67,6 +69,7 @@ class ActivityOut(BaseModel):
     failure_code: str | None
     reorder_draft_id: uuid.UUID | None
     result_link: str | None
+    delivery_state: DeliveryState = "none"
 
 
 class ActivityPage(BaseModel):

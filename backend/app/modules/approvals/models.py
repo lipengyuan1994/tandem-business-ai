@@ -7,6 +7,7 @@ from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     ForeignKey,
@@ -70,6 +71,7 @@ class ApprovalDecision(BusinessScopedBase):
     revision_id: Mapped[uuid.UUID]
     decision: Mapped[str] = mapped_column(String(10))
     decided_by: Mapped[uuid.UUID | None]
+    decided_via: Mapped[str] = mapped_column(String(16), default="approvals", server_default="approvals")
     decided_by_kind: Mapped[str] = mapped_column(String(10), default="user", server_default="user")
     rule_id: Mapped[uuid.UUID | None]
     rule_version: Mapped[int | None]
@@ -85,6 +87,11 @@ class ApprovalDecision(BusinessScopedBase):
             ["business_id", "revision_id"], ["proposal_revisions.business_id", "proposal_revisions.id"]
         ),
         CheckConstraint("decision in ('approve','reject')", name="decision"),
+        CheckConstraint(
+            "decided_via in ('approvals','chat') and "
+            "(decided_via != 'chat' or (decided_by_kind='user' and decision='approve'))",
+            name="via",
+        ),
         ForeignKeyConstraint(["business_id", "rule_id"], ["autonomy_rules.business_id", "autonomy_rules.id"]),
         CheckConstraint(
             "(decided_by_kind='user' and decided_by is not null and rule_id is null "
@@ -155,4 +162,25 @@ class AutonomyCounter(BusinessScopedBase):
         ForeignKeyConstraint(["business_id", "rule_id"], ["autonomy_rules.business_id", "autonomy_rules.id"]),
         UniqueConstraint("business_id", "rule_id", "day"),
         CheckConstraint("count >= 0", name="count"),
+    )
+
+
+class ChatConfirmCounter(BusinessScopedBase):
+    __tablename__ = "chat_confirm_counters"
+    day: Mapped[date]
+    total_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    __table_args__ = scoped_table_args(
+        UniqueConstraint("business_id", "day"),
+        CheckConstraint("total_minor >= 0 and total_minor <= 100000", name="total"),
+    )
+
+
+class ChatConfirmReservation(BusinessScopedBase):
+    __tablename__ = "chat_confirm_reservations"
+    day: Mapped[date]
+    subject: Mapped[str] = mapped_column(String(100))
+    total_minor: Mapped[int] = mapped_column(BigInteger)
+    __table_args__ = scoped_table_args(
+        UniqueConstraint("business_id", "day", "subject"),
+        CheckConstraint("total_minor >= 0", name="total"),
     )

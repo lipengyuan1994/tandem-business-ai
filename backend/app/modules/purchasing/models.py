@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     ForeignKeyConstraint,
     Integer,
@@ -27,6 +28,7 @@ def reference(column: str, table: str) -> ForeignKeyConstraint:
 
 class Supplier(BusinessScopedBase):
     __tablename__ = "suppliers"
+    active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     name: Mapped[str] = mapped_column(String(200))
     email: Mapped[str | None] = mapped_column(String(320))
     phone: Mapped[str | None] = mapped_column(String(60))

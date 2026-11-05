@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
+from app.modules.approvals import public as approvals
 from app.platform import crud
 from app.platform.context import Context
 from app.platform.db import transaction
@@ -21,10 +22,12 @@ from . import public, usage
 from .autonomy_api import router as autonomy_router
 from .models import AiRun
 from .schemas import AiStatus, RunOut, RunStatus, UsageOut, UseCaseId
-from .usecases import briefing, campaign_draft, copilot, procurement, summary
+from .usecases import briefing, campaign_draft, copilot, copilot_cards, procurement, summary
+from .work_queue_api import router as work_queue_router
 
 router = APIRouter()
 router.include_router(autonomy_router)
+router.include_router(work_queue_router)
 ERRORS = error_responses(401, 403)
 
 
@@ -211,3 +214,18 @@ def draft_campaign(
 ) -> campaign_draft.CampaignDraftOut:
     ctx.require("marketing.campaign.write")
     return campaign_draft.run(ctx, id, purpose=body.purpose if body is not None else None)
+
+
+@router.post(
+    "/copilot/threads/{thread_id}/proposals/{proposal_id}/confirm",
+    response_model=approvals.ChatCard,
+    summary="Explicitly confirm an action in your own chat",
+    responses=error_responses(401, 403, 404, 409, 422),
+)
+def confirm_copilot_proposal(
+    thread_id: uuid.UUID,
+    proposal_id: uuid.UUID,
+    body: approvals.ChatConfirmIn,
+    ctx: Context = Depends(require(P.ASSISTANT_USE)),
+) -> approvals.ChatCard:
+    return copilot_cards.confirm(ctx, thread_id, proposal_id, body)

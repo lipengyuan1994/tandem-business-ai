@@ -58,6 +58,13 @@ def demo(owner_engine: Engine, registry: Registry) -> Demo:
 def endpoints() -> list[tuple[str, str, dict | None]]:
     ident = str(uuid.uuid4())
     return [
+        ("GET", "/work-queue", None),
+        ("GET", "/exceptions", None),
+        (
+            "POST",
+            f"/copilot/threads/{ident}/proposals/{ident}/confirm",
+            {"revision_id": ident, "payload_hash": "0" * 64},
+        ),
         ("GET", "/autonomy/rules", None),
         ("PUT", "/autonomy/rules", {"action_type": "inventory.create_reorder_draft", "level": "ask", "version": 0}),
         ("POST", "/autonomy/pause", None),

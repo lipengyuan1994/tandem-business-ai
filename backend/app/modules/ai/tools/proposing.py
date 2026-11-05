@@ -11,17 +11,21 @@ from __future__ import annotations
 import re
 import uuid
 from collections.abc import Iterable
+from dataclasses import replace
 from typing import Annotated, Any
 
 from pydantic import AfterValidator
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.approvals import public as approvals
 from app.modules.approvals.public import Evidence
 from app.modules.conversations import public as conversations
+from app.modules.identity import public as identity
 from app.platform.context import Context
 from app.platform.errors import DomainError
 
+from ..models import AiRun
 from .base import RunState
 from .common import MAX_EVIDENCE, MAX_EXCERPT_CHARS, cite, redact_contacts
 
@@ -116,9 +120,29 @@ def propose(
         db, ctx, action_type=action_type, payload=payload, title=title, evidence=evidence,
         conversation_id=conversation_id,
     )  # fmt: skip
-    return {
+    result = {
         "proposal_id": ref.id,
         "title": title,
         "status": ref.status,
         "needs_approval": ref.status == "pending_review",
     }
+
+    if (
+        ctx.ai_run_id is not None
+        and ctx.on_behalf_of_user_id is not None
+        and ctx.business_id is not None
+        and db.scalar(
+            select(AiRun.id).where(
+                AiRun.business_id == ctx.business_id,
+                AiRun.id == ctx.ai_run_id,
+                AiRun.use_case == "copilot",
+                AiRun.on_behalf_of_user_id == ctx.on_behalf_of_user_id,
+            )
+        )
+        is not None
+    ):
+        permissions = identity.effective_permissions(db, ctx.on_behalf_of_user_id, ctx.business_id)
+        requester = replace(ctx, actor_kind="user", user_id=ctx.on_behalf_of_user_id, permissions=permissions)
+        card = approvals.chat_card(db, requester, ref.id, run_id=ctx.ai_run_id)
+        result["confirmation"] = {"can_confirm": card.can_confirm, "reason": card.cannot_confirm_reason}
+    return result

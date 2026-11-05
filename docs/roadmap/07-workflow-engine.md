@@ -44,7 +44,7 @@ stateDiagram-v2
   cancelled --> [*]
 ```
 
-External delivery (for example the reply to the customer) is **not** a proposal state. It is tracked per outbox message (`pending → sending → delivered | failed | unknown`). The UI shows "Booked ✓ · Message: delivered / pending / **uncertain — check**". This is how the "needs reconciliation" requirement from the design review is met without blocking the local result.
+External delivery (for example the reply to the customer) is **not** a proposal state. It is tracked per outbox message (`pending → sending → delivered | failed | unknown; pending → cancelled`). The UI shows "Booked ✓ · Message: delivered / pending / **uncertain — check**". This is how the "needs reconciliation" requirement from the design review is met without blocking the local result.
 
 ### Payload, hash and preview
 
@@ -211,3 +211,8 @@ returning *;
 
 P10-A0 adds delegated autonomy decisions for AI reorder drafts, with no change to the claim/resume algorithm.
 The detailed schema and API extension is [Autonomy rules (P10-A0)](ai/contracts.md#autonomy-rules-p10-a0).
+
+P10-A1 extends the executor contract with `second_person` (boolean or payload callback) and optional
+`chat_money` exposure. Chat confirmation, typed human decision provenance, PO delivery, delay/stop and
+operational read APIs are specified in [the A1 contract](ai/contracts.md#p10-a1-confirm-in-chat-po-delivery-send-delay).
+The outbox claim enforces not_before and retry time while holding the row lock; Stop competes with it.

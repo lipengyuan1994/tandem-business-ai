@@ -35,6 +35,16 @@ class ExecutionMeta:
 
 
 @dataclass(frozen=True)
+class ChatMoney:
+    total_minor: int
+    currency: str
+    subject: str
+
+
+DeliveryState = Literal["none", "scheduled", "sending", "delivered", "failed", "unknown", "stopped"]
+
+
+@dataclass(frozen=True)
 class ExecutorSpec:
     action_type: str
     payload_model: type[BaseModel]
@@ -42,6 +52,9 @@ class ExecutorSpec:
     describe: Callable[[Session, Context, Any], list[PreviewLine]]
     validate: Callable[[Session, Context, Any], None]
     run: Callable[[Session, Context, Any, ExecutionMeta], dict[str, Any]]
+    second_person: bool | Callable[[Session, Context, Any], bool] = False
+    chat_money: Callable[[Session, Context, Any], ChatMoney] | None = None
+    autonomy_reasons: Callable[[Session, Context, Any], list[str]] | None = None
 
 
 JobHandler = Callable[[Session, "Context", dict[str, Any]], None]
@@ -131,6 +144,7 @@ class Registry:
     erasure_links: dict[str, Callable[..., Any]] = field(default_factory=dict)  # (db, ctx, target) -> {ids}
     restriction_handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)
     retention_handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)
+    proposal_delivery_reader: Callable[[Session, Context, UUID], DeliveryState] | None = None
     public_routes: set[str] = field(default_factory=set)
     _frozen: bool = False
 

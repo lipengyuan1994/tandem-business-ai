@@ -7,7 +7,7 @@ import { server } from "@/test/server"
 import { APPROVE, OVERRIDE, READ, RECEIVE, WRITE, type PO, type Supplier } from "./model"
 
 const ROOT = "*/api/v1/purchasing"
-const supplier: Supplier = { id: "supplier-1", name: "Example Parts", email: "parts@example.com", phone: null, notes: null, version: 1, created_at: "2026-10-28T12:00:00Z", items: [{ catalog_item_id: "item-1", last_price_minor: 1250, supplier_sku: "BP-1", lead_time_days: 3 }] }
+const supplier: Supplier = { active: true, id: "supplier-1", name: "Example Parts", email: "parts@example.com", phone: null, notes: null, version: 1, created_at: "2026-10-28T12:00:00Z", items: [{ catalog_item_id: "item-1", last_price_minor: 1250, supplier_sku: "BP-1", lead_time_days: 3 }] }
 const po: PO = { id: "order-1", supplier_id: supplier.id, supplier_name: supplier.name, currency: "USD", status: "draft", number: null, approved_date: null, notes: null, total_minor: 2500, source_draft_id: null, source_quote_id: null, sent_at: null, expected_delivery_date: null, last_followup_at: null, version: 1, created_at: "2026-10-28T12:00:00Z", lines: [{ id: "line-1", catalog_item_id: "item-1", name: "Example pads", quantity: "2", unit_cost_minor: 1250, line_total_minor: 2500, position: 0, received_quantity: "0" }], receipts: [] }
 function mocks() {
   mockMe(meWith(READ, WRITE, APPROVE, RECEIVE, OVERRIDE, "catalog.item.read"))

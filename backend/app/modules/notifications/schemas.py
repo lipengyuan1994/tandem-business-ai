@@ -15,7 +15,8 @@ class OutboxOut(BaseModel):
     related_type: str | None
     related_id: uuid.UUID | None
     proposal_id: uuid.UUID | None
-    status: Literal["pending", "sending", "delivered", "failed", "unknown"]
+    status: Literal["pending", "sending", "delivered", "failed", "unknown", "cancelled"]
+    not_before: datetime | None
     attempts: int
     provider_message_id: str | None
     last_error: str | None

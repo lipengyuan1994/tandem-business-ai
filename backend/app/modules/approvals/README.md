@@ -43,3 +43,20 @@ P10-A0: [Autonomy contract](../../../../docs/roadmap/ai/contracts.md#autonomy-ru
   fields to event consumers without importing approvals internals. Policy detail includes the grantor display name.
   Activity includes action type and version-correct grantor identity/name. `autonomy_history.py` resolves historical
   versions through rule-save audit snapshots, with legacy-summary support; missing history stays unavailable.
+
+P10-A1: `ExecutorSpec.second_person` is a bool or payload callback (default false); `chat_money`
+returns total/currency/domain subject. Typed `decided_via=approvals|chat` preserves human provenance.
+`chat.py` owns explicit requester approvals, fresh approve permission, exact revision/hash and
+second-person checks, revalidates previews and atomically reserves business-local daily money.
+`chat_confirm_counters` and `chat_confirm_reservations` use forced RLS; source draft/quote/PO
+subjects count once per day with top-ups and no refunds. Normal decisions retain allow_self_approval;
+requesters cannot self-approve second-person actions. Engine rechecks second-person for chat/self.
+Public `chat_origin_run_id`, `chat_card`, `confirm_chat` serve AI's owned-thread path; no model tool.
+`outbound_authority` returns scoped origin/action for notifications. Detail and Activity get independent
+`delivery_state` from notifications' registered reader, preserving the dependency graph. Activity still
+lists autonomy evaluations. `proposal_queue_items`/`fallback_queue_items` serve the read-only work views.
+
+A1 live-eval correction: `ExecutorSpec.autonomy_reasons` supplies payload-owned conditions. Reorder
+quantities differing from current suggestions record fell_back/quantity_not_suggested before any
+shadow/live cap reservation. Human/chat decisions may use requested quantities; policy execution
+retains its strict locked recheck. No rule allowlist expansion or model-derived policy judgment.

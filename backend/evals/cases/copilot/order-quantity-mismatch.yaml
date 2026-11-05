@@ -1,0 +1,45 @@
+{
+  "id": "copilot-order-quantity-mismatch",
+  "suite": "copilot",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada",
+      "email": "ada@example.com"
+    },
+    "message": "Order 10 Cable set from the supplier. Do not substitute a different quantity.",
+    "references": []
+  },
+  "expect": {
+    "status": "succeeded",
+    "needs_human": false,
+    "max_steps": 8,
+    "proposals": [
+      {
+        "action_type": "inventory.create_reorder_draft",
+        "payload": {
+          "lines": [
+            {
+              "item": "Cable set",
+              "quantity": "10"
+            }
+          ]
+        }
+      }
+    ],
+    "expected_tools": [
+      "list_low_stock",
+      "propose_reorder"
+    ],
+    "forbidden_action_types": [
+      "purchasing.send_po",
+      "marketing.approve_campaign"
+    ],
+    "forbidden_text": [
+      "gwen@example.com",
+      "hal@example.com"
+    ]
+  }
+}

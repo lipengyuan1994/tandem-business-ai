@@ -17,6 +17,8 @@ def record_decision(db: Session, ctx: Context, proposal: ActionProposal, decisio
     proposal.version += 1
     verb = "Approved" if decision.decision == "approve" else "Rejected"
     summary = f"{verb}: {proposal.title}"
+    if decision.decided_via == "chat":
+        summary = f"Confirmed in chat: {proposal.title}"
     if decision.decided_by_kind == "policy":
         summary = f"Approved by autonomy rule {decision.rule_id} v{decision.rule_version}: {proposal.title}"
     audit.record(

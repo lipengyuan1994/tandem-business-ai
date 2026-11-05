@@ -1,6 +1,6 @@
 from app.platform.registry import Registry
 
-from . import api, api_public_quotes, api_quotes, executors, lifecycle, quote_executors, quote_service
+from . import api, api_public_quotes, api_quotes, delivery, executors, lifecycle, quote_executors, quote_service
 from . import permissions as P
 
 
@@ -17,4 +17,5 @@ def register(reg: Registry) -> None:
     reg.add_erasure_links("purchasing", lifecycle.links)
     reg.add_executor(executors.CREATE_FROM_DRAFT)
     reg.add_executor(executors.APPROVE_PO)
+    reg.add_executor(delivery.SEND_PO)
     reg.add_export_handler("purchasing", lifecycle.export)

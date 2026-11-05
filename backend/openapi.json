@@ -36,6 +36,20 @@
             "title": "Created At",
             "type": "string"
           },
+          "delivery_state": {
+            "default": "none",
+            "enum": [
+              "none",
+              "scheduled",
+              "sending",
+              "delivered",
+              "failed",
+              "unknown",
+              "stopped"
+            ],
+            "title": "Delivery State",
+            "type": "string"
+          },
           "failure_code": {
             "anyOf": [
               {
@@ -1080,6 +1094,13 @@
             "title": "Hold Minutes",
             "type": "integer"
           },
+          "outbound_send_delay_seconds": {
+            "default": 120,
+            "maximum": 900.0,
+            "minimum": 0.0,
+            "title": "Outbound Send Delay Seconds",
+            "type": "integer"
+          },
           "public_chat_enabled": {
             "default": true,
             "title": "Public Chat Enabled",
@@ -1199,6 +1220,13 @@
             "maximum": 240.0,
             "minimum": 5.0,
             "title": "Hold Minutes",
+            "type": "integer"
+          },
+          "outbound_send_delay_seconds": {
+            "default": 120,
+            "maximum": 900.0,
+            "minimum": 0.0,
+            "title": "Outbound Send Delay Seconds",
             "type": "integer"
           },
           "public_chat_enabled": {
@@ -2126,6 +2154,115 @@
           "version"
         ],
         "title": "CatalogItemUpdate",
+        "type": "object"
+      },
+      "ChatCard": {
+        "properties": {
+          "action_type": {
+            "title": "Action Type",
+            "type": "string"
+          },
+          "can_confirm": {
+            "title": "Can Confirm",
+            "type": "boolean"
+          },
+          "cannot_confirm_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cannot Confirm Reason"
+          },
+          "delivery_state": {
+            "enum": [
+              "none",
+              "scheduled",
+              "sending",
+              "delivered",
+              "failed",
+              "unknown",
+              "stopped"
+            ],
+            "title": "Delivery State",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "payload_hash": {
+            "title": "Payload Hash",
+            "type": "string"
+          },
+          "preview": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewLineOut"
+            },
+            "title": "Preview",
+            "type": "array"
+          },
+          "result": {
+            "additionalProperties": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Result",
+            "type": "object"
+          },
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "action_type",
+          "preview",
+          "status",
+          "can_confirm",
+          "cannot_confirm_reason",
+          "revision_id",
+          "payload_hash",
+          "delivery_state"
+        ],
+        "title": "ChatCard",
+        "type": "object"
+      },
+      "ChatConfirmIn": {
+        "additionalProperties": false,
+        "properties": {
+          "payload_hash": {
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Payload Hash",
+            "type": "string"
+          },
+          "revision_id": {
+            "format": "uuid",
+            "title": "Revision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision_id",
+          "payload_hash"
+        ],
+        "title": "ChatConfirmIn",
         "type": "object"
       },
       "Clause": {
@@ -3615,6 +3752,14 @@
             "title": "Decided By Name",
             "type": "string"
           },
+          "decided_via": {
+            "enum": [
+              "approvals",
+              "chat"
+            ],
+            "title": "Decided Via",
+            "type": "string"
+          },
           "decision": {
             "enum": [
               "approve",
@@ -3687,6 +3832,7 @@
           "decision",
           "decided_by",
           "decided_by_kind",
+          "decided_via",
           "rule_id",
           "rule_version",
           "granted_by",
@@ -4411,6 +4557,39 @@
           "id"
         ],
         "title": "ExceptionOut",
+        "type": "object"
+      },
+      "ExceptionPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "paused"
+        ],
+        "title": "ExceptionPage",
         "type": "object"
       },
       "ExtractIn": {
@@ -5949,6 +6128,18 @@
             ],
             "title": "Last Error"
           },
+          "not_before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Before"
+          },
           "proposal_id": {
             "anyOf": [
               {
@@ -6012,7 +6203,8 @@
               "sending",
               "delivered",
               "failed",
-              "unknown"
+              "unknown",
+              "cancelled"
             ],
             "title": "Status",
             "type": "string"
@@ -6030,6 +6222,7 @@
           "related_id",
           "proposal_id",
           "status",
+          "not_before",
           "attempts",
           "provider_message_id",
           "last_error",
@@ -6782,6 +6975,20 @@
             },
             "title": "Decisions",
             "type": "array"
+          },
+          "delivery_state": {
+            "default": "none",
+            "enum": [
+              "none",
+              "scheduled",
+              "sending",
+              "delivered",
+              "failed",
+              "unknown",
+              "stopped"
+            ],
+            "title": "Delivery State",
+            "type": "string"
           },
           "expires_at": {
             "format": "date-time",
@@ -9627,6 +9834,11 @@
       "SupplierIn": {
         "additionalProperties": false,
         "properties": {
+          "active": {
+            "default": true,
+            "title": "Active",
+            "type": "boolean"
+          },
           "email": {
             "anyOf": [
               {
@@ -9784,6 +9996,11 @@
       "SupplierOut": {
         "additionalProperties": false,
         "properties": {
+          "active": {
+            "default": true,
+            "title": "Active",
+            "type": "boolean"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -10066,6 +10283,17 @@
       "SupplierUpdate": {
         "additionalProperties": false,
         "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
           "email": {
             "anyOf": [
               {
@@ -10374,6 +10602,13 @@
               "type": "string"
             },
             "title": "Proposal Ids",
+            "type": "array"
+          },
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/ChatCard"
+            },
+            "title": "Proposals",
             "type": "array"
           },
           "role": {
@@ -10876,6 +11111,194 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WorkItem": {
+        "properties": {
+          "action_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Type"
+          },
+          "approve_permission": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approve Permission"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "failure_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Code"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "proposal",
+              "outbound_mail",
+              "supplier_quote",
+              "autonomy_fallback"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal Id"
+          },
+          "quote_request_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Request Id"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "stop_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stop Until"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "waiting_on_roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Waiting On Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "created_at",
+          "status"
+        ],
+        "title": "WorkItem",
+        "type": "object"
+      },
+      "WorkPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "WorkPage",
         "type": "object"
       },
       "app__modules__catalog__api__VersionIn": {
@@ -11919,6 +12342,164 @@
         ]
       }
     },
+    "/api/v1/ai/copilot/threads/{thread_id}/proposals/{proposal_id}/confirm": {
+      "post": {
+        "operationId": "confirm_copilot_proposal_api_v1_ai_copilot_threads__thread_id__proposals__proposal_id__confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "thread_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Thread Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCard"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Explicitly confirm an action in your own chat",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/v1/ai/exceptions": {
+      "get": {
+        "operationId": "exceptions_api_v1_ai_exceptions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExceptionPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Execution, delivery and recent autonomy exceptions",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/api/v1/ai/procurement/items/{item_id}/request-quotes": {
       "post": {
         "operationId": "request_procurement_quotes_api_v1_ai_procurement_items__item_id__request_quotes_post",
@@ -12298,6 +12879,81 @@
           }
         },
         "summary": "Today's AI usage and budget, and the last 30 days",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/v1/ai/work-queue": {
+      "get": {
+        "operationId": "work_queue_api_v1_ai_work_queue_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "What is waiting now, newest first",
         "tags": [
           "ai"
         ]
@@ -17449,6 +18105,69 @@
           }
         },
         "summary": "Resolve an uncertain delivery",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/outbox/{outbox_id}/stop": {
+      "post": {
+        "operationId": "stop_api_v1_notifications_outbox__outbox_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "outbox_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Outbox Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboxOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Stop a queued outbound message",
         "tags": [
           "notifications"
         ]

@@ -24,6 +24,7 @@ from app.platform.registry import Registry
 PROPOSE_TOOLS = {
     "propose_booking", "propose_reply", "propose_customer", "propose_reorder", "propose_payment_reminder",
     "propose_quote_request", "propose_supplier_quote", "propose_po_from_quote", "propose_supplier_followup",
+    "propose_send_po",
 }  # fmt: skip
 TUESDAY_1145 = "2026-11-10T18:45:00Z"  # the earliest Tuesday-morning brake slot (11:45 Denver, Jordan)
 

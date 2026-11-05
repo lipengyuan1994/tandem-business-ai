@@ -19,6 +19,7 @@ from .autonomy import RULE_ELIGIBLE_ACTIONS
 from .autonomy_history import rule_snapshot
 from .autonomy_schemas import ActivityOut, ActivityPage, RuleOut, RulePut, RulesOut, ShadowSummary
 from .models import ActionProposal, ApprovalDecision, AutonomyEvaluation, AutonomyRule, ExecutionAttempt
+from .reading import delivery_state
 
 MANAGE = "org.settings.write"
 
@@ -169,6 +170,7 @@ def activity(db: Session, ctx: Context, *, limit: int = 50, cursor: str | None =
         names = identity.get_user_briefs(db, ctx, {grantor} if grantor else set())
         items.append(
             ActivityOut(
+                delivery_state=delivery_state(db, ctx, proposal.id),
                 id=ev.id,
                 proposal_id=proposal.id,
                 rule_id=ev.rule_id,

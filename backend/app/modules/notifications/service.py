@@ -15,7 +15,7 @@ from datetime import timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.modules.org import public as org
@@ -45,6 +45,7 @@ from .in_app import (
     unread_count as unread_count,
 )
 from .models import DeliveryAttempt, OutboxMessage
+from .outbound import send_after
 from .templates import render, render_html
 
 log = structlog.get_logger(__name__)
@@ -111,6 +112,7 @@ def enqueue_message(
     if existing is not None:
         return existing
     assert ctx.business_id is not None
+    not_before = send_after(db, ctx, proposal_id or ctx.proposal_id, channel)
     message = OutboxMessage(
         id=new_id(),
         business_id=ctx.business_id,
@@ -124,6 +126,7 @@ def enqueue_message(
         proposal_id=proposal_id or ctx.proposal_id,
         status="pending",
         next_attempt_at=clock.now(),
+        not_before=not_before,
     )
     db.add(message)
     db.flush()
@@ -133,6 +136,7 @@ def enqueue_message(
         {"outbox_id": str(message.id)},
         business_id=ctx.business_id,
         dedupe_key=f"deliver:{message.id}:0",
+        run_at=not_before,
         priority=20,
     )
     return message.id
@@ -159,8 +163,10 @@ def deliver(business_id: uuid.UUID, outbox_id: uuid.UUID) -> str:
                 OutboxMessage.id == outbox_id,
                 OutboxMessage.status == "pending",
                 OutboxMessage.restricted_at.is_(None),
+                OutboxMessage.next_attempt_at <= clock.now(),
+                or_(OutboxMessage.not_before.is_(None), OutboxMessage.not_before <= clock.now()),
             )
-            .with_for_update(skip_locked=True)
+            .with_for_update()
         )
         if m is None:
             return "skipped"

@@ -245,6 +245,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai/copilot/threads/{thread_id}/proposals/{proposal_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Explicitly confirm an action in your own chat */
+        post: operations["confirm_copilot_proposal_api_v1_ai_copilot_threads__thread_id__proposals__proposal_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Execution, delivery and recent autonomy exceptions */
+        get: operations["exceptions_api_v1_ai_exceptions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai/procurement/items/{item_id}/request-quotes": {
         parameters: {
             query?: never;
@@ -322,6 +356,23 @@ export interface paths {
         };
         /** Today's AI usage and budget, and the last 30 days */
         get: operations["get_usage_api_v1_ai_usage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/work-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What is waiting now, newest first */
+        get: operations["work_queue_api_v1_ai_work_queue_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1345,6 +1396,23 @@ export interface paths {
         put?: never;
         /** Resolve an uncertain delivery */
         post: operations["resolve_api_v1_notifications_outbox__outbox_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/outbox/{outbox_id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop a queued outbound message */
+        post: operations["stop_api_v1_notifications_outbox__outbox_id__stop_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2558,6 +2626,12 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Delivery State
+             * @default none
+             * @enum {string}
+             */
+            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped";
             /** Failure Code */
             failure_code: string | null;
             /** Granted By */
@@ -2984,6 +3058,11 @@ export interface components {
              */
             hold_minutes: number;
             /**
+             * Outbound Send Delay Seconds
+             * @default 120
+             */
+            outbound_send_delay_seconds: number;
+            /**
              * Public Chat Enabled
              * @default true
              */
@@ -3049,6 +3128,11 @@ export interface components {
              * @default 30
              */
             hold_minutes: number;
+            /**
+             * Outbound Send Delay Seconds
+             * @default 120
+             */
+            outbound_send_delay_seconds: number;
             /**
              * Public Chat Enabled
              * @default true
@@ -3348,6 +3432,52 @@ export interface components {
             sku?: string | null;
             /** Version */
             version: number;
+        };
+        /** ChatCard */
+        ChatCard: {
+            /** Action Type */
+            action_type: string;
+            /** Can Confirm */
+            can_confirm: boolean;
+            /** Cannot Confirm Reason */
+            cannot_confirm_reason: string | null;
+            /**
+             * Delivery State
+             * @enum {string}
+             */
+            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Payload Hash */
+            payload_hash: string;
+            /** Preview */
+            preview: components["schemas"]["PreviewLineOut"][];
+            /** Result */
+            result?: {
+                [key: string]: string;
+            };
+            /**
+             * Revision Id
+             * Format: uuid
+             */
+            revision_id: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
+        /** ChatConfirmIn */
+        ChatConfirmIn: {
+            /** Payload Hash */
+            payload_hash: string;
+            /**
+             * Revision Id
+             * Format: uuid
+             */
+            revision_id: string;
         };
         /**
          * Clause
@@ -3856,6 +3986,11 @@ export interface components {
              */
             decided_by_name: string;
             /**
+             * Decided Via
+             * @enum {string}
+             */
+            decided_via: "approvals" | "chat";
+            /**
              * Decision
              * @enum {string}
              */
@@ -4126,6 +4261,15 @@ export interface components {
              * Format: date-time
              */
             starts_at: string;
+        };
+        /** ExceptionPage */
+        ExceptionPage: {
+            /** Items */
+            items: components["schemas"]["WorkItem"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Paused */
+            paused: boolean;
         };
         /** ExtractIn */
         ExtractIn: {
@@ -4682,6 +4826,8 @@ export interface components {
             id: string;
             /** Last Error */
             last_error: string | null;
+            /** Not Before */
+            not_before: string | null;
             /** Proposal Id */
             proposal_id: string | null;
             /** Provider Message Id */
@@ -4696,7 +4842,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "sending" | "delivered" | "failed" | "unknown";
+            status: "pending" | "sending" | "delivered" | "failed" | "unknown" | "cancelled";
             /** Template Key */
             template_key: string;
         };
@@ -4954,6 +5100,12 @@ export interface components {
             current_revision_id: string | null;
             /** Decisions */
             decisions: components["schemas"]["DecisionOut"][];
+            /**
+             * Delivery State
+             * @default none
+             * @enum {string}
+             */
+            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped";
             /**
              * Expires At
              * Format: date-time
@@ -6082,6 +6234,11 @@ export interface components {
         };
         /** SupplierIn */
         SupplierIn: {
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
             /** Email */
             email?: string | null;
             /** Items */
@@ -6134,6 +6291,11 @@ export interface components {
         };
         /** SupplierOut */
         SupplierOut: {
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
             /**
              * Created At
              * Format: date-time
@@ -6225,6 +6387,8 @@ export interface components {
         };
         /** SupplierUpdate */
         SupplierUpdate: {
+            /** Active */
+            active?: boolean | null;
             /** Email */
             email?: string | null;
             /** Items */
@@ -6350,6 +6514,8 @@ export interface components {
             id: string;
             /** Proposal Ids */
             proposal_ids: string[];
+            /** Proposals */
+            proposals?: components["schemas"]["ChatCard"][];
             /**
              * Role
              * @enum {string}
@@ -6519,6 +6685,57 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WorkItem */
+        WorkItem: {
+            /** Action Type */
+            action_type?: string | null;
+            /** Approve Permission */
+            approve_permission?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Due Date */
+            due_date?: string | null;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Failure Code */
+            failure_code?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback";
+            /** Proposal Id */
+            proposal_id?: string | null;
+            /** Quote Request Id */
+            quote_request_id?: string | null;
+            /** Reasons */
+            reasons?: string[];
+            /** Status */
+            status: string;
+            /** Stop Until */
+            stop_until?: string | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /** Title */
+            title: string;
+            /** Waiting On Roles */
+            waiting_on_roles?: string[];
+        };
+        /** WorkPage */
+        WorkPage: {
+            /** Items */
+            items: components["schemas"]["WorkItem"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
         /** VersionIn */
         app__modules__catalog__api__VersionIn: {
@@ -7587,6 +7804,137 @@ export interface operations {
             };
         };
     };
+    confirm_copilot_proposal_api_v1_ai_copilot_threads__thread_id__proposals__proposal_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatCard"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    exceptions_api_v1_ai_exceptions_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExceptionPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     request_procurement_quotes_api_v1_ai_procurement_items__item_id__request_quotes_post: {
         parameters: {
             query?: never;
@@ -7910,6 +8258,65 @@ export interface operations {
             };
             /** @description Permission denied */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    work_queue_api_v1_ai_work_queue_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12598,6 +13005,73 @@ export interface operations {
                 "application/json": components["schemas"]["ResolveIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutboxOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    stop_api_v1_notifications_outbox__outbox_id__stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outbox_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

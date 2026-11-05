@@ -3,8 +3,9 @@
 The only direct write is `hold_slot` (a reversible 30-minute scheduling hold for an existing customer). Everything else
 creates a proposal decided by a person or an eligible autonomy rule. Ids and numbers the model must not invent
 are filled in here: the hold's
-service, resource and time come from the hold; a new customer's contacts from `RunState.server_facts`; reorder
-quantities from `inventory.list_below_reorder`. Idempotency per trigger comes from the framework (`ai_effects`).
+service, resource and time come from the hold; a new customer's contacts from `RunState.server_facts`. Reorders
+live in reorders.py: background quantities are suggestions, staff quantities are grounded in the owned copilot request.
+Idempotency per trigger comes from the framework (`ai_effects`).
 
 Run-scoped state used: `RunState.holds` (holds placed in this run), `RunState.read_conversation_ids` (only those get
 replies), `RunState.server_facts` keys `visitor_name`, `visitor_email`, `visitor_phone` (never shown to the model).
@@ -23,7 +24,6 @@ from app.modules.approvals import public as approvals
 from app.modules.catalog import public as catalog
 from app.modules.conversations import public as conversations
 from app.modules.crm import public as crm
-from app.modules.inventory import public as inventory
 from app.modules.org import public as org
 from app.modules.scheduling import public as scheduling
 from app.platform import clock
@@ -32,8 +32,9 @@ from app.platform.errors import Conflict, Invalid, NotFound
 
 from .. import effects
 from .base import RunState, Tool
-from .common import ToolArgs, local_label, qty, utc
+from .common import ToolArgs, local_label, utc
 from .proposing import PlainText, gather, note, propose, run_conversation, tool_result
+from .reorders import TOOL as REORDER_TOOL
 
 PROPOSE = "ai.assistant.use"
 HOLD = "scheduling.appointment.write"
@@ -274,49 +275,6 @@ def _propose_customer(db: Session, ctx: Context, args: BaseModel, state: RunStat
     return propose(db, ctx, action_type="crm.create_customer", payload=payload, title=title, evidence=evidence)
 
 
-# ----------------------------------------------------------------------------------------------- propose_reorder
-class ProposeReorderArgs(ToolArgs):
-    effect_fields: ClassVar[tuple[str, ...]] = ("item_ids",)
-    item_ids: list[uuid.UUID] = Field(min_length=1, max_length=20)
-    note: PlainText | None = Field(default=None, max_length=1000)
-    reason_text: PlainText | None = Field(default=None, max_length=300)
-
-    @field_validator("item_ids")
-    @classmethod
-    def unique_sorted(cls, value: list[uuid.UUID]) -> list[uuid.UUID]:
-        return sorted(set(value))
-
-
-def _propose_reorder(db: Session, ctx: Context, args: BaseModel, state: RunState) -> dict[str, Any]:
-    assert isinstance(args, ProposeReorderArgs)
-    for item_id in args.item_ids:
-        if inventory.has_open_reorder_draft(db, ctx, item_id):
-            raise Conflict("inventory.open_reorder_draft")
-        if approvals.find_open_proposals(
-            db, ctx, action_types=["inventory.create_reorder_draft"], item_id=item_id, include_executing=True
-        ):
-            raise Conflict("ai.reorder_already_proposed")
-    below = {s.item_id: s for s in inventory.list_below_reorder(db, ctx)}
-    missing = [i for i in args.item_ids if i not in below]
-    if missing:
-        raise Invalid("ai.not_below_reorder", detail="not below reorder point: " + ", ".join(map(str, missing)))
-    rows = [below[i] for i in args.item_ids]
-    lines = [{"item_id": str(s.item_id), "quantity": qty(s.suggested),
-              "reason_text": s.explanation[:300] if args.reason_text is None else args.reason_text}
-             for s in rows]  # fmt: skip
-    payload: dict[str, Any] = {"lines": lines}
-    if args.note is not None:
-        payload["note"] = args.note
-    parts = [f"{s.item_name} ×{qty(s.suggested)}" for s in rows]
-    title = f"Reorder {parts[0]}" if len(parts) == 1 else f"Reorder {len(parts)} items: {', '.join(parts)}"
-    own = [tool_result("propose_reorder", None, [{"item": s.item_name, "available": qty(s.available),
-                                                  "reorder_point": qty(s.reorder_point),
-                                                  "suggested": qty(s.suggested)} for s in rows])]  # fmt: skip
-    evidence = gather(db, ctx, state, own, args.item_ids)
-    return propose(db, ctx, action_type="inventory.create_reorder_draft", payload=payload, title=title,
-                   evidence=evidence)  # fmt: skip
-
-
 TOOLS = (
     Tool(
         name="hold_slot",
@@ -343,11 +301,5 @@ TOOLS = (
         "system from the visitor's own form; never type them.",
         kind="propose", permission=PROPOSE, args_model=ProposeCustomerArgs, run=_propose_customer,
     ),
-    Tool(
-        name="propose_reorder",
-        description="Propose a reorder draft for items below their reorder point (ids from list_low_stock). "
-        "Quantities are the computed suggestions; you cannot change them. Optional plain-text note and "
-        "reason_text (up to 300 characters, used for each line).",
-        kind="propose", permission=PROPOSE, args_model=ProposeReorderArgs, run=_propose_reorder,
-    ),
+    REORDER_TOOL,
 )  # fmt: skip

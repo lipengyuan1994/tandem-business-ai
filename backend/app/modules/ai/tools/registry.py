@@ -66,6 +66,7 @@ _LOOKUP_PERMISSIONS: dict[str, tuple[str, ...]] = {
     "propose_quote_request": ("purchasing.po.read", "inventory.stock.read"),
     "propose_supplier_quote": ("purchasing.po.read",),
     "propose_po_from_quote": ("purchasing.po.read",),
+    "propose_send_po": ("purchasing.po.read", "inventory.stock.read"),
     "propose_supplier_followup": ("purchasing.po.read",),
 }
 
@@ -266,9 +267,9 @@ def _execute_effect(ctx: Context, tool: Tool, args: BaseModel, state: RunState) 
 # ------------------------------------------------------------------------------------------- built-in tools
 def _register_builtin_tools() -> None:
     """Register every tool of the area files (AI-06 read tools, AI-07 hold and propose tools) once, at import."""
-    from . import catalog, conversations, crm, dashboard, inventory, proposals, purchasing, sales, scheduling
+    from . import catalog, conversations, crm, dashboard, inventory, orders, proposals, purchasing, sales, scheduling
 
-    for area in (conversations, crm, catalog, scheduling, inventory, purchasing, sales, dashboard, proposals):
+    for area in (conversations, crm, catalog, scheduling, inventory, purchasing, sales, dashboard, proposals, orders):
         for tool in area.TOOLS:
             register_tool(tool)
 

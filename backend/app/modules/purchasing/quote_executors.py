@@ -15,6 +15,7 @@ from . import quote_repository as repo
 from . import quote_service as service
 from . import repository as po_repo
 from . import service as po_service
+from .delivery import quote_money
 from .previews import item_name, item_names, priced_line, total_line
 from .schemas_quotes import (
     CreatePOFromQuote,
@@ -125,7 +126,13 @@ RECORD_SUPPLIER_QUOTE = ExecutorSpec(
     "purchasing.record_supplier_quote", RecordSupplierQuote, P.WRITE, describe_record, validate_record, run_record
 )
 CREATE_PO_FROM_QUOTE = ExecutorSpec(
-    "purchasing.create_po_from_quote", CreatePOFromQuote, P.APPROVE, describe_po, service.validate_po, run_po
+    "purchasing.create_po_from_quote",
+    CreatePOFromQuote,
+    P.APPROVE,
+    describe_po,
+    service.validate_po,
+    run_po,
+    chat_money=quote_money,
 )
 SEND_SUPPLIER_FOLLOWUP = ExecutorSpec(
     "purchasing.send_supplier_followup",

@@ -2,6 +2,16 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## Unreleased (P10-A0, P10-A1)
+
+AI workflows, first steps (ADR-020): autonomy rules (Off · Draft · Ask · Act and notify · Act, shadow mode, daily limit,
+pause switch) with rule-approved reorder drafts, AI → Autonomy, Activity, Work queue and Exceptions pages; action cards
+with **Confirm** in the assistant chat (own requests only; $500 per order, $1,000 per day; larger or new-supplier orders
+need a second person); purchase orders e-mailed to the supplier; AI-sent e-mails wait 2 minutes and can be stopped.
+
+- **Migrations:** `20261105_0800_autonomy`, `20261105_0900_chat_delivery` (apply with the upgrade).
+- **New business setting:** `outbound_send_delay_seconds` (default 120). Demo seed adds a reorder-draft rule in shadow mode.
+
 ## 0.1.5 (2026-11-04)
 
 Marketing: a **Draft with AI** button on the campaign page writes a new revision through the campaign-draft AI use case

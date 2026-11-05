@@ -39,3 +39,19 @@ It uses approvals' public notification-state reader: pending proposals request a
 explain shadow mode, non-pending `act_notify` policy approvals send `ai_acted` to the same approvers, and `act`/other
 non-pending proposals send no approval request. Notifications include a body in the API and panel. Historical
 rule versions retain their original notification level after edits. At-least-once delivery remains deduplicated.
+
+P10-A1: outbox adds nullable `not_before` and terminal `cancelled`. AI-origin proposal mail gets org's
+send delay at enqueue (default 120 s, including human/chat/policy decisions); staff mail stays immediate.
+The job is due at not_before. Targeted claim waits for row locks and checks both delay and retry time
+inside that transaction; a failed/rolled-back Stop cannot consume a delivery job as a skip.
+`POST /outbox/{id}/stop` permits the linked action's approver or owner/admin, explicitly scopes the
+RLS-exempt row and atomically locks pending→cancelled; sending/terminal/unknown gives too_late_to_stop.
+Stop is audited and emits DeliveryStatusChanged; it never reverses the local business action.
+`outbound.py` owns stop, origin delay and projections. Registry delivery reader aggregates states
+none/scheduled/sending/delivered/failed/unknown/stopped; issues take priority over queued/terminal rows.
+Public `outbound_queue_items(db,ctx,*,statuses,limit,cursor)` serves proposal-read work/exception views,
+without recipients/variables/capability URLs. Unknown resolution rules remain unchanged.
+`purchase_order` is text plus escaped HTML; the business's public email remains Reply-To.
+
+SMTP retry tests freeze the application clock, verify no claim/SMTP send before next_attempt_at,
+then advance to the exact due time before retrying. Header/stable-ID and TLS certificate checks stay intact.

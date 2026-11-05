@@ -3,24 +3,23 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import threading
 import uuid
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Literal
 
 import structlog
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.types import Receive, Scope, Send
 
 from app.platform import clock, ratelimit
 from app.platform.context import Context
 from app.platform.db import transaction
-from app.platform.errors import Conflict, NotFound, RateLimited, Unauthenticated
+from app.platform.errors import Conflict, RateLimited
 
 from .. import recording
 from ..agent.contexts import staff_ctx_factory, staff_permissions
@@ -30,9 +29,41 @@ from ..agent.runner import StopRun, run_agent
 from ..gateway.router import Router, load_router
 from ..gateway.routes import ModelClass, RouteEntry
 from ..gateway.types import ChatRequest, ChatResult
-from ..models import AiRun, AssistantMessage, AssistantThread
+from ..models import AiRun, AssistantMessage
 from ..schemas import Policy
 from ..tools.registry import authorized_tools
+from .copilot_cards import cards
+from .copilot_cards import owned as _owned
+from .copilot_threads import (
+    CopilotThreadDetailOut as CopilotThreadDetailOut,
+)
+from .copilot_threads import (
+    CopilotThreadOut as CopilotThreadOut,
+)
+from .copilot_threads import (
+    MessageCreate as MessageCreate,
+)
+from .copilot_threads import (
+    ThreadCreate as ThreadCreate,
+)
+from .copilot_threads import (
+    ThreadMessageOut as ThreadMessageOut,
+)
+from .copilot_threads import (
+    _staff,
+)
+from .copilot_threads import (
+    create_thread as create_thread,
+)
+from .copilot_threads import (
+    get_thread as get_thread,
+)
+from .copilot_threads import (
+    list_threads as list_threads,
+)
+from .copilot_threads import (
+    retain_messages as retain_messages,
+)
 from .summary import Operation, claim_operation
 
 log = structlog.get_logger(__name__)
@@ -61,84 +92,12 @@ STATUS_TEXT = {
     "propose_booking": "Drafting a booking proposal…",
     "hold_slot": "Holding the selected time…",
     "propose_customer": "Drafting a customer proposal…",
+    "propose_send_po": "Drafting the next purchase order step…",
+    "propose_quote_request": "Drafting a supplier quote request…",
+    "propose_supplier_quote": "Drafting a supplier quote proposal…",
+    "propose_po_from_quote": "Drafting a purchase order proposal…",
+    "propose_supplier_followup": "Drafting a supplier follow-up…",
 }
-
-
-class ThreadCreate(BaseModel):
-    title: str = Field(default="New chat", min_length=1, max_length=120)
-
-
-class MessageCreate(BaseModel):
-    content: str = Field(min_length=1, max_length=4000)
-
-
-class CopilotThreadOut(BaseModel):
-    id: uuid.UUID
-    title: str
-    created_at: datetime
-    updated_at: datetime
-
-
-class ThreadMessageOut(BaseModel):
-    id: uuid.UUID
-    role: Literal["user", "assistant"]
-    content: str
-    run_id: uuid.UUID | None
-    proposal_ids: list[uuid.UUID]
-    created_at: datetime
-
-
-class CopilotThreadDetailOut(CopilotThreadOut):
-    messages: list[ThreadMessageOut]
-
-
-def _staff(ctx: Context) -> tuple[uuid.UUID, uuid.UUID]:
-    ctx.require("ai.assistant.use")
-    if ctx.business_id is None or ctx.user_id is None:
-        raise Unauthenticated("auth.unauthenticated")
-    return ctx.business_id, ctx.user_id
-
-
-def _owned(db: Session, ctx: Context, thread_id: uuid.UUID, *, lock: bool = False) -> AssistantThread:
-    business_id, user_id = _staff(ctx)
-    stmt = select(AssistantThread).where(
-        AssistantThread.business_id == business_id, AssistantThread.user_id == user_id,
-        AssistantThread.id == thread_id,
-    )  # fmt: skip
-    thread = db.scalar(stmt.with_for_update() if lock else stmt)
-    if thread is None:
-        raise NotFound("ai.thread_not_found")
-    return thread
-
-
-def list_threads(ctx: Context) -> list[CopilotThreadOut]:
-    business_id, user_id = _staff(ctx)
-    with transaction(ctx) as db:
-        rows = db.scalars(select(AssistantThread).where(
-            AssistantThread.business_id == business_id, AssistantThread.user_id == user_id,
-        ).order_by(AssistantThread.created_at.desc(), AssistantThread.id.desc()).limit(50))  # fmt: skip
-        return [CopilotThreadOut.model_validate(row, from_attributes=True) for row in rows]
-
-
-def create_thread(ctx: Context, body: ThreadCreate) -> CopilotThreadOut:
-    business_id, user_id = _staff(ctx)
-    with transaction(ctx) as db:
-        thread = AssistantThread(business_id=business_id, user_id=user_id, title=body.title)
-        db.add(thread)
-        db.flush()
-        return CopilotThreadOut.model_validate(thread, from_attributes=True)
-
-
-def get_thread(ctx: Context, thread_id: uuid.UUID) -> CopilotThreadDetailOut:
-    with transaction(ctx) as db:
-        thread = _owned(db, ctx, thread_id)
-        rows = db.scalars(select(AssistantMessage).where(
-            AssistantMessage.business_id == ctx.business_id, AssistantMessage.thread_id == thread_id,
-        ).order_by(AssistantMessage.created_at, AssistantMessage.id))  # fmt: skip
-        return CopilotThreadDetailOut(
-            **CopilotThreadOut.model_validate(thread, from_attributes=True).model_dump(),
-            messages=[ThreadMessageOut.model_validate(row, from_attributes=True) for row in rows],
-        )
 
 
 def _next_message_time(db: Session, thread_id: uuid.UUID) -> datetime:
@@ -163,7 +122,7 @@ def prepare_message(
 ) -> PreparedMessage:
     """Ownership, validation and rate-limit errors happen before the HTTP stream starts."""
     business_id, user_id = _staff(ctx)
-    prompt = load_prompt("copilot", 1)
+    prompt = load_prompt("copilot", 3)
     permissions = staff_permissions(ctx.permissions, "copilot")
     tools = authorized_tools(
         staff_ctx_factory(business_id, user_id, permissions, "copilot")(uuid.uuid4()), list(STATUS_TEXT)
@@ -232,6 +191,17 @@ def prepare_message(
                 ContextBlock(label=f"{m.role} message", source_id=m.id, text=m.content, untrusted=m.role == "assistant")
                 for m in reversed(recent)
             ]
+            for message in reversed(recent):
+                action_cards = cards(db, ctx, message)
+                if action_cards:
+                    blocks.append(
+                        ContextBlock(
+                            label="Current proposal status and result",
+                            source_id=message.id,
+                            text=json.dumps([card.model_dump(mode="json") for card in action_cards]),
+                            untrusted=True,
+                        )
+                    )
             spec = RunSpec(
                 use_case="copilot", prompt=prompt, tools=tools,
                 task="Answer the latest staff message using the available tools and the thread history.",
@@ -408,27 +378,3 @@ class CopilotResponse(StreamingResponse):
             await super().__call__(scope, receive, send)
         finally:
             await self.events.aclose()
-
-
-def retain_messages(ctx: Context) -> None:
-    """Per-business retention: strictly older than 90 days, then threads with no remaining messages."""
-    if ctx.business_id is None:
-        raise ValueError("ai.assistant_retention requires a business")
-    with transaction(ctx) as db:
-        old_messages = select(AssistantMessage.id).where(
-            AssistantMessage.business_id == ctx.business_id,
-            AssistantMessage.created_at < clock.now() - timedelta(days=90),
-        )
-        db.execute(
-            delete(Operation).where(Operation.business_id == ctx.business_id, Operation.message_id.in_(old_messages))
-        )
-        db.execute(delete(AssistantMessage).where(
-            AssistantMessage.business_id == ctx.business_id,
-            AssistantMessage.created_at < clock.now() - timedelta(days=90),
-        ))  # fmt: skip
-        has_message = select(AssistantMessage.id).where(
-            AssistantMessage.business_id == ctx.business_id, AssistantMessage.thread_id == AssistantThread.id,
-        ).exists()  # fmt: skip
-        db.execute(delete(AssistantThread).where(
-            AssistantThread.business_id == ctx.business_id, ~has_message,
-        ))  # fmt: skip

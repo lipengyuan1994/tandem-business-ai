@@ -30,5 +30,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/settings/ai", labelKey: "ai.settings.nav", permission: "ai.settings.read", group: "ai" },
   { to: "/ai/autonomy", labelKey: "ai.autonomy.title", permission: "org.settings.write", group: "ai" },
   { to: "/ai/activity", labelKey: "ai.activity.title", permission: "approvals.proposal.read", group: "ai" },
+  { to: "/ai/work-queue", labelKey: "ai.workQueue.title", permission: "approvals.proposal.read", group: "ai" },
+  { to: "/ai/exceptions", labelKey: "ai.exceptions.title", permission: "approvals.proposal.read", group: "ai" },
   { to: "/settings", labelKey: "nav.settings", permission: "org.business.read" },
 ]

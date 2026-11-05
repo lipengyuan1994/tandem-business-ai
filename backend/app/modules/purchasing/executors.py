@@ -15,6 +15,7 @@ from app.platform.errors import Conflict, Invalid
 from . import permissions as P
 from . import repository as repo
 from . import service
+from .delivery import draft_money
 from .models import PurchaseOrder
 from .previews import priced_line, total_line
 from .schemas import ApprovePOPayload, ConversionSnapshot, CreateFromDraftPayload, DraftConversion, POCreate, POLineIn
@@ -28,13 +29,22 @@ def snapshot(db: Session, ctx: Context, p: DraftConversion, *, lock: bool = Fals
     items = {i.catalog_item_id: i for i in repo.supplier_items(db, ctx, supplier.id)}
     if not draft.lines or any(line.item_id not in items for line in draft.lines):
         raise Invalid("purchasing.supplier_item_required")
+    overrides = (
+        {line.item_id: line.quantity for line in p.requested_lines}
+        if isinstance(p, CreateFromDraftPayload) and p.requested_lines
+        else {}
+    )
+    if isinstance(p, CreateFromDraftPayload) and p.requested_lines and len(overrides) != len(p.requested_lines):
+        raise Invalid("purchasing.duplicate_requested_item")
+    if set(overrides) - {line.item_id for line in draft.lines}:
+        raise Invalid("purchasing.requested_item_not_in_draft")
     values = service.prepare_lines(
         db,
         ctx,
         [
             POLineIn(
                 catalog_item_id=line.item_id,
-                quantity=line.quantity,
+                quantity=overrides.get(line.item_id, line.quantity),
                 unit_cost_minor=items[line.item_id].last_price_minor,
             )
             for line in draft.lines
@@ -90,6 +100,12 @@ def describe_create(db: Session, ctx: Context, p: CreateFromDraftPayload) -> lis
             for line in p.snapshot.lines
         ],
         total_line(p.snapshot.total_minor, currency),
+        *[PreviewLine("Quantity source", None, line.reason_text) for line in (p.requested_lines or [])],
+        *[
+            PreviewLine("Quantity source", None, line.reason_text)
+            for line in inventory.read_reorder_draft(db, ctx, p.draft_id).lines
+            if line.reason_text and not p.requested_lines
+        ],
     ]
 
 
@@ -124,7 +140,13 @@ def run_approve(db: Session, ctx: Context, p: ApprovePOPayload, meta: ExecutionM
 
 
 CREATE_FROM_DRAFT = ExecutorSpec(
-    "purchasing.create_po_from_draft", CreateFromDraftPayload, P.APPROVE, describe_create, validate_create, run_create
+    "purchasing.create_po_from_draft",
+    CreateFromDraftPayload,
+    P.APPROVE,
+    describe_create,
+    validate_create,
+    run_create,
+    chat_money=draft_money,
 )
 APPROVE_PO = ExecutorSpec(
     "purchasing.approve_po", ApprovePOPayload, P.APPROVE, describe_approve, validate_approve, run_approve

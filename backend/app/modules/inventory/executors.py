@@ -49,12 +49,32 @@ def _run_adjust(db: Session, ctx: Context, p: AdjustStockPayload, meta: Executio
 
 def _describe_draft(db: Session, ctx: Context, p: ReorderDraftIn) -> list[PreviewLine]:
     names = catalog.get_items(db, ctx, {ln.item_id for ln in p.lines})
-    return [
-        PreviewLine(
-            f"Order {names[ln.item_id].name if ln.item_id in names else ln.item_id}", None, format_quantity(ln.quantity)
-        )
-        for ln in p.lines
-    ]
+    below = {line.item_id: line for line in service.suggestions(db, ctx)}
+    preview = []
+    for line in p.lines:
+        name = names[line.item_id].name if line.item_id in names else str(line.item_id)
+        preview.append(PreviewLine(f"Order {name}", None, format_quantity(line.quantity)))
+        source = line.reason_text
+        if not source or not source.startswith("Quantity requested by "):
+            suggested = below[line.item_id].suggested if line.item_id in below else None
+            label = (
+                f"Suggested {format_quantity(line.quantity)}"
+                if line.quantity == suggested
+                else f"Quantity {format_quantity(line.quantity)} (suggested "
+                f"{format_quantity(suggested) if suggested is not None else 'none'})"
+            )
+            source = label + (f" · {line.reason_text}" if line.reason_text else "")
+        preview.append(PreviewLine(f"Quantity source · {name}", None, source))
+    return preview
+
+
+def _autonomy_reasons(db: Session, ctx: Context, p: ReorderDraftIn) -> list[str]:
+    below = {line.item_id: line for line in service.suggestions(db, ctx)}
+    return (
+        ["quantity_not_suggested"]
+        if any(line.item_id not in below or line.quantity != below[line.item_id].suggested for line in p.lines)
+        else []
+    )
 
 
 def _validate_draft(db: Session, ctx: Context, p: ReorderDraftIn) -> None:
@@ -94,5 +114,11 @@ ADJUST = ExecutorSpec(
     "inventory.adjust_stock", AdjustStockPayload, P.PROPOSAL_APPROVE, _describe_adjust, _validate_adjust, _run_adjust
 )
 DRAFT = ExecutorSpec(
-    "inventory.create_reorder_draft", ReorderDraftIn, P.PROPOSAL_APPROVE, _describe_draft, _validate_draft, _run_draft
+    "inventory.create_reorder_draft",
+    ReorderDraftIn,
+    P.PROPOSAL_APPROVE,
+    _describe_draft,
+    _validate_draft,
+    _run_draft,
+    autonomy_reasons=_autonomy_reasons,
 )

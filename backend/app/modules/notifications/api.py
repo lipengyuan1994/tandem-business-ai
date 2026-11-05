@@ -11,7 +11,7 @@ from app.platform.db import transaction
 from app.platform.errors import error_responses
 from app.platform.permissions import require, require_session
 
-from . import service
+from . import outbound, service
 from .schemas import NotificationList, NotificationOut, OutboxOut, ResolveIn
 
 router = APIRouter()
@@ -66,3 +66,11 @@ def resolve(
 ) -> OutboxOut:
     with transaction(ctx) as db:
         return OutboxOut.model_validate(service.resolve(db, ctx, outbox_id, body.resolution))
+
+
+@router.post(
+    "/outbox/{outbox_id}/stop", response_model=OutboxOut, summary="Stop a queued outbound message", responses=ERRORS
+)
+def stop(outbox_id: uuid.UUID, ctx: Context = Depends(require_session())) -> OutboxOut:
+    with transaction(ctx) as db:
+        return OutboxOut.model_validate(outbound.stop(db, ctx, outbox_id))

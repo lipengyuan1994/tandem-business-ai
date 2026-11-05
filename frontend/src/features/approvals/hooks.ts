@@ -30,7 +30,7 @@ export function useProposal(id: string) {
   return useQuery({
     queryKey: approvalKeys.detail(id),
     queryFn: async () => unwrap(await api.GET("/api/v1/approvals/proposals/{proposal_id}", { params: { path: { proposal_id: id } } })),
-    refetchInterval: (q) => (q.state.data && LIVE.has(q.state.data.status) ? 1500 : false),
+    refetchInterval: (q) => (q.state.data && (LIVE.has(q.state.data.status) || ["scheduled", "sending"].includes(q.state.data.delivery_state)) ? 1500 : false),
   })
 }
 

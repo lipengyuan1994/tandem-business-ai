@@ -2,6 +2,7 @@
 
 import json
 import uuid
+from pathlib import Path
 
 import pytest
 
@@ -105,7 +106,7 @@ def test_general_runner_limits_every_model_call(registry, owner_engine, stage, m
     business = make_business()
     spec = RunSpec(
         use_case="copilot",
-        prompt=load_prompt("copilot"),
+        prompt=load_prompt("test_agent", 1, base_dir=Path(__file__).parent / "prompts"),
         tools=["list_services"],
         task="Check services.",
         context_blocks=[],

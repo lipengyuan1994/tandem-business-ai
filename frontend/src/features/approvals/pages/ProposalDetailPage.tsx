@@ -3,6 +3,7 @@ import { useParams } from "@tanstack/react-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useSession } from "@/app/session-context"
+import { DeliveryBadge, ScheduledMail } from "@/features/ai/DeliveryStatus"
 import { AiBadge } from "@/features/ai/AiBadge"
 import { ConfirmDialog } from "@/components/common/ConfirmDialog"
 import { EmptyState } from "@/components/common/EmptyState"
@@ -58,7 +59,7 @@ export function ProposalDetailPage() {
         actions={
           <div className="flex items-center gap-2">
             <AiBadge originKind={p.origin_kind} />
-            <StatusBadge status={p.status} />
+            <StatusBadge status={p.status} /><DeliveryBadge state={p.delivery_state} />
           </div>
         }
       />
@@ -106,7 +107,9 @@ export function ProposalDetailPage() {
               <ul className="space-y-1">
                 {outbox.data!.map((m) => (
                   <li key={m.id} className="flex items-center gap-2 text-sm">
-                    <StatusBadge status={m.channel === "simulated" && m.status === "delivered" ? "simulated" : m.status} />
+                    <DeliveryBadge state={m.status === "pending" ? "scheduled" : m.status === "cancelled" ? "stopped" : m.status} />
+                    {m.channel === "simulated" && m.status === "delivered" ? <StatusBadge status="simulated" /> : null}
+                    {m.status === "pending" ? <ScheduledMail id={m.id} sendAt={m.not_before} /> : null}
                     <span>{t(`approvals.channels.${m.channel}`)}</span>
                     {m.status === "unknown" ? <span className="text-destructive">{t("approvals.uncertain")}</span> : null}
                   </li>

@@ -1,5 +1,5 @@
 // The assistant: a slide-over on the right (full screen on phones). Streams the steps it takes, links to the proposals
-// it makes, and never says a change is done: every change waits in Approvals.
+// it makes, with explicit revision-bound confirmation on saved action cards.
 import { Link } from "@tanstack/react-router"
 import { Sparkles } from "lucide-react"
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react"
@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { AiDisabledBanner } from "./AiDisabledBanner"
 import { problemCode, useCopilotThread, useCopilotThreads, useCreateCopilotThread, useSendCopilotMessage } from "./api"
+import { ActionCard } from "./ActionCard"
 import { aiErrorText, useAiAvailability } from "./text"
 
 const MAX_LENGTH = 4000
@@ -109,9 +110,9 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
           {!messages.length && !live && !loadingThread ? <p className="text-sm text-muted-foreground">{t("ai.assistant.empty")}</p> : null}
           {messages.map((m) => (
             <Bubble key={m.id} who={m.role === "user" ? t("ai.assistant.you") : t("ai.assistant.assistant")} mine={m.role === "user"} text={m.content}>
-              {m.proposal_ids.length ? (
+              {m.proposals?.length ? <div aria-label={t("ai.assistant.proposals")}>{m.proposals.map((card) => <ActionCard key={`${card.id}:${card.revision_id}`} card={card} threadId={threadId!} onReload={() => void thread.refetch()} />)}</div> : m.proposal_ids.length ? (
                 <ul aria-label={t("ai.assistant.proposals")} className="mt-2 flex flex-wrap gap-2">
-                  {m.proposal_ids.map((id, i) => <li key={id}><ProposalChip id={id} label={t("ai.assistant.proposalN", { n: i + 1 })} /></li>)}
+                  {m.proposal_ids.map((id, i) => <li key={id}><ProposalLink id={id} label={t("ai.assistant.proposalN", { n: i + 1 })} /></li>)}
                 </ul>
               ) : null}
             </Bubble>
@@ -127,7 +128,7 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
               {stream.status === "streaming" && stream.answer === null ? <p className="text-sm text-muted-foreground">{t("ai.assistant.working")}</p> : null}
               {stream.proposals.length ? (
                 <ul aria-label={t("ai.assistant.proposals")} className="flex flex-wrap gap-2">
-                  {stream.proposals.map((p) => <li key={p.id}><ProposalChip id={p.id} label={p.title || t("ai.assistant.proposalN", { n: 1 })} /></li>)}
+                  {stream.proposals.map((p) => <li key={p.id}><ProposalLink id={p.id} label={p.title || t("ai.assistant.proposalN", { n: 1 })} /></li>)}
                 </ul>
               ) : null}
               {stream.answer !== null ? <Bubble who={t("ai.assistant.assistant")} text={stream.answer} /> : null}
@@ -138,6 +139,7 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
         </div>
 
         <form className="space-y-2 px-4 pt-1" onSubmit={(e) => void submit(e)}>
+          <p className="text-xs text-muted-foreground">{t("ai.cards.confirmHint")}</p>
           <Label htmlFor="assistant-input">{t("ai.assistant.inputLabel")}</Label>
           <Textarea id="assistant-input" ref={input} value={text} maxLength={MAX_LENGTH} disabled={blocked} rows={2} placeholder={t("ai.assistant.placeholder")}
             onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} />
@@ -163,10 +165,10 @@ function Bubble({ who, text, mine, children }: { who: string; text: string; mine
   )
 }
 
-function ProposalChip({ id, label }: { id: string; label: string }) {
+function ProposalLink({ id, label }: { id: string; label: string }) {
   return (
     <Link to="/approvals/$proposalId" params={{ proposalId: id }}
-      className="inline-flex min-h-9 items-center gap-1 rounded-full border bg-background px-3 py-1 text-sm underline-offset-2 hover:bg-accent hover:underline">
+      className="inline-flex min-h-9 items-center gap-1 rounded-md border bg-background px-3 py-2 text-sm underline-offset-2 hover:bg-accent hover:underline">
       <Sparkles aria-hidden="true" className="size-3" /> {label}
     </Link>
   )

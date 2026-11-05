@@ -7,6 +7,7 @@ import base64
 import socket
 import uuid
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from email import policy
 from email.parser import BytesParser
 from typing import Any
@@ -16,7 +17,9 @@ from aiosmtpd.controller import Controller
 from sqlalchemy import Engine, text
 
 from app.modules.notifications import adapters, service
+from app.modules.notifications.models import OutboxMessage
 from app.modules.org.testing import make_business
+from app.platform import clock
 from app.platform.config import Settings, get_settings
 from app.platform.context import system_context
 from app.platform.db import transaction
@@ -78,12 +81,34 @@ def enqueue(
     return ctx, outbox_id
 
 
-def test_multipart_headers_escaping_and_stable_id(smtp: Any, owner_engine: Engine) -> None:
+def advance_to_retry(ctx: Any, outbox_id: uuid.UUID, freeze_time: Any) -> None:
+    """Respect the real retry schedule rather than bypassing the claim's due-time guard."""
+    with transaction(ctx) as db:
+        message = db.get(OutboxMessage, outbox_id)
+        assert message is not None
+        # These are manual messages: there is no AI send delay. Only retry backoff applies.
+        assert message.not_before is None
+        assert (message.status, message.attempts) == ("pending", 1)
+        due = message.next_attempt_at
+        assert due == clock.now() + service.BACKOFF[0]
+    freeze_time(due - timedelta(microseconds=1))
+    assert service.deliver(ctx.business_id, outbox_id) == "skipped"
+    with transaction(ctx) as db:
+        message = db.get(OutboxMessage, outbox_id)
+        assert message is not None
+        assert (message.status, message.attempts, message.next_attempt_at) == ("pending", 1, due)
+    freeze_time(due)
+
+
+def test_multipart_headers_escaping_and_stable_id(smtp: Any, owner_engine: Engine, freeze_time: Any) -> None:
+    freeze_time(datetime(2026, 11, 5, 17, 0, tzinfo=UTC))
     box, _ = smtp
     box.response = "451 try later"
     ctx, oid = enqueue()
     assert service.deliver(ctx.business_id, oid) == "retry"
     box.response = "250 accepted"
+    advance_to_retry(ctx, oid, freeze_time)
+    assert len(box.messages) == 1  # the early claim did not reach SMTP
     assert service.deliver(ctx.business_id, oid) == "delivered"
     first, second = [BytesParser(policy=policy.default).parsebytes(raw) for raw in box.messages]
     assert first["Message-ID"] == second["Message-ID"]
@@ -273,12 +298,13 @@ def tls_material(tmp_path: Any) -> tuple[Any, Any]:
 
 @pytest.mark.parametrize("implicit", [False, True])
 def test_real_tls_verification_and_delivery(
-    tls_material: Any, monkeypatch: pytest.MonkeyPatch, registry: Any, implicit: bool
+    tls_material: Any, monkeypatch: pytest.MonkeyPatch, registry: Any, implicit: bool, freeze_time: Any
 ) -> None:
     import ssl
 
     from app.modules.notifications import smtp_adapter
 
+    freeze_time(datetime(2026, 11, 5, 17, 0, tzinfo=UTC))
     cert, key = tls_material
     server_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     server_context.load_cert_chain(cert, key)
@@ -300,6 +326,8 @@ def test_real_tls_verification_and_delivery(
         # An unknown certificate must be rejected before any message reaches the server.
         assert service.deliver(ctx.business_id, oid) == "retry"
         assert box.messages == []
+        advance_to_retry(ctx, oid, freeze_time)
+        assert box.messages == []  # an early claim cannot bypass TLS verification or backoff
         # Trust only the ephemeral test CA, preserving hostname verification and CERT_REQUIRED.
         context = ssl.create_default_context(cafile=str(cert))
         assert context.check_hostname and context.verify_mode == ssl.CERT_REQUIRED

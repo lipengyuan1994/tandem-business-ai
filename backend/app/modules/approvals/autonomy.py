@@ -94,6 +94,8 @@ def evaluate(
     elif rule.level == "draft":
         reasons.append("level_not_supported")
     else:
+        if spec.autonomy_reasons is not None:
+            reasons.extend(spec.autonomy_reasons(db, ctx, spec.payload_model.model_validate(revision.payload)))
         if paused:
             reasons.append("autonomy_paused")
         if not identity.has_permission_now(db, rule.granted_by, proposal.business_id, spec.approve_permission):

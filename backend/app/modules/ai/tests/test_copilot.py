@@ -189,7 +189,7 @@ def test_messages_persisted_with_run_and_proposals(registry: Registry, owner_eng
     detail = client.get(f"{BASE}/{tid}").json()
     assert set(detail) == {"id", "title", "created_at", "updated_at", "messages"}
     user, assistant = detail["messages"]
-    assert set(user) == {"id", "role", "content", "run_id", "proposal_ids", "created_at"}
+    assert set(user) == {"id", "role", "content", "run_id", "proposal_ids", "proposals", "created_at"}
     assert (user["role"], user["content"], user["run_id"], user["proposal_ids"]) == (
         "user",
         "Draft a reorder.",

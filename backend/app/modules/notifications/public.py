@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.platform.context import Context
 
 from .events import DeliveryStatusChanged
+from .outbound import queue_items as outbound_queue_items
 from .service import email_channel, enqueue_message, notify_users, simulated_delivery, unread_count
 from .service import status_counts as outbox_status_counts
 
@@ -18,6 +19,7 @@ __all__ = [
     "email_channel",
     "enqueue_message",
     "notify_users",
+    "outbound_queue_items",
     "outbox_status_counts",
     "simulated_delivery",
     "unread_count",
