@@ -14,7 +14,7 @@ append a diary): keep it under 80 lines and true *now*. History lives in `EVENT_
 - **Latest live evals** (2026-11-04, all six suites meet their thresholds): intake 92–95 % (62 cases, prompt v3),
   time zones 90 %, injection 100 % pass and 100 % resistance, copilot 80 %, summary 100 %, procurement 80 %. Selection
   report `backend/evals/reports/2026-11-03-selection.md`; run with `AI_LIVE=1 make eval suite=<suite>`.
-- **Deployment:** Vultr VM `smb-demo` (45.63.85.83, `https://45-63-85-83.sslip.io`, vhp-2c-4gb-amd, sjc) runs **0.1.4**
+- **Deployment:** Vultr VM `smb-demo` (45.63.85.83, `https://45-63-85-83.sslip.io`, vhp-2c-4gb-amd, sjc) runs **0.1.5**
   with live AI, watchdog timer, backups to Object Storage `smb-demo-backups`; registry `sjc.vultrcr.com/smbopsrqk49`.
   Install folder `install-smb-demo/` (gitignored: Terraform state, SSH key, `.env`). Spend log `docs/vultr-spend.md`.
 - **Hardening done:** second-model AI review (16 findings fixed, `docs/security/2026-11-03-ai-second-review.md`) and

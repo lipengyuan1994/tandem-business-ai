@@ -2,6 +2,16 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.5 (2026-11-04)
+
+Marketing: a **Draft with AI** button on the campaign page writes a new revision through the campaign-draft AI use case
+(people who may edit campaigns and use the assistant; disabled while there are unsaved edits; a campaign in review asks
+for confirmation first, as manual edits do). Restore drill: the details file `/state/restore-last.json` now lists every
+database of the last run and is also written when row counts differ (it was missing in that case).
+
+- **No migration.** Backup image rebuilt (restore helper). **Scripts changed:** `restore.sh` — copy it from the staged
+  release to `/opt/smb/restore.sh` (mode 755) before or after `upgrade.sh 0.1.5`; `compose.yml` unchanged.
+
 ## 0.1.4 (2026-11-04)
 
 Intake customer matching: an e-mail or phone that matches no customer now outweighs a name-only overlap, a shared surname alone is no longer a possible identity (an initial plus surname still is), and an ambiguous match no longer stops intake: the agent still answers information questions and the staff note lists the candidates. Found live on the demo deployment (a new visitor sharing a surname got no reply to a stock question).

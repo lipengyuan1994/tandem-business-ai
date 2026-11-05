@@ -35,6 +35,7 @@ Check the balance at any time: `GET https://api.vultr.com/v2/account` (`balance`
 | 2026-11-04 12:10 | Updated | VM cloud-init `user_data` to the current template (in place, no reboot: uptime unchanged; cloud-init does not rerun, so it only affects a rebuild) | — | — |
 | 2026-11-04 12:15 | Opened, closed | SSH for 76.19.41.155/32 with `access.sh` to copy the demo logins file to `install-smb-demo/` (gitignored); `terraform plan` now shows no changes; only 80/443 open | — | pending charges $1.96 of $200.00 |
 | 2026-11-04 23:28 | Opened, closed | SSH for 76.19.41.155/32 (about 10 minutes) for the P6-08 restore drill and the P6-06 egress test; one manual backup (≈ 0.9 MB) to Object Storage; `terraform plan` no changes afterwards; only 80/443 open | — | pending charges $2.65 of $200.00 |
+| 2026-11-05 01:40 | Upgraded | VM to 0.1.5 (images pushed, registry ≈ 4 GB of the free 10 GB; SSH opened about 6 minutes for the upgrade and a restore drill, then closed; `terraform plan` no changes) | — | — |
 
 ## Running resources (2026-11-04 12:15 UTC)
 
