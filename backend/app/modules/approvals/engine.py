@@ -25,6 +25,7 @@ from app.platform.errors import DomainError
 from app.platform.ids import new_id
 from app.platform.registry import ExecutionMeta, get_registry
 
+from . import autonomy
 from .events import ProposalClosed
 from .models import ActionProposal, ApprovalDecision, ExecutionAttempt, ProposalRevision
 from .service import executor_for
@@ -76,9 +77,9 @@ def _claim(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UUI
     return "done"
 
 
-def _approver(db: Session, proposal_id: uuid.UUID, revision_id: uuid.UUID) -> uuid.UUID:
+def _approver(db: Session, proposal_id: uuid.UUID, revision_id: uuid.UUID) -> ApprovalDecision:
     row = db.scalar(
-        select(ApprovalDecision.decided_by)
+        select(ApprovalDecision)
         .where(
             ApprovalDecision.proposal_id == proposal_id,
             ApprovalDecision.revision_id == revision_id,
@@ -138,14 +139,19 @@ def execute(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UU
     if _claim(business_id, proposal_id, revision_id) == "done":
         return "done"
     key = f"{proposal_id}:{revision_id}"
+    failure_ctx = system_context(business_id)
     try:
-        with transaction(system_context(business_id)) as db:
-            approver = _approver(db, proposal_id, revision_id)
-        with transaction(
-            Context(
-                request_id=f"exec-{proposal_id.hex[:12]}", actor_kind="user", user_id=approver, business_id=business_id
-            )
-        ) as db:  # TX-2
+        with transaction(system_context(business_id)) as db:  # TX-2
+            proposal = db.scalar(select(ActionProposal).where(ActionProposal.id == proposal_id).with_for_update())
+            revision = db.scalar(select(ProposalRevision).where(ProposalRevision.id == revision_id))
+            assert proposal is not None and revision is not None
+            # Re-check under the row lock: another worker (or the resume path racing it) may have finished already.
+            if proposal.status != "executing" or proposal.current_revision_id != revision_id:
+                return "done"
+            spec = executor_for(proposal.action_type)
+            decision = _approver(db, proposal_id, revision_id)
+            approver = decision.granted_by if decision.decided_by_kind == "policy" else decision.decided_by
+            assert approver is not None
             permissions = identity.effective_permissions(db, approver, business_id)
             ctx = Context(
                 request_id=f"exec-{proposal_id.hex[:12]}",
@@ -155,17 +161,16 @@ def execute(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UU
                 permissions=permissions,
                 proposal_id=proposal_id,
             )
-            proposal = db.scalar(select(ActionProposal).where(ActionProposal.id == proposal_id).with_for_update())
-            revision = db.scalar(select(ProposalRevision).where(ProposalRevision.id == revision_id))
-            assert proposal is not None and revision is not None
-            # Re-check under the row lock: another worker (or the resume path racing it) may have finished already.
-            if proposal.status != "executing" or proposal.current_revision_id != revision_id:
-                return "done"
-            spec = executor_for(proposal.action_type)
-            if spec.approve_permission not in permissions:
+            if decision.decided_by_kind == "policy":
+                failure_ctx = autonomy.policy_context(ctx, decision)
+                ctx = autonomy.check_execution(db, ctx, proposal, decision, spec)
+            elif spec.approve_permission not in permissions:
                 raise ApproverNotAuthorized("approvals.approver_no_longer_authorized")
-            if sha256_hex(revision.payload) != revision.payload_hash:
+            if sha256_hex(revision.payload) != revision.payload_hash or decision.payload_hash != revision.payload_hash:
                 raise DomainError("approvals.payload_hash_mismatch")
+            db.execute(
+                update(ExecutionAttempt).where(ExecutionAttempt.idempotency_key == key).values(acting_user_id=approver)
+            )
             model = spec.payload_model.model_validate(revision.payload)
             result = spec.run(
                 db, ctx, model, ExecutionMeta(proposal_id=proposal_id, revision_id=revision_id, idempotency_key=key)
@@ -178,7 +183,7 @@ def execute(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UU
             proposal = db.scalar(select(ActionProposal).where(ActionProposal.id == proposal_id).with_for_update())
             assert proposal is not None
             if proposal.status == "executing":
-                _finish(db, system_context(business_id), proposal, key, ok=False, error=exc)
+                _finish(db, failure_ctx, proposal, key, ok=False, error=exc)
         return "failed"
     except Exception:
         log.error("proposal_execution_crashed", proposal_id=str(proposal_id), error=traceback.format_exc()[-2000:])

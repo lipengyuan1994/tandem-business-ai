@@ -48,8 +48,13 @@ class DecisionOut(BaseModel):
     id: uuid.UUID
     revision_id: uuid.UUID
     decision: Literal["approve", "reject"]
-    decided_by: uuid.UUID
+    decided_by: uuid.UUID | None
+    decided_by_kind: Literal["user", "policy"]
+    rule_id: uuid.UUID | None
+    rule_version: int | None
+    granted_by: uuid.UUID | None
     decided_by_name: str = ""
+    granted_by_name: str = ""
     roles_at_decision: list[str]
     comment: str | None
     decided_at: datetime

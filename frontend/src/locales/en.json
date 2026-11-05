@@ -338,7 +338,9 @@
     "review": "Review →",
     "actionLabels": {
       "inventory.adjust_stock": "Stock adjustment"
-    }
+    },
+    "policyDecision": "Approved by autonomy rule (v{{version}}), granted by {{who}}",
+    "unknownDecider": "an unavailable user"
   },
   "audit": {
     "description": "Who changed what, when — including the assistant and automatic jobs.",
@@ -1259,7 +1261,94 @@
         "step_limit": "Stopped: too many steps",
         "budget_exceeded": "Stopped: daily limit",
         "policy_blocked": "Blocked by policy"
-      }
+      },
+      "nav": "AI settings"
+    },
+    "area": "AI",
+    "autonomy": {
+      "title": "Autonomy",
+      "description": "Choose which AI proposals may run under a rule you grant. Manual proposals still need a person’s decision.",
+      "noAccess": "You don't have access to autonomy settings.",
+      "actions": {
+        "inventory_create_reorder_draft": "Create reorder drafts when stock is low"
+      },
+      "level": "Autonomy level",
+      "levels": {
+        "off": {
+          "label": "Off",
+          "help": "AI cannot propose this action."
+        },
+        "draft": {
+          "label": "Draft",
+          "help": "A person sends the draft. Unavailable for this action."
+        },
+        "ask": {
+          "label": "Ask",
+          "help": "A person must approve each proposal."
+        },
+        "act_notify": {
+          "label": "Act and notify",
+          "help": "Approve automatically and notify approvers; follow the result in Activity."
+        },
+        "act": {
+          "label": "Act",
+          "help": "Approve automatically and record it in Activity."
+        }
+      },
+      "shadow": "Shadow mode",
+      "shadowHelp": "Records what it would have done; nothing runs automatically. Proposals still need approval.",
+      "newShadow": "New rules always start in shadow mode. Save first, then turn shadow mode off in a separate save to allow actions.",
+      "cap": "Daily limit",
+      "capHelp": "Counts actions and successful shadow checks in the business time zone. Editing a rule does not reset today’s count.",
+      "capInvalid": "Enter a whole number from 0 to 2,147,483,647.",
+      "active": "Rule active",
+      "summary": "Results in the last 30 days",
+      "counts": "Would act: {{would_act}} · Acted: {{acted}} · Fell back: {{fell_back}}",
+      "pause": "Pause all AI actions",
+      "confirmPause": "Pause actions",
+      "resume": "Resume AI actions",
+      "pauseHelp": "Pause automatic approvals across this business and prevent queued rule-approved actions from running. Actions already completed remain completed. People can still review proposals.",
+      "paused": "All AI actions are paused for this business. Automatic approvals and queued rule-approved actions are blocked.",
+      "cannotGrant": "You need permission to approve reorder proposals to grant or change this rule."
+    },
+    "activity": {
+      "title": "Activity",
+      "description": "Rule evaluations and the current result of each proposal. An automatic approval can still fail during execution.",
+      "noAccess": "You don't have access to AI Activity.",
+      "when": "When",
+      "action": "Action",
+      "outcome": "Outcome",
+      "result": "Current result",
+      "rule": "Rule and grantor",
+      "outcomes": {
+        "acted": "Acted",
+        "would_act": "Would act (shadow)",
+        "fell_back": "Fell back",
+        "blocked": "Blocked"
+      },
+      "reasons": {
+        "cap_reached": "The daily limit was reached.",
+        "autonomy_paused": "AI actions were paused.",
+        "grantor_not_authorized": "The person who granted this rule is no longer allowed to approve this action.",
+        "rule_inactive": "The rule was inactive.",
+        "level_not_supported": "This action does not support the selected level.",
+        "rule_changed": "The rule changed before execution.",
+        "autonomy_revoked": "The rule’s permission to act was withdrawn.",
+        "rule_off": "The rule was off."
+      },
+      "unknownReason": "A rule condition was not met. Open the proposal for details.",
+      "failures": {
+        "approvals_autonomy_revoked": "Execution was blocked because actions were paused, the rule changed, or its grantor lost permission.",
+        "inventory_reorder_changed": "Stock or the suggested quantity changed before execution.",
+        "inventory_open_reorder_draft": "An open reorder draft already exists."
+      },
+      "failedHint": "Execution failed. Open the proposal for details.",
+      "draftCreated": "Reorder draft created",
+      "ruleVersion": "Rule {{id}} (v{{version}})",
+      "grantedBy": "Granted by {{who}}",
+      "unknownGrantor": "unavailable for this rule version",
+      "empty": "No AI activity yet.",
+      "emptyHelp": "When an autonomy rule evaluates an AI proposal, its shadow checks, automatic approvals, fallbacks and blocks will appear here alongside the current execution result."
     }
   }
 }

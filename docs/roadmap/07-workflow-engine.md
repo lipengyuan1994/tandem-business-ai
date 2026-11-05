@@ -7,7 +7,7 @@ This is the heart of the product and the part with the least room for error. Tas
 | Path | Who | How | Used for |
 |---|---|---|---|
 | **Direct** | Authorised staff in the UI | Endpoint → service → audit, in one transaction | Normal ERP work: editing a customer, booking by phone |
-| **Proposal** | The AI assistant; staff lacking a permission; rules (e.g. reorder); any action type a business marks "always review" | Proposal → human decision → executor → **the same service functions** | Everything the AI wants to change; sensitive actions |
+| **Proposal** | The AI assistant; staff lacking a permission; rules (e.g. reorder); any action type a business marks "always review" | Proposal → human or delegated policy decision → executor → **the same service functions** | Everything the AI wants to change; sensitive actions |
 
 ## Proposals
 
@@ -208,3 +208,6 @@ returning *;
 - **Every service function that mutates data calls it exactly once per logical change, in the same transaction.** If the audit insert fails, the whole change rolls back.
 - `audit.diff(before, after, redact=…)` produces `{"field": {"from": x, "to": y}}`, with redacted fields shown as `"[redacted]"`.
 - The application role has only `INSERT` and `SELECT` on `audit_events`. A v1 task adds a nightly hash chain (`prev_hash`, `hash`) and export to Object Storage. This is tamper-*evident*, not tamper-proof; a database superuser can still alter data, and the docs say so.
+
+P10-A0 adds delegated autonomy decisions for AI reorder drafts, with no change to the claim/resume algorithm.
+The detailed schema and API extension is [Autonomy rules (P10-A0)](ai/contracts.md#autonomy-rules-p10-a0).

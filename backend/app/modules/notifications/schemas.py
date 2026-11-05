@@ -38,6 +38,7 @@ class NotificationOut(BaseModel):
     id: uuid.UUID
     kind: str
     title: str
+    body: str = ""
     link: str | None
     read_at: datetime | None
     created_at: datetime

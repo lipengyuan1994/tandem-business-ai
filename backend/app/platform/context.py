@@ -24,6 +24,8 @@ class Context:
     ai_run_id: UUID | None = None
     proposal_id: UUID | None = None
     visitor_conversation_id: UUID | None = None
+    autonomy_rule_id: UUID | None = None
+    autonomy_rule_version: int | None = None
 
     def require(self, permission: str) -> None:
         if permission not in self.permissions:

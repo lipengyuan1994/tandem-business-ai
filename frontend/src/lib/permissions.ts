@@ -9,6 +9,7 @@ export interface NavItem {
   to: string
   labelKey: string
   permission?: string
+  group?: "ai"
   /** Key in /api/v1/dashboard/counters shown as a badge. */
   counter?: "inbox_waiting_on_staff" | "approvals_i_can_decide"
 }
@@ -26,5 +27,8 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/sales", labelKey: "nav.sales", permission: "sales.document.read" },
   { to: "/audit", labelKey: "nav.audit", permission: "audit.event.read" },
   { to: "/system", labelKey: "nav.system", permission: "admin_ops.system.read" },
+  { to: "/settings/ai", labelKey: "ai.settings.nav", permission: "ai.settings.read", group: "ai" },
+  { to: "/ai/autonomy", labelKey: "ai.autonomy.title", permission: "org.settings.write", group: "ai" },
+  { to: "/ai/activity", labelKey: "ai.activity.title", permission: "approvals.proposal.read", group: "ai" },
   { to: "/settings", labelKey: "nav.settings", permission: "org.business.read" },
 ]

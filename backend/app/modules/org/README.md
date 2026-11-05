@@ -13,3 +13,7 @@ Spec: [docs/roadmap/modules/M02-org.md](../../../../docs/roadmap/modules/M02-org
 - `get_public_email(db, ctx)` returns `public_profile.email` for notification Reply-To.
 
 - P8-23: settings include a whitelisted plain-text `terminology` map; the public profile adds `avoid_medical_details` (boolean only).
+
+P10-A0: typed setting `ai_autonomy_paused=False`; public `autonomy_paused(db, ctx, *, lock=False)`
+reads it (optional share lock), `set_autonomy_paused(db, ctx, paused)` requires `org.settings.write`,
+locks the row and changes only this key, with audit and `org.settings_changed`.

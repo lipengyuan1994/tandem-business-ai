@@ -34,6 +34,11 @@ def record(
 ) -> UUID:
     if ctx.business_id is None:
         raise Forbidden("auth.no_active_business", detail="audit requires a business")
+    if ctx.autonomy_rule_id is not None:
+        marker = (
+            f"autonomy rule {ctx.autonomy_rule_id} v{ctx.autonomy_rule_version}, granted by {ctx.on_behalf_of_user_id}"
+        )
+        summary = f"{marker}: {summary}"
     event_id = new_id()
     actor_id = ctx.user_id
     db.execute(

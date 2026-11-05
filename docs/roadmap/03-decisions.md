@@ -112,7 +112,7 @@ Format: Status · Decision · Why · Rejected alternatives · Consequences / rev
 - **Why:** Privacy promise to customers; low operations overhead.
 
 ## ADR-018 Regulated data profile (health clinics later, by configuration)
-- **Status:** ACCEPTED 2026-11-03 (owner, in chat: "make our AI ERP system general that can be used with health clinics like dental in future just by providing a BAA model API key")
+- **Status:** ACCEPTED 2026-11-03; §1 amended 2026-11-05 by ADR-020 (`regulated` = local models only) (owner, in chat: "make our AI ERP system general that can be used with health clinics like dental in future just by providing a BAA model API key")
 - **Context:** v1 and the event exclude healthcare ([01](01-product-and-scope.md), Q10 in [13](13-risks-and-open-questions.md)). Public terms checked on 2026-11-03: Vultr offers HIPAA-configurable virtual servers only after a review and does not name a BAA; Vultr Serverless Inference makes no HIPAA statement; OpenAI, Anthropic and Google (Vertex AI) state that they sign BAAs. A clinic edition must therefore be able to use a different model provider, and possibly a different host and backup target, **without code changes**.
 - **Decision:** one install-wide setting, `DATA_PROFILE=standard | regulated` (default `standard`). Everything that differs is configuration:
   1. **AI:** each provider in `ai-routes.yaml` gets `baa: true | false` (default false), which the operator sets only after signing that provider's BAA. A new routing policy `regulated` allows only providers with `baa: true` and local models (`hosted: false`). In the regulated profile it is forced for every business and cannot be overridden in settings. If no allowed route exists, AI features are disabled and the UI says so; nothing falls back to a non-BAA provider (fail closed).
@@ -139,3 +139,22 @@ reminder caller exists yet. AI remains unbuilt/off until P5-01 after kickoff.
 - **Decision:** `aiosmtpd` (Apache-2.0, with `atpublic` and `attrs`) as a backend **dev-only** dependency. Tests start an in-process SMTP server; no container is added to the dev stack. Mailpit was the alternative (a mail-catcher container with a web view); not chosen, to keep the stack unchanged.
 - **Decision (owner, 2026-11-03, in chat):** `pyyaml` (MIT) is a direct backend dependency, for the AI route file loader. It was already installed through `uvicorn[standard]`; listing it makes the dependency explicit. Same locked version (6.0.3).
 - **Not decided here:** the production sending provider (Q7). Each customer configures `SMTP_URL`; until then e-mail stays simulated.
+
+## ADR-020 AI workflows: autonomy rules, AI team, local-only models for regulated data
+- **Status:** ACCEPTED 2026-11-05 (owner, in chat: "Approve as proposed" for [P10](phases/P10-ai-workflows.md)).
+- **Decision 1 (autonomy):** AI proposals can be decided by a business's autonomy rule as well as by a person. A rule's
+  decision is a *policy* decision delegated by the owner/admin who granted the rule; execution re-checks the grantor's
+  permissions, the rule and the kill switch. Levels `off`, `draft`, `ask`, `act_notify`, `act`; every rule starts in
+  shadow mode; starting defaults are the table in P10 §3. Rules never govern a person's manual proposals.
+- **Decision 2 (confirm in chat):** for assistant-requested actions, the requester's **Confirm** on the action card is
+  their approval when they hold the approve permission and the action is not second-person. Limit for purchase orders
+  confirmed this way: $500 per order, $1,000 per day (business currency, incl. tax and shipping).
+- **Decision 3 (team):** agents are configurations over the existing events and jobs (P10 §4), with correlation ids,
+  a fixed transition graph and workflow-wide budgets; no generic second task queue.
+- **Decision 4 (knowledge base):** v1 is owner-written text articles with full-text search and citations; embeddings
+  and PDF upload later (C2).
+- **Decision 5 (amends ADR-018 §1):** the `regulated` routing policy allows **local routes only** (`hosted: false`),
+  for every model class and fallback, including STT, polishing and embeddings. BAA-covered hosted providers are no
+  longer allowed under `regulated`. No allowed route → AI off (fail closed).
+- **Open:** D5 (how the dental example runs on the public demo) and D7 (voice length limit), asked when those steps
+  start.

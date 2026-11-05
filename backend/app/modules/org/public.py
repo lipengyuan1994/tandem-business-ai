@@ -58,6 +58,7 @@ __all__ = [
     "BusinessSettings",
     "LocationOut",
     "OpeningHoursItem",
+    "autonomy_paused",
     "create_business",
     "get_business_brief",
     "get_default_location",
@@ -65,4 +66,54 @@ __all__ = [
     "get_public_email",
     "get_sales_tax_rate",
     "get_settings",
+    "set_autonomy_paused",
 ]
+
+
+def autonomy_paused(db: Session, ctx: Context, *, lock: bool = False) -> bool:
+    """Read the kill switch; share lock serializes policy execution against settings writes."""
+    from sqlalchemy import select
+
+    from .models import BusinessSettingsRow
+
+    stmt = select(BusinessSettingsRow).where(BusinessSettingsRow.business_id == ctx.business_id)
+    if lock:
+        stmt = stmt.with_for_update(read=True)
+    row = db.scalar(stmt.execution_options(populate_existing=True))
+    if row is None:
+        raise NotFound("org.settings_not_found")
+    return BusinessSettings.model_validate(row.settings).ai_autonomy_paused
+
+
+def set_autonomy_paused(db: Session, ctx: Context, paused: bool) -> None:
+    """Change only the kill switch under the settings row lock; owner/admin permission."""
+    from sqlalchemy import select
+
+    from app.platform import audit, events
+
+    from .events import SettingsChanged
+    from .models import BusinessSettingsRow
+
+    ctx.require("org.settings.write")
+    row = db.scalar(
+        select(BusinessSettingsRow)
+        .where(BusinessSettingsRow.business_id == ctx.business_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if row is None:
+        raise NotFound("org.settings_not_found")
+    if BusinessSettings.model_validate(row.settings).ai_autonomy_paused == paused:
+        return
+    row.settings = {**row.settings, "ai_autonomy_paused": paused}
+    row.version += 1
+    audit.record(
+        db,
+        ctx,
+        action="org.settings.updated",
+        target_type="business_settings",
+        target_id=row.id,
+        summary="AI autonomy paused" if paused else "AI autonomy resumed",
+        changes={"ai_autonomy_paused": {"from": not paused, "to": paused}},
+    )
+    events.publish(db, ctx, SettingsChanged(changed_keys=["ai_autonomy_paused"]))

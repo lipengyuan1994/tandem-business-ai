@@ -2,18 +2,15 @@
 
 Assistant runs, tools and use cases. Interfaces are frozen in `docs/roadmap/ai/contracts.md`; build order and current
 state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules only through their `public.py`.
-
 ## Tables (migration `20261103_1600_ai_core`; all business-scoped, forced RLS)
 - `ai_runs` — one per run: use case, trigger (`trigger_key`), prompt name/version, model, status, tokens, cost,
   `result` (validated final output only). `ai_run_steps` (append-only) — per step: kind, tool, redacted arguments,
   short summary, tokens. No prompt or completion text is ever stored.
 - `ai_effects` (append-only) — holds and proposals a tool created, unique `(business_id, effect_key)`.
 - `ai_usage_daily` — tokens, cost, runs per business and UTC day (+ `notified_80_at`). `assistant_*` — copilot; `ai_operations` (migration `20261104_0400_ai_operations`) — scoped operation claims/IDs; `details` (migration `20261104_0500_ai_op_details`) preserves verification metadata.
-
 ## Public (`public.py`)
 - `status(db, ctx) -> AiStatus`: reason `ai.not_configured` (no/invalid routes file, or no `agent` route with a usable
   provider key), `ai.disabled_by_policy`, `ai.budget_exceeded`; policy `regulated` when `DATA_PROFILE=regulated`.
-
 ## Gateway (`gateway/`)
 - `types.py`: `ChatMessage`, `ChatRequest`, `ChatResult`, `Usage`, `ProviderError(kind, detail, retry_after_s)`,
   `TRANSIENT_KINDS`, `Adapter`. Adapters `openai_compat.OpenAICompatAdapter(name, base_url, api_key, *, local)` and
@@ -25,7 +22,6 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
   `reset_router_cache()`, `set_router_for_tests(r)`, `effective_policy(db, ctx)`, `check_routes_at_startup()` (prod
   refuses the `fake` provider).
 - `fake.py`: `FakeGateway(script | fn)` with `.calls`, `fake_router(gw)`, `ScriptFileAdapter` (`AI_FAKE_SCRIPT_FILE`).
-
 ## Runner (`agent/`, `structured.py`, `recording.py`, `usage.py`)
 - `agent/protocol.py`: `ToolCallStep`, `FinalStep`, `AGENT_STEP_ADAPTER`, `ContextBlock`, `RunSpec`, `StepEvent`,
   `RunResult`. `agent/prompts.py`: `load_prompt(name, version=None, *, base_dir=None)` (prompts in `ai/prompts/`).
@@ -37,7 +33,6 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
 - `recording.py`: `RunMeta`, `StepRecord`, `open_run`, `record_step`, `record_usage_now`, `close_run`,
   `close_stale_runs`, `record_early_result` (0-step run for decisions made in code; run id = `ctx.ai_run_id`).
 - `usage.py`: `effective_budget`, `check_budget`, `usage_today`, `usage_days`, `maybe_notify_80_percent`.
-
 ## Tool framework (`tools/`, `effects.py`)
 - `tools/base.py`: `Tool`, `RunState`; `tools/registry.py`: `register_tool`, `get_tool`, `tool_catalog`,
   `execute_tool(ctx, name, raw_args, allowed, state)` (own transaction; errors become observations; hold/propose
@@ -49,7 +44,6 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
   propose tools (`propose_booking`, `_reply`, `_customer`, `_reorder`, `_payment_reminder`, `_quote_request`,
   `_supplier_quote`, `_po_from_quote`, `_supplier_followup`). Read tools never return contact values (free text is
   redacted) and add evidence to `RunState.evidence`; titles come from looked-up data, never model text.
-
 ## Use cases (`usecases/`, `subscribers.py`, `jobs.py`)
 - Intake (U1): `conversations.message_received` (visitor/customer) → job `ai.intake` (non-transactional) →
   `usecases.intake.run(message_id, business_id)`: open-proposal guard, safety screen (`usecases.safety.screen`,
@@ -58,7 +52,6 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
 Other files:
 - `permissions.py` (§3 sets), `errors.py` (`AiError`), `settings.py` (`ai_settings()`, `api_key(env)`),
   `schemas.py` (§11 outputs, run/usage DTOs), `lifecycle.py` (export, erasure).
-
 ## API (`/api/v1/ai`)
 `GET /status` (`ai.assistant.use`) → `AiStatus`; `GET /runs?cursor&use_case&status&limit` (`ai.settings.read`) →
 `Page[RunOut]` (no text); `GET /usage` (`ai.settings.read`) → `UsageOut{today, days (30, oldest first)}`.
@@ -78,3 +71,10 @@ Config: `deploy/config/ai-routes.example.yaml` (placeholders), `ai-routes.dev.ya
 - Evals: `backend/evals/` (130 cases, `AI_LIVE=1 make eval suite=…`); safety review `docs/security/2026-11-03-ai-review.md`.
 - Payment follow-up (U10): paged scan → deduplicated per-invoice jobs; proposals lock/recheck version, pending proposals
   and cooldown. Live-provider verification remains owner-run.
+
+P10-A0: `/autonomy/rules` GET/PUT (owner/admin via `org.settings.write`, versioned), `/autonomy/pause|resume`
+POST, `/autonomy/activity` GET (`approvals.proposal.read`, cursor pagination). Policy is owned by approvals;
+org exposes `ai_autonomy_paused` and atomic pause/resume. Only AI reorder-draft proposals are eligible.
+U4 checks open proposals (including executing) and inventory's open-draft intent before generation and proposing;
+`off` ends the job without model calls/retries (also handled if changed during generation). Quantity and stock are
+re-checked under stock locks at execution. Shadow is the seeded default. See contracts “Autonomy rules (P10-A0)”.

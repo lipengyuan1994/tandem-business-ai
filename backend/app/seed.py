@@ -437,6 +437,20 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
             k.ids[u["id"]] = identity.ensure_user(db, u["email"], u["display_name"])
             identity.ensure_membership(db, ctx, k[u["id"]], roles_by_membership.get(m["id"], []), m.get("title"))
         counts["staff"] = len(_rows(tables, "memberships", key))
+        for rule in _rows(tables, "autonomy_rules", key):
+            grantor_ctx = _ctx(business_id, k[rule["granted_by"]], ("owner",))
+            approvals.put_autonomy_rule(
+                db,
+                grantor_ctx,
+                approvals.RulePut(
+                    action_type=rule["action_type"],
+                    level=rule["level"],
+                    shadow=rule["shadow"],
+                    daily_cap=rule["daily_cap"],
+                    active=rule["active"],
+                    version=0,
+                ),
+            )
 
         for item in _rows(tables, "catalog_items", key):
             data = {

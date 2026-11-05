@@ -47,7 +47,8 @@ export function NotificationBell() {
                 className={`w-full px-3 py-2 text-left text-sm hover:bg-accent ${n.read_at ? "text-muted-foreground" : "font-medium"}`}
                 onClick={() => { if (!n.read_at) readOne.mutate(n.id); if (n.link) void navigate({ to: n.link }) }}
               >
-                {n.title}
+                <span className="block">{n.title}</span>
+                {n.body ? <span className="mt-1 block text-xs font-normal text-muted-foreground">{n.body}</span> : null}
               </button>
             </li>
           ))}

@@ -10,7 +10,7 @@ import uuid
 from decimal import Decimal
 from typing import Literal
 
-from sqlalchemy import select
+from sqlalchemy import and_, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -444,8 +444,39 @@ def put_rule(db: Session, ctx: Context, item_id: uuid.UUID, data: ReorderRuleIn)
     return rule
 
 
+def has_open_reorder_draft(db: Session, ctx: Context, item_id: uuid.UUID, *, lock: bool = False) -> bool:
+    """Open means not converted/cancelled. Optional item lock serializes check-and-create transactions."""
+    if lock:
+        db.execute(
+            text("select pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+            {"key": f"open-reorder:{ctx.business_id}:{item_id}"},
+        )
+    return (
+        db.scalar(
+            select(ReorderDraftLine.id)
+            .join(
+                ReorderDraft,
+                and_(
+                    ReorderDraft.business_id == ReorderDraftLine.business_id,
+                    ReorderDraft.id == ReorderDraftLine.draft_id,
+                ),
+            )
+            .where(
+                ReorderDraft.business_id == ctx.business_id,
+                ReorderDraft.status == "draft",
+                ReorderDraftLine.item_id == item_id,
+            )
+            .limit(1)
+        )
+        is not None
+    )
+
+
 def create_draft(db: Session, ctx: Context, lines: list[DraftLineIn], note: str | None) -> ReorderDraft:
     assert ctx.business_id is not None
+    for item_id in sorted({line.item_id for line in lines}):
+        if has_open_reorder_draft(db, ctx, item_id, lock=True):
+            raise Conflict("inventory.open_reorder_draft")
     for line in lines:
         _tracked(db, ctx, line.item_id, line.quantity)
     draft = ReorderDraft(

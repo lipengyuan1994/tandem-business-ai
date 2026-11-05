@@ -46,7 +46,10 @@ def _detail(db: Any, ctx: Context, proposal_id: uuid.UUID) -> ProposalDetailOut:
         current_revision=RevisionOut.model_validate(d["current_revision"]),
         revisions=[RevisionOut.model_validate(r) for r in d["revisions"]],
         decisions=[
-            DecisionOut.model_validate(dec).model_copy(update={"decided_by_name": name}) for dec, name in d["decisions"]
+            DecisionOut.model_validate(dec).model_copy(
+                update={"decided_by_name": name, "granted_by_name": d["grantor_names"][dec.id]}
+            )
+            for dec, name in d["decisions"]
         ],
         attempts=[AttemptOut.model_validate(a) for a in d["attempts"]],
     )

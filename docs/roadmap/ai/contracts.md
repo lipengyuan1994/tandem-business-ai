@@ -622,3 +622,79 @@ Components: `AssistantPanel` (slide-over, Ctrl/Cmd+J, streaming steps, proposal 
 line "AI can make mistakes; you approve every change"), `AiBadge` (proposals with `origin_kind === "assistant"`),
 `AiDisabledBanner`, `BriefingCard` (Today), `SummariseButton` (Inbox), `PasteSupplierReplyDialog` (Purchasing),
 `AiSettingsPage` (`/settings/ai`). Strings in `src/locales/en.json` under `ai.*`; terminology overrides apply.
+
+## Autonomy rules (P10-A0)
+
+A0 permits only `inventory.create_reorder_draft` (a code allowlist in approvals). AI contexts, including
+`background_ctx_factory`, use `actor_kind=assistant`; staff and generic system proposals never enter rule evaluation.
+The existing proposal → immutable decision → job → executor path remains the only execution path.
+
+**Storage / tenancy.** Migration `20261105_0800_autonomy` follows `20261104_0700_retention`.
+`autonomy_rules` has business/id, unique (business, action_type), level (`off|draft|ask|act_notify|act`), shadow
+(default true), daily_cap (default 10, nonnegative), active (default true), version, granted_by (real user), timestamps.
+Every PUT bumps version and records the current owner/admin as grantor. New rules always start in shadow mode;
+a subsequent versioned PUT can switch shadow off. `autonomy_evaluations` is append-only: business/id, proposal_id,
+rule_id, rule_version, outcome (`acted|would_act|fell_back|blocked`), short reason codes, created_at.
+`autonomy_counters` is unique (business, rule, business-local date), with a nonnegative count. These tables use forced
+business RLS and composite business foreign keys. Evaluations and decisions have INSERT/SELECT-only app grants.
+`approval_decisions` adds decided_by_kind (`user` default, or `policy`), rule_id/version and granted_by. A check requires
+a real decided_by and no policy fields for user decisions, or null decided_by and all policy fields for policy approvals.
+Existing decisions remain user decisions. `business_settings.settings.ai_autonomy_paused` defaults to false in the typed
+settings schema; pause/resume update only that key, audit the change and publish `org.settings_changed`.
+
+**Creation, in the proposal transaction.** No rule or `ask` leaves pending review. Inactive rules leave pending review
+(`fell_back`, `rule_inactive`). Active `off` raises 409 `approvals.autonomy_off` before any proposal is inserted.
+The reorder job logs and finishes without retry, including if the rule changes to off during generation. `draft` leaves
+pending review (`fell_back`, `level_not_supported`). For `act_notify|act`, check pause, active membership/current approve
+permission of the grantor, and daily cap. Failed checks leave pending review (`fell_back`, `autonomy_paused`,
+`grantor_not_authorized`, `cap_reached`). Shadow success records `would_act`; live success records `acted`, an immutable
+policy approval bound to revision/hash and grantor roles + identity policy version, then enqueues the same
+`exec:{proposal_id}:{revision_id}` job as human approval. Shadow and live successes both reserve cap slots, allowing
+shadow to model the limit; failures do not reserve. Reservations are not refunded on execution failure and rule edits do
+not reset them. The date uses the business timezone. Rule share locks plus a conditional counter upsert serialize cap
+reservation and configuration changes in the same transaction. Evaluation outcomes describe the decision at creation,
+not the later execution result; Activity also exposes the current proposal status/failure.
+
+**Execution.** Under the proposal lock, re-read the decision, pause and rule; require the exact recorded rule version,
+active `act_notify|act`, shadow off, same grantor, eligible action, and the grantor's current effective approve permission.
+Any revoked delegation fails the proposal with `approvals.autonomy_revoked`, before the executor. No compatible-version
+heuristic in A0: every rule edit revokes queued policy decisions. Settings/rule read locks serialize these checks against
+pause/rule writes through the executor transaction. Policy actors are `system`, with grantor as on_behalf_of_user_id;
+Context carries the rule id/version. Every audit entry from that context includes “autonomy rule <id> v<n>, granted by
+<user>”. No human approver is invented. Revision and decision payload hashes are both checked. Existing claim,
+transaction rollback and resume behavior remain. Audit `approvals.proposal.approved` explicitly names the autonomy rule;
+`ProposalCreated`, `ProposalDecided`, `ProposalClosed` remain the lifecycle events (no second event/job pipeline).
+
+**Repeated intent and stale stock.** Inventory publicly exposes `has_open_reorder_draft(db, ctx, item_id)`; open means
+status `draft` (converted is `sent_to_purchasing`, cancelled is `cancelled`). U4 checks it before generation and before
+proposing; the reorder tool and executor validate again. Item-scoped transaction locks serialize draft creation, so two
+proposals cannot create two open drafts. At execution, policy reorder payload quantities must still equal inventory's
+current deterministic suggestion and stock must still be low; otherwise fail `inventory.reorder_changed`. Staff drafts
+keep their existing freedom to choose quantities. The inventory result remains `{reorder_draft_id}`. A small permission-gated GET at
+`/api/v1/inventory/reorder-drafts/{id}` supplies a working result link (there is no draft-specific frontend route).
+
+**HTTP API** under `/api/v1/ai/autonomy` (ordinary problem envelope / OpenAPI):
+
+| Method/path | Permission | Contract |
+|---|---|---|
+| GET `/rules` | `org.settings.write` (owner/admin) | `{paused, items}`; one entry per allowlisted action with rule or defaults (`ask`, shadow true, cap 10, active true, version 0, null id/grantor), plus last-30-day counts `would_act/acted/fell_back` |
+| PUT `/rules` | `org.settings.write` + action approve permission | `{action_type, level, shadow, daily_cap, active, version}`; version 0 creates; stale version → 409 `approvals.autonomy_version_conflict`; response is the saved rule plus summary |
+| POST `/pause`, `/resume` | `org.settings.write` | `{paused}`; idempotent value change, no overwrite of other settings |
+| GET `/activity?limit&cursor` | `approvals.proposal.read` | `{items, next_cursor}` newest first by (created_at,id); evaluations joined to proposal title/status/failure and attempt result, with `reorder_draft_id` and `result_link` (`/api/v1/inventory/reorder-drafts/{id}`) when present |
+
+Unsupported rule action → 422 `approvals.autonomy_action_not_eligible`. Invalid fields → standard 422.
+Lost grantor authority during a rule write → 409 `approvals.autonomy_grantor_not_authorized`.
+A competing open proposal → tool error `ai.reorder_already_proposed`; open draft → `inventory.open_reorder_draft`.
+U4 treats these intent conflicts as logged skips, alongside stale suggestion errors. Rule read/write,
+activity and counters are scoped explicitly as well as by RLS. A0 part 2 adds in-app `ai_acted` notifications for
+non-pending policy approvals at `act_notify`; `act` stays Activity-only. Other non-pending proposals never trigger
+an approval request, while pending shadow proposals keep the approval request with a shadow explanation. No outbound
+message is added. The AI navigation includes Autonomy (`org.settings.write`) and Activity (`approvals.proposal.read`). Demo fixtures and seed create just the reorder rule (`act_notify`,
+shadow true, cap 10), granted by each demo business's existing owner; other fixture data is unchanged.
+
+
+A0 part 2 response additions: Activity exposes `action_type`, nullable `granted_by` and `granted_by_name`;
+proposal decisions expose `granted_by_name`; in-app notifications expose `body`. Rule-save audit changes include a
+structured version/level snapshot. Historical rule levels and grantors resolve from the exact rule version, immutable
+policy decision, or rule-save audit (including the pre-part-2 summary format). Missing history remains explicitly
+unavailable; the current rule's grantor is never substituted for an older version. No database migration is needed.

@@ -13,7 +13,7 @@ from app.platform.errors import error_responses
 from app.platform.permissions import require
 
 from . import permissions as P
-from . import service
+from . import public, service
 from .models import ReorderDraft, StockMovement, StockReservation
 from .schemas import (
     AvailabilityOut,
@@ -171,3 +171,15 @@ def create_draft(body: ReorderDraftIn, ctx: Context = Depends(require(P.REORDER_
     with transaction(ctx) as db:
         d = service.create_draft(db, ctx, body.lines, body.note)
         return ReorderDraftOut(id=d.id, status=d.status, note=d.note, created_at=d.created_at, lines=body.lines)
+
+
+@router.get(
+    "/reorder-drafts/{draft_id}",
+    response_model=ReorderDraftOut,
+    summary="Read a reorder draft linked from Activity",
+    responses=ERRORS,
+)
+def get_draft(draft_id: uuid.UUID, ctx: Context = Depends(require(P.REORDER_READ))) -> ReorderDraftOut:
+    with transaction(ctx) as db:
+        draft = public.read_reorder_draft(db, ctx, draft_id)
+        return ReorderDraftOut(**draft.model_dump(exclude={"version"}))

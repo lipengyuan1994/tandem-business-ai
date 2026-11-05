@@ -73,6 +73,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai/autonomy/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activity */
+        get: operations["activity_api_v1_ai_autonomy_activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/autonomy/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause */
+        post: operations["pause_api_v1_ai_autonomy_pause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/autonomy/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume */
+        post: operations["resume_api_v1_ai_autonomy_resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/autonomy/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rules */
+        get: operations["rules_api_v1_ai_autonomy_rules_get"];
+        /** Save Rule */
+        put: operations["save_rule_api_v1_ai_autonomy_rules_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai/briefing": {
         parameters: {
             query?: never;
@@ -1031,6 +1100,23 @@ export interface paths {
         put?: never;
         /** Create a reorder draft */
         post: operations["create_draft_api_v1_inventory_reorder_drafts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/reorder-drafts/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a reorder draft linked from Activity */
+        get: operations["get_draft_api_v1_inventory_reorder_drafts__draft_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2463,6 +2549,61 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** ActivityOut */
+        ActivityOut: {
+            /** Action Type */
+            action_type: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Failure Code */
+            failure_code: string | null;
+            /** Granted By */
+            granted_by: string | null;
+            /** Granted By Name */
+            granted_by_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "acted" | "would_act" | "fell_back" | "blocked";
+            /**
+             * Proposal Id
+             * Format: uuid
+             */
+            proposal_id: string;
+            /** Reasons */
+            reasons: string[];
+            /** Reorder Draft Id */
+            reorder_draft_id: string | null;
+            /** Result Link */
+            result_link: string | null;
+            /**
+             * Rule Id
+             * Format: uuid
+             */
+            rule_id: string;
+            /** Rule Version */
+            rule_version: number;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
+        /** ActivityPage */
+        ActivityPage: {
+            /** Items */
+            items: components["schemas"]["ActivityOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** AiStatus */
         AiStatus: {
             /** Budget Percent */
@@ -2807,6 +2948,11 @@ export interface components {
          * @description Typed settings (M02 settings table). Unknown keys are rejected.
          */
         "BusinessSettings-Input": {
+            /**
+             * Ai Autonomy Paused
+             * @default false
+             */
+            ai_autonomy_paused: boolean;
             /** Ai Daily Token Budget */
             ai_daily_token_budget?: number | null;
             /**
@@ -2868,6 +3014,11 @@ export interface components {
          * @description Typed settings (M02 settings table). Unknown keys are rejected.
          */
         "BusinessSettings-Output": {
+            /**
+             * Ai Autonomy Paused
+             * @default false
+             */
+            ai_autonomy_paused: boolean;
             /** Ai Daily Token Budget */
             ai_daily_token_budget?: number | null;
             /**
@@ -3692,11 +3843,13 @@ export interface components {
              * Format: date-time
              */
             decided_at: string;
+            /** Decided By */
+            decided_by: string | null;
             /**
-             * Decided By
-             * Format: uuid
+             * Decided By Kind
+             * @enum {string}
              */
-            decided_by: string;
+            decided_by_kind: "user" | "policy";
             /**
              * Decided By Name
              * @default
@@ -3707,6 +3860,13 @@ export interface components {
              * @enum {string}
              */
             decision: "approve" | "reject";
+            /** Granted By */
+            granted_by: string | null;
+            /**
+             * Granted By Name
+             * @default
+             */
+            granted_by_name: string;
             /**
              * Id
              * Format: uuid
@@ -3719,6 +3879,10 @@ export interface components {
             revision_id: string;
             /** Roles At Decision */
             roles_at_decision: string[];
+            /** Rule Id */
+            rule_id: string | null;
+            /** Rule Version */
+            rule_version: number | null;
         };
         /** DeclineQuote */
         DeclineQuote: {
@@ -4440,6 +4604,11 @@ export interface components {
         /** NotificationOut */
         NotificationOut: {
             /**
+             * Body
+             * @default
+             */
+            body: string;
+            /**
              * Created At
              * Format: date-time
              */
@@ -4690,6 +4859,11 @@ export interface components {
             items: components["schemas"]["SupplierOut"][];
             /** Next Cursor */
             next_cursor?: string | null;
+        };
+        /** PauseOut */
+        PauseOut: {
+            /** Paused */
+            paused: boolean;
         };
         /** PaymentReminderIn */
         PaymentReminderIn: {
@@ -5592,6 +5766,80 @@ export interface components {
              */
             weekday: number;
         };
+        /** RuleOut */
+        RuleOut: {
+            /** Action Type */
+            action_type: string;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Created At */
+            created_at?: string | null;
+            /**
+             * Daily Cap
+             * @default 10
+             */
+            daily_cap: number;
+            /** Granted By */
+            granted_by?: string | null;
+            /** Id */
+            id?: string | null;
+            /**
+             * Level
+             * @default ask
+             * @enum {string}
+             */
+            level: "off" | "draft" | "ask" | "act_notify" | "act";
+            /**
+             * Shadow
+             * @default true
+             */
+            shadow: boolean;
+            summary?: components["schemas"]["ShadowSummary"];
+            /** Updated At */
+            updated_at?: string | null;
+            /**
+             * Version
+             * @default 0
+             */
+            version: number;
+        };
+        /** RulePut */
+        RulePut: {
+            /** Action Type */
+            action_type: string;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Daily Cap
+             * @default 10
+             */
+            daily_cap: number;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "off" | "draft" | "ask" | "act_notify" | "act";
+            /**
+             * Shadow
+             * @default true
+             */
+            shadow: boolean;
+            /** Version */
+            version: number;
+        };
+        /** RulesOut */
+        RulesOut: {
+            /** Items */
+            items: components["schemas"]["RuleOut"][];
+            /** Paused */
+            paused: boolean;
+        };
         /**
          * RunOut
          * @description A recorded run without any text (no prompt, completion or result).
@@ -5722,6 +5970,24 @@ export interface components {
             settings: components["schemas"]["BusinessSettings-Input"];
             /** Version */
             version: number;
+        };
+        /** ShadowSummary */
+        ShadowSummary: {
+            /**
+             * Acted
+             * @default 0
+             */
+            acted: number;
+            /**
+             * Fell Back
+             * @default 0
+             */
+            fell_back: number;
+            /**
+             * Would Act
+             * @default 0
+             */
+            would_act: number;
         };
         /** SlotOut */
         SlotOut: {
@@ -6531,6 +6797,293 @@ export interface operations {
             };
             /** @description Too many requests */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    activity_api_v1_ai_autonomy_activity_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    pause_api_v1_ai_autonomy_pause_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PauseOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    resume_api_v1_ai_autonomy_resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PauseOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    rules_api_v1_ai_autonomy_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulesOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    save_rule_api_v1_ai_autonomy_rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RulePut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -10826,6 +11379,73 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReorderDraftOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    get_draft_api_v1_inventory_reorder_drafts__draft_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from fastapi.routing import APIRoute, iter_route_contexts
 from sqlalchemy import Engine, text
 
 from app.main import create_app
@@ -57,6 +58,11 @@ def demo(owner_engine: Engine, registry: Registry) -> Demo:
 def endpoints() -> list[tuple[str, str, dict | None]]:
     ident = str(uuid.uuid4())
     return [
+        ("GET", "/autonomy/rules", None),
+        ("PUT", "/autonomy/rules", {"action_type": "inventory.create_reorder_draft", "level": "ask", "version": 0}),
+        ("POST", "/autonomy/pause", None),
+        ("POST", "/autonomy/resume", None),
+        ("GET", "/autonomy/activity", None),
         ("GET", "/status", None),
         ("GET", "/runs", None),
         ("GET", "/usage", None),
@@ -78,7 +84,7 @@ def test_every_ai_endpoint_requires_its_permission(registry: Registry) -> None:
     client = client_for(app, registry, business, set())
     cases = endpoints()
     # A newly added route must be included in this permission sweep.
-    assert len(cases) == len(api_router.routes)
+    assert len(cases) == sum(isinstance(c.original_route, APIRoute) for c in iter_route_contexts(api_router.routes))
     for method, path, body in cases:
         response = client.request(method, BASE + path, json=body)
         assert response.status_code == 403, (method, path, response.text)
@@ -86,7 +92,7 @@ def test_every_ai_endpoint_requires_its_permission(registry: Registry) -> None:
     for path in ("/runs", "/usage"):
         assert assistant.get(BASE + path).status_code == 403
     for method, path, body in cases:
-        if path.startswith(("/conversations/", "/procurement/", "/campaigns/")):
+        if path.startswith(("/conversations/", "/procurement/", "/campaigns/", "/autonomy/")):
             assert assistant.request(method, BASE + path, json=body).status_code == 403
 
 

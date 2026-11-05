@@ -26,6 +26,28 @@
     "dana_conflict": "Dana's requested slot (Tue 10 Nov 10:00 MST) overlaps Ben's confirmed tune-up for resource res-jordan; Sky does not work Tuesdays"
   },
   "tables": {
+    "autonomy_rules": [
+      {
+        "id": "autonomy-biz-cycle",
+        "business_id": "biz-cycle",
+        "action_type": "inventory.create_reorder_draft",
+        "level": "act_notify",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-morgan"
+      },
+      {
+        "id": "autonomy-biz-garden",
+        "business_id": "biz-garden",
+        "action_type": "inventory.create_reorder_draft",
+        "level": "act_notify",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-sam"
+      }
+    ],
     "businesses": [
       {
         "id": "biz-cycle",

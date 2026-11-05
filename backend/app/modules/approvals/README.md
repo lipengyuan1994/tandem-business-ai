@@ -9,8 +9,8 @@ Spec: [docs/roadmap/modules/M08-approvals.md](../../../../docs/roadmap/modules/M
 - Events: `approvals.proposal_created`, `approvals.proposal_decided`, `approvals.proposal_closed`.
 - Dev/test executor: `testing.noop_write` (`APP_ENV=test` or `DEV_TEST_EXECUTORS=1`).
 
-`find_open_proposals(db, ctx, *, conversation_id=None, action_types=None, item_id=None, invoice_id=None)` requires `approvals.proposal.read` or
-`ai.assistant.use`. It returns this business's `pending_review` and `approved` proposals, newest first, as DTOs with
+`find_open_proposals(db, ctx, *, conversation_id=None, action_types=None, item_id=None, invoice_id=None, include_executing=False)` requires `approvals.proposal.read` or
+`ai.assistant.use`. It returns this business's `pending_review` and `approved` proposals (also `executing` when requested), newest first, as DTOs with
 `id`, `action_type`, `title`, `origin_kind`, `created_at`. Filters combine; `None` leaves a filter unrestricted and
 an empty action-type list returns no rows. `item_id` matches the string UUID in a `lines` array element of the
 proposal's current revision payload using JSONB containment; historical revisions do not match.
@@ -23,3 +23,23 @@ Scheduling uses it before binding a hold, so missing and foreign-business propos
 
 Self-approval is blocked for both staff proposals and assistant proposals made on the deciding user's behalf, unless
 the business enables `allow_self_approval`. Requesters retain their existing read and revision access.
+
+P10-A0: [Autonomy contract](../../../../docs/roadmap/ai/contracts.md#autonomy-rules-p10-a0).
+- New tables: `autonomy_rules`, `autonomy_evaluations` (append-only), `autonomy_counters`; forced business RLS.
+- The only rule-eligible action is `inventory.create_reorder_draft`. AI proposals may receive a policy decision;
+  staff proposals always retain the human path. `decided_by_kind=policy` has null `decided_by`, rule id/version and
+  the real grantor; execution resolves that grantor's current permissions and re-checks rule version + pause.
+- Settings/rule share locks protect execution against revocation; cap reservation uses a conditional daily upsert.
+  Shadow successes reserve cap too. New rules always start shadow; a versioned update can enable acting.
+- Policy audit actors are system with the grantor as on-behalf-of, plus a rule/version marker on every audit entry.
+- Public rule API: `RulePut`, `RuleOut`, `RulesOut`, `PauseOut`, `ActivityPage`,
+  `list_autonomy_rules(db, ctx)`, `put_autonomy_rule(db, ctx, RulePut)`, `autonomy_rule_out(db, ctx, rule)`,
+  `autonomy_activity(db, ctx, *, limit=50, cursor=None)`, `check_ai_proposal_allowed(db, ctx, action_type)`.
+- HTTP belongs to AI (`/api/v1/ai/autonomy`): GET/PUT rules, POST pause/resume (`org.settings.write`),
+  GET activity (`approvals.proposal.read`). Optimistic version 0 creates; stale versions return 409.
+- `decisions.py` shares immutable decision/audit/event/job writing; `reading.py` owns proposal queries.
+
+- P10-A0 part 2: public `proposal_notification_state(db, ctx, proposal_id)` supplies scoped lifecycle/delegation
+  fields to event consumers without importing approvals internals. Policy detail includes the grantor display name.
+  Activity includes action type and version-correct grantor identity/name. `autonomy_history.py` resolves historical
+  versions through rule-save audit snapshots, with legacy-summary support; missing history stays unavailable.

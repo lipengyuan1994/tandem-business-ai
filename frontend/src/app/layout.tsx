@@ -22,8 +22,9 @@ export function AppLayout() {
   const navigation = (onNavigate?: () => void) => (
     <nav aria-label={t("app.mainNav")}>
           <ul className="space-y-0.5 px-2">
-            {items.map((item) => (
-              <li key={item.to}>
+            {items.map((item, index) => (
+              <li key={item.to} className={item.group === "ai" ? "pl-3 border-l ml-3" : undefined}>
+                {item.group === "ai" && items[index - 1]?.group !== "ai" ? <p className="px-3 py-2 text-xs font-semibold text-muted-foreground">{t("ai.area")}</p> : null}
                 <Link
                   to={item.to}
                   onClick={onNavigate}

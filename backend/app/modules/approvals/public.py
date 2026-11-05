@@ -12,7 +12,21 @@ from app.platform.context import Context
 from app.platform.registry import ExecutionMeta, ExecutorSpec, PreviewLine
 
 from . import service
+from .autonomy_schemas import ActivityPage, PauseOut, RuleOut, RulePut, RulesOut
+from .autonomy_service import (
+    activity as autonomy_activity,
+)
+from .autonomy_service import (
+    list_rules as list_autonomy_rules,
+)
+from .autonomy_service import (
+    put_rule as put_autonomy_rule,
+)
+from .autonomy_service import (
+    rule_out as autonomy_rule_out,
+)
 from .events import ProposalClosed, ProposalCreated, ProposalDecided
+from .reading import proposal_notification_state
 from .schemas import Evidence, OpenProposal
 
 
@@ -62,9 +76,16 @@ def find_open_proposals(
     action_types: list[str] | None = None,
     item_id: uuid.UUID | None = None,
     invoice_id: uuid.UUID | None = None,
+    include_executing: bool = False,
 ) -> list[OpenProposal]:
     return service.find_open_proposals(
-        db, ctx, conversation_id=conversation_id, action_types=action_types, item_id=item_id, invoice_id=invoice_id
+        db,
+        ctx,
+        conversation_id=conversation_id,
+        action_types=action_types,
+        item_id=item_id,
+        invoice_id=invoice_id,
+        include_executing=include_executing,
     )
 
 
@@ -88,19 +109,37 @@ def count_pending(db: Session, ctx: Context, *, for_permissions: frozenset[str] 
 
 
 __all__ = [
+    "ActivityPage",
     "Evidence",
     "ExecutionMeta",
     "ExecutorSpec",
     "OpenProposal",
+    "PauseOut",
     "PreviewLine",
     "ProposalClosed",
     "ProposalCreated",
     "ProposalDecided",
     "ProposalRef",
+    "RuleOut",
+    "RulePut",
+    "RulesOut",
+    "autonomy_activity",
+    "autonomy_rule_out",
     "cancel_proposal",
+    "check_ai_proposal_allowed",
     "count_pending",
     "create_proposal",
     "find_open_proposals",
+    "list_autonomy_rules",
     "proposal_exists",
+    "proposal_notification_state",
+    "put_autonomy_rule",
     "top_pending",
 ]
+
+
+def check_ai_proposal_allowed(db: Session, ctx: Context, action_type: str) -> None:
+    """Optional early off-rule check to avoid generation cost; create_proposal always re-checks."""
+    from .autonomy import creation_rule
+
+    creation_rule(db, ctx, action_type)

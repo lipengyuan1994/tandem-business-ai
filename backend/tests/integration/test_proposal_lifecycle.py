@@ -92,6 +92,8 @@ def test_proposal_lifecycle_end_to_end(setup: Any, owner_engine: Engine) -> None
             "evidence": [{"kind": "message", "excerpt": "Could I bring my bike in next Tuesday morning?"}],
         },
     ).json()
+    # Notify approvers while the proposal still needs review, before its approval below.
+    events.deliver_pending(reg)
     rev1 = created["current_revision"]
     revised = approver.post(
         f"/api/v1/approvals/proposals/{created['id']}/revisions",

@@ -15,10 +15,9 @@ from datetime import timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.modules.identity import public as identity
 from app.modules.org import public as org
 from app.platform import audit, clock, events, jobs
 from app.platform.config import get_settings
@@ -26,12 +25,26 @@ from app.platform.context import Context, system_context
 from app.platform.db import system_transaction, transaction
 from app.platform.errors import Conflict, Forbidden, NotFound
 from app.platform.ids import new_id
-from app.platform.registry import get_registry
 
 from . import permissions as P
 from .adapters import ADAPTERS, Delivered, PermanentError, RenderedMessage, RetryableError, Unknown
 from .events import DeliveryStatusChanged
-from .models import DeliveryAttempt, InAppNotification, OutboxMessage
+from .in_app import (
+    list_mine as list_mine,
+)
+from .in_app import (
+    mark_read as mark_read,
+)
+from .in_app import (
+    notify_users as notify_users,
+)
+from .in_app import (
+    on_proposal_created as on_proposal_created,
+)
+from .in_app import (
+    unread_count as unread_count,
+)
+from .models import DeliveryAttempt, OutboxMessage
 from .templates import render, render_html
 
 log = structlog.get_logger(__name__)
@@ -306,86 +319,3 @@ def status_counts(db: Session, ctx: Context) -> dict[str, int]:
         .group_by(OutboxMessage.status)
     )
     return {status: int(count) for status, count in rows}
-
-
-# ---------------------------------------------------------------------------------------------------- in-app
-def notify_users(
-    db: Session,
-    ctx: Context,
-    user_ids: list[uuid.UUID],
-    *,
-    kind: str,
-    title: str,
-    body: str = "",
-    link: str | None = None,
-) -> None:
-    assert ctx.business_id is not None
-    for user_id in dict.fromkeys(user_ids):
-        db.add(
-            InAppNotification(
-                business_id=ctx.business_id, user_id=user_id, kind=kind, title=title[:200], body=body[:1000], link=link
-            )
-        )
-    db.flush()
-
-
-def on_proposal_created(db: Session, ctx: Context, payload: dict[str, Any], event_id: uuid.UUID) -> None:
-    """Tell everyone who can approve this action type (idempotent per event)."""
-    spec = get_registry().executors.get(payload["action_type"])
-    if spec is None:
-        return
-    marker = f"proposal:{payload['proposal_id']}"
-    if db.scalar(
-        select(InAppNotification.id)
-        .where(
-            InAppNotification.business_id == ctx.business_id,
-            InAppNotification.link == f"/approvals/{payload['proposal_id']}",
-        )
-        .limit(1)
-    ):
-        return  # already delivered for this proposal (at-least-once events)
-    approvers = [u.id for u in identity.list_users_with_permission(db, ctx, spec.approve_permission)]
-    origin = "AI proposal" if payload["origin_kind"] == "assistant" else "New proposal"
-    notify_users(
-        db,
-        ctx,
-        approvers,
-        kind="approval_needed",
-        title=f"{origin}: {payload['title']}",
-        body=marker,
-        link=f"/approvals/{payload['proposal_id']}",
-    )
-
-
-def list_mine(db: Session, ctx: Context, limit: int = 30) -> list[InAppNotification]:
-    stmt = (
-        select(InAppNotification)
-        .where(InAppNotification.business_id == ctx.business_id, InAppNotification.user_id == ctx.user_id)
-        .order_by(InAppNotification.read_at.is_not(None), InAppNotification.created_at.desc())
-        .limit(min(limit, 100))
-    )
-    return list(db.scalars(stmt))
-
-
-def unread_count(db: Session, ctx: Context) -> int:
-    stmt = (
-        select(func.count())
-        .select_from(InAppNotification)
-        .where(
-            InAppNotification.business_id == ctx.business_id,
-            InAppNotification.user_id == ctx.user_id,
-            InAppNotification.read_at.is_(None),
-        )
-    )
-    return int(db.scalar(stmt) or 0)
-
-
-def mark_read(db: Session, ctx: Context, notification_id: uuid.UUID | None) -> int:
-    stmt = update(InAppNotification).where(
-        InAppNotification.business_id == ctx.business_id,
-        InAppNotification.user_id == ctx.user_id,
-        InAppNotification.read_at.is_(None),
-    )
-    if notification_id is not None:
-        stmt = stmt.where(InAppNotification.id == notification_id)
-    return db.execute(stmt.values(read_at=clock.now())).rowcount  # type: ignore[attr-defined, no-any-return]

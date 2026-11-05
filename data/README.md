@@ -96,3 +96,7 @@ terms, due on S-10 (10 days overdue), issued and unpaid, no reminder sent yet. I
 - 2026-11-03: the first draft (contract v0) had 9 tables and 2 businesses, and a single `quantity` stock column and 3 roles that no longer match the design.
 - 2026-11-03: rewritten as contract v1 to match the roadmap data model (stock ledger with reservations, six roles, consent history, holds and exclusion-ready appointments, proposals with revisions) and expanded to cover the demo story.
 - 2026-11-03: the seed adds the procurement and payment showcase above (suppliers, order history, one open quote request, one late order, one overdue invoice); `fixtures.json` is unchanged.
+
+P10-A0 adds `tables.autonomy_rules`: one `inventory.create_reorder_draft` rule per demo business,
+`act_notify`, shadow true, daily cap 10, active, granted by that business’s existing owner. The seed
+creates these through the versioned approvals public API. Other fixture rows are unchanged.

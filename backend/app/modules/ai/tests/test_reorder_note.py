@@ -22,7 +22,7 @@ from app.modules.ai.usecases import reorder_note
 from app.modules.approvals import public as approvals
 from app.modules.inventory import public as inventory
 from app.modules.org.testing import make_business
-from app.platform import clock, jobs
+from app.platform import clock, events, jobs
 from app.platform.context import Context, system_context
 from app.platform.db import get_engine, transaction
 from app.platform.registry import Registry, set_registry
@@ -133,7 +133,7 @@ def test_reorder_note_skips_when_pending_proposal_exists(
     monkeypatch.setattr(approvals, "find_open_proposals", find)
     gw = FakeGateway([])
     assert reorder_note.run(item, demo.business, router=fake_router_by_class(writer=gw)) is None
-    assert calls == [{"action_types": ["inventory.create_reorder_draft"], "item_id": item}]
+    assert calls == [{"action_types": ["inventory.create_reorder_draft"], "item_id": item, "include_executing": True}]
     assert not gw.calls and [str(p.id) for p in proposals(owner_engine, demo.business)] == [pending]
 
 
@@ -234,4 +234,98 @@ def test_reorder_job_completes_with_real_usecase(demo: Demo, registry: Registry,
     claimed = jobs.claim("reorder-test")
     assert claimed is not None and claimed["kind"] == "ai.reorder_note"
     assert jobs.run_job(registry, claimed)
+    assert len(proposals(owner_engine, demo.business)) == 1 and len(gw.calls) == 1
+
+
+def autonomy_rule(demo: Demo, owner_engine: Engine, *, level: str = "act_notify", live: bool = False) -> None:
+    """Adjust the seeded shadow rule through the public API as its existing owner."""
+    from app.modules.approvals import public as approvals_api
+    from app.modules.identity import public as identity
+
+    with owner_engine.connect() as db:
+        grantor, version = db.execute(
+            text("select granted_by,version from autonomy_rules where business_id=:b"), {"b": demo.business}
+        ).one()
+    ctx = Context("test", "user", grantor, demo.business, identity.ROLES["owner"])
+    with transaction(ctx) as db:
+        approvals_api.put_autonomy_rule(
+            db,
+            ctx,
+            approvals_api.RulePut(
+                action_type="inventory.create_reorder_draft",
+                level=level,
+                shadow=not live,
+                version=version,
+            ),
+        )
+
+
+def test_off_rule_skips_writer_without_retry(demo: Demo, owner_engine: Engine) -> None:
+    autonomy_rule(demo, owner_engine, level="off")
+    gw = FakeGateway([])
+    assert reorder_note.run(demo.items["Cable set"], demo.business, router=fake_router_by_class(writer=gw)) is None
+    assert gw.calls == [] and proposals(owner_engine, demo.business) == []
+
+
+def test_off_rule_changed_during_generation_is_handled(
+    demo: Demo, owner_engine: Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = reorder_note.complete
+
+    def complete_then_disable(*args: Any, **kwargs: Any) -> Any:
+        result = original(*args, **kwargs)
+        autonomy_rule(demo, owner_engine, level="off")
+        return result
+
+    monkeypatch.setattr(reorder_note, "complete", complete_then_disable)
+    gw = FakeGateway([ReorderNote(explanation=NOTE).model_dump_json()])
+    assert reorder_note.run(demo.items["Cable set"], demo.business, router=fake_router_by_class(writer=gw)) is None
+    assert len(gw.calls) == 1 and proposals(owner_engine, demo.business) == []
+
+
+def test_low_stock_event_policy_execution_and_next_day_intent(
+    demo: Demo, owner_engine: Engine, registry: Registry
+) -> None:
+
+    autonomy_rule(demo, owner_engine, live=True)
+    gw = FakeGateway([ReorderNote(explanation=NOTE).model_dump_json()])
+    set_router_for_tests(fake_router_by_class(writer=gw))
+    item = demo.items["Cable set"]
+    ctx = system_context(demo.business)
+    # Cross the actual low-stock threshold; the inventory event is delivered by the real event worker.
+    with transaction(ctx) as db:
+        inventory.record_movement(db, ctx, inventory.MovementIn(item_id=item, quantity=Decimal(5), reason="receipt"))
+        inventory.record_movement(
+            db, ctx, inventory.MovementIn(item_id=item, quantity=Decimal(-5), reason="consumption")
+        )
+    events.deliver_pending(registry)
+    trigger(registry, demo.business, item)  # duplicate delivery retains one job
+    with owner_engine.connect() as db:
+        rows = db.execute(
+            text("select payload from jobs where kind='ai.reorder_note' and business_id=:b"), {"b": demo.business}
+        ).all()
+    assert len(rows) == 1
+    handler = registry.jobs["ai.reorder_note"]
+    assert not handler.transactional
+    handler.handler(system_context(demo.business), rows[0].payload)
+    with owner_engine.connect() as db:
+        p = db.execute(
+            text(
+                "select id,current_revision_id,status from action_proposals "
+                "where action_type='inventory.create_reorder_draft'"
+            )
+        ).one()
+    assert p.status == "approved"
+    execute_job = jobs.claim("a0-execute")
+    assert execute_job is not None and execute_job["kind"] == "approvals.execute"
+    assert jobs.run_job(registry, execute_job)
+    with transaction(ctx) as db:
+        page = approvals.autonomy_activity(db, system_context(demo.business, frozenset({"approvals.proposal.read"})))
+        assert page.items[0].status == "succeeded" and page.items[0].reorder_draft_id is not None
+    clock.set_clock(lambda: datetime(2026, 11, 6, 17, 30, tzinfo=UTC))
+    trigger(registry, demo.business, item)
+    assert reorder_note.run(item, demo.business, router=fake_router_by_class(writer=gw)) is None
+    with owner_engine.connect() as db:
+        assert db.execute(text("select count(*) from reorder_drafts")).scalar_one() == 1
+        assert db.execute(text("select outcome from autonomy_evaluations")).scalar_one() == "acted"
     assert len(proposals(owner_engine, demo.business)) == 1 and len(gw.calls) == 1

@@ -57,6 +57,7 @@ __all__ = [
     "StockBelowReorderLevel",
     "consume_reservations",
     "get_availability",
+    "has_open_reorder_draft",
     "list_below_reorder",
     "mark_reorder_draft_converted",
     "read_reorder_draft",
@@ -111,3 +112,8 @@ def mark_reorder_draft_converted(db: Session, ctx: Context, draft_id: uuid.UUID,
         summary="Reorder draft converted to purchase order",
     )
     db.flush()
+
+
+def has_open_reorder_draft(db: Session, ctx: Context, item_id: uuid.UUID, *, lock: bool = False) -> bool:
+    """Business-scoped intent guard. Callers authorize their own feature; lock through transaction end if requested."""
+    return service.has_open_reorder_draft(db, ctx, item_id, lock=lock)

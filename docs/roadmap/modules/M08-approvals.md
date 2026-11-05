@@ -5,7 +5,7 @@
 | Release / phase | MVP · P2 (engine) / P3 (UI polish) |
 | Tier / kind | **A** · PRE (a generic staff change-request engine, useful without AI) |
 | Depends on | platform, org, identity (org: `allow_self_approval` setting) |
-| Owns tables | `action_proposals`, `proposal_revisions`, `approval_decisions`, `execution_attempts` |
+| Owns tables | `action_proposals`, `proposal_revisions`, `approval_decisions`, `execution_attempts`, `autonomy_rules`, `autonomy_evaluations`, `autonomy_counters` |
 
 ## Purpose
 A generic engine for "propose → decide → execute" with exact payload binding. It knows nothing about bookings or stock. Business modules register executors (through the platform registry), and the engine looks them up by `action_type`. The full behaviour is specified in [07-workflow-engine.md](../07-workflow-engine.md#proposals). This file lists the contract.
@@ -25,7 +25,7 @@ Columns as listed in [07](../07-workflow-engine.md#tables-owned-by-m08-approvals
 4. Approver authority: holds `executor.approve_permission` at decision time. Self-approval follows the business setting,
    including assistant proposals whose `origin_user_id` is the deciding user. Requester read/revision access remains.
    Authority is re-checked at execution time.
-5. Execution follows the TX-1 / TX-2 / TX-3 algorithm in [07](../07-workflow-engine.md#executing-job-approvalsexecute). The executor's context = the approving user, with permissions re-resolved now, `actor_kind='user'` and `proposal_id` set for audit.
+5. Execution follows the TX-1 / TX-2 / TX-3 algorithm in [07](../07-workflow-engine.md#executing-job-approvalsexecute). Human decisions execute as the approving user with permissions re-resolved now. P10-A0 policy decisions execute as system with current grantor permissions, on-behalf-of grantor and a rule/version audit marker. Both set `proposal_id`.
 6. Expiry job: `pending_review` past `expires_at` → `expired` + `proposal_closed` event.
 7. `cancelled`: the creator (or an admin) may cancel a pending proposal. The assistant cancels its own proposals when it supersedes them.
 8. A proposal's evidence and preview never include data from another business (they are built in the same context).
@@ -94,3 +94,6 @@ Published: `approvals.proposal_created`, `approvals.proposal_decided`, `approval
 
 ## Out of scope
 Multi-step approval chains (two approvers) — v1 option "second approver required for action types X". Scheduled execution ("approve now, run at 9:00") — later.
+
+P10-A0 extends this contract with delegated policy decisions for AI reorder drafts only; see
+[Autonomy rules](../ai/contracts.md#autonomy-rules-p10-a0) for tables, API, locks, levels, cap/shadow semantics and errors.

@@ -1,6 +1,7 @@
 # AI screens (AI-13)
 
-Staff-facing AI features. Every change the AI wants waits in Approvals; no screen says an action is done.
+Staff-facing AI features. AI changes use the proposal lifecycle; reorder drafts can receive delegated policy approval.
+Activity distinguishes the rule evaluation from the proposal’s current execution result.
 All copy is in `en.json` under `ai.*`; `AI can make mistakes; you approve every change` is fixed.
 
 | Piece | Where it shows | Needs |
@@ -11,6 +12,8 @@ All copy is in `en.json` under `ai.*`; `AI can make mistakes; you approve every 
 | `BriefingCard` | Today, hidden when AI is off | `ai.assistant.use` |
 | `PasteSupplierReplyButton` / `PasteSupplierReplyDialog` | quote request page while status is `sent` | `ai.assistant.use` + `purchasing.po.write` |
 | `AskAiQuotesButton` | inventory item page when stock is at or below the reorder point and 2+ suppliers with an e-mail address sell it | `ai.assistant.use` + `purchasing.po.read/write` |
+| `AutonomyPage` | `/ai/autonomy`, AI navigation | `org.settings.write` (save also needs `inventory.proposal.approve`) |
+| `ActivityPage` | `/ai/activity`, AI navigation | `approvals.proposal.read`; result link also needs `inventory.reorder.read` |
 | `AiSettingsPage` | `/settings/ai` (tab "AI") | `ai.settings.read` (edit: `ai.settings.write` + `org.settings.write`) |
 | `AiDisabledBanner` | panel, summary dialog, paste dialog, settings | — (reads `GET /ai/status`) |
 
@@ -40,3 +43,9 @@ no test calls a backend or a model.
 
 `sse.test.ts` (parser, stream state), `assistant.test.tsx` (panel), `features.test.tsx` (summary, badge, briefing, paste,
 quotes), `settings.test.tsx`. E2E: `e2e/ai.e2e.ts` (needs the dev fake provider) and `/settings/ai` in `e2e/a11y.e2e.ts`.
+
+P10-A0 part 2 uses generated types and `api.GET/PUT/POST` in `autonomy-api.ts`. Settings use the server-returned
+version/state (including forced shadow for new rules), a reload dialog on 409 and a confirmed business pause.
+Activity uses cursor pagination, business-local time, plain-language outcomes/reasons and version-correct grantors.
+`autonomy.test.tsx` covers settings, permissions, pause, Activity and links; approvals tests cover policy attribution;
+notification tests cover the rule explanation. No model or provider calls are needed for these deterministic screens.

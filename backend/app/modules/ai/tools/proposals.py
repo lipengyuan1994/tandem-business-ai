@@ -1,7 +1,8 @@
 """Hold and propose tools: bookings, replies, customers, reorders (AI-07; contracts §10, integration-map §C/§D/§F).
 
 The only direct write is `hold_slot` (a reversible 30-minute scheduling hold for an existing customer). Everything else
-creates a proposal that a person approves. Ids and numbers the model must not invent are filled in here: the hold's
+creates a proposal decided by a person or an eligible autonomy rule. Ids and numbers the model must not invent
+are filled in here: the hold's
 service, resource and time come from the hold; a new customer's contacts from `RunState.server_facts`; reorder
 quantities from `inventory.list_below_reorder`. Idempotency per trigger comes from the framework (`ai_effects`).
 
@@ -288,6 +289,13 @@ class ProposeReorderArgs(ToolArgs):
 
 def _propose_reorder(db: Session, ctx: Context, args: BaseModel, state: RunState) -> dict[str, Any]:
     assert isinstance(args, ProposeReorderArgs)
+    for item_id in args.item_ids:
+        if inventory.has_open_reorder_draft(db, ctx, item_id):
+            raise Conflict("inventory.open_reorder_draft")
+        if approvals.find_open_proposals(
+            db, ctx, action_types=["inventory.create_reorder_draft"], item_id=item_id, include_executing=True
+        ):
+            raise Conflict("ai.reorder_already_proposed")
     below = {s.item_id: s for s in inventory.list_below_reorder(db, ctx)}
     missing = [i for i in args.item_ids if i not in below]
     if missing:

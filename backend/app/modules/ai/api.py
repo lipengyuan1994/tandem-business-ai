@@ -18,11 +18,13 @@ from app.platform.permissions import require
 
 from . import permissions as P
 from . import public, usage
+from .autonomy_api import router as autonomy_router
 from .models import AiRun
 from .schemas import AiStatus, RunOut, RunStatus, UsageOut, UseCaseId
 from .usecases import briefing, campaign_draft, copilot, procurement, summary
 
 router = APIRouter()
+router.include_router(autonomy_router)
 ERRORS = error_responses(401, 403)
 
 

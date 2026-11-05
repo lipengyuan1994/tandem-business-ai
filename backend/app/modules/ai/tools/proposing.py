@@ -116,4 +116,9 @@ def propose(
         db, ctx, action_type=action_type, payload=payload, title=title, evidence=evidence,
         conversation_id=conversation_id,
     )  # fmt: skip
-    return {"proposal_id": ref.id, "title": title, "status": ref.status, "needs_approval": True}
+    return {
+        "proposal_id": ref.id,
+        "title": title,
+        "status": ref.status,
+        "needs_approval": ref.status == "pending_review",
+    }

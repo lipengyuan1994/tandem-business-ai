@@ -47,6 +47,7 @@ class BusinessSettings(BaseModel):
     slot_granularity_minutes: Literal[5, 10, 15, 30] = 15
     booking_lead_time_minutes: int = Field(default=60, ge=0, le=10080)
     allow_self_approval: bool = False
+    ai_autonomy_paused: bool = False
     always_review_action_types: list[str] = Field(default_factory=list)
     allow_backorders: bool = False
     ai_policy: Literal["hosted_vultr", "hosted_any", "strict_private"] = "hosted_vultr"

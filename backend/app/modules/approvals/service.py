@@ -11,23 +11,42 @@ from datetime import timedelta
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
-from sqlalchemy import and_, or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.identity import public as identity
 from app.modules.org import public as org
-from app.platform import audit, clock, events, jobs
+from app.platform import audit, clock, events
 from app.platform.canonical import sha256_hex
 from app.platform.context import Context
 from app.platform.errors import Conflict, Forbidden, Invalid, NotFound
 from app.platform.ids import new_id
-from app.platform.pagination import clamp_limit, decode_cursor, encode_cursor
 from app.platform.registry import ExecutorSpec, get_registry
 
+from . import autonomy
 from . import permissions as P
-from .events import ProposalClosed, ProposalCreated, ProposalDecided
-from .models import CLOSED, ActionProposal, ApprovalDecision, ExecutionAttempt, ProposalRevision
-from .schemas import Evidence, OpenProposal
+from .decisions import record_decision
+from .events import ProposalClosed, ProposalCreated
+from .models import CLOSED, ActionProposal, ApprovalDecision, ProposalRevision
+from .reading import (
+    can_decide as can_decide,
+)
+from .reading import (
+    count_pending as count_pending,
+)
+from .reading import (
+    find_open_proposals as find_open_proposals,
+)
+from .reading import (
+    get_detail as get_detail,
+)
+from .reading import (
+    list_proposals as list_proposals,
+)
+from .reading import (
+    proposal_exists as proposal_exists,
+)
+from .schemas import Evidence
 
 DEFAULT_TTL = timedelta(hours=24)
 
@@ -96,6 +115,7 @@ def create_proposal(
     _can_create(ctx)
     spec = executor_for(action_type)
     model = _validated(spec, payload)
+    rule, paused = autonomy.creation_rule(db, ctx, action_type)
     assert ctx.business_id is not None
     origin = "assistant" if ctx.actor_kind == "assistant" else ("rule" if ctx.actor_kind == "system" else "staff")
     proposal = ActionProposal(
@@ -126,6 +146,7 @@ def create_proposal(
     events.publish(
         db, ctx, ProposalCreated(proposal_id=proposal.id, action_type=action_type, origin_kind=origin, title=title)
     )
+    autonomy.evaluate(db, ctx, proposal, revision, spec, rule, paused)
     return proposal
 
 
@@ -220,43 +241,23 @@ def decide(
         raise Forbidden("approvals.self_approval_forbidden")
     assert ctx.user_id is not None and ctx.business_id is not None
     roles = sorted(identity.active_roles(db, ctx.user_id, ctx.business_id))
-    db.add(
+    record_decision(
+        db,
+        ctx,
+        proposal,
         ApprovalDecision(
             business_id=ctx.business_id,
             proposal_id=proposal.id,
             revision_id=revision.id,
             decision=decision,
             decided_by=ctx.user_id,
+            decided_by_kind="user",
             roles_at_decision=roles,
             policy_version=identity.POLICY_VERSION,
             payload_hash=revision.payload_hash,
             comment=comment,
-        )
+        ),
     )
-    proposal.status = "approved" if decision == "approve" else "rejected"
-    proposal.version += 1
-    verb = "Approved" if decision == "approve" else "Rejected"
-    audit.record(
-        db,
-        ctx,
-        action=f"approvals.proposal.{proposal.status}",
-        target_type="proposal",
-        target_id=proposal.id,
-        summary=f"{verb}: {proposal.title}",
-        proposal_id=proposal.id,
-    )
-    events.publish(db, ctx, ProposalDecided(proposal_id=proposal.id, decision=decision))
-    if decision == "approve":
-        jobs.enqueue(
-            db,
-            "approvals.execute",
-            {"proposal_id": str(proposal.id), "revision_id": str(revision.id)},
-            business_id=ctx.business_id,
-            dedupe_key=f"exec:{proposal.id}:{revision.id}",
-            priority=10,
-        )
-    else:
-        _close(db, ctx, proposal, "rejected")
     return proposal
 
 
@@ -284,144 +285,6 @@ def cancel(db: Session, ctx: Context, proposal_id: uuid.UUID) -> ActionProposal:
     )
     _close(db, ctx, proposal, "cancelled")
     return proposal
-
-
-# --------------------------------------------------------------------------------------------------- reading
-def can_decide(ctx: Context, proposal: ActionProposal) -> bool:
-    spec = get_registry().executors.get(proposal.action_type)
-    return bool(spec and proposal.status == "pending_review" and ctx.has(spec.approve_permission))
-
-
-def proposal_exists(db: Session, ctx: Context, proposal_id: uuid.UUID) -> bool:
-    """Scoped reference check for other modules; the caller authorizes the operation using the reference."""
-    return (
-        db.scalar(
-            select(ActionProposal.id).where(
-                ActionProposal.business_id == ctx.business_id, ActionProposal.id == proposal_id
-            )
-        )
-        is not None
-    )
-
-
-def find_open_proposals(
-    db: Session,
-    ctx: Context,
-    *,
-    conversation_id: uuid.UUID | None = None,
-    action_types: list[str] | None = None,
-    item_id: uuid.UUID | None = None,
-    invoice_id: uuid.UUID | None = None,
-) -> list[OpenProposal]:
-    if not ctx.has(P.ASSISTANT_USE):
-        ctx.require(P.PROPOSAL_READ)
-    stmt = select(ActionProposal).where(
-        ActionProposal.business_id == ctx.business_id,
-        ActionProposal.status.in_(("pending_review", "approved")),
-    )
-    if conversation_id is not None:
-        stmt = stmt.where(ActionProposal.conversation_id == conversation_id)
-    if action_types is not None:
-        stmt = stmt.where(ActionProposal.action_type.in_(action_types))
-    if item_id is not None or invoice_id is not None:
-        stmt = stmt.join(
-            ProposalRevision,
-            and_(
-                ProposalRevision.id == ActionProposal.current_revision_id,
-                ProposalRevision.business_id == ActionProposal.business_id,
-                ProposalRevision.proposal_id == ActionProposal.id,
-            ),
-        )
-    if item_id is not None:
-        stmt = stmt.where(ProposalRevision.payload.contains({"lines": [{"item_id": str(item_id)}]}))
-    if invoice_id is not None:
-        stmt = stmt.where(ProposalRevision.payload.contains({"invoice_id": str(invoice_id)}))
-    return [
-        OpenProposal.model_validate(row)
-        for row in db.scalars(stmt.order_by(ActionProposal.created_at.desc(), ActionProposal.id.desc()))
-    ]
-
-
-def list_proposals(
-    db: Session,
-    ctx: Context,
-    *,
-    status: str | None,
-    action_type: str | None,
-    mine: bool,
-    can_approve: bool,
-    limit: int = 50,
-    cursor: str | None = None,
-) -> tuple[list[ActionProposal], str | None]:
-    ctx.require(P.PROPOSAL_READ)
-    stmt = select(ActionProposal).where(ActionProposal.business_id == ctx.business_id)
-    if status:
-        stmt = stmt.where(ActionProposal.status == status)
-    if action_type:
-        stmt = stmt.where(ActionProposal.action_type == action_type)
-    if mine:
-        stmt = stmt.where(ActionProposal.origin_user_id == ctx.user_id)
-    if can_approve:
-        allowed = [t for t, s in get_registry().executors.items() if ctx.has(s.approve_permission)]
-        stmt = stmt.where(ActionProposal.action_type.in_(allowed), ActionProposal.status == "pending_review")
-    if cursor:
-        ts, rid = decode_cursor(cursor)
-        stmt = stmt.where(
-            or_(ActionProposal.created_at < ts, and_(ActionProposal.created_at == ts, ActionProposal.id < rid))
-        )
-    limit = clamp_limit(limit)
-    rows = list(db.scalars(stmt.order_by(ActionProposal.created_at.desc(), ActionProposal.id.desc()).limit(limit + 1)))
-    page = rows[:limit]
-    return page, (encode_cursor(page[-1].created_at, page[-1].id) if len(rows) > limit and page else None)
-
-
-def get_detail(db: Session, ctx: Context, proposal_id: uuid.UUID) -> dict[str, Any]:
-    ctx.require(P.PROPOSAL_READ)
-    proposal = db.scalar(
-        select(ActionProposal).where(ActionProposal.business_id == ctx.business_id, ActionProposal.id == proposal_id)
-    )
-    if proposal is None:
-        raise NotFound("approvals.not_found")
-    revisions = list(
-        db.scalars(
-            select(ProposalRevision)
-            .where(ProposalRevision.proposal_id == proposal.id)
-            .order_by(ProposalRevision.revision_no)
-        )
-    )
-    decisions = list(
-        db.scalars(
-            select(ApprovalDecision)
-            .where(ApprovalDecision.proposal_id == proposal.id)
-            .order_by(ApprovalDecision.decided_at)
-        )
-    )
-    attempts = list(
-        db.scalars(
-            select(ExecutionAttempt)
-            .where(ExecutionAttempt.proposal_id == proposal.id)
-            .order_by(ExecutionAttempt.started_at)
-        )
-    )
-    names = identity.get_user_briefs(db, ctx, {d.decided_by for d in decisions})
-    return {
-        "proposal": proposal,
-        "current_revision": next(r for r in revisions if r.id == proposal.current_revision_id),
-        "revisions": revisions,
-        "decisions": [(d, names[d.decided_by].display_name if d.decided_by in names else "") for d in decisions],
-        "attempts": attempts,
-    }
-
-
-def count_pending(db: Session, ctx: Context, *, for_permissions: frozenset[str] | None = None) -> int:
-    stmt = select(ActionProposal.action_type).where(
-        ActionProposal.business_id == ctx.business_id, ActionProposal.status == "pending_review"
-    )
-    types = list(db.scalars(stmt))
-    if for_permissions is None:
-        return len(types)
-    executors = get_registry().executors
-    return sum(1 for t in types if t in executors and executors[t].approve_permission in for_permissions)
 
 
 __all__ = ["CLOSED", "cancel", "count_pending", "create_proposal", "decide", "get_detail", "list_proposals", "revise"]

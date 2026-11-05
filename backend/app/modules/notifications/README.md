@@ -33,3 +33,9 @@ become `[erased]`, preserving supplier recipients and credential variables. Dura
 new delivery claims/retries; pending, unknown and sending rows become failed. An already in-flight
 external send cannot be recalled and retains its actual outcome. Unrelated suppliers' requests and other
 businesses remain untouched. Capability variables (including quote_url) remain excluded from exports.
+
+P10-A0 part 2: `in_app.py` owns in-app reads/writes and the proposal-created subscriber (re-exported by service).
+It uses approvals' public notification-state reader: pending proposals request approval, successful shadow checks
+explain shadow mode, non-pending `act_notify` policy approvals send `ai_acted` to the same approvers, and `act`/other
+non-pending proposals send no approval request. Notifications include a body in the API and panel. Historical
+rule versions retain their original notification level after edits. At-least-once delivery remains deduplicated.

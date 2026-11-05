@@ -2,6 +2,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { createRoute, createRouter, redirect } from "@tanstack/react-router"
 import { approvalDetailRoute, approvalsRoute } from "@/features/approvals/routes"
+import { activityRoute, autonomyRoute } from "@/features/ai/routes"
 import { auditRoute } from "@/features/audit/routes"
 import { catalogRoute } from "@/features/catalog/routes"
 import { inboxRoute, inboxThreadRoute } from "@/features/conversations/routes"
@@ -31,7 +32,7 @@ export const routeTree = rootRoute.addChildren([
   selectBusinessRoute,
   loginFailedRoute,
   appRoute.addChildren([
-    indexRoute, todayRoute, inboxRoute, inboxThreadRoute, approvalsRoute, approvalDetailRoute, customersRoute, customerDetailRoute,
+    indexRoute, autonomyRoute, activityRoute, todayRoute, inboxRoute, inboxThreadRoute, approvalsRoute, approvalDetailRoute, customersRoute, customerDetailRoute,
     scheduleRoute, inventoryRoute, inventoryItemRoute, catalogRoute, marketingRoute, campaignRoute, salesRoute, quoteRoute, orderRoute, invoiceRoute, purchasingRoute, purchaseOrderRoute, quoteRequestRoute, auditRoute, systemRoute, settingsTree,
   ]),
 ])

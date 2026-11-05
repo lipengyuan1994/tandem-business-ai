@@ -104,6 +104,15 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P8-05](P8-production-v1.md) | purchasing: suppliers, POs, receipts, reorder draft conversion | PRE (moved before kickoff) | B | P8-04 | DONE (2026-11-03; built by Codex GPT-6.1 Sol, verified here; Sol review: 2 findings fixed) |
 | [P8-23](P8-production-v1.md) | Regulated data profile, non-AI half (ADR-018) | PRE (may run before kickoff) | A | — | DONE (2026-11-03; built by Codex GPT-6.1 Sol, Sol review: 5 findings fixed, verified here; AI half is P5-01) |
 | [P8-02](P8-production-v1.md) | SMTP adapter, templates, Keycloak SMTP | PRE (moved before kickoff) | A | — | DONE (2026-11-03; built by Codex GPT-6.1 Sol, verified here; Sol review: 3 findings fixed; Keycloak mail is a documented manual step; no real provider tested) |
+| — | **P10 AI workflows (owner approval 2026-11-05, ADR-020):** steps from [P10](P10-ai-workflows.md) §8. | — | — | — | — |
+| [P10-A0](P10-ai-workflows.md) | Autonomy engine, smallest slice: rule-approved reorder draft + Activity | EVENT | A | ADR-020 | DONE (2026-11-05): backend (Codex GPT-6.1 Sol, reviewed here) + Autonomy and Activity screens + notification fix; `make check` passed (1,583 backend, 309 frontend); demo rules start in shadow mode; not yet deployed |
+| [P10-A1](P10-ai-workflows.md) | Confirm in chat, PO delivery to supplier, outbox stop, Work queue | EVENT | A | P10-A0 | PLANNED |
+| [P10-C1](P10-ai-workflows.md) | Hand-over enforced, knowledge base v1, grounded front-desk answers | EVENT | A/B | P10-A0 | PLANNED |
+| [P10-E0](P10-ai-workflows.md) | Local-model benchmark (P5-02) and local-only `regulated` routing | EVENT + DEPLOY | A | ADR-020 | PLANNED |
+| [P10-D](P10-ai-workflows.md) | Voice dictation (STT adapter, polish pass) | EVENT | B | — | PLANNED |
+| [P10-B](P10-ai-workflows.md) | AI Team page, agent configs, chaining rules, Customer Care agent | EVENT | A/B | P10-A1 | PLANNED |
+| [P10-E1](P10-ai-workflows.md) | Multi-resource booking, emergency rules, recall, Example Dental Clinic | EVENT | A/B | P10-C1, P10-E0 | PLANNED |
+| [P10-C2](P10-ai-workflows.md) | Embed snippet, customer self-service, embeddings and PDF upload | EVENT | B | P10-C1 | PLANNED |
 | [P7-01](P7-submission.md) | Publish the repository | GATE | Owner | P6 gate | PLANNED |
 | [P7-02](P7-submission.md) | Judge-facing README | DOC | B | P6-04 | PARTIAL (2026-11-03): draft `docs/submission/README-judges.draft.md`, cold-read by a second model; updated 2026-11-03 for sales, purchasing and procurement; AI facts after kickoff |
 | [P7-03](P7-submission.md) | Demo video | GATE | Owner | P6-04 | PLANNED |

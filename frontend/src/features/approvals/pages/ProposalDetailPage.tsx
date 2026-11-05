@@ -132,7 +132,7 @@ export function ProposalDetailPage() {
                   <li key={r.id}>{t("approvals.revisionLine", { n: r.revision_no, who: t(`approvals.by.${r.created_by_kind}`) })} · <LocalTime iso={r.created_at} timeZone={businessTimeZone} pattern="d MMM HH:mm" /></li>
                 ))}
                 {p.decisions.map((d) => (
-                  <li key={d.id}>{t(`approvals.decisionLine.${d.decision}`, { who: d.decided_by_name })}{d.comment ? `: “${d.comment}”` : ""}</li>
+                  <li key={d.id}>{d.decided_by_kind === "policy" ? t("approvals.policyDecision", { version: d.rule_version, who: d.granted_by_name || d.granted_by || t("ai.activity.unknownGrantor") }) : t(`approvals.decisionLine.${d.decision}`, { who: d.decided_by_name || d.decided_by || t("approvals.unknownDecider") })}{d.comment ? `: “${d.comment}”` : ""}</li>
                 ))}
                 {p.attempts.map((a) => (
                   <li key={a.id}>{t("approvals.attemptLine")} <StatusBadge status={a.status === "running" ? "executing" : a.status} /></li>
