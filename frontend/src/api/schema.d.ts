@@ -73,6 +73,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Agents */
+        get: operations["agents_api_v1_ai_agents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/agents/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Agent */
+        patch: operations["patch_agent_api_v1_ai_agents__key__patch"];
+        trace?: never;
+    };
+    "/api/v1/ai/agents/{key}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Agent Activity */
+        get: operations["agent_activity_api_v1_ai_agents__key__activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai/autonomy/activity": {
         parameters: {
             query?: never;
@@ -170,6 +221,23 @@ export interface paths {
         put?: never;
         /** Draft an assistant campaign revision for staff to edit and submit */
         post: operations["draft_campaign_api_v1_ai_campaigns__id__draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/chains/{correlation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chain */
+        get: operations["chain_api_v1_ai_chains__correlation_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2884,6 +2952,52 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** AgentOut */
+        AgentOut: {
+            /** Autonomy */
+            autonomy: components["schemas"]["RuleOut"][];
+            /** Cost Today Micros */
+            cost_today_micros: number;
+            /** Daily Cost Limit Usd */
+            daily_cost_limit_usd: string | null;
+            /** Enabled */
+            enabled: boolean;
+            /** Job */
+            job: string;
+            /** Key */
+            key: string;
+            /** Last Activity At */
+            last_activity_at: string | null;
+            /** Name */
+            name: string;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on" | "off" | "paused" | "limit_reached" | "unavailable";
+            today: components["schemas"]["TodayWork"];
+            /** Updated By */
+            updated_by?: string | null;
+            /** Version */
+            version: number;
+            waiting: components["schemas"]["WaitingItems"];
+        };
+        /** AgentPatch */
+        AgentPatch: {
+            /** Daily Cost Limit Usd */
+            daily_cost_limit_usd?: number | string | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Version */
+            version: number;
+        };
+        /** AgentsOut */
+        AgentsOut: {
+            /** Items */
+            items: components["schemas"]["AgentOut"][];
+        };
         /** AiStatus */
         AiStatus: {
             /** Budget Percent */
@@ -3752,6 +3866,44 @@ export interface components {
             sku?: string | null;
             /** Version */
             version: number;
+        };
+        /** ChainOut */
+        ChainOut: {
+            /** Actions */
+            actions: number;
+            /**
+             * Correlation Id
+             * Format: uuid
+             */
+            correlation_id: string;
+            /**
+             * Cost Limit Micros
+             * @default 500000
+             */
+            cost_limit_micros: number;
+            /** Cost Micros */
+            cost_micros: number;
+            /**
+             * Max Actions
+             * @default 10
+             */
+            max_actions: number;
+            /**
+             * Max Depth
+             * @default 6
+             */
+            max_depth: number;
+            /**
+             * Max Model Calls
+             * @default 30
+             */
+            max_model_calls: number;
+            /** Model Calls */
+            model_calls: number;
+            /** Steps */
+            steps: components["schemas"]["TeamActivityItem"][];
+            /** Stopped Reason */
+            stopped_reason?: string | null;
         };
         /** ChatCard */
         ChatCard: {
@@ -4954,6 +5106,8 @@ export interface components {
         };
         /** MessageCreate */
         MessageCreate: {
+            /** Agent */
+            agent?: string | null;
             /** Content */
             content: string;
         };
@@ -6873,6 +7027,59 @@ export interface components {
             /** Tags */
             tags: string[];
         };
+        /** TeamActivityItem */
+        TeamActivityItem: {
+            /** Action Type */
+            action_type?: string | null;
+            /** Agent */
+            agent: string | null;
+            /** Causation Id */
+            causation_id?: string | null;
+            /** Correlation Id */
+            correlation_id?: string | null;
+            /**
+             * Cost Micros
+             * @default 0
+             */
+            cost_micros: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Delivery State
+             * @default none
+             * @enum {string}
+             */
+            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped" | "withheld" | "published";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Proposal Id */
+            proposal_id?: string | null;
+            /** Reasons */
+            reasons?: string[];
+            /** Result Link */
+            result_link?: string | null;
+            /** Run Id */
+            run_id?: string | null;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
+        /** TeamActivityPage */
+        TeamActivityPage: {
+            /** Items */
+            items: components["schemas"]["TeamActivityItem"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
         /** TestEmailIn */
         TestEmailIn: {
             /**
@@ -7041,6 +7248,34 @@ export interface components {
             /** Timezone */
             timezone: string;
         };
+        /** TodayWork */
+        TodayWork: {
+            /**
+             * Actions Executed By People
+             * @default 0
+             */
+            actions_executed_by_people: number;
+            /**
+             * Actions Executed By Rules
+             * @default 0
+             */
+            actions_executed_by_rules: number;
+            /**
+             * Handed To Person
+             * @default 0
+             */
+            handed_to_person: number;
+            /**
+             * Proposals Created
+             * @default 0
+             */
+            proposals_created: number;
+            /**
+             * Runs
+             * @default 0
+             */
+            runs: number;
+        };
         /** UsageDayOut */
         UsageDayOut: {
             /** Cost Micros */
@@ -7119,6 +7354,16 @@ export interface components {
             /** Version No */
             version_no: number;
         };
+        /** WaitingItems */
+        WaitingItems: {
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /** Oldest At */
+            oldest_at?: string | null;
+        };
         /** WorkItem */
         WorkItem: {
             /** Action Type */
@@ -7145,7 +7390,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback" | "web_reply";
+            kind: "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback" | "web_reply" | "chain_blocked";
             /** Proposal Id */
             proposal_id?: string | null;
             /** Quote Request Id */
@@ -7452,6 +7697,185 @@ export interface operations {
             };
             /** @description Too many requests */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    agents_api_v1_ai_agents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentsOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    patch_agent_api_v1_ai_agents__key__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    agent_activity_api_v1_ai_agents__key__activity_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamActivityPage"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7909,6 +8333,64 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    chain_api_v1_ai_chains__correlation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                correlation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChainOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

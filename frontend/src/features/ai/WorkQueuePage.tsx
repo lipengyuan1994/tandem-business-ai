@@ -9,14 +9,18 @@ import { PermissionGate } from "@/components/common/PermissionGate"
 import { StatusBadge } from "@/components/common/StatusBadge"
 import { ScheduledReply } from "@/features/conversations/ReplyPublication"
 import { useWorkQueue, type WorkItem } from "./actions-api"
+import { Button } from "@/components/ui/button"
+import { QueryError } from "@/components/common/QueryError"
+import { useAgents } from "./team-api"
+import { workQueueRoute } from "./routes"
 import { useClock } from "./useClock"
 import { DeliveryBadge, ScheduledMail } from "./DeliveryStatus"
 
-export function WorkQueuePage() { return <QueuePage exceptions={false} /> }
+export function WorkQueuePage() { const { agent } = workQueueRoute.useSearch(); return <QueuePage exceptions={false} agentKey={agent} /> }
 export function ExceptionsPage() { return <QueuePage exceptions /> }
-function QueuePage({ exceptions }: { exceptions: boolean }) {
+function QueuePage({ exceptions, agentKey }: { exceptions: boolean; agentKey?: string }) {
   const { t } = useTranslation()
-  return <PermissionGate permission="approvals.proposal.read" fallback={<EmptyState title={t("ai.queues.noAccess")} />}><QueueList exceptions={exceptions} /></PermissionGate>
+  return <PermissionGate permission="approvals.proposal.read" fallback={<EmptyState title={t("ai.queues.noAccess")} />}><QueueList exceptions={exceptions} agentKey={agentKey} /></PermissionGate>
 }
 
 function Age({ since }: { since: string }) {
@@ -26,10 +30,14 @@ function Age({ since }: { since: string }) {
   return <span>{t("ai.queues.age", { age: minutes < 60 ? `${minutes}m` : minutes < 1440 ? `${Math.floor(minutes / 60)}h` : `${Math.floor(minutes / 1440)}d` })}</span>
 }
 
-function QueueList({ exceptions }: { exceptions: boolean }) {
+function QueueList({ exceptions, agentKey }: { exceptions: boolean; agentKey?: string }) {
   const { t } = useTranslation()
   const { businessTimeZone } = useSession()
   const queue = useWorkQueue(exceptions)
+  const agents = useAgents(!!agentKey)
+  const agent = agents.data?.items.find((item) => item.key === agentKey)
+  const actions = new Set(agent?.autonomy.map((rule) => rule.action_type))
+  const items = queue.data?.pages.flatMap((page) => page.items).filter((item) => !agentKey || !!item.action_type && actions.has(item.action_type))
   const prefix = exceptions ? "ai.exceptions" : "ai.workQueue"
   const columns: ColumnDef<WorkItem, unknown>[] = [
     { header: t("ai.queues.item"), cell: ({ row: { original: item } }) => {
@@ -53,6 +61,9 @@ function QueueList({ exceptions }: { exceptions: boolean }) {
   return <div className="space-y-6">
     <PageHeader title={t(`${prefix}.title`)} description={t(`${prefix}.description`)} />
     {exceptions && queue.data?.pages[0]?.paused ? <p role="status" className="rounded-md border border-destructive p-4">{t("ai.autonomy.paused")} <a href="/ai/autonomy" className="record-link">{t("ai.exceptions.reviewAutonomy")}</a></p> : null}
-    <DataTable columns={columns} data={queue.data?.pages.flatMap((page) => page.items)} isLoading={queue.isPending} error={queue.error} onRetry={() => queue.refetch()} emptyTitle={t(`${prefix}.empty`)} emptyDescription={t(`${prefix}.emptyHelp`)} caption={t(`${prefix}.title`)} hasMore={queue.hasNextPage} onLoadMore={() => void queue.fetchNextPage()} />
+    {agentKey ? <p>{agent?.name ?? agentKey} · <a className="record-link" href="/ai/work-queue">{t("ai.team.allAgents")}</a></p> : null}
+    {agents.error ? <QueryError error={agents.error} onRetry={() => agents.refetch()} /> : null}
+    <DataTable columns={columns} data={items} isLoading={queue.isPending || !!agentKey && agents.isPending} error={queue.error} onRetry={() => queue.refetch()} emptyTitle={t(`${prefix}.empty`)} emptyDescription={t(`${prefix}.emptyHelp`)} caption={t(`${prefix}.title`)} hasMore={!agentKey && queue.hasNextPage} onLoadMore={() => void queue.fetchNextPage()} />
+    {agentKey && queue.hasNextPage ? <Button variant="outline" disabled={queue.isFetchingNextPage} onClick={() => void queue.fetchNextPage()}>{t("common.loadMore")}</Button> : null}
   </div>
 }

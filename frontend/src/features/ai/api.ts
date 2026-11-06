@@ -73,7 +73,7 @@ export function useSendCopilotMessage(threadId: string | undefined) {
   const qc = useQueryClient()
   const [stream, setStream] = useState<CopilotStream>(IDLE_STREAM)
   const controller = useRef<AbortController | null>(null)
-  const operation = useRef<{ threadId: string; content: string; key: string } | null>(null)
+  const operation = useRef<{ threadId: string; content: string; key: string; agent?: string } | null>(null)
 
   useEffect(() => () => controller.current?.abort(), [])
 
@@ -84,8 +84,8 @@ export function useSendCopilotMessage(threadId: string | undefined) {
     setStream(IDLE_STREAM)
   }, [])
 
-  const sendOperation = useCallback(async (content: string, id: string, operationKey: string) => {
-    operation.current = { threadId: id, content, key: operationKey }
+  const sendOperation = useCallback(async (content: string, id: string, operationKey: string, agent?: string) => {
+    operation.current = { threadId: id, content, key: operationKey, agent }
     controller.current?.abort()
     const mine = new AbortController()
     controller.current = mine
@@ -101,7 +101,7 @@ export function useSendCopilotMessage(threadId: string | undefined) {
         credentials: "same-origin",
         signal: mine.signal,
         headers,
-        body: JSON.stringify({ content } satisfies MessageCreate),
+        body: JSON.stringify({ content, ...(agent ? { agent } : {}) } satisfies MessageCreate),
       })
       if (!response.ok) throw await problemFrom(response)
       await readStepEvents(response, (event) => {
@@ -120,14 +120,14 @@ export function useSendCopilotMessage(threadId: string | undefined) {
     if (current()) setStream((s) => (s.status === "error" ? s : { ...s, status: "done" }))
   }, [qc])
 
-  const send = useCallback(async (content: string, threadOverride?: string) => {
+  const send = useCallback(async (content: string, threadOverride?: string, agent?: string) => {
     const id = threadOverride ?? threadId
-    if (id) await sendOperation(content, id, crypto.randomUUID())
+    if (id) await sendOperation(content, id, crypto.randomUUID(), agent)
   }, [threadId, sendOperation])
 
   const retry = useCallback(async () => {
     const previous = operation.current
-    if (previous) await sendOperation(previous.content, previous.threadId, previous.key)
+    if (previous) await sendOperation(previous.content, previous.threadId, previous.key, previous.agent)
   }, [sendOperation])
 
   const abort = useCallback(() => {

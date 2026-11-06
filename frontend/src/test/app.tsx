@@ -25,6 +25,7 @@ export function meWith(...permissions: string[]): Me {
 
 export function mockMe(me: Me | null = ME) {
   server.use(
+    http.get("*/api/v1/ai/agents", () => HttpResponse.json({ items: [] })),
     http.get("*/api/v1/org/settings", () => HttpResponse.json({ settings: { terminology: {} }, version: 1 })),
     http.get("*/api/v1/admin/system", () => HttpResponse.json({ data_profile: "standard" })),
     http.get("*/api/v1/auth/me", () => (me ? HttpResponse.json(me) : HttpResponse.json({ code: "auth.unauthenticated", status: 401, title: "x" }, { status: 401 }))),

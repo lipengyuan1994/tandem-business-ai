@@ -2,7 +2,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { createRoute, createRouter, redirect } from "@tanstack/react-router"
 import { approvalDetailRoute, approvalsRoute } from "@/features/approvals/routes"
-import { activityRoute, autonomyRoute, workQueueRoute, exceptionsRoute } from "@/features/ai/routes"
+import { teamRoute, teamDetailRoute, chainRoute, activityRoute, autonomyRoute, workQueueRoute, exceptionsRoute } from "@/features/ai/routes"
 import { auditRoute } from "@/features/audit/routes"
 import { catalogRoute } from "@/features/catalog/routes"
 import { inboxRoute, inboxThreadRoute } from "@/features/conversations/routes"
@@ -33,7 +33,7 @@ export const routeTree = rootRoute.addChildren([
   selectBusinessRoute,
   loginFailedRoute,
   appRoute.addChildren([
-    indexRoute, knowledgeRoute, knowledgeNewRoute, knowledgeArticleRoute, autonomyRoute, activityRoute, workQueueRoute, exceptionsRoute, todayRoute, inboxRoute, inboxThreadRoute, approvalsRoute, approvalDetailRoute, customersRoute, customerDetailRoute,
+    indexRoute, teamRoute, teamDetailRoute, chainRoute, knowledgeRoute, knowledgeNewRoute, knowledgeArticleRoute, autonomyRoute, activityRoute, workQueueRoute, exceptionsRoute, todayRoute, inboxRoute, inboxThreadRoute, approvalsRoute, approvalDetailRoute, customersRoute, customerDetailRoute,
     scheduleRoute, inventoryRoute, inventoryItemRoute, catalogRoute, marketingRoute, campaignRoute, salesRoute, quoteRoute, orderRoute, invoiceRoute, purchasingRoute, purchaseOrderRoute, quoteRequestRoute, auditRoute, systemRoute, settingsTree,
   ]),
 ])

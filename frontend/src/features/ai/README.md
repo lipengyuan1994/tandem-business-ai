@@ -15,6 +15,7 @@ All copy is in `en.json` under `ai.*`; `AI can make mistakes; you approve every 
 | `AutonomyPage` | `/ai/autonomy`, AI navigation | `org.settings.write` (save also needs `inventory.proposal.approve`) |
 | `ActionCard` + `DeliveryStatus` | saved chat proposals, Activity and proposal detail; revision-bound Confirm, local collapse, delivery countdown and confirmed Stop | backend card eligibility; Stop rechecks action approver / settings writer |
 | `WorkQueuePage` / `ExceptionsPage` | `/ai/work-queue`, `/ai/exceptions`, AI navigation | `approvals.proposal.read` |
+| `TeamPage`, `TeamActivity`, `ChainPage`, `AgentMention` | Team/detail/chain routes, assistant targeting and agent filters; [P10-B3 evidence](../../../../docs/roadmap/ai/cards/P10-B3-screens.md) | `approvals.proposal.read`; edits: `org.settings.write` |
 | `ActivityPage` | `/ai/activity`, AI navigation | `approvals.proposal.read`; result link also needs `inventory.reorder.read` |
 | `AiSettingsPage` | `/settings/ai` (tab "AI") | `ai.settings.read` (edit: `ai.settings.write` + `org.settings.write`) |
 | `AiDisabledBanner` | panel, summary dialog, paste dialog, settings | — (reads `GET /ai/status`) |

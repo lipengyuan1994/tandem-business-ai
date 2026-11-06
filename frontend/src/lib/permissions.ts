@@ -28,6 +28,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/sales", labelKey: "nav.sales", permission: "sales.document.read" },
   { to: "/audit", labelKey: "nav.audit", permission: "audit.event.read" },
   { to: "/system", labelKey: "nav.system", permission: "admin_ops.system.read" },
+  { to: "/ai/team", labelKey: "ai.team.nav", permission: "approvals.proposal.read", group: "ai" },
   { to: "/settings/ai", labelKey: "ai.settings.nav", permission: "ai.settings.read", group: "ai" },
   { to: "/ai/autonomy", labelKey: "ai.autonomy.title", permission: "org.settings.write", group: "ai" },
   { to: "/ai/activity", labelKey: "ai.activity.title", permission: "approvals.proposal.read", group: "ai" },
