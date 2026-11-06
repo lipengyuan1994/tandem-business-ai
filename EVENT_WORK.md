@@ -162,3 +162,13 @@ complaint/warranty cases (en, zh). Intake **69/70 (98.6 %)**, injection **15/15*
 `preferred_contact_channel` optional on customer create/update (the generated TypeScript type made it mandatory,
 so the edit dialog would have had to send "email" and could overwrite an opt-out). Full `make check` passed
 (2,261 backend, 451 frontend); affected tests rerun after the prompt/case edits.
+
+## 2026-11-06 ~22:30–22:45 — 0.1.8 released to the VM (Claude)
+
+Customer Care backend (P10-B2). Images built from a clean worktree at `adcac3c` (the dental task was editing the main
+checkout), checked (migration `20261106_1200_customer_care`, safety v2 boundary) and pushed. `make check` passed at
+the commit (2,261 backend, 451 frontend); `make e2e` **not run** for this release (the dev stack serves the main
+checkout with the dental work in progress; no screens changed). Deployment and route files identical on the VM; manual
+backup; `upgrade.sh 0.1.7 → 0.1.8` in 29 s, smoke passed. In-container live check: 7 agents, Customer Care off;
+safety v2 classified "my rear brake squeaks, please book" as `care_category=none` and a complaint about earlier
+brake work as `complaint/high`. SSH closed, Terraform no changes, readyz 200, pending charges $6.70.

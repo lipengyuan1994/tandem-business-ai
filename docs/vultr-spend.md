@@ -38,6 +38,7 @@ Check the balance at any time: `GET https://api.vultr.com/v2/account` (`balance`
 | 2026-11-05 01:40 | Upgraded | VM to 0.1.5 (images pushed, registry ≈ 4 GB of the free 10 GB; SSH opened about 6 minutes for the upgrade and a restore drill, then closed; `terraform plan` no changes) | — | — |
 | 2026-11-06 13:20 | Upgraded | VM to 0.1.6 (images pushed, registry ≈ 4.7 GB of the free 10 GB; SSH opened about 10 minutes for the upgrade, the route-file swap, demo knowledge articles and a live front-desk check, then closed; `terraform plan` no changes) | — | pending charges $5.65 of $200.00 |
 | 2026-11-06 19:05 | Upgraded | VM to 0.1.7 (images pushed, registry ≈ 5.4 GB of the free 10 GB; SSH opened about 10 minutes for the upgrade, compose.yml copy (comments only), route-file swap and an in-container live check, then closed; `terraform plan` no changes) | — | pending charges $6.04 of $200.00 |
+| 2026-11-06 22:40 | Upgraded | VM to 0.1.8 (images pushed; SSH opened about 8 minutes for the upgrade and an in-container live check, then closed; deployment and route files unchanged; `terraform plan` no changes) | — | pending charges $6.70 of $200.00 |
 
 ## Running resources (2026-11-04 12:15 UTC)
 

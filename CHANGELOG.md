@@ -2,6 +2,26 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.8 (2026-11-06)
+
+**Customer Care** (P10-B2, backend): a new agent that keeps in touch after the work is done — a "How did it go?"
+check-in a few days after a completed appointment (with an optional review link), recall reminders when a service is
+due again ("time for your 6-month check-up"), and complaint/warranty triage that puts the concern in front of a person
+with the related appointment and invoice and a suggested reply. Every message is a proposal first; before it is sent
+the system rechecks consent, the customer's contact preference, open complaints or disputes, quiet hours (default
+20:00–08:00) and duplicates. Clinics and businesses that avoid medical details get minimal messages without service
+names, written without AI. **Customer Care is off until you switch it on in AI → Team**; its screens (settings for the
+check-in delay, review link and recall interval) come in a later release.
+
+**Front desk:** messages that complain about earlier work, ask for a refund or claim warranty now go straight to a
+person instead of an AI reply. Ordinary repair requests ("my brake squeaks, please book a brake service") are not
+affected. Customers' preferred contact channel (e-mail, web chat, none) is stored; a consent ticked in the chat widget
+covers that request only, never later reminders.
+
+- **Migration:** `20261106_1200_customer_care` (applied by the upgrade).
+- **Deployment files and route file:** unchanged; nothing to copy.
+- Live evals (Vultr): customer_care 19/19, intake 69/70, injection 15/15.
+
 ## 0.1.7 (2026-11-06)
 
 **Voice dictation** (P10-D): a microphone button in the assistant, the Inbox reply box, the knowledge editor and other
