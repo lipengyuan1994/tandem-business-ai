@@ -2,7 +2,7 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
-## Unreleased (P10-A0, P10-A1, P10-C1)
+## 0.1.6 (2026-11-06)
 
 AI workflows, first steps (ADR-020): autonomy rules (Off · Draft · Ask · Act and notify · Act, shadow mode, daily limit,
 pause switch) with rule-approved reorder drafts, AI → Autonomy, Activity, Work queue and Exceptions pages; action cards
@@ -17,8 +17,11 @@ front-desk replies can be decided by an autonomy rule (starts in shadow mode).
 
 - **Migrations:** `20261105_0800_autonomy`, `20261105_0900_chat_delivery`, `20261105_1000_knowledge_handoff`,
   `20261105_1100_grounded_publication` (apply with the upgrade).
-- **Route file:** new model class `grounding` in `deploy/config/ai-routes.yaml` — upload the updated file before or
-  with the upgrade (`/opt/smb/config/ai-routes.yaml`), then `docker compose up -d api worker`.
+- **Route file (after):** new model class `grounding` in `deploy/config/ai-routes.yaml`. Upload it **after**
+  `upgrade.sh 0.1.6` succeeds (keep the old file as `config/ai-routes.yaml.previous`), then
+  `docker compose restart api worker`. Not before: 0.1.5 rejects the unknown class, so after an automatic rollback the old
+  version would run with AI turned off. Until the file is replaced, front-desk replies fail the check closed and go to a person.
+- **Deployment files unchanged** (`compose.yml`, scripts): `upgrade.sh 0.1.6`.
 - **New business setting:** `outbound_send_delay_seconds` (default 120). Demo seed adds a reorder-draft rule in shadow mode.
 
 ## 0.1.5 (2026-11-04)
