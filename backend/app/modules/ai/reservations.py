@@ -26,7 +26,7 @@ from .budget_models import CostPeriod, PublicAllowance
 from .errors import AiError
 from .gateway.pricing import cost_micros
 from .gateway.routes import RouteEntry
-from .gateway.types import Adapter, ChatRequest, ChatResult, Usage
+from .gateway.types import Adapter, ChatRequest, ChatResult, TranscriptionRequest, Usage
 from .models import AiRun, AiUsageDaily
 from .usage import effective_budget, maybe_notify_80_percent
 
@@ -65,17 +65,20 @@ def conservative_input(req: ChatRequest) -> int:
     return 256 + len(schema.encode()) + sum(len(m.content.encode()) + len(m.role) + 32 for m in req.messages)
 
 
-def reserve(ctx: Context, entry: RouteEntry, req: ChatRequest) -> Reservation:
+def reserve(ctx: Context, entry: RouteEntry, req: ChatRequest | TranscriptionRequest) -> Reservation:
     day = clock.now().astimezone(UTC).date()
     month = day.replace(day=1)
-    input_tokens = conservative_input(req)
-    output_tokens = req.max_output_tokens
+    audio = isinstance(req, TranscriptionRequest)
+    input_tokens = 0 if isinstance(req, TranscriptionRequest) else conservative_input(req)
+    output_tokens = 0 if isinstance(req, TranscriptionRequest) else req.max_output_tokens
     tokens = input_tokens + output_tokens
     cost = int(
         (
             Decimal(str(entry.price_in_per_m)) * input_tokens + Decimal(str(entry.price_out_per_m)) * output_tokens
         ).to_integral_value(rounding=ROUND_CEILING)
     )
+    if audio:
+        cost = cost_micros(entry, Usage(input_tokens=0, output_tokens=0, audio_seconds=120), round_up=True)
     public = req.use_case in {"intake", "safety"}
     result = Reservation(day, month, input_tokens, output_tokens, cost, public)
     s = get_settings()
@@ -99,6 +102,8 @@ def reserve(ctx: Context, entry: RouteEntry, req: ChatRequest) -> Reservation:
             if claimed is None:
                 raise AiError("ai.budget_exceeded")
         budget = effective_budget(db, ctx)
+        if budget <= 0:
+            raise AiError("ai.budget_exceeded")
         db.execute(insert(AiUsageDaily).values(business_id=ctx.business_id, day=day).on_conflict_do_nothing())
         claimed = db.scalar(
             update(AiUsageDaily)
@@ -147,7 +152,9 @@ def reserve(ctx: Context, entry: RouteEntry, req: ChatRequest) -> Reservation:
 
 def reconcile(ctx: Context, r: Reservation, entry: RouteEntry, result: ChatResult | None) -> None:
     # Providers/adapters currently represent absent usage as 0/0. Treat it as unknown, never as a free call.
-    reported = result is not None and result.usage.input_tokens > 0 and result.usage.output_tokens >= 0
+    reported = result is not None and (
+        result.usage.audio_seconds is not None or (result.usage.input_tokens > 0 and result.usage.output_tokens >= 0)
+    )
     usage = (
         result.usage
         if reported and result is not None
@@ -212,7 +219,7 @@ class ReservedAdapter:
         self.ctx, self.adapter, self.entries = ctx, adapter, entries
         self.name = adapter.name
 
-    def chat(self, req: ChatRequest) -> ChatResult:
+    def chat(self, req: ChatRequest | TranscriptionRequest) -> ChatResult:
         # Duplicate model entries may have different prices: reserve the more expensive rates conservatively.
         entries = [e for e in self.entries if e.model == req.model]
         entry = entries[0].model_copy(
@@ -232,7 +239,10 @@ class ReservedAdapter:
                 raise
             result = None
             try:
-                result = self.adapter.chat(req)
+                if isinstance(req, TranscriptionRequest):
+                    result = self.adapter.transcribe(req)  # type: ignore[attr-defined]
+                else:
+                    result = self.adapter.chat(req)
                 return result
             finally:
                 reconcile(self.ctx, r, entry, result)

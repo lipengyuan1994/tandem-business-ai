@@ -13,3 +13,5 @@ Spec: [docs/roadmap/modules/M01-identity.md](../../../../docs/roadmap/modules/M0
 - Session `authenticated_at` preserves the authentication origin across rotations. Regulated expiry stays capped at origin + 8 hours; standard expiry preserves the original configured absolute deadline.
 - Login state is keyed by the OIDC state plus a short-lived Secure, HttpOnly, SameSite=Lax `__Host-smb_oidc` browser cookie. A successful login revokes only the presented session before issuing its replacement.
 - Owner status changes require owner authority, including reactivation. Membership and role edits share a business-scoped transaction lock before checking the last-active-owner invariant.
+
+P10-D: public.dictation_names(db, ctx, entity_ids) returns bounded permission/business-scoped names only.

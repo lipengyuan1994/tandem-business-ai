@@ -41,7 +41,7 @@
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "same-origin"
-		Permissions-Policy "camera=(), geolocation=(), microphone=()"
+		Permissions-Policy "camera=(), geolocation=(), microphone=(self)"
 		-Server
 	}
 	# `-Server` is applied when a handler writes the response. A response that Caddy builds itself from an error (a 502

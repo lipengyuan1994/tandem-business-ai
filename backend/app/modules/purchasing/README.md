@@ -77,4 +77,4 @@ as answered before the sweep too. Sending calculates expected date from slowest 
 Late means date < business-local today; absent date is unknown. Receipts require sent/partially
 received; >110% needs owner/admin override reason. Cancellation preserves receipts/numbering.
 
-Absent requested_lines stays absent on serialization, preserving legacy pending proposal hashes.
+Absent requested_lines stays absent on serialization, preserving legacy pending proposal hashes.  P10-D: public.dictation_names(db, ctx, entity_ids) returns bounded permission/business-scoped names only.

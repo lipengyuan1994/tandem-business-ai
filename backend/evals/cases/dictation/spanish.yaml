@@ -1,0 +1,18 @@
+id: dictation-spanish
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: eh no enviar el pedido
+  dictionary: []
+  expected_text: No enviar el pedido.
+expect:
+  answer_contains:
+  - no enviar el pedido
+  forbidden_text:
+  - send
+  - order
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1

@@ -9,6 +9,7 @@ HTTP goes only through `app.platform.http.client()` (egress allowlist), or `clie
 from __future__ import annotations
 
 import json
+import math
 import threading
 import time
 from collections.abc import Callable
@@ -21,7 +22,7 @@ import structlog
 
 from app.platform.http import EgressDenied, client
 
-from .types import ChatMessage, ChatRequest, ChatResult, ProviderError, Usage
+from .types import ChatMessage, ChatRequest, ChatResult, ProviderError, TranscriptionRequest, Usage
 
 log = structlog.get_logger(__name__)
 
@@ -78,14 +79,24 @@ class HttpAdapterBase:
         return self._client
 
     def _post(
-        self, url: str, headers: dict[str, str], body: dict[str, Any], *, model: str, timeout_s: float
+        self,
+        url: str,
+        headers: dict[str, str],
+        body: dict[str, Any],
+        *,
+        model: str,
+        timeout_s: float,
+        files: dict[str, tuple[str, bytes, str]] | None = None,
     ) -> tuple[dict[str, Any], int]:
         """POST JSON; returns (parsed body, latency ms) or raises ProviderError. Logs only metadata."""
         started = time.monotonic()
         timeout = httpx.Timeout(timeout_s, connect=min(5.0, timeout_s))
         status: int | None = None
         try:
-            response = self._http().post(url, headers=headers, json=body, timeout=timeout)
+            if files is None:
+                response = self._http().post(url, headers=headers, json=body, timeout=timeout)
+            else:
+                response = self._http().post(url, headers=headers, data=body, files=files, timeout=timeout)
             status = response.status_code
             error = error_for_status(status, response.headers.get("retry-after"))
             if error is not None:
@@ -170,6 +181,42 @@ class OpenAICompatAdapter(HttpAdapterBase):
         body["messages"] = [{"role": m.role, "content": m.content} for m in messages]
         return body
 
+    def transcribe(self, req: TranscriptionRequest) -> ChatResult:
+        headers = {"Accept": "application/json"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        # Vultr rejects verbose_json; local whisper.cpp/faster-whisper servers use it for duration metadata.
+        body = {"model": req.model, "response_format": "verbose_json" if self.local else "json"}
+        if req.language:
+            body["language"] = req.language
+        data, latency = self._post(
+            f"{self.base_url}/audio/transcriptions",
+            headers,
+            body,
+            model=req.model,
+            timeout_s=req.timeout_s,
+            files={"file": ("dictation" + _audio_suffix(req.mime), req.audio, req.mime)},
+        )
+        text = data.get("text")
+        seconds = data.get("usage", {}).get("seconds") if isinstance(data.get("usage"), dict) else None
+        if seconds is None:
+            seconds = data.get("duration")
+        if (
+            not isinstance(text, str)
+            or not isinstance(seconds, (int, float))
+            or isinstance(seconds, bool)
+            or not math.isfinite(seconds)
+            or seconds < 0
+        ):
+            raise self.malformed(req.model)
+        return ChatResult(
+            text=text,
+            usage=Usage(input_tokens=0, output_tokens=0, audio_seconds=seconds),
+            provider=self.name,
+            model=req.model,
+            latency_ms=latency,
+        )
+
     def chat(self, req: ChatRequest) -> ChatResult:
         headers = {"Accept": "application/json"}
         if self._api_key:
@@ -194,6 +241,17 @@ class OpenAICompatAdapter(HttpAdapterBase):
             raise self.malformed(req.model) from None
         # The route's model name (not the provider's echo) so recording and pricing match the route entry.
         return ChatResult(text=text, usage=usage, provider=self.name, model=req.model, latency_ms=latency_ms)
+
+
+def _audio_suffix(mime: str) -> str:
+    return {
+        "audio/webm": ".webm",
+        "audio/ogg": ".ogg",
+        "audio/mp4": ".m4a",
+        "audio/mpeg": ".mp3",
+        "audio/wav": ".wav",
+        "audio/x-wav": ".wav",
+    }.get(mime, ".audio")
 
 
 __all__ = ["OpenAICompatAdapter", "error_for_status", "retry_after_seconds"]

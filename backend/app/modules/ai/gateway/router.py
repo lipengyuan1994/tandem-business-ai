@@ -23,7 +23,7 @@ from .fake import ScriptFileAdapter
 from .local_address import Resolver, resolve_host, verify_local_url
 from .openai_compat import OpenAICompatAdapter
 from .routes import Limits, ModelClass, ProviderCfg, RouteEntry, RoutesFile, load_routes_file
-from .types import Adapter, ChatRequest, ChatResult, JsonMode, ProviderError
+from .types import Adapter, ChatRequest, ChatResult, JsonMode, ProviderError, TranscriptionRequest
 
 log = structlog.get_logger(__name__)
 _monotonic = time.monotonic
@@ -64,6 +64,8 @@ def effective_policy(db: Session, ctx: Context) -> Policy:
 
 
 def json_mode_for(entry: RouteEntry, req: ChatRequest) -> JsonMode:
+    if req.use_case == "dictation_polish":
+        return "json_object"
     if req.json_schema is None:
         return "text"
     return "json_schema" if entry.json_schema else "json_object"
@@ -104,9 +106,22 @@ class Router:
 
     def allowed(self, model_class: ModelClass, policy: Policy) -> list[RouteEntry]:
         """Entries of this class, in order, whose provider has an adapter (key present) and passes the policy."""
-        return [entry for entry in self.routes.routes.get(model_class, []) if self._allows(entry, policy)]
+        return [
+            entry
+            for entry in self.routes.routes.get(model_class, [])
+            if self._allows(entry, policy)
+            and (model_class != "stt" or hasattr(self.adapters[entry.provider], "transcribe"))
+        ]
 
     def complete(self, model_class: ModelClass, policy: Policy, req: ChatRequest) -> tuple[ChatResult, RouteEntry]:
+        return self._complete(model_class, policy, req)
+
+    def transcribe(self, policy: Policy, req: TranscriptionRequest) -> tuple[ChatResult, RouteEntry]:
+        return self._complete("stt", policy, req)
+
+    def _complete(
+        self, model_class: ModelClass, policy: Policy, req: ChatRequest | TranscriptionRequest
+    ) -> tuple[ChatResult, RouteEntry]:
         """Fill model and json_mode per entry; try allowed entries in order; on a transient ProviderError try the next;
         non-transient → raise it. No allowed entry → PolicyBlocked. All failed → ProviderError("unavailable")."""
         entries = self.routes.routes.get(model_class, [])
@@ -115,13 +130,17 @@ class Router:
         deadline = started + req.timeout_s
         for index, entry in enumerate(entries):
             policy = attempt_policy(policy)
-            if not self._allows(entry, policy):
+            if not self._allows(entry, policy) or entry not in self.allowed(model_class, policy):
                 continue
             remaining = deadline - (started if index == 0 else _monotonic())
             if remaining <= 0:
                 raise ProviderError("timeout", "request deadline exceeded")
             attempt = req.model_copy(
-                update={"model": entry.model, "json_mode": json_mode_for(entry, req), "timeout_s": remaining}
+                update={
+                    "model": entry.model,
+                    "json_mode": json_mode_for(entry, req) if isinstance(req, ChatRequest) else "text",
+                    "timeout_s": remaining,
+                }
             )
 
             def check_policy(entry: RouteEntry = entry, policy: Policy = policy) -> None:

@@ -9,6 +9,10 @@ from sqlalchemy.orm import Session
 from app.platform.context import Context
 
 from . import usage
+from .dictation import DictationOut
+from .dictation import available as voice_available
+from .dictation import transcribe as transcribe_dictation
+from .dictation_dictionary import dictionary as dictation_dictionary
 from .gateway.router import effective_policy, load_router
 from .gateway.routes import ModelClass
 from .schemas import AiStatus, ModelClassStatus
@@ -33,12 +37,15 @@ def status(db: Session, ctx: Context) -> AiStatus:
         reason = "ai.disabled_by_policy"
     elif percent >= 100:
         reason = "ai.budget_exceeded"
+    budget_enabled = usage.effective_budget(db, ctx) > 0
     classes = {}
     for model_class in get_args(ModelClass):
-        available = router is not None and bool(router.allowed(model_class, policy))
+        available = budget_enabled and router is not None and bool(router.allowed(model_class, policy))
         detail: str | None = None
         if not available:
-            if policy == "regulated":
+            if not budget_enabled:
+                detail = "ai.off: zero business AI allowance"
+            elif policy == "regulated":
                 detail = f"regulated: no local route for {model_class}"
             elif router is None or not router.allowed(model_class, "hosted_any"):
                 detail = f"ai.not_configured: no usable route for {model_class}"
@@ -48,4 +55,6 @@ def status(db: Session, ctx: Context) -> AiStatus:
     return AiStatus(enabled=reason is None, reason=reason, policy=policy, budget_percent=percent, model_classes=classes)
 
 
-__all__ = ["AiStatus", "status"]
+__all__ = ["AiStatus", "DictationOut", "dictation_dictionary", "status", "transcribe_dictation", "voice_available"]
+
+# Voice uses only this facade; implementation/recording remain owned by ai.

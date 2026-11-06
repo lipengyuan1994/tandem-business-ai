@@ -96,3 +96,28 @@ __all__ = [
     "has_permission_now",
     "list_users_with_permission",
 ]
+
+
+def dictation_names(
+    db: Session, ctx: Context, entity_ids: set[uuid.UUID], limit: int = 40, *, only_selected: bool = False
+) -> list[str]:
+    """Only active members of the current business; no emails or global user lookup."""
+    from sqlalchemy import select, true
+
+    from .models import Membership, User
+
+    ctx.require("identity.membership.read")
+    return list(
+        db.scalars(
+            select(User.display_name)
+            .join(Membership, Membership.user_id == User.id)
+            .where(
+                Membership.business_id == ctx.business_id,
+                Membership.status == "active",
+                User.status == "active",
+                User.id.in_(entity_ids) if only_selected else true(),
+            )
+            .order_by(User.id.in_(entity_ids).desc(), Membership.updated_at.desc(), User.id)
+            .limit(min(limit, 50))
+        )
+    )

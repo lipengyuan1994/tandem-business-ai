@@ -11,7 +11,7 @@ import yaml  # type: ignore[import-untyped]  # PyYAML, locked through uvicorn[st
 
 from app.platform.config import get_settings
 
-from .types import ChatRequest, ChatResult, ProviderError, Usage
+from .types import ChatRequest, ChatResult, ProviderError, TranscriptionRequest, Usage
 
 if TYPE_CHECKING:
     from .router import Router
@@ -58,6 +58,10 @@ class FakeGateway:
             raise item
         return _result(item, self.name, req.model)
 
+    def transcribe(self, req: TranscriptionRequest) -> ChatResult:
+        result = self.chat(ChatRequest(model=req.model, messages=[], use_case="dictation_stt"))
+        return result.model_copy(update={"usage": Usage(input_tokens=0, output_tokens=0, audio_seconds=8)})
+
     @property
     def remaining(self) -> int:
         return len(self._script) if self._script is not None else 0
@@ -96,6 +100,10 @@ class ScriptFileAdapter:
             self._next[use_case] = (i + 1) % len(replies)
         return _result(replies[i], self.name, req.model)
 
+    def transcribe(self, req: TranscriptionRequest) -> ChatResult:
+        result = self.chat(ChatRequest(model=req.model, messages=[], use_case="dictation_stt"))
+        return result.model_copy(update={"usage": Usage(input_tokens=0, output_tokens=0, audio_seconds=8)})
+
 
 def fake_router(gateway: FakeGateway, *, grounding: FakeGateway | None = None) -> Router:
     """Fake routes with an independent checker. Without explicit checker output, grounding fails closed."""
@@ -109,7 +117,7 @@ def fake_router(gateway: FakeGateway, *, grounding: FakeGateway | None = None) -
             "checker": ProviderCfg(kind="fake", vendor="vultr"),
         },
         routes={
-            **{c: [RouteEntry(provider=gateway.name, model=f"fake-{c}")] for c in classes},
+            **{c: [RouteEntry(provider=gateway.name, model=f"fake-{c}", price_per_audio_minute=0)] for c in classes},
             "grounding": [RouteEntry(provider="checker", model="fake-grounding")],
         },
     )

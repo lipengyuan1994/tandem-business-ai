@@ -77,4 +77,4 @@ Cards carry revision/hash, preview, eligibility/reason, delivery state and white
 current status/results are fenced context on later turns. Typed yes never approves. Read-only
 `/work-queue` and `/exceptions` require proposal read, merge scoped public readers with pagination;
 exceptions includes current pause and seven-day fallback history. Proposal tool results supply fresh
-confirmation eligibility; v3/FinalStep reserve needs_human for blockers, not advice, stock warnings or ordinary Confirm.
+confirmation eligibility; v3/FinalStep reserve needs_human for blockers, not advice, stock warnings or ordinary Confirm.  P10-D: ai.public.voice_available/transcribe_dictation/dictation_dictionary support metadata-only dictation. OpenAI-compatible /audio/transcriptions uses policy/egress filtering and 120-second audio-cost reservations. dictation_polish v1 uses writer JSON object mode, scoped names and deterministic guards; failures return raw. No audio, transcript, dictionary or edited text is persisted in AI recordings. See voice/README.md.

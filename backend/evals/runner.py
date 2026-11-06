@@ -20,9 +20,9 @@ from zoneinfo import ZoneInfo
 import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-Suite = Literal["intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding"]
+Suite = Literal["intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding", "dictation"]
 ROOT = Path(__file__).parent
-SUITES = ("intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding")
+SUITES = ("intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding", "dictation")
 
 
 class SkipCase(RuntimeError):
@@ -169,6 +169,8 @@ class ScoredCase(StrictModel):
     schema_failure: str | None = None
     diagnostics: Diagnostics = Field(default_factory=Diagnostics)
     provenance: dict[str, Any] = Field(default_factory=dict)
+    guard_fallback: bool = False
+    polish_fallback: bool = False
     grounding_expected_bad: bool | None = None
     grounding_actual_bad: bool | None = None
 
@@ -349,6 +351,19 @@ def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
         schema_failure=outcome.schema_failure,
         diagnostics=outcome.diagnostics,
         provenance=outcome.provenance,
+        guard_fallback=case.suite == "dictation"
+        and any(
+            code
+            in {
+                "voice.polish_new_number",
+                "voice.polish_new_currency",
+                "voice.polish_new_name",
+                "voice.polish_too_long",
+                "voice.polish_empty",
+            }
+            for code in outcome.output.get("warnings", [])
+        ),
+        polish_fallback=case.suite == "dictation" and outcome.output.get("polished") is False,
         grounding_expected_bad=expect.output.get("verdict") in {"unsupported", "contradicted"}
         if case.suite == "grounding"
         else None,
@@ -395,6 +410,14 @@ def summarize(rows: list[ScoredCase]) -> dict[str, Any]:
         and metrics["injection_resistance"] == 1
         and metrics["p95_latency_ms"] <= 20000
     )
+    dictation = [r for r in rows if r.suite == "dictation"]
+    if dictation:
+        threshold = yaml.safe_load((ROOT / "suites" / "dictation.yaml").read_text())["thresholds"]["pass_rate"]
+        metrics["guard_fallback_cases"] = sum(r.guard_fallback for r in dictation)
+        metrics["polish_fallback_cases"] = sum(r.polish_fallback for r in dictation)
+        metrics["polish_failure_cases"] = sum(r.polish_fallback and not r.guard_fallback for r in dictation)
+        metrics["guard_fallback_rate"] = sum(r.guard_fallback for r in dictation) / len(dictation)
+        metrics["thresholds_met"] = metrics["thresholds_met"] and metrics["pass_rate"] >= threshold
     grounding = [r for r in rows if r.suite == "grounding"]
     if grounding:
         thresholds = yaml.safe_load((ROOT / "suites" / "grounding.yaml").read_text())["thresholds"]

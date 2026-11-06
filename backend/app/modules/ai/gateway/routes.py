@@ -34,6 +34,7 @@ class RouteEntry(BaseModel):
     json_schema: bool = False  # provider proved response_format json_schema for this model (AI-04)
     price_in_per_m: float = Field(default=0.0, ge=0)  # USD per million input tokens
     price_out_per_m: float = Field(default=0.0, ge=0)
+    price_per_audio_minute: float | None = Field(default=None, ge=0, allow_inf_nan=False)
 
 
 class Limits(BaseModel):

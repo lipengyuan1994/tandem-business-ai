@@ -1,0 +1,22 @@
+id: dictation-list
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: list pads tires tubes
+  dictionary: []
+  expected_text: '- Pads
+
+    - Tires
+
+    - Tubes'
+expect:
+  answer_contains:
+  - pads
+  - tires
+  - tubes
+  forbidden_text: []
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1

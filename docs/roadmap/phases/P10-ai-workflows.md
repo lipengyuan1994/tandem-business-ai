@@ -148,7 +148,7 @@ punctuation and lists, the business's names and SKUs spelled right, nothing adde
   `whisper-large-v3-turbo`, local Whisper under `strict_private`) → polish pass with a **scoped** dictionary (catalog
   items and the current screen's names, not every customer) → editable text; raw transcript kept beside it.
 - Keep M14's rule: the person confirms before anything is sent (immediate send is a later option). Length limit:
-  M14 says 60 s / 2 MB; raising it to 120 s is D7.
+  D7 (owner, 2026-11-06) amends M14 to 120 s / 4 MiB; backend accepts provider measurement up to 125 s.
 - Tests and evals: negation, quantities, currencies, dates, corrections, names; codecs, byte limits, interrupted
   uploads, temp-file cleanup, concurrency; audio never stored.
 

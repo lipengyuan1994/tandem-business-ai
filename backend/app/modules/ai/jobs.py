@@ -20,6 +20,12 @@ def assistant_retention_job(ctx: Context, payload: dict[str, Any]) -> None:
     from .usecases.copilot import retain_messages
 
     retain_messages(ctx)
+    from app.platform.db import transaction
+    from app.platform.registry import get_registry
+
+    with transaction(ctx) as db:
+        for handler in get_registry().retention_handlers.values():
+            handler(db, ctx, payload)
 
 
 def reorder_note_job(ctx: Context, payload: dict[str, Any]) -> None:

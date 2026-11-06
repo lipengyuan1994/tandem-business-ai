@@ -1,0 +1,16 @@
+id: dictation-quantity
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: we need twenty five boxes
+  dictionary: []
+  expected_text: We need 25 boxes.
+expect:
+  answer_contains:
+  - '25'
+  forbidden_text: []
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1

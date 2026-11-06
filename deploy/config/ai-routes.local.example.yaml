@@ -19,5 +19,5 @@ routes:
   safety: [{provider: clinic, model: local-safety}]
   grounding: [{provider: clinic, model: local-grounding}]
   embed: [{provider: clinic, model: local-embed}]
-  stt: [{provider: clinic, model: local-stt}]
+  stt: [{provider: clinic, model: local-stt, price_per_audio_minute: 0}]
   tts: [{provider: clinic, model: local-tts}]

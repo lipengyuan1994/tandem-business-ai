@@ -1,0 +1,18 @@
+id: dictation-correction
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: order twelve no ten brake pads
+  dictionary: []
+  expected_text: Order 10 brake pads.
+expect:
+  answer_contains:
+  - '10'
+  forbidden_text:
+  - '12'
+  - twelve
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1

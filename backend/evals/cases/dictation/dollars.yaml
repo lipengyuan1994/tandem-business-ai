@@ -1,0 +1,16 @@
+id: dictation-dollars
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: the price is fifty dollars
+  dictionary: []
+  expected_text: The price is $50.
+expect:
+  answer_contains:
+  - $50
+  forbidden_text: []
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1

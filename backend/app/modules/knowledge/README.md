@@ -28,3 +28,5 @@ Seed adds five public Cycle Works articles, four Garden Store articles, and one 
 Tests cover CRUD/publication/ranking, visibility/RLS/permissions, immutable versions, and suggestions.
 Admin tests verify complete scoped export and actual customer/visitor erasure; retention tests cover settings,
 boundary/recent/open rows, business isolation, bounded batches, continuation deduplication and missing scope.
+
+P10-D: public.dictation_names(db, ctx, entity_ids) returns bounded permission/business-scoped names only.

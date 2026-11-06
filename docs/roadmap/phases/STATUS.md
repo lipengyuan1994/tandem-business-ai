@@ -109,7 +109,7 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P10-A1](P10-ai-workflows.md) | Confirm in chat, PO delivery to supplier, outbox stop, Work queue | EVENT | A | P10-A0 | DONE (2026-11-05): confirm in chat (own thread, revision/hash, $500/order and $1,000/day), PO delivered to the supplier (`purchasing.send_po`), stoppable AI-sent mail (send delay, Stop), delivery states, Work queue and Exceptions; copilot live eval 83 %; `make check` and e2e passed; not yet deployed |
 | [P10-C1](P10-ai-workflows.md) | Hand-over enforced, knowledge base v1, grounded front-desk answers | EVENT | A/B | P10-A0 | DONE (2026-11-05): knowledge base v1 (M19), hand-over enforced, cited answers, grounding check, front-desk reply rule in shadow mode, withheld web-chat replies; live intake 98.5 %, grounding 100 %; `make check` and e2e passed; not yet deployed |
 | [P10-E0](P10-ai-workflows.md) | Local-model benchmark (P5-02) and local-only `regulated` routing | EVENT + DEPLOY | A | ADR-020 | DONE — [routing](../ai/cards/P10-E0-routing.md) (Codex) and [benchmark](../../../backend/evals/reports/2026-11-06-local-models.md) (2026-11-06: local grounding and extraction pass; agent classes stay off under regulated) |
-| [P10-D](P10-ai-workflows.md) | Voice dictation (STT adapter, polish pass) | EVENT | B | — | PLANNED |
+| [P10-D](P10-ai-workflows.md) | Voice dictation (STT adapter, polish pass) | EVENT | B | — | IN PROGRESS — backend Codex 2026-11-06; UI separate |
 | [P10-B](P10-ai-workflows.md) | AI Team page, agent configs, chaining rules, Customer Care agent | EVENT | A/B | P10-A1 | PLANNED |
 | [P10-E1](P10-ai-workflows.md) | Multi-resource booking, emergency rules, recall, Example Dental Clinic | EVENT | A/B | P10-C1, P10-E0 | PLANNED |
 | [P10-C2](P10-ai-workflows.md) | Embed snippet, customer self-service, embeddings and PDF upload | EVENT | B | P10-C1 | PLANNED |
@@ -119,3 +119,5 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P7-04](P7-submission.md) | Slides | DOC | B draft, owner final | — | PARTIAL (2026-11-03): outline `docs/submission/slides-outline.draft.md`; procurement added 2026-11-03 |
 | [P7-05](P7-submission.md) | Submit on lablab.ai | GATE | Owner | P7-01 … P7-04 | PLANNED |
 | [P7-06](P7-submission.md) | Freeze | PRE | B | — | PLANNED |
+
+| [P10-D backend](../ai/cards/P10-D-backend.md) | Voice dictation backend | EVENT | A | P10-E0 | DONE (2026-11-06): 2,083 backend tests; restricted make check; live eval/UI separate |

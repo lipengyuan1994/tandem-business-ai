@@ -6,6 +6,8 @@
 providers:
   vultr: {kind: openai_compat, base_url: "https://api.vultrinference.com/v1", api_key_env: VULTR_INFERENCE_API_KEY, hosted: true, vendor: vultr}
 routes:
+  # Unconfirmed conservative placeholder: operator MUST confirm Vultr audio billing.
+  stt: [{provider: vultr, model: whisper-large-v3-turbo, price_per_audio_minute: 0.006}]
   agent:
     - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
     - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}

@@ -1,0 +1,17 @@
+id: dictation-pounds
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: charge five pounds
+  dictionary: []
+  expected_text: Charge £5.
+expect:
+  answer_contains:
+  - £5
+  forbidden_text:
+  - $
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1

@@ -1,0 +1,17 @@
+id: dictation-not-ten
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: not ten order two pads
+  dictionary: []
+  expected_text: Not 10. Order 2 pads.
+expect:
+  answer_contains:
+  - not 10
+  - '2'
+  forbidden_text: []
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1

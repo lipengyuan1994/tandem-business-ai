@@ -4,6 +4,7 @@
 providers:
   fake: {kind: fake, hosted: false, vendor: local}
 routes:
+  stt: [{provider: fake, model: fake-stt, price_per_audio_minute: 0}]
   agent:        [{provider: fake, model: fake-dev}]
   fast_extract: [{provider: fake, model: fake-dev}]
   writer:       [{provider: fake, model: fake-dev}]

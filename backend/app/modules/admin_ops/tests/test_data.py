@@ -63,6 +63,7 @@ def test_export_contains_every_module_of_one_business_and_nothing_of_another(dem
         "sales",
         "purchasing",
         "ai",
+        "voice",
         "admin_ops",
     }
     assert set(manifest["modules"]) == expected
@@ -70,8 +71,9 @@ def test_export_contains_every_module_of_one_business_and_nothing_of_another(dem
     assert set(manifest["modules"]["ai"]) == {
         "ai_runs", "ai_run_steps", "ai_effects", "ai_usage_daily", "assistant_threads", "assistant_messages",
     }  # fmt: skip
-    # Nothing is sent while the demo data is loaded, and the demo data holds no assistant runs.
-    for module in expected - {"notifications", "admin_ops", "ai"}:
+    assert manifest["modules"]["voice"] == {"voice_sessions": 0}
+    # Nothing is sent while the demo data is loaded; it holds no assistant runs or voice sessions.
+    for module in expected - {"notifications", "admin_ops", "ai", "voice"}:
         assert any(count > 0 for count in manifest["modules"][module].values()), f"{module} exported no rows"
     assert set(manifest["modules"]["notifications"]) == {"outbox_messages", "delivery_attempts", "in_app_notifications"}
     everything = "".join(archive.read(name).decode() for name in archive.namelist())

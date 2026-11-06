@@ -36,7 +36,8 @@ routes:                               # ordered: the first healthy, policy-allow
   embed:
     - {provider: vultr, model: qwen3-embedding-4b, price_in_per_m: 0.05, price_out_per_m: 0.05}
   stt:
-    - {provider: vultr, model: whisper-large-v3-turbo}
+    # Unconfirmed conservative placeholder: operator MUST confirm Vultr audio billing.
+    - {provider: vultr, model: whisper-large-v3-turbo, price_per_audio_minute: 0.006}
   tts:
     - {provider: vultr, model: chatterbox}
 limits: {max_steps: 8, max_input_tokens_per_step: 12000, max_output_tokens_per_step: 800, run_timeout_s: 90, step_timeout_s: 30}

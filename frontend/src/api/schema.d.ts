@@ -2791,6 +2791,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/voice/transcriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dictate editable text; never creates or sends a message */
+        post: operations["transcriptions_api_v1_voice_transcriptions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2873,6 +2890,10 @@ export interface components {
             budget_percent: number;
             /** Enabled */
             enabled: boolean;
+            /** Model Classes */
+            model_classes?: {
+                [key: string]: components["schemas"]["ModelClassStatus"];
+            };
             /**
              * Policy
              * @enum {string}
@@ -4341,6 +4362,19 @@ export interface components {
              */
             declined: true;
         };
+        /** DictationOut */
+        DictationOut: {
+            /** Duration S */
+            duration_s: number;
+            /** Polished */
+            polished: boolean;
+            /** Raw Text */
+            raw_text: string;
+            /** Text */
+            text: string;
+            /** Warnings */
+            warnings: string[];
+        };
         /** DocumentCreate */
         DocumentCreate: {
             /** Bill To Address */
@@ -4967,6 +5001,13 @@ export interface components {
             readonly sending_label: string | null;
             /** Stop Url */
             readonly stop_url: string | null;
+        };
+        /** ModelClassStatus */
+        ModelClassStatus: {
+            /** Enabled */
+            enabled: boolean;
+            /** Reason */
+            reason: string | null;
         };
         /** Money */
         Money: {
@@ -8531,7 +8572,7 @@ export interface operations {
         parameters: {
             query?: {
                 cursor?: string | null;
-                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding") | null;
+                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding" | "dictation") | null;
                 status?: ("running" | "succeeded" | "failed" | "step_limit" | "budget_exceeded" | "policy_blocked") | null;
                 limit?: number;
             };
@@ -20401,6 +20442,103 @@ export interface operations {
                 content: {
                     "application/problem+json": unknown;
                 };
+            };
+        };
+    };
+    transcriptions_api_v1_voice_transcriptions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "idempotency-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description At most 4 MiB / 120 seconds
+                     */
+                    audio: string;
+                    /**
+                     * @default other
+                     * @enum {string}
+                     */
+                    context?: "assistant" | "inbox_reply" | "purchasing" | "inventory" | "knowledge" | "note" | "other";
+                    entity_ids?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DictationOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Audio too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Provider unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

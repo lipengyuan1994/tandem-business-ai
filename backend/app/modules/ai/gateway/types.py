@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Literal, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 Role = Literal["system", "user", "assistant"]
 JsonMode = Literal["json_schema", "json_object", "text"]
@@ -32,9 +32,20 @@ class ChatRequest(BaseModel):
     use_case: str | None = None  # informational; only the "fake" provider uses it to pick its script
 
 
+class TranscriptionRequest(BaseModel):
+    model: str = ""
+    audio: bytes = Field(repr=False)
+    filename: str
+    mime: str
+    language: str | None = None
+    timeout_s: float = 30.0
+    use_case: str = "dictation"
+
+
 class Usage(BaseModel):
     input_tokens: int
     output_tokens: int
+    audio_seconds: float | None = Field(default=None, ge=0, allow_inf_nan=False)
 
 
 class ChatResult(BaseModel):
@@ -77,5 +88,6 @@ __all__ = [
     "ProviderError",
     "ProviderErrorKind",
     "Role",
+    "TranscriptionRequest",
     "Usage",
 ]

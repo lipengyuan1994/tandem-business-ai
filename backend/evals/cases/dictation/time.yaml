@@ -1,0 +1,16 @@
+id: dictation-time
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: meet at five thirty
+  dictionary: []
+  expected_text: Meet at 5:30.
+expect:
+  answer_contains:
+  - '5:30'
+  forbidden_text: []
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1

@@ -95,3 +95,8 @@ safety:
 # Independent checker: development answers default to staff review.
 grounding:
   - '{"claims":[],"verdict":"unsupported"}'
+
+dictation_stt:
+  - "um order twelve no ten brake pads"
+dictation_polish:
+  - '{"text":"Order 10 brake pads."}'

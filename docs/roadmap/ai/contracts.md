@@ -972,3 +972,58 @@ instead of entering suggestion recovery. Recognized stock facts remain separate 
 Prompt v3 is edited in place before release: pass quantity only when the user stated a number. needs_human is neither
 a recommendation nor a warning flag: put advice/next steps in the answer; a complete stock/supplier answer
 is false even if it recommends reordering. The final-step schema describes the same semantics.
+
+
+## P10-D: voice dictation
+
+D7 (owner, 2026-11-06) amends M14: 120 seconds / 4 MiB (4,194,304 bytes).
+POST /api/v1/voice/transcriptions requires ai.assistant.use, the copilot permission.
+Multipart fields: audio required; context optional (assistant, inbox_reply, purchasing,
+inventory, knowledge, note, other; default other); repeated entity_ids UUIDs, at most 10.
+Parse the stream in bounded memory, including framing/field overhead; never use disk spooling.
+Accept WebM, Ogg, MP4/M4A, MPEG, WAV/x-wav only when MIME and container signature agree.
+Oversize uploads fail before inference (413); invalid audio/fields fail 422; duration >125 s fails 422.
+120 seconds is the recording limit; 125 seconds is the provider measurement tolerance.
+Return {text, raw_text, duration_s, polished, warnings} for editing and explicit confirmation.
+The endpoint never creates a conversation, message, proposal or outbound delivery.
+
+Gateway transcriptions carry bytes, sanitized filename, MIME, optional language, model and deadline.
+OpenAI-compatible adapters POST multipart to /audio/transcriptions. Hosted/Vultr uses response_format=json
+(Vultr supports json/text, not verbose_json); local servers use standard verbose_json for duration.
+Parse usage.seconds or local server duration.
+Missing duration fails closed; local servers must return duration.
+Use chat's policy filtering, egress client, LOCAL_INFERENCE_HOSTS, deadlines, transient fallback,
+per-attempt policy rechecks and shared concurrency cap. No allowed route (including absent
+configuration, zero business allowance, strict_private/regulated without local STT) gives
+voice.unavailable with reason. Never fall back outside policy or to browser speech.
+RouteEntry.price_per_audio_minute is optional; absent prices conservatively use $0.006/min (explicit zero for free local).
+Vultr ships at $0.006/min, an unconfirmed conservative placeholder: operator must confirm billing.
+Reserve 120 seconds per attempt in installation day/month and business usage cost counters.
+Settle successful measured duration; retain reservation for errors/unknown usage, original UTC periods.
+STT consumes no text tokens; polish uses normal token/cost reservations.
+
+dictation_polish v1 uses writer in JSON object mode: constrained text editing, not extraction.
+Transcript and dictionary are fenced untrusted data. Remove fillers/false starts, apply corrections,
+preserve negation/language, format spoken numbers/punctuation/lists, fix names only to scoped terms,
+never answer questions or execute spoken instructions. Resolve at most 200 terms via public readers,
+business/RLS and explicit read permissions: catalog names/SKUs, suppliers, staff and exact on-screen
+entity names. Customers are read only by supplied IDs, never enumerated.
+The deterministic conservative guard checks normalized numbers/currencies against raw speech,
+new capitalized/name candidates against raw/dictionary, and character length <= raw +20%.
+Unknown number formats fail conservatively. Rejection, invalid output, timeout, policy or budget failure
+returns whitespace-cleaned raw speech, polished=false, and a stable warning. No repair call.
+These are necessary checks, not semantic proof; live evals assess preservation of meaning.
+
+30 new operations/user/hour via the existing limiter. Optional Idempotency-Key (1–64 chars) claims
+business/user/key and audio/context/entity/permission digest before inference. Changed input returns 409.
+Concurrent/restarted operations never call providers twice. Completed responses replay from a bounded
+10-minute process-memory cache; another process/restart/expiry returns 409 voice.replay_unavailable.
+This privacy tradeoff avoids persisting transcripts; retry with a new key only when appropriate.
+voice_sessions stores metadata only, including operation hash/key, with forced business RLS.
+ai_runs use case dictation records prompt/model/usage/status, never audio/transcript/dictionary/output text.
+Metadata export and user erasure follow lifecycle handlers; the existing daily platform retention job
+also schedules bounded voice cleanup after 90 days. Audio/text live only in request/process memory.
+
+Caddy permits microphone=(self); camera/geolocation stay disabled. Text-only synthetic dictation eval:
+>=20 cases, >=85% pass, guard fallback reported separately. Implementation runs offline tests only;
+live model/audio quality and browser confirmation are supervisor/UI checks.

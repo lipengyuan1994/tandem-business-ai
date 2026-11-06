@@ -4,7 +4,7 @@ import uuid
 from datetime import date, timedelta
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import select, true
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
@@ -137,3 +137,23 @@ def order_quantities(db: Session, ctx: Context, purchase_order_id: uuid.UUID) ->
     ctx.require(P.READ)
     repository.order(db, ctx, purchase_order_id)
     return {line.catalog_item_id: line.quantity for line in repository.lines(db, ctx, purchase_order_id)}
+
+
+def dictation_names(
+    db: Session, ctx: Context, entity_ids: set[uuid.UUID], limit: int = 40, *, only_selected: bool = False
+) -> list[str]:
+    """Names only, business scoped; exact screen IDs first, then recently changed suppliers."""
+    from .models import Supplier
+
+    ctx.require(P.READ)
+    rows = db.scalars(
+        select(Supplier)
+        .where(
+            Supplier.business_id == ctx.business_id,
+            Supplier.active.is_(True),
+            Supplier.id.in_(entity_ids) if only_selected else true(),
+        )
+        .order_by(Supplier.id.in_(entity_ids).desc(), Supplier.updated_at.desc(), Supplier.id)
+        .limit(min(limit, 50))
+    )
+    return [r.name for r in rows]

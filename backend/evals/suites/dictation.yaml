@@ -1,0 +1,3 @@
+thresholds:
+  pass_rate: 0.85
+# guard_fallback_cases and guard_fallback_rate are reported separately; fallback is not polish success.

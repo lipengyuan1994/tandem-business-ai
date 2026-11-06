@@ -4215,6 +4215,42 @@
         "title": "DeclineQuote",
         "type": "object"
       },
+      "DictationOut": {
+        "properties": {
+          "duration_s": {
+            "title": "Duration S",
+            "type": "number"
+          },
+          "polished": {
+            "title": "Polished",
+            "type": "boolean"
+          },
+          "raw_text": {
+            "title": "Raw Text",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "text",
+          "raw_text",
+          "duration_s",
+          "polished",
+          "warnings"
+        ],
+        "title": "DictationOut",
+        "type": "object"
+      },
       "DocumentCreate": {
         "additionalProperties": false,
         "properties": {
@@ -13344,7 +13380,8 @@
                     "campaign_draft",
                     "payment_followup",
                     "safety",
-                    "grounding"
+                    "grounding",
+                    "dictation"
                   ],
                   "type": "string"
                 },
@@ -26242,6 +26279,124 @@
         "summary": "Free slots for a service (deterministic)",
         "tags": [
           "scheduling"
+        ]
+      }
+    },
+    "/api/v1/voice/transcriptions": {
+      "post": {
+        "operationId": "transcriptions_api_v1_voice_transcriptions_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "audio": {
+                    "description": "At most 4 MiB / 120 seconds",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "context": {
+                    "default": "other",
+                    "enum": [
+                      "assistant",
+                      "inbox_reply",
+                      "purchasing",
+                      "inventory",
+                      "knowledge",
+                      "note",
+                      "other"
+                    ],
+                    "type": "string"
+                  },
+                  "entity_ids": {
+                    "items": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "audio"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DictationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "413": {
+            "description": "Audio too large"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Too many requests"
+          },
+          "503": {
+            "description": "Provider unavailable"
+          }
+        },
+        "summary": "Dictate editable text; never creates or sends a message",
+        "tags": [
+          "voice"
         ]
       }
     }

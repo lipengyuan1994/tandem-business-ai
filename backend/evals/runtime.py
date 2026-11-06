@@ -60,6 +60,7 @@ DEFAULT_CLASS: dict[str, ModelClass] = {
     "summary": "fast_extract",
     "procurement": "fast_extract",
     "grounding": "grounding",
+    "dictation": "writer",
 }
 
 
@@ -121,6 +122,8 @@ def validate_cases(cases: list[Case], path: Path = seed_module.DEFAULT_FIXTURES)
             "references",
             "knowledge_injection",
         }
+        if case.suite == "dictation":
+            allowed |= {"dictionary", "expected_text"}
         if case.suite == "grounding":
             allowed |= {"articles", "db_facts"}
         if set(case.input) - allowed or not isinstance(case.input.get("message"), str) or not case.input["message"]:
@@ -138,6 +141,14 @@ def validate_cases(cases: list[Case], path: Path = seed_module.DEFAULT_FIXTURES)
                 )
             ):
                 raise ValueError(f"{case.id}: invalid knowledge injection fixture")
+        if case.suite == "dictation":
+            terms = case.input.get("dictionary", [])
+            if (
+                not isinstance(terms, list)
+                or len(terms) > 200
+                or not all(isinstance(t, str) and len(t) <= 200 for t in terms)
+            ):
+                raise ValueError(f"{case.id}: invalid dictionary")
         visitor = case.input.get("visitor", {})
         email = visitor.get("email")
         if email is not None and not email.endswith("@example.com"):
@@ -371,7 +382,31 @@ class LiveRuntime:
                 router_module.set_router_for_tests(previous_router)
 
     def _dispatch(self, case: Case, state: CaseState) -> None:
-        if case.suite == "grounding":
+        if case.suite == "dictation":
+            from dataclasses import replace
+
+            from app.modules.ai import recording
+            from app.modules.ai.agent.prompts import load_prompt
+            from app.modules.ai.dictation import polish
+
+            state.run_id = uuid4()
+            ctx = replace(state.ctx, ai_run_id=state.run_id)
+            recording.open_run(
+                ctx,
+                recording.RunMeta(
+                    use_case="dictation",
+                    prompt=load_prompt("dictation_polish", 1),
+                    trigger_type="api",
+                    trigger_key=f"eval:{case.id}",
+                    on_behalf_of_user_id=ctx.user_id,
+                ),
+            )
+            value, polished, warnings = polish(
+                ctx, case.input["message"], case.input.get("dictionary", []), self.router, step_no=1
+            )
+            state.output = {"text": value, "polished": polished, "warnings": warnings}
+            recording.close_run(ctx, state.run_id, "succeeded", result={"polished": polished})
+        elif case.suite == "grounding":
             from app.modules.ai.agent.contexts import background_ctx_factory
             from app.modules.ai.grounding import check
 
@@ -527,7 +562,12 @@ class LiveRuntime:
         schema_errors: list[dict[str, Any]] = []
         if schema_valid:
             try:
-                if case.suite == "summary":
+                if case.suite == "dictation":
+                    from app.modules.ai.dictation import DictationPolish
+
+                    output = state.output
+                    DictationPolish.model_validate({"text": output["text"]})
+                elif case.suite == "summary":
                     ThreadSummary.model_validate(output)
                 elif case.suite == "grounding":
                     conversations.GroundingResult.model_validate(output)

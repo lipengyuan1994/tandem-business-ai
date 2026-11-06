@@ -244,3 +244,9 @@ source-membership and deterministic field/number guards. Fake tests prove harnes
 Intake knowledge cases also require would_act shadow outcomes; the harness exposes outcomes/reasons from real A0
 rows. `fake_router(gw, grounding=checker)` gives independent scripts; the default checker fails closed. The supervisor
 runs live via `AI_LIVE=1 make eval suite=grounding model_class=grounding` after normal eval preflight/setup.
+
+P10-D dictation: 24 synthetic text-only cases in cases/dictation. Supervisor command:
+AI_LIVE=1 make eval suite=dictation (writer class, JSON object). No audio upload is part of this suite.
+Pass threshold >=85%; guard_fallback_cases/rate are reported separately and raw fallback is not polish success.
+Offline coverage: app/modules/ai/tests/test_dictation_evals.py validates cases, prompt, guards and scoring
+with scripted expected responses. It does not measure live model accuracy.

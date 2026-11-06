@@ -1,0 +1,16 @@
+id: dictation-keep-no
+suite: dictation
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: no do not cancel
+  dictionary: []
+  expected_text: No, do not cancel.
+expect:
+  answer_contains:
+  - not cancel
+  forbidden_text: []
+  output:
+    polished: true
+  proposals: []
+  max_steps: 1
