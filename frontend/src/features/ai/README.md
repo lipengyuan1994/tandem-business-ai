@@ -1,7 +1,6 @@
 # AI screens (AI-13)
 
-Staff-facing AI features. AI changes use the proposal lifecycle; reorder drafts can receive delegated policy approval.
-Activity distinguishes the rule evaluation from the proposal’s current execution result.
+Staff-facing AI features use the proposal lifecycle; Activity distinguishes rule evaluation from current execution.
 All copy is in `en.json` under `ai.*`; `AI can make mistakes; you approve every change` is fixed.
 
 | Piece | Where it shows | Needs |
@@ -16,6 +15,7 @@ All copy is in `en.json` under `ai.*`; `AI can make mistakes; you approve every 
 | `ActionCard` + `DeliveryStatus` | saved chat proposals, Activity and proposal detail; revision-bound Confirm, local collapse, delivery countdown and confirmed Stop | backend card eligibility; Stop rechecks action approver / settings writer |
 | `WorkQueuePage` / `ExceptionsPage` | `/ai/work-queue`, `/ai/exceptions`, AI navigation | `approvals.proposal.read` |
 | `TeamPage`, `TeamActivity`, `ChainPage`, `AgentMention` | Team/detail/chain routes, assistant targeting and agent filters; [P10-B3 evidence](../../../../docs/roadmap/ai/cards/P10-B3-screens.md) | `approvals.proposal.read`; edits: `org.settings.write` |
+| `CustomerCareSettings`, `CustomerCareCase`, `CustomerCareProposal` | Team detail, Work and Approvals; [P10-B2 evidence](../../../../docs/roadmap/ai/cards/P10-B2-screens.md) | settings: `org.settings.write`; resolve: `conversations.proposal.approve` |
 | `ActivityPage` | `/ai/activity`, AI navigation | `approvals.proposal.read`; result link also needs `inventory.reorder.read` |
 | `AiSettingsPage` | `/settings/ai` (tab "AI") | `ai.settings.read` (edit: `ai.settings.write` + `org.settings.write`) |
 | `AiDisabledBanner` | panel, summary dialog, paste dialog, settings | — (reads `GET /ai/status`) |

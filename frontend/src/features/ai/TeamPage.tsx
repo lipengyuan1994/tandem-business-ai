@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/common/PageHeader"
 import { PermissionGate } from "@/components/common/PermissionGate"
 import { QueryError } from "@/components/common/QueryError"
 import { Skeleton } from "@/components/ui/skeleton"
+import { CustomerCareSettings } from "./CustomerCareSettings"
 import { AgentCard } from "./AgentCard"
 import { TeamActivity } from "./TeamActivity"
 import { useAgents } from "./team-api"
@@ -32,5 +33,5 @@ function AgentDetail({ agentKey }: { agentKey: string }) {
   if (agents.isPending) return <Skeleton className="h-64 w-full" />
   const agent = agents.data?.items.find((item) => item.key === agentKey)
   if (!agent) return <EmptyState title={t("ai.team.notFound")} />
-  return <div className="max-w-4xl space-y-6"><a className="record-link" href="/ai/team">{t("ai.team.back")}</a><PageHeader title={agent.name} description={agent.job} /><AgentCard agent={agent} /><TeamActivity agentKey={agent.key} /></div>
+  return <div className="max-w-4xl space-y-6"><a className="record-link" href="/ai/team">{t("ai.team.back")}</a><PageHeader title={agent.name} description={agent.job} /><AgentCard agent={agent} />{agent.key === "customer_care" ? <PermissionGate permission="org.settings.write"><CustomerCareSettings /></PermissionGate> : null}<TeamActivity agentKey={agent.key} /></div>
 }

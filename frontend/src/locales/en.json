@@ -218,7 +218,12 @@
       "timezone": "Time zone",
       "timezoneHelp": "Existing {{appointments}} keep their exact moment in time; only how they are displayed changes.",
       "locale": "Locale",
-      "currency": "Currency {{currency}} · public address /p/{{slug}}"
+      "currency": "Currency {{currency}} · public address /p/{{slug}}",
+      "publicProfile": "Public profile",
+      "review_url": "Review link (optional)",
+      "booking_url": "Booking link (optional)",
+      "urlHelp": "Absolute https URL, or leave empty. Up to 500 characters.",
+      "urlInvalid": "Enter an absolute https URL without login details, or leave empty."
     },
     "locations": {
       "default": "Default",
@@ -338,7 +343,8 @@
     },
     "review": "Review →",
     "actionLabels": {
-      "inventory.adjust_stock": "Stock adjustment"
+      "inventory.adjust_stock": "Stock adjustment",
+      "customer_care.send_message": "Customer Care message"
     },
     "policyDecision": "Approved by autonomy rule (v{{version}}), granted by {{who}}",
     "unknownDecider": "an unavailable user"
@@ -435,7 +441,11 @@
         "staff": "staff",
         "import": "import",
         "unsubscribe_link": "unsubscribe link"
-      }
+      },
+      "requestOnly": "This request only",
+      "proactiveAllowed": "Allows proactive service messages",
+      "proactiveNotAllowed": "Does not authorize proactive service messages",
+      "proactiveHelp": "Proactive service messages need current service-update consent recorded by staff or import. A chat checkbox covers this request only. Review requests also need marketing consent. Contact preferences and open complaints still apply."
     },
     "erase": {
       "open": "Erase personal data…",
@@ -458,6 +468,12 @@
       "confirm": "Restrict and retain records",
       "done": "Customer restricted; records retained.",
       "checks": "Resolve open approval proposals that refer to this {{customer}} or their records, and cancel or complete upcoming held/confirmed {{appointments}} first. Otherwise restriction is blocked and nothing is changed."
+    },
+    "preferredContact": "Preferred contact",
+    "contactChannels": {
+      "email": "E-mail",
+      "web_chat": "Web chat",
+      "none": "Don't contact"
     }
   },
   "catalog": {
@@ -1287,7 +1303,8 @@
       "noAccess": "You don't have access to autonomy settings.",
       "actions": {
         "inventory_create_reorder_draft": "Create reorder drafts when stock is low",
-        "conversations_send_reply": "Front-desk replies"
+        "conversations_send_reply": "Front-desk replies",
+        "customer_care_send_message": "Customer Care messages"
       },
       "level": "Autonomy level",
       "levels": {
@@ -1459,7 +1476,8 @@
         "outbound_mail": "Outbound e-mail",
         "supplier_quote": "Awaiting supplier reply",
         "autonomy_fallback": "Autonomy fell back to review",
-        "web_reply": "Front-desk reply"
+        "web_reply": "Front-desk reply",
+        "customer_care_case": "Customer Care case"
       }
     },
     "workQueue": {
@@ -1588,6 +1606,91 @@
       },
       "comingSoon": "Coming soon",
       "needsLocal": "Needs a local model under this business's privacy setting"
+    },
+    "care": {
+      "settings": "Customer Care settings",
+      "delay": "Check-in delay (days)",
+      "quietStart": "Quiet hours start",
+      "quietEnd": "Quiet hours end",
+      "tone": "Tone",
+      "tones": {
+        "warm": "Warm",
+        "formal": "Formal",
+        "concise": "Concise"
+      },
+      "delayHelp": "Use 0 to turn check-ins off, or 1–365 days after a completed appointment.",
+      "checkinsOff": "Check-ins are off",
+      "quietOff": "Quiet hours are off (start and end are equal)",
+      "timezone": "Quiet hours use the business time zone: {{timezone}}",
+      "profileLinks": "Edit review and booking links in Business settings",
+      "invalid": "Enter whole days from 0–365 and whole hours from 0–23.",
+      "save": "Save Customer Care settings",
+      "unknownReason": "Customer Care needs a person to check this activity",
+      "reasons": {
+        "no_consent": "No consent for reminders",
+        "dispute": "Open complaint",
+        "quiet_hours": "Waiting for quiet hours to end",
+        "duplicate": "Already handled for this customer",
+        "contact_preference": "Customer’s contact preference prevents this message",
+        "customer_erased": "Customer data was erased",
+        "customer_inactive": "Customer is inactive or restricted",
+        "future_appointment": "Customer already has an upcoming appointment",
+        "language_unavailable": "Customer’s language needs a person to write the message",
+        "source_unavailable": "Original conversation or message is unavailable",
+        "recall_facts_changed": "Recall details changed; check the current appointment and service",
+        "facts_changed": "Appointment or service details changed",
+        "recall_off": "Recall reminders are off for this service",
+        "not_due": "Recall reminder is not due yet",
+        "minimal_template": "Using minimal wording for this business’s privacy settings",
+        "complaint_requires_human": "Needs a person",
+        "requires_person": "Needs a person",
+        "invoice_unavailable": "Related invoice could not be verified"
+      },
+      "caseDetail": "Customer Care case details",
+      "viewCase": "View case",
+      "hideCase": "Hide case",
+      "categories": {
+        "complaint": "Complaint",
+        "warranty": "Warranty",
+        "dispute": "Dispute",
+        "other": "Customer Care case"
+      },
+      "priorities": {
+        "urgent": "Urgent",
+        "high": "High priority",
+        "normal": "Normal priority"
+      },
+      "customer": "Customer",
+      "unknownCustomer": "Unknown customer — identify in Inbox",
+      "thread": "Open thread in Inbox",
+      "appointment": "Related appointment",
+      "invoice": "Related invoice",
+      "noProposal": "No suggested reply yet. Review the thread in Inbox.",
+      "resolve": "Resolve",
+      "resolveTitle": "Resolve Customer Care case?",
+      "resolveHelp": "Resolving lifts this case's hold on check-ins and reminders. Other open cases, consent and contact preferences still apply.",
+      "message": "Customer Care message",
+      "kinds": {
+        "checkin": "Check-in",
+        "review_request": "Review request",
+        "recall": "Recall reminder",
+        "complaint_reply": "Complaint reply"
+      },
+      "needsPerson": "Needs a person",
+      "subject": "Subject",
+      "body": "Message body",
+      "earliest": "Earliest send time",
+      "facts": "Facts used",
+      "factsLabels": {
+        "appointment_id": "Appointment",
+        "service_id": "Service",
+        "service_date": "Service date",
+        "invoice_id": "Invoice",
+        "source_message_id": "Source message",
+        "due_month": "Recall due month"
+      },
+      "reviewProposal": "Review suggested reply — approve, edit or reject",
+      "priorityHelp": "Cases are ordered by priority among loaded items. Load more to include older cases."
     }
   },
   "dictation": {

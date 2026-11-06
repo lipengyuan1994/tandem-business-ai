@@ -127,3 +127,5 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P10-B3 screens](../ai/cards/P10-B3-screens.md) | AI Team, agent detail, chains, targeted assistant and filters | EVENT | B | P10-B1 backend | DONE — Codex 2026-11-06: 451 frontend tests, typecheck/lint/build, scoped offline check; +9,779 B gzip; API gaps and live/browser verification in card |
 
 | [P10-B2 backend](../ai/cards/P10-B2-backend.md) | Customer Care post-sales workflows | EVENT | A | P10-B1 backend | DONE (2026-11-06): seven review findings reproduced/fixed; 167 focused / 2,261 full backend tests, 96% coverage, scoped make check; live hosted `customer_care` eval 19/19 (reviewer, 2026-11-06); release separate |
+
+| [P10-B2 screens](../ai/cards/P10-B2-screens.md) | Customer Care Team/settings, cases, CRM preference and proposals | EVENT | B | P10-B2 backend | DONE — Codex 2026-11-06: 494 frontend tests, typecheck/lint/build, scoped offline make check; +5,336 B gzip vs main. Global priority across unloaded pages needs backend support; browser/live verification separate (see card). |

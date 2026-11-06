@@ -6,6 +6,7 @@ export function usdMicros(micros: number) {
 }
 
 export function teamReason(t: TFunction, reason: string) {
+  if (reason.startsWith("customer_care.")) return t(`ai.care.reasons.${reason.slice("customer_care.".length)}`, { defaultValue: t("ai.care.unknownReason") })
   if (/coming soon|no triggers|coming_soon/i.test(reason)) return t("ai.team.comingSoon")
   if (/no local route|needs? a local model/i.test(reason)) return t("ai.team.needsLocal")
   // The backend also supplies readable explanations (for example a missing local route).

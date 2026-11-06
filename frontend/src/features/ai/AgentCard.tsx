@@ -28,7 +28,6 @@ export function AgentCard({ agent }: { agent: Agent }) {
       if (error instanceof ApiProblem && error.isConflict) setConflict(true)
     }, onSettled: () => setConfirmOff(false) })
   }
-  const comingSoon = agent.key === "customer_care" && /coming soon|coming_soon|no triggers/i.test(agent.reason ?? "")
   const today = agent.today
   return <Card className="min-w-0">
     <CardHeader><CardTitle><a className="record-link" href={`/ai/team/${encodeURIComponent(agent.key)}`}>{agent.name}</a></CardTitle>
@@ -38,7 +37,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
     </CardHeader>
     <CardContent className="space-y-4">
       <PermissionGate permission="org.settings.write"><div className="flex items-center gap-2">
-        <Switch id={`${agent.key}-enabled`} checked={agent.enabled} disabled={patch.isPending || comingSoon} onCheckedChange={(enabled) => enabled ? save({ enabled }) : setConfirmOff(true)} />
+        <Switch id={`${agent.key}-enabled`} checked={agent.enabled} disabled={patch.isPending} onCheckedChange={(enabled) => enabled ? save({ enabled }) : setConfirmOff(true)} />
         <Label htmlFor={`${agent.key}-enabled`}>{t("ai.team.enable", { name: agent.name })}</Label>
       </div></PermissionGate>
       {conflict ? <p role="alert">{t("ai.team.conflict")}</p> : patch.error && !(patch.error instanceof ApiProblem && patch.error.isConflict) ? <QueryError error={patch.error} onRetry={() => patch.reset()} /> : null}
