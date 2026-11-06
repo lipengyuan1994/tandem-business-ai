@@ -96,7 +96,7 @@ function Notes({ customerId, timeZone }: { customerId: string; timeZone: string 
           if (body.trim()) add.mutate({ body: body.trim(), pinned }, { onSuccess: () => { setBody(""); setPinned(false) }, onError: (err) => toastError(err) })
         }}>
           <Label htmlFor="note-body">{t("crm.notes.add")}</Label>
-          <Textarea id="note-body" value={body} onChange={(e) => setBody(e.target.value)} />
+          <Textarea dictation={{ context: "note" }} id="note-body" value={body} onChange={(e) => setBody(e.target.value)} />
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-2"><Checkbox id="note-pin" checked={pinned} onCheckedChange={(v) => setPinned(v === true)} /><Label htmlFor="note-pin">{t("crm.notes.pin")}</Label></span>
             <Button type="submit" disabled={add.isPending}>{t("common.add")}</Button>

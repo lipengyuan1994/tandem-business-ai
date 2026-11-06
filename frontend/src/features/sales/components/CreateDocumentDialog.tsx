@@ -63,7 +63,7 @@ export function CreateDocumentDialog({ family, onOpenChange }: { family: "quotes
           {business.isPending ? <p role="status">{t("common.loading")}</p> : null}
           {business.error ? <div role="alert"><p>{describeError(business.error)}</p><Button type="button" variant="outline" onClick={() => void business.refetch()}>{t("common.retry")}</Button></div> : null}
           {currency && !business.error ? <LinesEditor lines={lines} currency={currency} onChange={(next) => { setLines(next); setErrors({}) }} errors={errors} /> : null}
-          <div className="space-y-1"><Label htmlFor="sales-notes">{t("sales.fields.notes")}</Label><Textarea id="sales-notes" maxLength={4000} value={notes} aria-invalid={hasFieldError(errors, "notes")} onChange={(e) => setNotes(e.target.value)} /></div>
+          <div className="space-y-1"><Label htmlFor="sales-notes">{t("sales.fields.notes")}</Label><Textarea dictation={{ context: "note" }} id="sales-notes" maxLength={4000} value={notes} aria-invalid={hasFieldError(errors, "notes")} onChange={(e) => setNotes(e.target.value)} /></div>
         </fieldset>
       </form>
       <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button><Button type="submit" form="sales-create" disabled={!ready || create.isPending}>{t("sales.createDraft")}</Button></DialogFooter>

@@ -125,7 +125,7 @@ function ThreadView({ thread, onClosed }: { thread: Thread; onClosed: () => void
       <PermissionGate permission="conversations.thread.write">
         <form className="space-y-2 border-t p-3" onSubmit={(e) => { e.preventDefault(); submit() }}>
           <Label htmlFor="composer">{internal ? t("inbox.noteLabel") : t("inbox.replyLabel")}</Label>
-          <Textarea id="composer" value={body} onChange={(e) => setBody(e.target.value)} placeholder={internal ? t("inbox.notePlaceholder") : t("inbox.replyPlaceholder")}
+          <Textarea dictation={{ context: "inbox_reply", entity_ids: [thread.id, ...(thread.customer_id ? [thread.customer_id] : [])] }} id="composer" value={body} onChange={(e) => setBody(e.target.value)} placeholder={internal ? t("inbox.notePlaceholder") : t("inbox.replyPlaceholder")}
             className={cn(internal && "border-dashed border-status-pending")} />
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex items-center gap-2">

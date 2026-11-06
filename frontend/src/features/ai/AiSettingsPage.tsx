@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSettings, useUpdateSettings } from "@/features/org/hooks"
 import { toastError } from "@/lib/errors"
-import { useAiRuns, useAiUsage } from "./api"
+import { useAiRuns, useAiStatus, useAiUsage } from "./api"
 import { AiDisabledBanner } from "./AiDisabledBanner"
 import { useAiAvailability } from "./text"
 import type { AiPolicy, RunOut, UsageDay } from "./types"
@@ -33,12 +33,20 @@ export function AiSettingsPage() {
       <div className="max-w-3xl space-y-8">
         <h2 className="text-lg font-semibold">{t("ai.settings.title")}</h2>
         <AiDisabledBanner />
+        <VoiceStatus />
         <PolicyAndBudget />
         <UsageChart />
         <RunHistory />
       </div>
     </PermissionGate>
   )
+}
+
+function VoiceStatus() {
+  const { t } = useTranslation()
+  const status = useAiStatus()
+  const stt = status.data?.model_classes?.stt
+  return <p className="text-sm">{stt ? t(stt.enabled ? "dictation.statusOn" : "dictation.statusOff", { reason: stt.reason ?? t("dictation.unknown") }) : t("dictation.statusUnknown")}</p>
 }
 
 function PolicyAndBudget() {

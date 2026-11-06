@@ -18,6 +18,7 @@ All copy is in `en.json` under `ai.*`; `AI can make mistakes; you approve every 
 | `ActivityPage` | `/ai/activity`, AI navigation | `approvals.proposal.read`; result link also needs `inventory.reorder.read` |
 | `AiSettingsPage` | `/settings/ai` (tab "AI") | `ai.settings.read` (edit: `ai.settings.write` + `org.settings.write`) |
 | `AiDisabledBanner` | panel, summary dialog, paste dialog, settings | — (reads `GET /ai/status`) |
+| `useDictation` + `DictationButton` | opt-in `Textarea dictation={{ context, entity_ids, mode }}`; assistant, Inbox, knowledge, staff prose/notes | `ai.assistant.use`, supported microphone/codec, available `stt` |
 
 Files: `api.ts` (hooks of contracts §16), `http.ts` (plain fetch for endpoints not generated yet), `stream.ts` and `sse.ts`
 (copilot stream: `fetch` POST with the CSRF header, `TextDecoder`, events split on blank lines, aborted on unmount),
@@ -40,6 +41,11 @@ hand-written protocol type: `event: <kind>\ndata: <JSON>\n\n`, with every payloa
 null. Pre-stream problem+json errors use `code`; 429 `platform.rate_limited` (with `Retry-After`) shows the hourly
 limit message without automatically retrying the POST. Tests mock every AI endpoint with MSW (`testing.ts`);
 no test calls a backend or a model.
+
+Dictation inserts editable text without submitting. Toggle or hold-to-talk; hold Alt+Space in the focused field,
+release to stop; Esc cancels. Mono audio stays in bounded memory, stops at 120 seconds, with one same-key network
+retry. STT off reasons appear in AI settings. See [P10-D screens](../../../../docs/roadmap/ai/cards/P10-D-screens.md)
+for privacy, error handling, tests, offline Playwright instructions and verification limits.
 
 ## Tests
 

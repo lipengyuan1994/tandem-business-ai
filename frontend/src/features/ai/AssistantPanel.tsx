@@ -141,7 +141,7 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
         <form className="space-y-2 px-4 pt-1" onSubmit={(e) => void submit(e)}>
           <p className="text-xs text-muted-foreground">{t("ai.cards.confirmHint")}</p>
           <Label htmlFor="assistant-input">{t("ai.assistant.inputLabel")}</Label>
-          <Textarea id="assistant-input" ref={input} value={text} maxLength={MAX_LENGTH} disabled={blocked} rows={2} placeholder={t("ai.assistant.placeholder")}
+          <Textarea dictation={{ context: "assistant" }} id="assistant-input" ref={input} value={text} maxLength={MAX_LENGTH} disabled={blocked} rows={2} placeholder={t("ai.assistant.placeholder")}
             onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} />
           <div className="flex justify-end gap-2">
             {stream.status === "error" ? <Button type="button" variant="outline" disabled={busy || blocked} onClick={() => void retry()}>{t("ai.assistant.retry")}</Button> : null}

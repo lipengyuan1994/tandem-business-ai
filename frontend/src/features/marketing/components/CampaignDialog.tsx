@@ -48,7 +48,7 @@ export function CampaignDialog({ onOpenChange }: { onOpenChange: (open: boolean)
           </div>
           <div className="space-y-1">
             <Label htmlFor="mc-body">{t("marketing.fields.body")}</Label>
-            <Textarea id="mc-body" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
+            <Textarea dictation={{ context: "other" }} id="mc-body" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
           </div>
         </form>
         <DialogFooter>

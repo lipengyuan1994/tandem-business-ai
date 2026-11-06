@@ -38,7 +38,7 @@ export function FollowupDialog({ supplier, about, onClose }: { supplier: string;
   return <Dialog open onOpenChange={(open) => { if (!open && !save.isPending) onClose() }}><DialogContent>
     <DialogHeader><DialogTitle>{t("procurement.followup")}</DialogTitle><DialogDescription>{t("procurement.approvalHint")}</DialogDescription></DialogHeader>
     {save.data ? <ProposalFeedback proposal={save.data} /> : <form id="supplier-followup" className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (body.trim() && !save.isPending) save.mutate({ kind: "followup", body: { supplier_id: supplier, about, body: body.trim() } }) }}>
-      <Label htmlFor="followup-body">{t("procurement.message")}</Label><Textarea id="followup-body" aria-invalid={fieldInvalid(save.error, "body")} required maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} /><FieldError error={save.error} field="body" />
+      <Label htmlFor="followup-body">{t("procurement.message")}</Label><Textarea dictation={{ context: "purchasing" }} id="followup-body" aria-invalid={fieldInvalid(save.error, "body")} required maxLength={2000} value={body} onChange={(e) => setBody(e.target.value)} /><FieldError error={save.error} field="body" />
       {save.error ? <p role="alert">{describeError(save.error)}</p> : null}
     </form>}
     <DialogFooter><Button variant="outline" disabled={save.isPending} onClick={onClose}>{t("common.close")}</Button>{!save.data ? <Button form="supplier-followup" disabled={!body.trim() || save.isPending}>{t("procurement.followup")}</Button> : null}</DialogFooter>

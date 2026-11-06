@@ -162,7 +162,7 @@ export function ProposalDetailPage() {
       >
         <div className="space-y-1">
           <Label htmlFor="reject-comment">{t("approvals.comment")}</Label>
-          <Textarea id="reject-comment" value={comment} onChange={(e) => setComment(e.target.value)} />
+          <Textarea dictation={{ context: "note" }} id="reject-comment" value={comment} onChange={(e) => setComment(e.target.value)} />
         </div>
       </ConfirmDialog>
     </>

@@ -41,7 +41,7 @@ export function OrderDialog({ order, initial, onClose, reload }: { order?: PO; i
       {pickers.error ? <QueryError error={pickers.error} onRetry={() => pickers.refetch()} /> : null}
       {suppliers.error ? <QueryError error={suppliers.error} onRetry={() => suppliers.refetch()} /> : null}
       {pickers.data && currency ? <LinesEditor lines={lines} onChange={setLines} items={pickers.data.items} currency={currency} error={save.error} /> : <p>{t("common.loading")}</p>}
-      <div><Label htmlFor="po-notes">{t("purchasing.notes")}</Label><Textarea id="po-notes" maxLength={4000} aria-invalid={fieldInvalid(save.error, "notes")} value={notes} onChange={(e) => setNotes(e.target.value)} /><FieldError error={save.error} field="notes" /></div>
+      <div><Label htmlFor="po-notes">{t("purchasing.notes")}</Label><Textarea dictation={{ context: "purchasing" }} id="po-notes" maxLength={4000} aria-invalid={fieldInvalid(save.error, "notes")} value={notes} onChange={(e) => setNotes(e.target.value)} /><FieldError error={save.error} field="notes" /></div>
       {save.error ? <p role="alert" className="text-sm text-destructive">{describeError(save.error)}</p> : null}
     </form>
     <DialogFooter><Button variant="outline" onClick={onClose}>{t("common.cancel")}</Button><Button form="po-form" disabled={!ready}>{t(order ? "common.save" : "purchasing.createDraft")}</Button></DialogFooter>

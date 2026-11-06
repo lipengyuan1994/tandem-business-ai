@@ -1,7 +1,25 @@
 import * as React from "react"
 import { cn } from "cn"
+import { DictationButton } from "@/features/ai/DictationButton"
+import type { DictationOptions } from "@/features/ai/dictation-api"
 
-function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+type Props = React.ComponentProps<"textarea"> & { dictation?: boolean | DictationOptions }
+
+function Textarea({ dictation, ...props }: Props) {
+  if (dictation) return <DictatableTextarea {...props} options={dictation === true ? {} : dictation} />
+  return <PlainTextarea {...props} />
+}
+
+function DictatableTextarea({ ref, options, ...props }: React.ComponentProps<"textarea"> & { options: DictationOptions }) {
+  const target = React.useRef<HTMLTextAreaElement>(null)
+  React.useImperativeHandle(ref, () => target.current!, [])
+  return <div className="min-w-0">
+    <PlainTextarea {...props} ref={target} />
+    <DictationButton target={target} options={options} disabled={props.disabled || props.readOnly} />
+  </div>
+}
+
+function PlainTextarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea
       data-slot="textarea"

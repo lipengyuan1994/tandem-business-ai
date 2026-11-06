@@ -77,7 +77,7 @@ export function CampaignPage() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="cp-body">{t("marketing.fields.body")}</Label>
-              <Textarea id="cp-body" rows={8} value={body} disabled={!editable || aiDraft.isPending} onChange={(e) => setDraft({ subject, body: e.target.value })} />
+              <Textarea dictation={{ context: "other" }} id="cp-body" rows={8} value={body} disabled={!editable || aiDraft.isPending} onChange={(e) => setDraft({ subject, body: e.target.value })} />
             </div>
             <PermissionGate permission="marketing.campaign.write">
               {editable ? <p className="text-sm text-muted-foreground">{changed ? t("marketing.saveFirst") : t("marketing.editHint")}</p> : null}

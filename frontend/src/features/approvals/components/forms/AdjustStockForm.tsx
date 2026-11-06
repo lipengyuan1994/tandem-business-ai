@@ -30,7 +30,7 @@ export function AdjustStockForm({ payload, pending, onSubmit, onCancel }: Action
       </div>
       <div className="space-y-1">
         <Label htmlFor="adj-form-note">{t("inventory.adjust.note")}</Label>
-        <Textarea id="adj-form-note" value={note} onChange={(e) => setNote(e.target.value)} />
+        <Textarea dictation={{ context: "inventory" }} id="adj-form-note" value={note} onChange={(e) => setNote(e.target.value)} />
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={pending || !valid}>{t("approvals.edit.save")}</Button>

@@ -36,6 +36,22 @@ function mockAi(over: { runs?: RunOut[]; next?: string | null } = {}) {
 }
 
 describe("AI settings page", () => {
+  it("lists voice as off with the STT backend reason", async () => {
+    mockMe(meWith(...READ))
+    mockStatus({ ...ON, model_classes: { stt: { enabled: false, reason: "local-only policy without local speech-to-text" } } })
+    mockAi()
+    renderApp("/settings/ai")
+    expect(await screen.findByText("Voice dictation: off — local-only policy without local speech-to-text")).toBeVisible()
+  })
+
+  it("does not interpret absent STT telemetry as off", async () => {
+    mockMe(meWith(...READ))
+    mockStatus(ON)
+    mockAi()
+    renderApp("/settings/ai")
+    expect(await screen.findByText("Voice dictation: status unknown")).toBeVisible()
+  })
+
   it("explains each policy, shows usage bars and the run history without any text", async () => {
     mockMe(meWith(...READ))
     mockStatus({ ...ON, budget_percent: 1 })

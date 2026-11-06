@@ -21,7 +21,7 @@ export function ReminderDialog({ document: d, onClose }: { document: SalesDocume
         if (body.length >= 1 && body.length <= 2000 && !reminder.isPending) reminder.mutate({ body, version: d.version })
       }}>
         <Label htmlFor="reminder-body">{t("sales.reminder.message")}</Label>
-        <Textarea id="reminder-body" value={body} minLength={1} maxLength={2000} required disabled={reminder.isPending} onChange={(e) => setBody(e.target.value)} />
+        <Textarea dictation={{ context: "note" }} id="reminder-body" value={body} minLength={1} maxLength={2000} required disabled={reminder.isPending} onChange={(e) => setBody(e.target.value)} />
         {reminder.error ? <p role="alert" className="text-sm text-destructive">{describeError(reminder.error)}</p> : null}
       </form>}
       <DialogFooter><Button variant="outline" disabled={reminder.isPending} onClick={onClose}>{t(reminder.data ? "common.close" : "common.cancel")}</Button>

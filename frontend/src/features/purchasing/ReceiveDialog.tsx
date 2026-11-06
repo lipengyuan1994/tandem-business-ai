@@ -104,7 +104,7 @@ export function ReceiveDialog({ order, onClose, reload }: { order: PO; onClose: 
         <Input id={`receipt-${line.id}`} disabled={locked} aria-invalid={fieldInvalid(save.error, `lines.${selected.findIndex((l) => l.id === line.id)}.quantity`)} inputMode="decimal" value={quantities[line.id] ?? ""} onChange={(e) => setQuantities({ ...quantities, [line.id]: e.target.value })} /><FieldError error={save.error} field={`lines.${selected.findIndex((l) => l.id === line.id)}.quantity`} />
       </div>)}
       {permissions.has(OVERRIDE) ? <div className="space-y-2"><label className="flex items-center gap-2"><input type="checkbox" disabled={locked} checked={override} onChange={(e) => setOverride(e.target.checked)} />{t("purchasing.override")}</label>
-        {override ? <div><Label htmlFor="receipt-reason">{t("purchasing.reason")}</Label><Textarea id="receipt-reason" disabled={locked} aria-invalid={fieldInvalid(save.error, "reason")} required value={reason} maxLength={1000} onChange={(e) => setReason(e.target.value)} /><FieldError error={save.error} field="reason" /></div> : null}
+        {override ? <div><Label htmlFor="receipt-reason">{t("purchasing.reason")}</Label><Textarea dictation={{ context: "purchasing" }} id="receipt-reason" disabled={locked} aria-invalid={fieldInvalid(save.error, "reason")} required value={reason} maxLength={1000} onChange={(e) => setReason(e.target.value)} /><FieldError error={save.error} field="reason" /></div> : null}
       </div> : null}
       {save.error ? <p role="alert" className="text-sm text-destructive">{describeError(save.error)}</p> : null}
     </form>

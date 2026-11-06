@@ -46,7 +46,7 @@ export function RequestQuotesDialog({ onClose }: { onClose: () => void }) {
         {suppliers.error ? <QueryError error={suppliers.error} onRetry={() => suppliers.refetch()} /> : suppliers.isPending ? <p>{t("common.loading")}</p> : !eligible.length ? <p>{t("procurement.noSuppliers")}</p> : eligible.map((s) => <label key={s.id} className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={selected.includes(s.id)} disabled={selected.length >= 5 && !selected.includes(s.id)} onChange={(e) => setChosen(e.target.checked ? [...selected, s.id] : selected.filter((id) => id !== s.id))} />{s.name}</label>)}
         <FieldError error={save.error} field="supplier_ids" />
       </fieldset>
-      <div><Label htmlFor="qr-message">{t("procurement.messageOptional")}</Label><Textarea id="qr-message" maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} aria-invalid={fieldInvalid(save.error, "message")} /><FieldError error={save.error} field="message" /></div>
+      <div><Label htmlFor="qr-message">{t("procurement.messageOptional")}</Label><Textarea dictation={{ context: "purchasing" }} id="qr-message" maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} aria-invalid={fieldInvalid(save.error, "message")} /><FieldError error={save.error} field="message" /></div>
       {save.error ? <p role="alert">{describeError(save.error)}</p> : null}
     </form>}
     <DialogFooter><Button variant="outline" disabled={save.isPending} onClick={onClose}>{t(save.data ? "common.close" : "common.cancel")}</Button>{!save.data ? <Button form="quote-request" disabled={!valid || save.isPending}>{t("procurement.request")}</Button> : null}</DialogFooter>

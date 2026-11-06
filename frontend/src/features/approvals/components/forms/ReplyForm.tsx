@@ -12,7 +12,7 @@ export function ReplyForm({ payload, pending, onSubmit, onCancel }: ActionFormPr
   return (
     <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (body.trim()) onSubmit({ ...payload, body: body.trim() }) }}>
       <Label htmlFor="reply-body">{t("approvals.forms.replyText")}</Label>
-      <Textarea id="reply-body" rows={6} maxLength={4000} value={body} onChange={(e) => setBody(e.target.value)} />
+      <Textarea dictation={{ context: "inbox_reply" }} id="reply-body" rows={6} maxLength={4000} value={body} onChange={(e) => setBody(e.target.value)} />
       <p className="text-xs text-muted-foreground">{t("approvals.edit.note")}</p>
       <div className="flex gap-2">
         <Button type="submit" disabled={pending || !body.trim()}>{t("approvals.edit.save")}</Button>

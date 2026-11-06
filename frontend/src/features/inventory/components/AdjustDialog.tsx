@@ -49,7 +49,7 @@ export function AdjustDialog({ itemId, itemName, onOpenChange }: { itemId: strin
           </div>
           <div className="space-y-1">
             <Label htmlFor="adj-note">{t("inventory.adjust.note")}</Label>
-            <Textarea id="adj-note" value={note} onChange={(e) => setNote(e.target.value)} />
+            <Textarea dictation={{ context: "inventory" }} id="adj-note" value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
           {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
         </form>
