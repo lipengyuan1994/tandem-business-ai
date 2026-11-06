@@ -122,3 +122,11 @@ were verified arm64 before Make invocation. Installed Chromium headless shell is
 
 No backend API gap blocked implementation. Mocked frontend tests do not verify live speech-to-text, actual
 microphone/codec behavior, Safari, browser layout or assistive technology. No deployment occurred.
+
+## Supervisor check (2026-11-06)
+
+`pnpm build` and `pnpm exec playwright test -c e2e/dictation.config.ts` on the developer Mac: the permission-denied
+test passes; the fake-microphone recording test cannot run there because headless Chromium 156 never resolves
+`getUserMedia` on macOS (reproduced with a minimal page, with and without granted permissions; likely macOS
+microphone privacy around the fake device). Added `permissions: ["microphone"]` to the config (needed in headless
+mode). Run the recording test on Linux CI or check by hand in a browser before relying on it.

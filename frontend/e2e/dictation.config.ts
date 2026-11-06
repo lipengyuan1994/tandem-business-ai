@@ -11,6 +11,7 @@ export default defineConfig({
   outputDir: "../output/playwright/dictation",
   use: {
     ...devices["Desktop Chrome"],
+    permissions: ["microphone"],
     launchOptions: { args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] },
   },
 })
