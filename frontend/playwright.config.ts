@@ -4,6 +4,7 @@ import { defineConfig, devices } from "@playwright/test"
 export default defineConfig({
   testDir: "./e2e",
   testMatch: /.*\.(e2e|setup)\.ts$/,
+  testIgnore: /dictation\.e2e\.ts$/, // offline test with its own config: e2e/dictation.config.ts
   globalSetup: "./e2e/global-setup.ts",
   fullyParallel: false,
   workers: 1, // one shared dev database and Keycloak; TOTP codes are single-use per period

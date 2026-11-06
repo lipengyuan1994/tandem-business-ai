@@ -2,6 +2,33 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.7 (2026-11-06)
+
+**Voice dictation** (P10-D): a microphone button in the assistant, the Inbox reply box, the knowledge editor and other
+long text fields. Speak, and clean text is inserted for you to check: fillers removed, spoken corrections applied
+("twelve, no, ten" → 10), your catalogue and supplier names spelled right. Nothing is sent until you send it; audio
+and transcripts are never stored. Up to 2 minutes per recording. Speech-to-text: Vultr `whisper-large-v3-turbo`.
+
+**AI Team** (P10-B1, B3): AI → Team shows the Front Desk, Inventory, Purchasing, Finance, Marketing, Operations
+Manager and (coming) Customer Care agents, each with an on/off switch, a daily cost limit, today's work, waiting items
+and its timeline; a chain view shows how one piece of work passed between agents. Address an agent in the assistant
+with `@Inventory …`. Work that one agent hands to another follows a fixed set of allowed hand-offs and a budget per
+chain (6 steps, 30 model calls, 10 actions, $0.50).
+
+**Clinics and private data** (P10-E0): the `regulated` profile now uses only AI models on the clinic's own private
+network (no hosted API, also not BAA-covered ones); `/api/v1/ai/status` reports per model class whether it is
+available and why not (AI settings show this for voice dictation).
+A benchmark of a local 20B model on a workstation is in `backend/evals/reports/2026-11-06-local-models.md`.
+
+- **Migrations:** `20261106_0800_voice_dictation`, `20261106_1000_ai_team` (apply with the upgrade). Existing agents
+  start **on**, so nothing changes until someone switches one off.
+- **Route file (after):** new `stt` route with `price_per_audio_minute` in `deploy/config/ai-routes.yaml`. Upload it
+  **after** `upgrade.sh 0.1.7` succeeds (keep the old file as `config/ai-routes.yaml.previous`), then
+  `docker compose restart api worker`; 0.1.6 rejects the new field, so a rollback with it in place would run without
+  AI. The audio price is a placeholder ($0.006/min): confirm Vultr's audio billing.
+- **Microphone:** the web image's Caddy now sends `Permissions-Policy: microphone=(self)` (built into the image).
+- **Deployment files:** `compose.yml` changed in comments only; copy it to keep files in step, no other step.
+
 ## 0.1.6 (2026-11-06)
 
 AI workflows, first steps (ADR-020): autonomy rules (Off · Draft · Ask · Act and notify · Act, shadow mode, daily limit,
