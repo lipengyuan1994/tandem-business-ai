@@ -158,7 +158,14 @@ def test_status_requires_assistant_permission(routes_file: Path, registry: Regis
     allowed = client_for(app, registry, business, {"ai.assistant.use"})
     r = allowed.get("/api/v1/ai/status")
     assert r.status_code == 200, r.text
-    assert r.json() == {"enabled": True, "reason": None, "policy": "hosted_vultr", "budget_percent": 0}
+    assert r.json() == {
+        "enabled": True, "reason": None, "policy": "hosted_vultr", "budget_percent": 0,
+        "model_classes": {
+            "agent": {"enabled": True, "reason": None},
+            **{c: {"enabled": False, "reason": f"ai.not_configured: no usable route for {c}"}
+               for c in ("fast_extract", "writer", "safety", "grounding", "embed", "stt", "tts")},
+        },
+    }  # fmt: skip
 
 
 def test_status_endpoint_reports_not_configured(no_routes_file: Path, registry: Registry) -> None:

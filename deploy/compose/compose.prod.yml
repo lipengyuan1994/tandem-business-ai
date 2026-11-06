@@ -27,6 +27,7 @@ x-app-env: &app-env
   KEYCLOAK_ADMIN_CLIENT_ID: smb-admin
   KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?KEYCLOAK_ADMIN_CLIENT_SECRET is required}
   DATA_PROFILE: ${DATA_PROFILE:-standard}
+  # Hosting/backup attestations remain required; they never permit hosted AI under regulated (ADR-020).
   REGULATED_HOST_BAA: ${REGULATED_HOST_BAA:-}
   REGULATED_BACKUP_BAA: ${REGULATED_BACKUP_BAA:-}
   SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-12}
@@ -39,6 +40,8 @@ x-app-env: &app-env
 
 # AI layer (docs/roadmap/ai/contracts.md §2): only the api and worker get these (never migrate). The route file lives in
 # ./config (mounted read-only at /config); a missing ai-routes.yaml or empty provider keys leave AI disabled.
+# Regulated requires local routes/private resolved addresses for every class. Hosted BAA APIs are excluded;
+# use ai-routes.local.example.yaml and set LOCAL_INFERENCE_HOSTS to your private model server's DNS name.
 x-ai-env: &ai-env
   AI_ROUTES_FILE: ${AI_ROUTES_FILE:-/config/ai-routes.yaml}
   VULTR_INFERENCE_API_KEY: ${VULTR_INFERENCE_API_KEY:-}

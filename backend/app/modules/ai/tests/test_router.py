@@ -125,9 +125,13 @@ def test_policy_strict_private_only_unhosted() -> None:
         no_local.complete("agent", "strict_private", req())
 
 
-def test_policy_regulated_only_baa_or_unhosted_and_forced_by_data_profile(monkeypatch: pytest.MonkeyPatch) -> None:
-    router = Router(routes_file(agent=["vultr", "openai", "anthropic", "local"]), gateways(*PROVIDERS))  # type: ignore[arg-type]
-    assert allowed_providers(router, "regulated") == ["anthropic", "local"]  # anthropic has baa: true here
+def test_policy_regulated_only_local_and_forced_by_data_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    router = Router(
+        routes_file(agent=["vultr", "openai", "anthropic", "local"]),
+        gateways(*PROVIDERS),
+        resolver=lambda _host: ["172.20.0.2"],
+    )  # type: ignore[arg-type]
+    assert allowed_providers(router, "regulated") == ["local"]  # BAA no longer grants access
 
     ctx = system_ctx(make_business())  # business policy: hosted_vultr (default)
     with transaction(ctx) as db:
@@ -137,11 +141,13 @@ def test_policy_regulated_only_baa_or_unhosted_and_forced_by_data_profile(monkey
         assert effective_policy(db, ctx) == "regulated"
 
 
-def test_fake_provider_passes_every_policy() -> None:
+def test_fake_provider_passes_development_policies_but_not_regulated() -> None:
     gw = FakeGateway(["ok"] * 4)
     router = fake_router(gw)
-    for policy in ("hosted_vultr", "hosted_any", "strict_private", "regulated"):
+    for policy in ("hosted_vultr", "hosted_any", "strict_private"):
         assert router.complete("agent", policy, req())[0].text == "ok"  # type: ignore[arg-type]
+    with pytest.raises(PolicyBlocked):
+        router.complete("agent", "regulated", req())
 
 
 # ------------------------------------------------------------------------------------------ adapters/keys

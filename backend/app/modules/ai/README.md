@@ -1,7 +1,7 @@
 # ai · M13
 
-Assistant runs, tools and use cases. Interfaces are frozen in `docs/roadmap/ai/contracts.md`; build order and current
-state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules only through their `public.py`.
+Assistant runs, tools and use cases. Contracts: `docs/roadmap/ai/contracts.md`; build order/state: `docs/roadmap/ai/{README,HANDOFF}.md`.
+Imports other modules only through their `public.py`.
 - `ai_runs` — one per run: use case, trigger (`trigger_key`), prompt name/version, model, status, tokens, cost,
   `result` (validated final output only). `ai_run_steps` (append-only) — per step: kind, tool, redacted arguments,
   short summary, tokens. No prompt or completion text is ever stored.
@@ -9,15 +9,18 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
 - `ai_usage_daily` — tokens, cost, runs per business and UTC day (+ `notified_80_at`). `assistant_*` — copilot; `ai_operations` (migration `20261104_0400_ai_operations`) — scoped operation claims/IDs; `details` (migration `20261104_0500_ai_op_details`) preserves verification metadata.
 - `status(db, ctx) -> AiStatus`: reason `ai.not_configured` (no/invalid routes file, or no `agent` route with a usable
   provider key), `ai.disabled_by_policy`, `ai.budget_exceeded`; policy `regulated` when `DATA_PROFILE=regulated`.
+  `model_classes` gives allowed-route availability and a specific reason for each class, including STT/embed.
 - `types.py`: `ChatMessage`, `ChatRequest`, `ChatResult`, `Usage`, `ProviderError(kind, detail, retry_after_s)`,
   `TRANSIENT_KINDS`, `Adapter`. Adapters `openai_compat.OpenAICompatAdapter(name, base_url, api_key, *, local)` and
   `anthropic.AnthropicAdapter(name, base_url, api_key)` use `app.platform.http.client()`; content is never logged.
 - `routes.py`: `RoutesFile`/`ProviderCfg`/`RouteEntry`/`Limits`, `load_routes_file(path)` (`RoutesFileError` names
   the bad key). `pricing.cost_micros(entry, usage)`.
-- `router.py`: `Router(routes, adapters)` with `.limits`, `.allowed(class, policy)`, `.complete(class, policy, req)`
+- `router.py`: `Router(routes, adapters, *, resolver=None)` with `.limits`, `.allowed(class, policy)`, `.complete(class, policy, req)`
   (fallback on transient errors; `PolicyBlocked`); `load_router()` (cached, None without a valid file),
-  `reset_router_cache()`, `set_router_for_tests(r)`, `effective_policy(db, ctx)`, `check_routes_at_startup()` (prod
-  refuses the `fake` provider).
+  `reset_router_cache()`, `set_router_for_tests(r)`, `effective_policy(db, ctx)`, `check_routes_at_startup()`.
+- P10-E0: regulated requires hosted:false + vendor:local + private resolved addresses (cached); baa is ignored/warns.
+  Other unhosted vendors are invalid; strict_private unchanged; production refuses fake. See regulated runbook/example.
+  `model_calls.policy_scope` rechecks each attempt/repair/fallback (also safety/grounding), after budget waits and results.
 - `fake.py`: `FakeGateway(script | fn)` with `.calls`, `fake_router(gw)`, `ScriptFileAdapter` (`AI_FAKE_SCRIPT_FILE`).
 - `agent/protocol.py`: `ToolCallStep`, `FinalStep`, `AGENT_STEP_ADAPTER`, `ContextBlock`, `RunSpec`, `StepEvent`,
   `RunResult`. `agent/prompts.py`: `load_prompt(name, version=None, *, base_dir=None)` (prompts in `ai/prompts/`).
@@ -46,10 +49,8 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
   `schemas.py` (§11 outputs, run/usage DTOs), `lifecycle.py` (export, erasure).
 `GET /status` (`ai.assistant.use`) → `AiStatus`; `GET /runs?cursor&use_case&status&limit` (`ai.settings.read`) →
 `Page[RunOut]` (no text); `GET /usage` (`ai.settings.read`) → `UsageOut{today, days (30, oldest first)}`.
-
 - P10-C1: intake v4, run-scoped citations, empty-search hand-over; `grounding.check` uses a separate recorded class.
-- Typed claims (≤8), source/field-bound numbers and safety gate reply autonomy; failures retain staff review.
-- Ownership is checked before admission, every provider attempt (safety/repair/fallback), and under the thread lock.
+- Typed claims (≤8), source/field-bound numbers and safety gate autonomy; failures retain staff review; ownership checked at admission/attempts/thread lock.
 - search_knowledge is public-only for intake; authenticated copilot can read internal with current thread.read.
 - Copilot (U2, `usecases/copilot.py`): `/copilot/threads*` (own threads, `CopilotThreadOut`), SSE message stream,
   tools limited to the user's permissions, 30 runs/user/hour, cron + job `ai.assistant_retention` (90 days). Earlier
@@ -61,8 +62,7 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
   extract a pasted supplier reply (`POST /procurement/quote-requests/{id}/extract`, numbers verified against the text; supports operation keys),
   compare and propose a PO (`ai.compare-trigger`), chase late orders/invites (cron `ai-procurement-scan`).
 - Evals: intake shadow outcomes and labelled grounding precision/recall; live quality is supervisor-owned.
-- Payment follow-up (U10): paged scan → deduplicated per-invoice jobs; proposals lock/recheck version, pending proposals
-  and cooldown. Live-provider verification remains owner-run.
+- Payment follow-up (U10): paged scan → deduplicated invoice jobs; proposals lock/recheck version, pending proposals/cooldown.
 
 P10-A0: `/autonomy/rules` GET/PUT (owner/admin via `org.settings.write`, versioned), `/autonomy/pause|resume`
 POST, `/autonomy/activity` GET (`approvals.proposal.read`, cursor pagination). Policy is owned by approvals;

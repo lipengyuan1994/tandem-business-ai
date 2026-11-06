@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from typing import get_args
+
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
 
 from . import usage
 from .gateway.router import effective_policy, load_router
-from .schemas import AiStatus
+from .gateway.routes import ModelClass
+from .schemas import AiStatus, ModelClassStatus
 
 
 def status(db: Session, ctx: Context) -> AiStatus:
@@ -30,7 +33,19 @@ def status(db: Session, ctx: Context) -> AiStatus:
         reason = "ai.disabled_by_policy"
     elif percent >= 100:
         reason = "ai.budget_exceeded"
-    return AiStatus(enabled=reason is None, reason=reason, policy=policy, budget_percent=percent)
+    classes = {}
+    for model_class in get_args(ModelClass):
+        available = router is not None and bool(router.allowed(model_class, policy))
+        detail: str | None = None
+        if not available:
+            if policy == "regulated":
+                detail = f"regulated: no local route for {model_class}"
+            elif router is None or not router.allowed(model_class, "hosted_any"):
+                detail = f"ai.not_configured: no usable route for {model_class}"
+            else:
+                detail = f"{policy}: no allowed route for {model_class}"
+        classes[model_class] = ModelClassStatus(enabled=available, reason=detail)
+    return AiStatus(enabled=reason is None, reason=reason, policy=policy, budget_percent=percent, model_classes=classes)
 
 
 __all__ = ["AiStatus", "status"]

@@ -8,6 +8,33 @@ Conventions: `db: Session` (SQLAlchemy), `ctx: Context` (`app.platform.context`)
 timezone-aware UTC `datetime`, money is integer minor units, Pydantic v2 models with `extra="forbid"` for inputs.
 Revision: 2 (2026-11-03, after cold reads and a consistency review).
 
+## P10-E0: local-only regulated routing
+
+Owner-authorized Tier A / EVENT, routing half (2026-11-06); implements ADR-020 decision 5.
+`regulated` permits only `hosted: false` **and** `vendor: local`, for all eight model classes and every fallback.
+The legacy `baa` key still loads but grants no access; regulated router initialization warns
+`ai_routes_baa_ignored` with the provider name when the key is present. `strict_private` is unchanged.
+Route validation rejects `hosted: false` with any other vendor, naming `providers.<name>.vendor`.
+`vendor: local, hosted: true` is valid configuration but is excluded by regulated routing.
+
+At regulated router initialization, all local providers must resolve exclusively to loopback, RFC 1918,
+RFC 4193 (`fc00::/7`) or link-local addresses. Private DNS, including `*.internal` and single-label Docker
+services, must resolve to those addresses too. Empty/failed/mixed-public resolution fails closed with
+`ai_local_provider_public_address` (host only). Resolution is injectable and cached for the router lifetime;
+a router first used under regulated policy after a profile/business-policy change performs the same check.
+This is an address check, not proof of clinic control: the operator verifies network/firewall placement.
+
+Every provider attempt reads `effective_policy` again, including repairs, safety, grounding and fallbacks.
+The check also guards the boundary after budget waits and rejects results from a route disallowed while
+in flight. Continue to the next allowed route or close with the existing `policy_blocked` outcome.
+No per-token settings reads. Call-scoped policy state survives router decorators without shared mutation.
+
+`GET /ai/status` retains its existing aggregate enabled/reason codes and adds `model_classes`, keyed by
+every model class, with `{enabled, reason}`. Missing regulated routes say `regulated: no local route for <class>`;
+other policies distinguish configuration from policy exclusion. No frontend changes in this slice.
+The local example routes every class to an OpenAI-compatible private server without keys or prices.
+Local model benchmarks, deployment and clinical-network verification remain separate work.
+
 ## P10-C1: knowledge base and hand-over
 
 Owner-authorized Tier A / EVENT, part 1 (2026-11-05). This section extends the earlier frozen contracts;
@@ -68,8 +95,8 @@ Owner-authorized Tier A / EVENT (2026-11-05), backend only. This extends part 1 
 **Grounding.** Before an intake `propose_reply` is inserted, a separate structured completion uses model class
 `grounding`: Vultr `deepseek-v4.1-flash-1017`, then `qwen3.8-flash-next`, JSON object mode, at most 800 output
 tokens. Normal routing policy, per-attempt budget reservation and recorded usage apply; every fallback is filtered
-by the existing router. Strict_private excludes hosted models. The existing regulated policy still allows BAA-hosted
-routes; ADR-020's broader local-only conversion is scheduled for E0 and is not implemented by this slice.
+by the existing router. Strict_private excludes hosted models. P10-E0 supersedes C1's original BAA allowance:
+regulated uses only verified private-address local routes, including for the independent grounding checker.
 Input includes only this reply, its cited passages actually returned in this run,
 and trusted database facts supplied in this run. Reply/article text is untrusted data. Output contains at most eight
 claims `{text, verdict: supported|unsupported|contradicted, source: <article_id>@<version>|db_tool|none}` and
@@ -277,7 +304,7 @@ class Adapter(Protocol):
 ## §6 Routes, policies, router (`ai/gateway/routes.py`, `router.py`, `pricing.py`)
 
 ```python
-ModelClass = Literal["agent", "fast_extract", "writer", "safety", "embed", "stt", "tts"]
+ModelClass = Literal["agent", "fast_extract", "writer", "safety", "grounding", "embed", "stt", "tts"]
 Policy = Literal["hosted_vultr", "hosted_any", "strict_private", "regulated"]
 
 class ProviderCfg(BaseModel):
@@ -286,7 +313,7 @@ class ProviderCfg(BaseModel):
     api_key_env: str | None = None
     hosted: bool = True
     vendor: Literal["vultr", "external", "local"]
-    baa: bool = False                # operator sets true only after signing this provider's BAA (ADR-018)
+    baa: bool = False                # deprecated compatibility key; grants no routing access (P10-E0)
 
 class RouteEntry(BaseModel):
     provider: str
@@ -308,13 +335,16 @@ class RoutesFile(BaseModel):
     limits: Limits = Limits()
 ```
 Policy filter: `hosted_vultr` → vendor `vultr` or `local`; `hosted_any` → all; `strict_private` → `hosted: false`;
-`regulated` → `baa: true` or `hosted: false`. Effective policy = `regulated` when `DATA_PROFILE=regulated`, else the
-business `ai_policy`. `fake` providers pass every policy (dev only).
+`regulated` → `hosted: false` and `vendor: local`, with private-address verification (P10-E0 above).
+`hosted: false` requires `vendor: local` at file load; `vendor: local, hosted: true` is valid but not local.
+Effective policy = `regulated` when `DATA_PROFILE=regulated`, else the business `ai_policy`.
+`fake` providers bypass the other policies (dev only), but must meet regulated's local/address rules.
+Every provider attempt re-reads effective policy through call-scoped state, including fallbacks and repairs.
 
 ```python
 class PolicyBlocked(Exception): ...
 class Router:
-    def __init__(self, routes: RoutesFile, adapters: dict[str, Adapter]) -> None: ...
+    def __init__(self, routes: RoutesFile, adapters: dict[str, Adapter], *, resolver: Resolver | None = None) -> None: ...
     limits: Limits
     def allowed(self, model_class: ModelClass, policy: Policy) -> list[RouteEntry]: ...
     def complete(self, model_class: ModelClass, policy: Policy, req: ChatRequest) -> tuple[ChatResult, RouteEntry]:
@@ -630,7 +660,10 @@ it does not authorize a model call.
 
 ```python
 # ai/public.py
-class AiStatus(BaseModel): enabled: bool; reason: str | None; policy: Policy; budget_percent: int
+class ModelClassStatus(BaseModel): enabled: bool; reason: str | None
+class AiStatus(BaseModel):
+    enabled: bool; reason: str | None; policy: Policy; budget_percent: int
+    model_classes: dict[ModelClass, ModelClassStatus] = Field(default_factory=dict)
 def status(db: Session, ctx: Context) -> AiStatus
 ```
 Job handlers are registered **non-transactional** (`reg.add_job(kind, handler, transactional=False)`, PR-02): handler

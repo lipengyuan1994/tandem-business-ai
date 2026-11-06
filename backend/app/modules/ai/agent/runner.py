@@ -26,7 +26,7 @@ from ..errors import AiError
 from ..gateway.router import PolicyBlocked, Router, effective_policy, load_router
 from ..gateway.routes import Limits, ModelClass
 from ..gateway.types import ChatMessage, ChatRequest, ChatResult, ProviderError
-from ..model_calls import budget_scope
+from ..model_calls import budget_scope, policy_scope
 from ..schemas import Policy, RunStatus
 from ..tools.base import RunState
 from ..tools.intake import validate_step, validation_summary
@@ -101,6 +101,11 @@ class ModelCaller:
     def remaining(self) -> float:
         return self.limits.run_timeout_s - (_monotonic() - self.started)
 
+    def current_policy(self) -> Policy:
+        with transaction(self.ctx) as db:
+            self.policy = effective_policy(db, self.ctx)
+        return self.policy
+
     def call(self, messages: list[ChatMessage], schema: dict[str, Any]) -> ChatResult:
         remaining = self.remaining()
         if remaining <= 0:
@@ -122,7 +127,7 @@ class ModelCaller:
             use_case=self.use_case,
         )
         try:
-            with budget_scope(self.ctx):
+            with budget_scope(self.ctx), policy_scope(self.current_policy):
                 result, _entry = self.router.complete(self.model_class, self.policy, req)
         except AiError as exc:
             status: RunStatus = "budget_exceeded" if exc.code == "ai.budget_exceeded" else "failed"

@@ -109,6 +109,15 @@ The values in `routes` are **placeholders until P5-03 eval results pick the winn
 
 **Benchmark protocol (P5-02, about $1 of credits):** rent `vhp-8c-16gb-amd` ($0.132/h) for at most 4 hours. Run the llama.cpp server container with two candidate models, run `make eval model_class=fast_extract provider=local` and `model_class=agent`, record p50/p95 latency, schema-valid rate and accuracy, then **destroy the VM** and record the deletion. **Pass rule for a class:** accuracy within 5 points of the hosted winner, ≥ 98 % schema-valid, p95 latency ≤ 20 s (`fast_extract`) or ≤ 60 s per run (`agent`, background only). If it fails, strict-private mode ships with `fast_extract` only or AI disabled, and the docs say so.
 
+**Measured 2026-11-06 (P5-02 / P10-E0, `backend/evals/reports/2026-11-06-local-models.md`):** `gpt-oss-20b` on an
+Apple M1 Pro (32 GB, llama.cpp, GPU) instead of a rented CPU VM. By the pass rule above: **`grounding` and
+`fast_extract` pass**; `writer` (summaries 70 % vs 100 %) and `agent` (intake 43 %, copilot 17 %, 36 s p50 per run) do
+not. **Decision for `strict_private` / `regulated`:** local routes only; enable local `grounding` and `fast_extract`;
+agent use cases (front desk, copilot) and summaries stay off, with the reason shown, until a local model passes the same
+suites on the clinic's own hardware (next candidates: a 30B-class instruct model on a GPU workstation). A CPU-only VM
+is not worth testing: the GPU workstation was already too slow for agent runs. Example route file:
+`deploy/config/ai-routes.local.example.yaml`.
+
 ## Agent protocol
 
 Every model turn must return exactly one JSON object matching `AgentStep`:

@@ -77,4 +77,15 @@ act_notify + shadow. AI-origin web executor messages (including booking replies)
 job; public cursor ordering uses release time. Staff DTO supplies countdown/Stop URL; cancellation reasons join
 Exceptions. Mail retains A1 outbox. Fixtures validate via make fixtures/check. No frontend edit or live call.
 Supervisor: regenerate TS, build/render part 3 and run live grounding/intake evals. Existing regulated BAA allowance
-is preserved; ADR-020's global local-only conversion remains E0. Evidence and final checks: cards/P10-C1-part2.md.
+was preserved in C1; P10-E0 below supersedes it. Evidence and final checks: cards/P10-C1-part2.md.
+
+## P10-E0 routing half — 2026-11-06
+
+Contract: “P10-E0: local-only regulated routing”. Regulated requires hosted:false + vendor:local and
+private-address resolution (injected in tests, cached per router). Legacy baa loads but warns and grants
+no access. All classes/fallbacks recheck effective policy at attempt boundaries, after budget waits and
+before accepting results; call-scoped readers preserve existing router decorator signatures.
+AiStatus adds model_classes with per-class enabled/reason; backend OpenAPI regenerated, no frontend edits.
+System screen still has its pre-AI placeholder: inspect /api/v1/ai/status for class diagnostics.
+Local example/config guidance included; benchmark, real local-server/modalities and deployment separate.
+Evidence and remaining checks: cards/P10-E0-routing.md.

@@ -1,0 +1,23 @@
+# Local-only template (ADR-020 decision 5). Copy to ai-routes.yaml and replace the model names with ones served
+# by your clinic's llama.cpp llama-server, vLLM or Ollama OpenAI-compatible endpoint. Different classes can use
+# separate local providers/servers. This template does not promise that one server supports every modality.
+# All resolved addresses must be private under regulated. Set LOCAL_INFERENCE_HOSTS=llm.internal in .env.
+# Keep the model server behind the clinic firewall, with no public port forward. See regulated-profile.md.
+# Measured 2026-11-06 (backend/evals/reports/2026-11-06-local-models.md): a 20B model on a workstation passed only
+# grounding and fast_extract. Keep a class's route only after `AI_LIVE=1 make eval` passes for it on your hardware;
+# delete the others and those features stay off with the reason shown.
+providers:
+  clinic:
+    kind: openai_compat
+    base_url: http://llm.internal:8080/v1
+    hosted: false
+    vendor: local
+routes:
+  agent: [{provider: clinic, model: local-agent}]
+  fast_extract: [{provider: clinic, model: local-extract}]
+  writer: [{provider: clinic, model: local-writer}]
+  safety: [{provider: clinic, model: local-safety}]
+  grounding: [{provider: clinic, model: local-grounding}]
+  embed: [{provider: clinic, model: local-embed}]
+  stt: [{provider: clinic, model: local-stt}]
+  tts: [{provider: clinic, model: local-tts}]

@@ -226,9 +226,12 @@ class _DisconnectRouter(Router):
     """The runner's existing StopRun path closes the run at the next call boundary, after the current step."""
 
     def __init__(self, inner: Router, stopped: threading.Event) -> None:
-        super().__init__(inner.routes, inner.adapters)
+        self.routes, self.adapters, self.limits = inner.routes, inner.adapters, inner.limits
         self.inner = inner
         self.stopped = stopped
+
+    def allowed(self, model_class: ModelClass, policy: Policy) -> list[RouteEntry]:
+        return self.inner.allowed(model_class, policy)
 
     def complete(self, model_class: ModelClass, policy: Policy, req: ChatRequest) -> tuple[ChatResult, RouteEntry]:
         if self.stopped.is_set():

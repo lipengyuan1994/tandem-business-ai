@@ -156,7 +156,14 @@ def test_budget_at_100_percent_blocks_models_and_sets_banner_until_utc_reset(
     set_router_for_tests(fake_router_by_class(agent=gw, writer=gw, fast_extract=gw, safety=gw))
     client = client_for(create_app(registry), registry, demo.business, ALL_PERMISSIONS)
     status = client.get(BASE + "/status").json()
-    assert status == {"enabled": False, "reason": "ai.budget_exceeded", "policy": "hosted_vultr", "budget_percent": 100}
+    assert status == {
+        "enabled": False, "reason": "ai.budget_exceeded", "policy": "hosted_vultr", "budget_percent": 100,
+        "model_classes": {
+            **{c: {"enabled": True, "reason": None} for c in ("agent", "writer", "fast_extract", "safety")},
+            **{c: {"enabled": False, "reason": f"ai.not_configured: no usable route for {c}"}
+               for c in ("grounding", "embed", "stt", "tts")},
+        },
+    }  # fmt: skip
     assert client.get(BASE + "/usage").json()["today"]["percent"] == 100
     read_ctx = system_ctx(demo.business, ("purchasing.po.read",))
     with transaction(read_ctx) as db:
@@ -187,24 +194,26 @@ def test_budget_at_100_percent_blocks_models_and_sets_banner_until_utc_reset(
     assert client.get(BASE + "/status").json()["enabled"] is True
 
 
-def non_baa_router(gw: FakeGateway) -> Router:
+def hosted_router(gw: FakeGateway, *, baa: bool = False) -> Router:
     # The adapter is fake, but production-like route metadata must obey policy, with no key/network.
     return Router(
-        RoutesFile(providers={"hosted": ProviderCfg(kind="openai_compat", vendor="vultr", hosted=True, baa=False)},
+        RoutesFile(providers={"hosted": ProviderCfg(kind="openai_compat", vendor="vultr", hosted=True, baa=baa)},
                    routes={c: [RouteEntry(provider="hosted", model="offline")] for c in
                            ("agent", "writer", "fast_extract", "safety")}),
         {"hosted": gw},
     )  # fmt: skip
 
 
-def test_regulated_profile_blocks_all_model_entrypoints_without_baa_and_calls_no_model(
+@pytest.mark.parametrize("baa", [False, True])
+def test_regulated_profile_blocks_all_hosted_model_entrypoints_and_calls_no_model(
     demo: Demo,
     registry: Registry,
     monkeypatch: pytest.MonkeyPatch,
+    baa: bool,
 ) -> None:
     monkeypatch.setattr(get_settings(), "data_profile", "regulated")
     gw = FakeGateway([])
-    set_router_for_tests(non_baa_router(gw))
+    set_router_for_tests(hosted_router(gw, baa=baa))
     client = client_for(create_app(registry), registry, demo.business, ALL_PERMISSIONS)
     status = client.get(BASE + "/status").json()
     assert status["enabled"] is False and status["reason"] == "ai.disabled_by_policy"
@@ -331,7 +340,7 @@ def test_background_writers_and_procurement_obey_policy_and_budget(
     gw = FakeGateway([])
     if guard == "regulated":
         monkeypatch.setattr(get_settings(), "data_profile", "regulated")
-        router = non_baa_router(gw)
+        router = hosted_router(gw)
         expected = "ai.disabled_by_policy"
     else:
         monkeypatch.setattr(get_settings(), "ai_daily_token_budget_per_business", 0)

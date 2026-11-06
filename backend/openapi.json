@@ -205,6 +205,25 @@
             "title": "Enabled",
             "type": "boolean"
           },
+          "model_classes": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ModelClassStatus"
+            },
+            "propertyNames": {
+              "enum": [
+                "agent",
+                "fast_extract",
+                "writer",
+                "safety",
+                "grounding",
+                "embed",
+                "stt",
+                "tts"
+              ]
+            },
+            "title": "Model Classes",
+            "type": "object"
+          },
           "policy": {
             "enum": [
               "hosted_vultr",
@@ -6039,6 +6058,31 @@
           "stop_url"
         ],
         "title": "MessageOut",
+        "type": "object"
+      },
+      "ModelClassStatus": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "enabled",
+          "reason"
+        ],
+        "title": "ModelClassStatus",
         "type": "object"
       },
       "Money": {

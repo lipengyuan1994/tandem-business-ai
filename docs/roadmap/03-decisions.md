@@ -134,6 +134,15 @@ and upcoming held/confirmed appointments; it does not invoke destructive erasure
 lifted in this version. Existing Audit action filters expose read activity. No automatic
 reminder caller exists yet. AI remains unbuilt/off until P5-01 after kickoff.
 
+### As built (2026-11-06) — P10-E0 routing, ADR-020 decision 5
+
+§1's original BAA allowance is superseded: regulated requires `hosted: false` and `vendor: local`,
+plus private-address resolution at router build, for every class/fallback. The legacy `baa` key loads
+with `ai_routes_baa_ignored` warnings under regulated; it grants no access. Failed/public resolution
+fails closed. Effective policy is re-read at each provider attempt, after budget waits and before
+accepting a result. `/ai/status` reports availability/reasons for all classes. The local example and
+network verification procedure are in the runbook. No local model benchmark or deployment in this slice.
+
 ## ADR-019 Test SMTP server for P8-02
 - **Status:** ACCEPTED 2026-11-03 (owner, in chat, left the choice between aiosmtpd and Mailpit to the agent)
 - **Decision:** `aiosmtpd` (Apache-2.0, with `atpublic` and `attrs`) as a backend **dev-only** dependency. Tests start an in-process SMTP server; no container is added to the dev stack. Mailpit was the alternative (a mail-catcher container with a web view); not chosen, to keep the stack unchanged.

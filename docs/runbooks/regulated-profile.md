@@ -41,6 +41,8 @@ never bypass those constraints.
 
 ## What changes
 
+- AI uses only `hosted: false, vendor: local` providers with private resolved addresses, for every class and fallback.
+  BAA-covered hosted AI APIs are no longer used; `baa` remains readable but has no effect (ADR-020 decision 5).
 - Staff reads of customer detail, notes, timeline and consent history produce
   `crm.customer.viewed`; conversation detail produces `conversations.conversation.viewed`;
   appointment detail produces `scheduling.appointment.viewed`. The actor and target ID
@@ -99,11 +101,44 @@ never bypass those constraints.
   main buttons and short labels use i18next interpolation scoped to the active business.
   Record names, API fields and free-text history are not rewritten.
 
+## Local AI server and verification
+
+Copy `deploy/config/ai-routes.local.example.yaml` to the installation's `config/ai-routes.yaml`.
+Point `base_url` at a clinic-controlled OpenAI-compatible server (llama.cpp `llama-server`, vLLM or Ollama),
+for example `http://llm.internal:8080/v1`, and replace each placeholder model with one actually served.
+Keep `hosted: false` and `vendor: local`; no provider key is required unless your server requires authentication.
+Set `LOCAL_INFERENCE_HOSTS=llm.internal` in `.env` for both API and worker. A DNS name is required by the
+existing HTTP egress guard: literal IP URLs and link-local destinations remain refused by transport even when
+eligible at the routing layer. Do not add a public hosted API as a fallback.
+
+From the API and worker network, verify that the name resolves **only** to loopback (same container),
+RFC 1918, RFC 4193 (`fc00::/7`) or link-local addresses. Docker single-label service names are valid only
+when they resolve privately. Public/mixed/failed resolution disables that regulated provider and logs
+`ai_local_provider_public_address` with just the host. Explicit legacy `baa` keys log `ai_routes_baa_ignored`
+with the provider name; remove those keys to clear the deprecation warning. Resolution is cached per router;
+recreate both processes after changing routes/DNS. The client separately applies its existing egress guard.
+
+Verify the server is physically/on-network under the clinic's control: a private address alone does not prove
+this. Keep it on the clinic LAN/private container network, with **no router/NAT port forward** or public ingress,
+and firewall the model port to the API/worker hosts only. Check the server's own telemetry/update configuration
+and its host/network inventory. A self-run cloud VM marked `vendor: local, hosted: true` never qualifies.
+
+After recreating both processes, check **System** for `regulated` and both hosting/backup attestations.
+With a staff session that has `ai.assistant.use`, inspect `GET /api/v1/ai/status` (browser Network tools or
+authenticated API client): `policy` must be `regulated`; `model_classes` reports `enabled` and `reason` for
+agent, fast_extract, writer, safety, grounding, embed, stt and tts. Missing STT reads
+`regulated: no local route for stt`. The System screen's existing AI placeholder does not render these fields
+yet; this backend change does not alter that screen. Availability means an allowed configured route, not a
+successful server probe or a quality benchmark. Test the required modalities using synthetic data before use;
+the current gateway implements chat only, with STT/embedding/TTS execution reserved for later tasks.
+
 ## What this does not do
 
-AI stays off until P5-01 implements BAA-aware routing (`baa` and the forced regulated
-policy) after kickoff. P8-23 adds no AI module, route file or inference call. Never
-attach an unrestricted inference integration to a regulated installation.
+AI stays off without an allowed local route; policy is checked for each provider attempt, including repair,
+safety, grounding and fallback, after budget waits and before accepting results. An already in-flight request
+cannot be recalled when policy changes; its result is discarded if its route became disallowed.
+No local model is installed or benchmarked by this routing change. Never attach an unrestricted inference
+integration to a regulated installation.
 
 There is no automatic retention enforcement or legal hold expiry/release workflow.
 Backups retain data until their own expiry; this profile does not delete or alter

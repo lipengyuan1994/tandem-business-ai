@@ -1,8 +1,9 @@
 # P10 · AI workflows: from drafts to an AI team that does the work
 
 **Status: APPROVED (owner, 2026-11-05, in chat: "Approve as proposed").** D1–D4, D6, D8–D10 as proposed in §11;
-D5 (dental demo AI) and D7 (voice length limit) offered options without a default and are asked again when E1 and D
-start. Each step becomes cards under `docs/roadmap/ai/cards/` (contracts first) and rows in `STATUS.md`.
+D5 and D7 decided 2026-11-06 by the tech lead under the owner's standing approval ("use your best judgment"):
+**D5 = (a)**, plus the local benchmark of E0 run on a developer Mac (no GPU VM unless those results need one);
+**D7 = 120 s / 4 MB**, confirm before send kept. Each step becomes cards under `docs/roadmap/ai/cards/` (contracts first) and rows in `STATUS.md`.
 Reviewed by a second model (GPT-6.1 Sol, read-only, 2026-11-05); its corrections are folded in below.
 
 **Goal:** the AI does routine work end to end, inside rules the business sets. People approve what is risky and can
@@ -19,7 +20,7 @@ books, and hands over to a person when needed.
 | Coordination | Events and deduplicated jobs already chain work: low stock → quote requests → supplier replies → comparison (`ai/subscribers.py`) | Not presented as a team; no view of "what the AI did and is waiting on" |
 | Background vs on request | Scheduled: procurement and payment scans. On request: briefing (cached per user and hour), campaign draft (writes a campaign revision directly) | — |
 | Voice | Spec only (M14: push-to-talk, ≤ 60 s / 2 MB, confirm before sending) | The gateway only supports chat; STT, embeddings and re-ranking need gateway adapters, cost accounting and tests. Vultr lists `whisper-large-v3-turbo`, `qwen3-embedding-4b`, `bge-reranker-v2-m3`, `chatterbox`, `qwen3-tts` |
-| Regulated data | ADR-018 (`DATA_PROFILE=regulated`, non-AI half built); per-business `ai_policy`; `strict_private` = local routes only; `regulated` currently allows **BAA-covered hosted providers or local** (`gateway/router.py`) | Owner now wants local models only for PHI → ADR change. No local route deployed or benchmarked (P5-02). Routing policy is fixed once per run |
+| Regulated data | ADR-018/ADR-020 (`DATA_PROFILE=regulated`); per-business `ai_policy`; P10-E0 routing requires hosted:false + vendor:local + private resolved addresses, with policy rechecked per attempt; BAA-hosted AI excluded | Routing evidence in [E0 card](../ai/cards/P10-E0-routing.md). Routing task does not deploy or benchmark local models (P5-02); clinic network verification remains operator-owned |
 | Scheduling for clinics | One resource per appointment | A dental visit needs provider **and** chair at once |
 
 ## 2. Product principles
@@ -208,11 +209,11 @@ tools; documents published by the owner); regulated data (fail closed, local-onl
   second-person actions (yes/no). PO confirm-in-chat limit (default proposal: $500 per order, $1,000 per day).
 - **D3** Agent roster in §4 (add Reviews/Reputation? Staff rostering?).
 - **D4** Knowledge base v1 with full-text search only; embeddings and PDFs in C2 (proposed).
-- **D5** Dental demo AI on the public demo: (a) Vultr models on synthetic data with the banner and a "demo only"
+- **D5** (decided: a) Dental demo AI on the public demo: (a) Vultr models on synthetic data with the banner and a "demo only"
   marker that a regulated install refuses; (b) AI off for that business with the explanation; (c) also a short
   local-model test on a rented GPU VM (≈ $1–2 per hour, within the credit).
 - **D6** ADR-018: `regulated` = local models only (proposed, per the owner), or BAA-covered APIs as an explicit opt-in.
-- **D7** Voice: Vultr Whisper for standard businesses; keep confirm-before-send; 60 s or 120 s limit.
+- **D7** (decided: 120 s / 4 MB) Voice: Vultr Whisper for standard businesses; keep confirm-before-send; 60 s or 120 s limit.
 - **D8** Order of work in §8.
 - **D9** New libraries when their step starts (PDF text extraction in C2; none needed for A0–C1).
 - **D10** Shadow-mode thresholds for switching a rule on (proposal: at least 50 shadow cases and ≤ 2 % wrong

@@ -169,6 +169,11 @@ def test_status_reports_budget(monkeypatch: pytest.MonkeyPatch, registry: Regist
     client = client_for(create_app(registry), registry, biz, {"ai.assistant.use"})
     assert client.get("/api/v1/ai/status").json() == {
         "enabled": True, "reason": None, "policy": "hosted_vultr", "budget_percent": 0,
+        "model_classes": {
+            "agent": {"enabled": True, "reason": None},
+            **{c: {"enabled": False, "reason": f"ai.not_configured: no usable route for {c}"}
+               for c in ("fast_extract", "writer", "safety", "grounding", "embed", "stt", "tts")},
+        },
     }  # fmt: skip
     monkeypatch.setattr(get_settings(), "ai_daily_token_budget_per_business", 0)
     body = client.get("/api/v1/ai/status").json()

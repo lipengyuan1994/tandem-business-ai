@@ -23,7 +23,7 @@ class ProviderCfg(BaseModel):
     api_key_env: str | None = None
     hosted: bool = True
     vendor: Literal["vultr", "external", "local"]
-    baa: bool = False  # operator sets true only after signing this provider's BAA (ADR-018)
+    baa: bool = False  # deprecated compatibility key; grants no routing access (ADR-020 decision 5)
 
 
 class RouteEntry(BaseModel):
@@ -55,6 +55,9 @@ class RoutesFile(BaseModel):
 
     @model_validator(mode="after")
     def _known_providers(self) -> RoutesFile:
+        for name, cfg in self.providers.items():
+            if not cfg.hosted and cfg.vendor != "local":
+                raise ValueError(f"providers.{name}.vendor: hosted: false requires vendor: local")
         for model_class, entries in self.routes.items():
             for i, entry in enumerate(entries):
                 if model_class == "grounding" and entry.json_schema:

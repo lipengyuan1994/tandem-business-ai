@@ -20,6 +20,9 @@ following docs/roadmap/12-agent-playbook.md. If code and roadmap disagree, stop 
 ## Never without the owner's explicit approval in chat
 - **Git commits** (each one needs the owner's approval; the first commit was approved 2026-11-03), creating remotes,
   GitHub resources, pushing, or publishing anything.
+  (2026-11-06: the owner gave **standing approval** in chat to commit finished, verified steps and release them to the
+  Vultr demo VM without asking, and to settle open roadmap decisions by best judgment, recording each in the roadmap.
+  Still ask before pushing, creating remotes or GitHub resources, publishing, or exceeding the $200 credit.)
 - Creating or changing cloud resources, spending money, redeeming credits, using real API keys. (2026-11-03: the owner
   allowed test deploys on Vultr within the $200 credit for the whole project; log every resource in docs/vultr-spend.md.)
 - Adding a new dependency, service or container not covered by docs/roadmap/03-decisions.md.

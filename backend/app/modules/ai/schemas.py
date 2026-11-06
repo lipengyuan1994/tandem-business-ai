@@ -12,6 +12,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .gateway.routes import ModelClass
+
 Policy = Literal["hosted_vultr", "hosted_any", "strict_private", "regulated"]
 UseCaseId = Literal[
     "intake", "copilot", "summary", "reorder_note", "briefing", "procurement", "campaign_draft", "payment_followup",
@@ -19,11 +21,17 @@ UseCaseId = Literal[
 ]  # fmt: skip
 
 
+class ModelClassStatus(BaseModel):
+    enabled: bool
+    reason: str | None
+
+
 class AiStatus(BaseModel):
     enabled: bool
     reason: str | None
     policy: Policy
     budget_percent: int
+    model_classes: dict[ModelClass, ModelClassStatus] = Field(default_factory=dict)
 
 
 # ----------------------------------------------------------------------------------------- §11 output models

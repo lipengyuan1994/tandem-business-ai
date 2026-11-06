@@ -15,11 +15,12 @@ from app.modules.org import public as org
 from app.platform.config import get_settings
 from app.platform.context import Context
 
-from ..model_calls import complete_attempt
+from ..model_calls import attempt_policy, complete_attempt
 from ..schemas import Policy
 from ..settings import API_KEY_ENVS, ai_settings, api_key
 from .anthropic import AnthropicAdapter
 from .fake import ScriptFileAdapter
+from .local_address import Resolver, resolve_host, verify_local_url
 from .openai_compat import OpenAICompatAdapter
 from .routes import Limits, ModelClass, ProviderCfg, RouteEntry, RoutesFile, load_routes_file
 from .types import Adapter, ChatRequest, ChatResult, JsonMode, ProviderError
@@ -42,6 +43,8 @@ class FakeProviderInProduction(RuntimeError):
 
 
 def policy_allows(cfg: ProviderCfg, policy: Policy) -> bool:
+    if policy == "regulated":
+        return not cfg.hosted and cfg.vendor == "local"
     if cfg.kind == "fake":  # dev and e2e only; refused in production
         return True
     if policy == "hosted_vultr":
@@ -50,8 +53,6 @@ def policy_allows(cfg: ProviderCfg, policy: Policy) -> bool:
         return True
     if policy == "strict_private":
         return not cfg.hosted
-    if policy == "regulated":
-        return cfg.baa or not cfg.hosted
     return False  # unknown policy: fail closed
 
 
@@ -69,38 +70,74 @@ def json_mode_for(entry: RouteEntry, req: ChatRequest) -> JsonMode:
 
 
 class Router:
-    def __init__(self, routes: RoutesFile, adapters: dict[str, Adapter]) -> None:
+    def __init__(self, routes: RoutesFile, adapters: dict[str, Adapter], *, resolver: Resolver | None = None) -> None:
         self.routes = routes
         self.adapters = adapters
         self.limits: Limits = routes.limits
+        self._resolver = resolver or resolve_host
+        self._local_lock = threading.Lock()
+        self._regulated_local: set[str] | None = None
+        if ai_settings().regulated:
+            self._verify_regulated_providers()
+
+    def _verify_regulated_providers(self) -> set[str]:
+        with self._local_lock:
+            if self._regulated_local is None:
+                allowed: set[str] = set()
+                for name, cfg in self.routes.providers.items():
+                    if "baa" in cfg.model_fields_set:
+                        log.warning("ai_routes_baa_ignored", provider=name)
+                    if cfg.hosted or cfg.vendor != "local":
+                        continue
+                    valid, host = verify_local_url(cfg.base_url, self._resolver)
+                    if valid:
+                        allowed.add(name)
+                    else:
+                        log.warning("ai_local_provider_public_address", host=host)
+                self._regulated_local = allowed
+            return self._regulated_local
+
+    def _allows(self, entry: RouteEntry, policy: Policy) -> bool:
+        if entry.provider not in self.adapters or not policy_allows(self.routes.providers[entry.provider], policy):
+            return False
+        return policy != "regulated" or entry.provider in self._verify_regulated_providers()
 
     def allowed(self, model_class: ModelClass, policy: Policy) -> list[RouteEntry]:
         """Entries of this class, in order, whose provider has an adapter (key present) and passes the policy."""
-        return [
-            entry
-            for entry in self.routes.routes.get(model_class, [])
-            if entry.provider in self.adapters and policy_allows(self.routes.providers[entry.provider], policy)
-        ]
+        return [entry for entry in self.routes.routes.get(model_class, []) if self._allows(entry, policy)]
 
     def complete(self, model_class: ModelClass, policy: Policy, req: ChatRequest) -> tuple[ChatResult, RouteEntry]:
         """Fill model and json_mode per entry; try allowed entries in order; on a transient ProviderError try the next;
         non-transient → raise it. No allowed entry → PolicyBlocked. All failed → ProviderError("unavailable")."""
-        entries = self.allowed(model_class, policy)
-        if not entries:
-            raise PolicyBlocked(model_class, policy)
+        entries = self.routes.routes.get(model_class, [])
         last: ProviderError | None = None
         started = _monotonic()
         deadline = started + req.timeout_s
         for index, entry in enumerate(entries):
+            policy = attempt_policy(policy)
+            if not self._allows(entry, policy):
+                continue
             remaining = deadline - (started if index == 0 else _monotonic())
             if remaining <= 0:
                 raise ProviderError("timeout", "request deadline exceeded")
             attempt = req.model_copy(
                 update={"model": entry.model, "json_mode": json_mode_for(entry, req), "timeout_s": remaining}
             )
+
+            def check_policy(entry: RouteEntry = entry, policy: Policy = policy) -> None:
+                current = attempt_policy(policy)
+                if not self._allows(entry, current):
+                    raise PolicyBlocked(model_class, current)
+
             try:
-                result = complete_attempt(self.adapters[entry.provider], entry, attempt)
+                result = complete_attempt(self.adapters[entry.provider], entry, attempt, check_policy=check_policy)
+                # A call already in flight cannot be recalled. Discard its result if policy tightened meanwhile.
+                check_policy()
+            except PolicyBlocked:
+                continue
             except ProviderError as exc:
+                if not self._allows(entry, attempt_policy(policy)):
+                    continue
                 if not exc.transient:
                     raise
                 log.warning(
@@ -112,8 +149,13 @@ class Router:
             if _monotonic() >= deadline:
                 raise ProviderError("timeout", "request deadline exceeded")
             return result, entry
+        policy = attempt_policy(policy)
+        if not self.allowed(model_class, policy):
+            raise PolicyBlocked(model_class, policy)
         raise ProviderError(
-            "unavailable", f"all {len(entries)} route(s) failed", last.retry_after_s if last is not None else None
+            "unavailable",
+            f"all {len(self.allowed(model_class, policy))} route(s) failed",
+            last.retry_after_s if last is not None else None,
         )
 
 
@@ -166,6 +208,7 @@ def _fingerprint() -> Any:
         tuple(sorted(e for e in API_KEY_ENVS if api_key(e))),
         tuple(sorted(s.local_inference_hosts)),
         get_settings().app_env,
+        s.regulated,
     )
 
 
@@ -203,8 +246,8 @@ def set_router_for_tests(router: Router | None) -> None:
 
 
 def check_routes_at_startup() -> None:
-    """Called at registration: refuses a `fake` provider in production before the app starts serving."""
-    if get_settings().is_prod:
+    """Refuse production fakes and emit regulated policy/address warnings before serving."""
+    if get_settings().is_prod or ai_settings().regulated:
         load_router()
 
 

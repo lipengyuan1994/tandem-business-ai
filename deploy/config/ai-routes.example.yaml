@@ -4,8 +4,9 @@
 # key variable is empty is skipped. Hosted provider hosts must also be listed in EGRESS_ALLOWLIST.
 #
 # Routing policy (per business, settings → AI): hosted_vultr allows vendor vultr and local; hosted_any allows all;
-# strict_private allows only hosted: false; regulated (forced by DATA_PROFILE=regulated) allows only baa: true or
-# hosted: false. Set baa: true only after signing that provider's business associate agreement (ADR-018).
+# strict_private allows only hosted: false; regulated (forced by DATA_PROFILE=regulated) requires hosted: false,
+# vendor: local and private resolved addresses for all classes/fallbacks. The legacy baa key grants no access
+# (ADR-020 decision 5). For a clinic start with ai-routes.local.example.yaml; hosted BAA APIs are excluded.
 #
 # The routes and prices below are PLACEHOLDERS from the 2026-10-24 Vultr catalog (docs/roadmap/08-ai-layer.md) until
 # the probe (AI-04) and the evals (AI-09) pick the winners. json_schema: true only for models the probe proved.

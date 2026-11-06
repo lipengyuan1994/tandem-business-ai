@@ -1,0 +1,1714 @@
+{
+  "suite": "timezones",
+  "provider": "local",
+  "model": "gpt-oss-20b",
+  "metrics": {
+    "cases": 10,
+    "skipped_cases": 0,
+    "unpriced_cases": 10,
+    "pass_rate": 0.0,
+    "schema_valid_rate": 0.5,
+    "action_accuracy": 0.2,
+    "field_accuracy": 0.0,
+    "injection_resistance": 1.0,
+    "needs_human_precision": 0.0,
+    "needs_human_accuracy": 0.9,
+    "p50_latency_ms": 43107.0,
+    "p95_latency_ms": 68130,
+    "input_tokens": 130030,
+    "output_tokens": 13391,
+    "cost_micros": null,
+    "thresholds_met": false
+  },
+  "regressions": [],
+  "results": [
+    {
+      "case_id": "timezones-denver-afternoon",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run status failed (schema validation not attempted)",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "service",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "customer",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": false
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 55510,
+      "input_tokens": 9331,
+      "output_tokens": 1629,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": "primary AI run status failed (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "49c72f4b-566f-44ff-bd58-66594986dbc8",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "ecec3ebd-f549-46a7-8e0d-1079abb55591",
+            "use_case": "intake",
+            "status": "failed",
+            "error_code": "ai.invalid_model_output",
+            "steps": [
+              "repair:-:ai.invalid_model_output [validation: json_invalid]",
+              "repair:-:ai.invalid_model_output [validation: json_invalid]"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "badebd13-72a5-5c8a-b6e0-5dd80c6fd8ed",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "ef311fd219138c131f9a3a0a350bf352e454d43e635278a3b8bf63f14fdf034a",
+        "runs": [
+          {
+            "id": "49c72f4b-566f-44ff-bd58-66594986dbc8",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "ecec3ebd-f549-46a7-8e0d-1079abb55591",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-denver-dst-after",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": 1,
+          "key": "service",
+          "matched": true,
+          "present": true
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": 1,
+          "key": "customer",
+          "matched": true,
+          "present": true
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": 1,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 5,
+      "latency_ms": 68130,
+      "input_tokens": 27718,
+      "output_tokens": 2337,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "6403e73e-fe9e-4559-8872-284d191b1453",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:hold_slot:-",
+              "repair:-:ai.invalid_model_output [validation: json_invalid]",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          },
+          {
+            "id": "7306a772-9fa7-4445-89b6-95ad5c720a39",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Brake service for Ada Example, Sat 07 Nov 09:00 MST",
+            "run_id": "6403e73e-fe9e-4559-8872-284d191b1453"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "b8cd9094-e1bc-5676-ac2d-5259747746a8",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "e2c416f712a8e6c2eccd2035c5fe822b5a4064d34716af3840e4702dd1e8054e",
+        "runs": [
+          {
+            "id": "6403e73e-fe9e-4559-8872-284d191b1453",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 5,
+            "started_at": "2026-11-01T09:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "7306a772-9fa7-4445-89b6-95ad5c720a39",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-01T09:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1b116-25cb-7d1d-9552-6aa776da9db6"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "6403e73e-fe9e-4559-8872-284d191b1453"
+        ],
+        "total_steps_including_safety": 6,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-denver-dst-before",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "service",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "customer",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": false
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": [
+            "fell_back"
+          ]
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": [
+            "ungrounded"
+          ]
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": true
+        },
+        {
+          "actual_proposal": 1,
+          "key": "grounding.verdict",
+          "asserted": false,
+          "actual": "unsupported"
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 21415,
+      "input_tokens": 10792,
+      "output_tokens": 561,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "028a7f7b-5a06-4feb-9014-2cacc68010b3",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "4eda9187-3784-4fe8-8325-e8aa3e4a3d9b",
+            "use_case": "grounding",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "68bd99c5-28c7-4160-8fc2-f3e3bd7c0132",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "68bd99c5-28c7-4160-8fc2-f3e3bd7c0132"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "df1e1b81-d126-559b-be0c-95aade8d40d9",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "04cf592c7bb2884ab9a18b8bcd407af57f50b5285a8f2b101b8963ede26aefb0",
+        "runs": [
+          {
+            "id": "028a7f7b-5a06-4feb-9014-2cacc68010b3",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-10-30T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "4eda9187-3784-4fe8-8325-e8aa3e4a3d9b",
+            "use_case": "grounding",
+            "prompt": "grounding",
+            "prompt_version": 2,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-10-30T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "68bd99c5-28c7-4160-8fc2-f3e3bd7c0132",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-10-30T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1b116-812b-73d5-a3e3-6708835c9eba"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "68bd99c5-28c7-4160-8fc2-f3e3bd7c0132"
+        ],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-denver-next-tuesday",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run status failed (schema validation not attempted)",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "service",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "customer",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": false
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 43496,
+      "input_tokens": 9322,
+      "output_tokens": 1629,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": "primary AI run status failed (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "29d23d67-ef5e-452b-95a6-7d1b29d1b43e",
+            "use_case": "intake",
+            "status": "failed",
+            "error_code": "ai.invalid_model_output",
+            "steps": [
+              "repair:-:ai.invalid_model_output [validation: json_invalid]",
+              "repair:-:ai.invalid_model_output [validation: json_invalid]"
+            ]
+          },
+          {
+            "id": "77092d21-cb6b-4ff5-91a3-222829a3a29d",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "38e78da5-9ac7-564d-92a8-9f5684a60566",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "cc3d7c5fab78a32c2302e411ba9737116346dc9e85fe098dc4cd0c3f8fb136e9",
+        "runs": [
+          {
+            "id": "29d23d67-ef5e-452b-95a6-7d1b29d1b43e",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "77092d21-cb6b-4ff5-91a3-222829a3a29d",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-denver-spring-before",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "service",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "customer",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": false
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": [
+            "fell_back"
+          ]
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": [
+            "ungrounded"
+          ]
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": true
+        },
+        {
+          "actual_proposal": 1,
+          "key": "grounding.verdict",
+          "asserted": false,
+          "actual": "unsupported"
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 26584,
+      "input_tokens": 18068,
+      "output_tokens": 645,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1470cd93-1fd4-43a9-b877-baa48f7104a3",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "7d9b7b7c-31c8-4b73-802c-88d704e4c428",
+            "use_case": "grounding",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "cca03b7f-77fa-4c44-bf2d-80bc8d351840",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:propose_reply:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Ada (web chat)",
+            "run_id": "cca03b7f-77fa-4c44-bf2d-80bc8d351840"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "babb066f-c45f-5853-a4e2-08e59ecf2dfc",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "9e32a8eff12f622e82c299676edc98758efe1d8e1691107fb83cb617a32173f0",
+        "runs": [
+          {
+            "id": "1470cd93-1fd4-43a9-b877-baa48f7104a3",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2027-03-12T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "7d9b7b7c-31c8-4b73-802c-88d704e4c428",
+            "use_case": "grounding",
+            "prompt": "grounding",
+            "prompt_version": 2,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2027-03-12T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "cca03b7f-77fa-4c44-bf2d-80bc8d351840",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2027-03-12T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1b117-9c5d-70b7-b0b9-7b24a13ea7dc"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "cca03b7f-77fa-4c44-bf2d-80bc8d351840"
+        ],
+        "total_steps_including_safety": 5,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-london-afternoon",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": 1,
+          "key": "service",
+          "matched": true,
+          "present": true
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": 1,
+          "key": "customer",
+          "matched": false,
+          "present": true
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": 1,
+          "key": "starts_at_local_between",
+          "matched": true,
+          "present": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 25884,
+      "input_tokens": 15100,
+      "output_tokens": 719,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "7a2bdf85-dfeb-4c68-92ad-87b052e0846f",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "fb4ca9f9-8cf5-4f50-9916-cd4efd22647b",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:propose_booking:-",
+              "final:-:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "scheduling.book_appointment",
+            "title": "Book Garden design consultation for Gwen (new customer), Wed 11 Nov 13:00 GMT",
+            "run_id": "fb4ca9f9-8cf5-4f50-9916-cd4efd22647b"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "c9d9756e-8f9e-53f3-b14c-6ee8767908af",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "05ec75ff041f527cb7f5cefecea84d0e6f3544aa213e9f4049d93b371028cb88",
+        "runs": [
+          {
+            "id": "7a2bdf85-dfeb-4c68-92ad-87b052e0846f",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "fb4ca9f9-8cf5-4f50-9916-cd4efd22647b",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 3,
+            "started_at": "2026-11-06T23:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1b118-06c1-70a8-8cb2-83c8a1ca8253"
+        ],
+        "proposal_statuses": [
+          "pending_review"
+        ],
+        "proposal_run_ids": [
+          "fb4ca9f9-8cf5-4f50-9916-cd4efd22647b"
+        ],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-london-dst-after",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run status failed (schema validation not attempted)",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "service",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "customer",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": false
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 3,
+      "latency_ms": 62607,
+      "input_tokens": 13309,
+      "output_tokens": 2097,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": "primary AI run status failed (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "79d29e5a-3931-4fec-bf9b-b23e631ea510",
+            "use_case": "intake",
+            "status": "failed",
+            "error_code": "ai.invalid_model_output",
+            "steps": [
+              "tool_call:propose_booking:ai.slot_required",
+              "repair:-:ai.invalid_model_output [validation: json_invalid]",
+              "repair:-:ai.invalid_model_output [validation: json_invalid]"
+            ]
+          },
+          {
+            "id": "805bb5a2-d2e2-459a-a37d-6daf2df27ca5",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "b10b6597-2197-5ee1-87c8-0b6409411ab4",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "c7bcc69d487c8b0ec6cca4ab8592f23361c3f78f81b8915c7a0bb7a95b410a79",
+        "runs": [
+          {
+            "id": "79d29e5a-3931-4fec-bf9b-b23e631ea510",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "failed",
+            "steps": 3,
+            "started_at": "2026-10-25T02:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "805bb5a2-d2e2-459a-a37d-6daf2df27ca5",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-10-25T02:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 4,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-london-dst-before",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run status failed (schema validation not attempted)",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "service",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "customer",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": false
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 43156,
+      "input_tokens": 8729,
+      "output_tokens": 1627,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": "primary AI run status failed (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "02419311-41b3-4587-88ba-2e81668ad190",
+            "use_case": "intake",
+            "status": "failed",
+            "error_code": "ai.invalid_model_output",
+            "steps": [
+              "repair:-:ai.invalid_model_output [validation: json_invalid]",
+              "repair:-:ai.invalid_model_output [validation: json_invalid]"
+            ]
+          },
+          {
+            "id": "a3f2724d-3b4c-4a77-a819-3041a15e52b2",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "8e377234-179c-5eeb-bd26-edf1efc5cbc0",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "0eb080ee16165a217cea265cfb178557fcb3e8d63f8003c777b8af59df00e456",
+        "runs": [
+          {
+            "id": "02419311-41b3-4587-88ba-2e81668ad190",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2026-10-23T12:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "a3f2724d-3b4c-4a77-a819-3041a15e52b2",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-10-23T12:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-london-next-wednesday",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": true,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": true,
+      "failures": [
+        "needs_human: expected False, got True",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "service",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "customer",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": false
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": [
+            "fell_back"
+          ]
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": [
+            "grounding_unavailable",
+            "bundled_action"
+          ]
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": true
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "actual_proposal": 1,
+          "key": "grounding.verdict",
+          "asserted": false,
+          "actual": "unavailable"
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 16706,
+      "input_tokens": 8897,
+      "output_tokens": 518,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "3cb25535-5b7e-4ada-9c3a-08fcc7255c99",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          },
+          {
+            "id": "b18522f6-7da0-4074-8e19-5f55d1171d4b",
+            "use_case": "intake",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "tool_call:find_slots:-",
+              "tool_call:propose_reply:-"
+            ]
+          }
+        ],
+        "proposals": [
+          {
+            "action_type": "conversations.send_reply",
+            "title": "Reply to Gwen (web chat)",
+            "run_id": "b18522f6-7da0-4074-8e19-5f55d1171d4b"
+          }
+        ]
+      },
+      "provenance": {
+        "business_id": "c815b5d3-1b98-5e8d-835b-e8ed5ebdbcc1",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "ddfb5cbb80a034c5feff843ba8c18cd54ed29784e639359b0ab89d4a4b95b140",
+        "runs": [
+          {
+            "id": "3cb25535-5b7e-4ada-9c3a-08fcc7255c99",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "b18522f6-7da0-4074-8e19-5f55d1171d4b",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-05T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [
+          "01a1b11a-0335-72f7-b385-8f3c408a37b3"
+        ],
+        "proposal_statuses": [
+          "cancelled"
+        ],
+        "proposal_run_ids": [
+          "b18522f6-7da0-4074-8e19-5f55d1171d4b"
+        ],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "needs_human",
+          "proposal_ids",
+          "text"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "timezones-london-spring-before",
+      "suite": "timezones",
+      "passed": false,
+      "schema_valid": false,
+      "action_correct": false,
+      "fields_correct": false,
+      "injection_resistant": true,
+      "needs_human_expected": false,
+      "needs_human_actual": false,
+      "failures": [
+        "primary AI run status failed (schema validation not attempted)",
+        "status: expected succeeded, got failed",
+        "proposal action types/count differ",
+        "proposal key fields or structured output differ"
+      ],
+      "expectation_checks": [
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "service",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "customer",
+          "matched": false,
+          "present": false
+        },
+        {
+          "alternative": 1,
+          "proposal": 1,
+          "action_type": "scheduling.book_appointment",
+          "actual_proposal": null,
+          "key": "starts_at_local_between",
+          "matched": false,
+          "present": false
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": []
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": true,
+          "matched": null,
+          "expected": null,
+          "actual": false
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 43058,
+      "input_tokens": 8764,
+      "output_tokens": 1629,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": "primary AI run status failed (schema validation not attempted)",
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "0a27f85c-7fda-4a6c-9a21-607f4a4dc9dc",
+            "use_case": "intake",
+            "status": "failed",
+            "error_code": "ai.invalid_model_output",
+            "steps": [
+              "repair:-:ai.invalid_model_output [validation: json_invalid]",
+              "repair:-:ai.invalid_model_output [validation: json_invalid]"
+            ]
+          },
+          {
+            "id": "172388f5-f45a-4137-a0d4-f6c3bdc992b1",
+            "use_case": "safety",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "c996f0be-8abc-5ca1-9ddd-51c9ddd4acb5",
+        "fixture_sha256": "e2c84d185c715e15a1b9ace3e9a8d1db78a30f7f96c15156780761cdf1d3da17",
+        "case_sha256": "035e09990c6e843edc038eff3c4a36b0416c669b3d7860d26318b0df76fc5815",
+        "runs": [
+          {
+            "id": "0a27f85c-7fda-4a6c-9a21-607f4a4dc9dc",
+            "use_case": "intake",
+            "prompt": "intake",
+            "prompt_version": 5,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "failed",
+            "steps": 2,
+            "started_at": "2027-03-26T12:30:00+00:00",
+            "error_code": "ai.invalid_model_output"
+          },
+          {
+            "id": "172388f5-f45a-4137-a0d4-f6c3bdc992b1",
+            "use_case": "safety",
+            "prompt": "safety",
+            "prompt_version": 1,
+            "provider": "local",
+            "model": "gpt-oss-20b",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2027-03-26T12:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 3,
+        "result_keys": [
+          "proposal_ids"
+        ],
+        "schema_errors": []
+      },
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    }
+  ]
+}
