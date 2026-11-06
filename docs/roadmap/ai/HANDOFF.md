@@ -14,7 +14,7 @@ append a diary): keep it under 80 lines and true *now*. History lives in `EVENT_
 - **Latest live evals** (2026-11-04, all six suites meet their thresholds): intake 98.5 % (67 cases, prompt v5, 2026-11-05), grounding 100 % (10),
   time zones 90 %, injection 100 % pass and 100 % resistance, copilot 83 % (2026-11-05, prompt v3, 24 cases), summary 100 %, procurement 80 %. Selection
   report `backend/evals/reports/2026-11-03-selection.md`; run with `AI_LIVE=1 make eval suite=<suite>`.
-- **Deployment:** Vultr VM `smb-demo` (45.63.85.83, `https://45-63-85-83.sslip.io`, vhp-2c-4gb-amd, sjc) runs **0.1.6** (P10-A0, A1, C1; demo articles and shadow rules loaded 2026-11-06)
+- **Deployment:** Vultr VM `smb-demo` (45.63.85.83, `https://45-63-85-83.sslip.io`, vhp-2c-4gb-amd, sjc) runs **0.1.7** (P10-A0, A1, C1, E0, D, B1, B3; 2026-11-06)
   with live AI, watchdog timer, backups to Object Storage `smb-demo-backups`; registry `sjc.vultrcr.com/smbopsrqk49`.
   Install folder `install-smb-demo/` (gitignored: Terraform state, SSH key, `.env`). Spend log `docs/vultr-spend.md`.
 - **Hardening done:** second-model AI review (16 findings fixed, `docs/security/2026-11-03-ai-second-review.md`) and
@@ -26,8 +26,7 @@ append a diary): keep it under 80 lines and true *now*. History lives in `EVENT_
   `payment_followup` gets `sales.document.write` (owner decision); intake prompt v3 preloads context (≈ 5 steps);
   customer matching: an unmatched e-mail/phone outweighs a name-only overlap, a surname alone is no identity, and
   ambiguity no longer stops intake (2026-11-04).
-- Tests (2026-11-06 13:00): `make check` 1,822 backend, 380 frontend, deploy checks, licences, no leaks; `make e2e`
-  passed on the same commit (2026-11-05).
+- Tests (2026-11-06 18:30): `make check` 2,131 backend, 451 frontend, deploy checks, licences, no leaks; `make e2e` 30.
 
 ## Open items (owner)
 
