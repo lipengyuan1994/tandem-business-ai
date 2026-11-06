@@ -233,6 +233,9 @@ def outbound_authority(db: Session, ctx: Context, proposal_id: uuid.UUID) -> dic
             ActionProposal.origin_kind,
             ActionProposal.origin_user_id,
             ProposalRevision.evidence,
+            ActionProposal.correlation_id,
+            ActionProposal.agent_key,
+            ActionProposal.chain_depth,
         )
         .join(
             ProposalRevision,

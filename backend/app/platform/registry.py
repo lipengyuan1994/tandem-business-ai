@@ -148,6 +148,11 @@ class Registry:
     retention_handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)
     proposal_delivery_reader: Callable[[Session, Context, UUID], DeliveryState] | None = None
     proposal_delivery_readers: list[Callable[[Session, Context, UUID], DeliveryState]] = field(default_factory=list)
+    ai_proposal_context: Callable[[Session, Context, str], Context] | None = None
+    ai_policy_enabled: Callable[[Session, Context], bool] | None = None
+    ai_execution_context: Callable[[Session, Context, str], Context] | None = None
+    ai_chain_stop: Callable[[Session, Context, str], None] | None = None
+    ai_reserve_action: Callable[[Session, Context], None] | None = None
     public_routes: set[str] = field(default_factory=set)
     _frozen: bool = False
 

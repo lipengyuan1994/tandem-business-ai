@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import random
 import traceback
+from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import Any, cast
 from uuid import UUID
@@ -21,7 +22,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.platform import clock
-from app.platform.context import system_context
+from app.platform.context import Context, system_context, workflow_scope
 from app.platform.db import system_transaction, transaction
 from app.platform.ids import new_id
 from app.platform.models import Job, JobDedupe
@@ -41,6 +42,7 @@ def enqueue(
     priority: int = 100,
     dedupe_key: str | None = None,
     max_attempts: int = 8,
+    ctx: Context | None = None,
 ) -> UUID:
     """Insert a job. With an existing `dedupe_key` this is a no-op returning the existing job's id."""
     # Serialise cleanup/enqueue for a key, including its first use. Tombstones keep
@@ -50,8 +52,12 @@ def enqueue(
         previous = db.scalar(select(JobDedupe.job_id).where(JobDedupe.key == dedupe_key))
         if previous is not None:
             return previous
+    ctx = ctx or db.info.get("context")
+    if ctx is not None and ctx.business_id != business_id:
+        ctx = None
+    new_job_id = new_id()
     values: dict[str, Any] = {
-        "id": new_id(),
+        "id": new_job_id,
         "kind": kind,
         "payload": payload or {},
         "business_id": business_id,
@@ -59,6 +65,10 @@ def enqueue(
         "dedupe_key": dedupe_key,
         "max_attempts": max_attempts,
         "run_at": run_at or clock.now(),
+        "correlation_id": ctx.correlation_id if ctx is not None else None,
+        "causation_id": ctx.causation_id if ctx is not None else None,
+        "agent_key": ctx.agent_key if ctx is not None else None,
+        "chain_depth": ctx.chain_depth if ctx is not None else None,
     }
     stmt = pg_insert(Job).values(**values).on_conflict_do_nothing(index_elements=["dedupe_key"]).returning(Job.id)
     job_id = db.scalar(stmt)
@@ -76,7 +86,8 @@ CLAIM_SQL = text(
                   and (:lane = 'all' or (:lane = 'ai' and kind like 'ai.%')
                        or (:lane = 'non_ai' and kind not like 'ai.%'))
                   order by priority, run_at for update skip locked limit 1)
-    returning id, business_id, kind, payload, attempts, max_attempts, locked_by
+    returning id, business_id, kind, payload, attempts, max_attempts, locked_by,
+              correlation_id, causation_id, agent_key, chain_depth
     """
 )
 
@@ -132,14 +143,22 @@ def run_job(registry: Registry, job: dict[str, Any]) -> bool:
         job["attempts"] = job["max_attempts"]  # unknown kinds go straight to dead
         _fail(job, f"no handler registered for {job['kind']}")
         return False
-    ctx = system_context(job["business_id"])
+    ctx = replace(
+        system_context(job["business_id"]),
+        correlation_id=job.get("correlation_id") or job["id"],
+        causation_id=job["id"],
+        agent_key=job.get("agent_key"),
+        chain_depth=job.get("chain_depth") or 0,
+    )
     try:
-        if spec.transactional:
-            with transaction(ctx) as db:
-                cast(JobHandler, spec.handler)(db, ctx, job["payload"])
-                db.execute(update(Job).where(Job.id == job["id"]).values(status="succeeded", locked_until=None))
-        else:
-            cast(NonTransactionalJobHandler, spec.handler)(ctx, job["payload"])
+        with workflow_scope(ctx):
+            if spec.transactional:
+                with transaction(ctx) as db:
+                    cast(JobHandler, spec.handler)(db, ctx, job["payload"])
+                    db.execute(update(Job).where(Job.id == job["id"]).values(status="succeeded", locked_until=None))
+            else:
+                cast(NonTransactionalJobHandler, spec.handler)(ctx, job["payload"])
+        if not spec.transactional:
             with system_transaction() as db:
                 saved = db.scalar(
                     update(Job)

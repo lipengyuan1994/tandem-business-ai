@@ -14,12 +14,23 @@ from app.modules.ai.gateway.router import Router
 from app.modules.ai.gateway.routes import ProviderCfg, RouteEntry, RoutesFile
 from app.modules.ai.models import AiEffect, AiRun, AiRunStep, AiUsageDaily, AssistantMessage, AssistantThread
 from app.modules.ai.permissions import AI_SYSTEM_PERMISSIONS
+from app.modules.ai.team_models import AgentSettings, AgentUsageDaily, ChainBudget
 from app.platform import clock
 from app.platform.context import Context, assistant_context
 from app.platform.db import transaction
 from app.platform.testing.auth import ctx_for
 
-AI_TABLES = ("ai_runs", "ai_run_steps", "ai_effects", "ai_usage_daily", "assistant_threads", "assistant_messages")
+AI_TABLES = (
+    "ai_runs",
+    "ai_run_steps",
+    "ai_effects",
+    "ai_usage_daily",
+    "assistant_threads",
+    "assistant_messages",
+    "ai_agent_settings",
+    "ai_agent_usage_daily",
+    "ai_chain_budgets",
+)
 
 
 def system_ctx(business_id: uuid.UUID, permissions: tuple[str, ...] = ()) -> Context:
@@ -61,6 +72,9 @@ def fill_all_tables(ctx: Context) -> dict[str, uuid.UUID]:
         )  # fmt: skip
         db.add(effect)
         db.add(AiUsageDaily(business_id=ctx.business_id, day=date(2026, 11, 3), input_tokens=10, output_tokens=5))
+        db.add(AgentSettings(business_id=ctx.business_id, agent_key="inventory", enabled=True))
+        db.add(AgentUsageDaily(business_id=ctx.business_id, agent_key="inventory", day=date(2026, 11, 3)))
+        db.add(ChainBudget(business_id=ctx.business_id, correlation_id=uuid.uuid4()))
         thread = AssistantThread(business_id=ctx.business_id, user_id=uuid.uuid4(), title="Stock questions")
         db.add(thread)
         db.flush()

@@ -22,12 +22,14 @@ from . import public, usage
 from .autonomy_api import router as autonomy_router
 from .models import AiRun
 from .schemas import AiStatus, RunOut, RunStatus, UsageOut, UseCaseId
+from .team_api import router as team_router
 from .usecases import briefing, campaign_draft, copilot, copilot_cards, procurement, summary
 from .work_queue_api import router as work_queue_router
 
 router = APIRouter()
 router.include_router(autonomy_router)
 router.include_router(work_queue_router)
+router.include_router(team_router)
 ERRORS = error_responses(401, 403)
 
 

@@ -93,6 +93,8 @@ def run(business_id: uuid.UUID, *, router: Router | None = None) -> list[uuid.UU
 def scan(business_id: uuid.UUID) -> None:
     """No inference in the scan: each bounded, independently retryable invoice gets its own job."""
     ctx = background_ctx_factory(business_id, use_case="payment_followup")(uuid.uuid4())
+    from ..chains import subject_context
+
     after = None
     while True:
         with transaction(ctx) as db:
@@ -102,7 +104,14 @@ def scan(business_id: uuid.UUID) -> None:
                     continue
                 key = f"payment_followup:{business_id}:{invoice.id}:{clock.now().astimezone(UTC).date()}"
                 jobs.enqueue(
-                    db, "ai.payment_followup", {"invoice_id": str(invoice.id)}, business_id=business_id, dedupe_key=key
+                    db,
+                    "ai.payment_followup",
+                    {"invoice_id": str(invoice.id)},
+                    business_id=business_id,
+                    dedupe_key=key,
+                    ctx=subject_context(
+                        db, ctx, "invoice_id", invoice.id, period=str(clock.now().astimezone(UTC).date())
+                    ),
                 )
         if len(invoices) < _LIMIT:
             break

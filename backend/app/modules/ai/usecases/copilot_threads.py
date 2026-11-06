@@ -27,6 +27,7 @@ class ThreadCreate(BaseModel):
 
 class MessageCreate(BaseModel):
     content: str = Field(min_length=1, max_length=4000)
+    agent: str | None = Field(default=None, max_length=32)
 
 
 class CopilotThreadOut(BaseModel):

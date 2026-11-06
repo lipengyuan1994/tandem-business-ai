@@ -3,11 +3,31 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from typing import Any
 
-from app.platform.context import Context
+from app.platform.context import Context, workflow_scope
+from app.platform.db import transaction
 
+from .errors import AiError
+from .team_settings import enabled
 from .usecases import intake
+
+
+def guarded(handler: Callable[[Context, dict[str, Any]], None], key: str) -> Callable[[Context, dict[str, Any]], None]:
+    def run(ctx: Context, payload: dict[str, Any]) -> None:
+        with transaction(ctx) as db:
+            if not enabled(db, ctx, key):
+                return
+        try:
+            with workflow_scope(ctx):
+                handler(ctx, payload)
+        except AiError as exc:
+            if not (exc.code.startswith("ai.chain_") or exc.code in {"ai.agent_disabled", "ai.agent_limit_reached"}):
+                raise
+            # Admission/provider paths record the exception. These controls are terminal, not retryable.
+
+    return run
 
 
 def intake_job(ctx: Context, payload: dict[str, Any]) -> None:

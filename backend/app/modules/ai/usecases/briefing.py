@@ -61,7 +61,7 @@ class BriefingOut(BaseModel):
 def run(ctx: Context, *, router: Router | None = None) -> BriefingOut:
     ctx.require("ai.assistant.use")
     assert ctx.business_id is not None and ctx.user_id is not None
-    factory = staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "briefing")
+    factory = staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "briefing", parent=ctx)
     hour = clock.now().strftime("%Y-%m-%dT%H")
     fingerprint = hashlib.sha256("\n".join(sorted(staff_permissions(ctx.permissions, "briefing"))).encode()).hexdigest()
     trigger_key = f"briefing:{ctx.user_id}:{hour}:{fingerprint}"

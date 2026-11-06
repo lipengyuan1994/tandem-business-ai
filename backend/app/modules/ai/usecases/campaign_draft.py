@@ -6,6 +6,7 @@ import html
 import json
 import re
 import uuid
+from dataclasses import replace
 from urllib.parse import unquote
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -59,7 +60,7 @@ def run(
     ctx.require("ai.assistant.use")
     ctx.require("marketing.campaign.write")
     assert ctx.business_id is not None and ctx.user_id is not None
-    factory = staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "campaign_draft")
+    factory = staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "campaign_draft", parent=ctx)
     read_ctx = factory(uuid.uuid4())
     with transaction(read_ctx) as db:
         campaign = marketing.get_campaign(db, read_ctx, campaign_id)
@@ -80,15 +81,29 @@ def run(
         facts=[ContextBlock(label="campaign", source_id=campaign_id, text=facts, untrusted=True)],
         output_model=CampaignDraft, trigger_type="api", trigger_key=trigger_key, router=router, validate=_validate,
     )  # fmt: skip
-    assistant = factory(run_id)
-    with transaction(assistant) as db:
-        revision = marketing.add_revision(
-            db,
-            assistant,
-            campaign_id,
-            value.subject,
-            value.body_markdown,
-            created_by_kind="assistant",
-            ai_run_id=run_id,
-        )
+    assistant = replace(factory(run_id), causation_id=run_id)
+    from .. import recording
+    from ..chains import require_enabled
+    from ..errors import AiError
+    from ..team_budget import reserve_action, stop_chain
+
+    try:
+        with transaction(assistant) as db:
+            require_enabled(db, assistant)
+            reserve_action(db, assistant)
+            revision = marketing.add_revision(
+                db,
+                assistant,
+                campaign_id,
+                value.subject,
+                value.body_markdown,
+                created_by_kind="assistant",
+                ai_run_id=run_id,
+            )
+    except AiError as exc:
+        if exc.code.startswith("ai.chain_"):
+            with transaction(assistant) as db:
+                stop_chain(db, assistant, exc.code)
+        recording.close_run(assistant, run_id, "policy_blocked", error_code=exc.code, needs_human=True)
+        raise
     return CampaignDraftOut(run_id=run_id, revision_id=revision.id)

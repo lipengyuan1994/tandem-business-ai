@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import replace
 from datetime import UTC
 from typing import Any
 
@@ -17,9 +18,28 @@ from app.platform.errors import NotFound
 
 from .agent.contexts import background_ctx_factory
 from .public_intake import admit
+from .team_settings import enabled
+
+
+def _domain_context(ctx: Context, event_id: uuid.UUID) -> Context:
+    """A deterministic domain consequence starts its subscriber's agent, not an emitter→agent hand-off.
+
+    Preserve the root and depth so this work still consumes the original chain's limits.
+    Explicit agent-initiated hand-offs retain their source agent at the calling boundary instead.
+    """
+    return replace(
+        ctx,
+        correlation_id=ctx.correlation_id or event_id,
+        causation_id=event_id,
+        agent_key=None,
+        causing_agent_key=None,
+    )
 
 
 def intake_trigger(db: Session, ctx: Context, payload: dict[str, Any], event_id: uuid.UUID) -> None:
+    ctx = _domain_context(ctx, event_id)
+    if not enabled(db, ctx, "front_desk"):
+        return
     if payload.get("author_kind") not in {"visitor", "customer"}:
         return
     message_id = uuid.UUID(str(payload["message_id"]))
@@ -35,11 +55,14 @@ def intake_trigger(db: Session, ctx: Context, payload: dict[str, Any], event_id:
         return
     jobs.enqueue(
         db, "ai.intake", {"message_id": str(message_id)}, business_id=ctx.business_id,
-        dedupe_key=f"intake:{message_id}",
+        dedupe_key=f"intake:{message_id}", ctx=ctx,
     )  # fmt: skip
 
 
 def compare_trigger(db: Session, ctx: Context, payload: dict[str, Any], event_id: uuid.UUID) -> None:
+    ctx = _domain_context(ctx, event_id)
+    if not enabled(db, ctx, "purchasing"):
+        return
     if payload.get("all_answered") is not True:
         return
     request_id = uuid.UUID(str(payload["quote_request_id"]))
@@ -49,16 +72,21 @@ def compare_trigger(db: Session, ctx: Context, payload: dict[str, Any], event_id
         {"quote_request_id": str(request_id)},
         business_id=ctx.business_id,
         dedupe_key=f"procurement_compare:{request_id}",
+        ctx=ctx,
     )
 
 
 def reorder_trigger(db: Session, ctx: Context, payload: dict[str, Any], event_id: uuid.UUID) -> None:
+    ctx = _domain_context(ctx, event_id)
     item_id = uuid.UUID(str(payload["item_id"]))
     day = clock.now().astimezone(UTC).date().isoformat()
-    jobs.enqueue(
-        db, "ai.reorder_note", {"item_id": str(item_id)}, business_id=ctx.business_id,
-        dedupe_key=f"reorder_note:{item_id}:{day}",
-    )  # fmt: skip
+    if enabled(db, ctx, "inventory"):
+        jobs.enqueue(
+            db, "ai.reorder_note", {"item_id": str(item_id)}, business_id=ctx.business_id,
+            dedupe_key=f"reorder_note:{item_id}:{day}", ctx=ctx,
+        )  # fmt: skip
+    if not enabled(db, ctx, "purchasing"):
+        return
 
     assert ctx.business_id is not None
     read_ctx = background_ctx_factory(ctx.business_id)(uuid.uuid4())
@@ -74,6 +102,7 @@ def reorder_trigger(db: Session, ctx: Context, payload: dict[str, Any], event_id
             {"item_id": str(item_id)},
             business_id=ctx.business_id,
             dedupe_key=f"procurement_request_quotes:{item_id}:{day}",
+            ctx=ctx,
         )
 
 

@@ -121,3 +121,7 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P7-06](P7-submission.md) | Freeze | PRE | B | — | PLANNED |
 
 | [P10-D backend](../ai/cards/P10-D-backend.md) | Voice dictation backend | EVENT | A | P10-E0 | DONE (2026-11-06): 2,083 backend tests; restricted make check; live eval/UI separate |
+| [P10-D screens](../ai/cards/P10-D-screens.md) | Staff voice dictation controls | EVENT | B | P10-D backend | BLOCKED — verification only (2026-11-06): implementation ready; frontend typecheck/lint/build and 424 tests pass; restricted make check blocked by Gitleaks finding in concurrent backend; Playwright launch denied by sandbox |
+
+| [P10-B1 backend](../ai/cards/P10-B1-backend.md) | AI team registry, controls, causality and safe chaining | EVENT | A | P10-A1, P10-E0, P10-D backend | DONE (2026-11-06): 2,120 backend tests; scoped make check; final focused 40 passed; UI/types/live/release separate |
+| [P10-B3 screens](../ai/cards/P10-B3-screens.md) | AI Team, agent detail, chains, targeted assistant and filters | EVENT | B | P10-B1 backend | DONE — Codex 2026-11-06: 451 frontend tests, typecheck/lint/build, scoped offline check; +9,779 B gzip; API gaps and live/browser verification in card |

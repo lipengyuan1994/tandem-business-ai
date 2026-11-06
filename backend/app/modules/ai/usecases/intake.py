@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
 from typing import Any, Literal
 
@@ -201,7 +201,7 @@ def _outcome_note(
         names = ", ".join(result.extra["candidates"])
         outcome += f" Several customers could match ({names}). Please link the right one."
     marker = f"[intake:{message_id}]"
-    ctx = ctx_factory(result.run_id)
+    ctx = replace(ctx_factory(result.run_id), causation_id=result.run_id)
     with transaction(ctx) as db:
         # Serialize marker checks and writes for concurrent retries, without module-internal queries.
         db.execute(text("select pg_advisory_xact_lock(hashtextextended(:key, 0))"), {"key": marker})
@@ -211,7 +211,7 @@ def _outcome_note(
 
 
 def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None = None) -> RunResult:
-    ctx_factory = background_ctx_factory(business_id)
+    ctx_factory = background_ctx_factory(business_id, use_case="intake")
     ctx = system_context(business_id, frozenset({"conversations.thread.read", "org.business.read"}))
     with transaction(ctx) as db:
         message = conversations.get_message_context(db, ctx, message_id)
@@ -256,8 +256,9 @@ def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None
         result = run_agent_step(ctx_factory, message, match, state)
         result = result.model_copy(update={"extra": {**result.extra, **state.extra}})
     if result.status == "budget_exceeded":
-        with transaction(ctx) as db:
-            conversations.request_handoff(db, ctx, message.conversation_id, reason=_outcome_text(result))
+        handoff_ctx = replace(ctx_factory(result.run_id), causation_id=result.run_id)
+        with transaction(handoff_ctx) as db:
+            conversations.request_handoff(db, handoff_ctx, message.conversation_id, reason=_outcome_text(result))
     _outcome_note(ctx_factory, message.conversation_id, message_id, result)
     return result
 

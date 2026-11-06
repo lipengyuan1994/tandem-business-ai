@@ -12,6 +12,7 @@ from app.platform.context import Context
 from app.platform.registry import ExecutionMeta, ExecutorSpec, PreviewLine
 
 from . import service
+from .autonomy import RULE_ELIGIBLE_ACTIONS as RULE_ELIGIBLE_ACTIONS
 from .autonomy_schemas import ActivityPage, PauseOut, RuleOut, RulePut, RulesOut
 from .autonomy_service import (
     activity as autonomy_activity,
@@ -30,10 +31,14 @@ from .chat import confirm as confirm_chat
 from .chat import origin_run_id as chat_origin_run_id
 from .events import ProposalClosed, ProposalCreated, ProposalDecided
 from .invalidation import invalidate_ai_replies as invalidate_ai_replies
+from .lineage import workflow_for_result as workflow_for_result
 from .queue import fallback_items as fallback_queue_items
 from .queue import proposal_items as proposal_queue_items
 from .reading import outbound_authority, proposal_notification_state
 from .schemas import ChatCard, ChatConfirmIn, Evidence, OpenProposal
+from .team import activity as team_activity
+from .team import return_items as team_return_items
+from .team import summary as team_summary
 
 
 class ProposalRef:
@@ -115,6 +120,7 @@ def count_pending(db: Session, ctx: Context, *, for_permissions: frozenset[str] 
 
 
 __all__ = [
+    "RULE_ELIGIBLE_ACTIONS",
     "ActivityPage",
     "ChatCard",
     "ChatConfirmIn",
@@ -149,7 +155,11 @@ __all__ = [
     "proposal_notification_state",
     "proposal_queue_items",
     "put_autonomy_rule",
+    "team_activity",
+    "team_return_items",
+    "team_summary",
     "top_pending",
+    "workflow_for_result",
 ]
 
 

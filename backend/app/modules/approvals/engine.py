@@ -38,6 +38,52 @@ class ApproverNotAuthorized(DomainError):
     title = "Approver no longer authorised"
 
 
+def _return_to_person(
+    db: Session,
+    ctx: Context,
+    proposal: ActionProposal,
+    revision: ProposalRevision,
+    decision: ApprovalDecision,
+    key: str,
+    reason: str,
+) -> None:
+    """New exact revision invalidates the old policy job and permits a fresh human decision/job."""
+    fresh = ProposalRevision(
+        id=new_id(),
+        business_id=proposal.business_id,
+        proposal_id=proposal.id,
+        revision_no=revision.revision_no + 1,
+        payload=revision.payload,
+        payload_hash=revision.payload_hash,
+        summary=revision.summary,
+        evidence=revision.evidence,
+        preview=revision.preview,
+        created_by_kind=revision.created_by_kind,
+        created_by=revision.created_by,
+    )
+    db.add(fresh)
+    db.flush()
+    proposal.current_revision_id = fresh.id
+    proposal.status = "pending_review"
+    proposal.failure_code = reason
+    proposal.version += 1
+    db.execute(
+        update(ExecutionAttempt)
+        .where(ExecutionAttempt.idempotency_key == key)
+        .values(status="failed", error_code=reason, finished_at=clock.now())
+    )
+    audit.record(
+        db,
+        ctx,
+        action="approvals.proposal.returned_to_person",
+        target_type="proposal",
+        target_id=proposal.id,
+        summary=f"Returned to human review: {reason}",
+        proposal_id=proposal.id,
+        changes={"reason": reason},
+    )
+
+
 def _claim(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UUID) -> str:
     """TX-1. Returns 'run' (claimed or resumable), or 'done' (already finished / not approved)."""
     ctx = system_context(business_id)
@@ -69,8 +115,14 @@ def _claim(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UUI
             return "run"
         state = db.execute(
             select(ActionProposal.status, ExecutionAttempt.status)
-            .join(ExecutionAttempt, ExecutionAttempt.proposal_id == ActionProposal.id, isouter=True)
-            .where(ActionProposal.id == proposal_id)
+            .join(
+                ExecutionAttempt,
+                (ExecutionAttempt.proposal_id == ActionProposal.id)
+                & (ExecutionAttempt.revision_id == revision_id)
+                & (ExecutionAttempt.idempotency_key == key),
+                isouter=True,
+            )
+            .where(ActionProposal.id == proposal_id, ActionProposal.current_revision_id == revision_id)
         ).first()
     if state and state[0] == "executing" and state[1] == "running":
         return "run"  # resume after a crash inside TX-2 (it rolled back, so nothing happened yet)
@@ -160,12 +212,30 @@ def execute(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UU
                 business_id=business_id,
                 permissions=permissions,
                 proposal_id=proposal_id,
+                ai_run_id=proposal.ai_run_id,
+                correlation_id=proposal.correlation_id
+                or (proposal.id if proposal.origin_kind == "assistant" else None),
+                causation_id=proposal.id,
+                agent_key=proposal.agent_key,
+                chain_depth=proposal.chain_depth or 0,
             )
+            resolve = get_registry().ai_execution_context
+            if resolve is not None:
+                ctx = resolve(db, ctx, proposal.action_type)
+            failure_ctx = ctx
             if decision.decided_by_kind == "policy":
                 failure_ctx = autonomy.policy_context(ctx, decision)
+                check = get_registry().ai_policy_enabled
+                if check is not None and not check(db, ctx):
+                    _return_to_person(db, failure_ctx, proposal, revision, decision, key, "ai.agent_disabled")
+                    return "pending_review"
                 ctx = autonomy.check_execution(db, ctx, proposal, decision, spec)
             elif spec.approve_permission not in permissions:
                 raise ApproverNotAuthorized("approvals.approver_no_longer_authorized")
+            reserve = get_registry().ai_reserve_action
+            if reserve is not None:
+                reserve(db, ctx)
+            db.info["context"] = ctx
             if sha256_hex(revision.payload) != revision.payload_hash or decision.payload_hash != revision.payload_hash:
                 raise DomainError("approvals.payload_hash_mismatch")
             db.execute(
@@ -188,6 +258,9 @@ def execute(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UU
             proposal = db.scalar(select(ActionProposal).where(ActionProposal.id == proposal_id).with_for_update())
             assert proposal is not None
             if proposal.status == "executing":
+                stop = get_registry().ai_chain_stop
+                if stop is not None and exc.code.startswith("ai.chain_"):
+                    stop(db, failure_ctx, exc.code)
                 _finish(db, failure_ctx, proposal, key, ok=False, error=exc)
         return "failed"
     except Exception:

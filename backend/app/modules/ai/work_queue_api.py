@@ -25,7 +25,7 @@ router = APIRouter()
 
 class WorkItem(BaseModel):
     id: uuid.UUID
-    kind: Literal["proposal", "outbound_mail", "supplier_quote", "autonomy_fallback", "web_reply"]
+    kind: Literal["proposal", "outbound_mail", "supplier_quote", "autonomy_fallback", "web_reply", "chain_blocked"]
     title: str
     created_at: datetime
     status: str
@@ -93,6 +93,10 @@ def exceptions(
     with transaction(ctx) as db:
         rows = approvals.proposal_queue_items(db, ctx, failed=True, limit=limit + 1, cursor=cursor)
         rows += approvals.fallback_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
+        rows += approvals.team_return_items(db, ctx, limit=limit + 1, cursor=cursor)
+        from .team_activity import exception_items
+
+        rows += exception_items(db, ctx, limit=limit + 1, cursor=cursor)
         rows += conversations.publication_queue_items(db, ctx, failed=True, limit=limit + 1, cursor=cursor)
         rows += notifications.outbound_queue_items(
             db, ctx, statuses=("failed", "unknown"), limit=limit + 1, cursor=cursor

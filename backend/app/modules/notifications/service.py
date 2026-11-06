@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from app.modules.org import public as org
 from app.platform import audit, clock, events, jobs
 from app.platform.config import get_settings
-from app.platform.context import Context, system_context
+from app.platform.context import Context, inherit_workflow, system_context, workflow_context
 from app.platform.db import system_transaction, transaction
 from app.platform.errors import Conflict, Forbidden, NotFound
 from app.platform.ids import new_id
@@ -144,6 +144,7 @@ def enqueue_message(
 
 # --------------------------------------------------------------------------------------------------- deliver
 def _status_event(db: Session, ctx: Context, m: OutboxMessage) -> None:
+    ctx = _workflow_context(db, ctx, m)
     events.publish(
         db,
         ctx,
@@ -153,8 +154,26 @@ def _status_event(db: Session, ctx: Context, m: OutboxMessage) -> None:
     )
 
 
+def _workflow_context(db: Session, ctx: Context, m: OutboxMessage) -> Context:
+    if m.proposal_id is not None:
+        from dataclasses import replace
+
+        from app.modules.approvals import public as approvals
+
+        source = approvals.outbound_authority(db, ctx, m.proposal_id)
+        if source is not None and source["correlation_id"] is not None:
+            ctx = replace(
+                ctx,
+                correlation_id=source["correlation_id"],
+                causation_id=m.proposal_id,
+                agent_key=source["agent_key"],
+                chain_depth=source["chain_depth"] or 0,
+            )
+    return ctx
+
+
 def deliver(business_id: uuid.UUID, outbox_id: uuid.UUID) -> str:
-    ctx = system_context(business_id)
+    ctx = inherit_workflow(system_context(business_id), workflow_context())
     with transaction(ctx) as db:  # A: claim
         m = db.scalar(
             select(OutboxMessage)
@@ -170,6 +189,7 @@ def deliver(business_id: uuid.UUID, outbox_id: uuid.UUID) -> str:
         )
         if m is None:
             return "skipped"
+        ctx = _workflow_context(db, ctx, m)
         m.status, m.attempts, m.locked_until = "sending", m.attempts + 1, clock.now() + SENDING_LEASE
         subject, body = render(m.template_key, m.variables)
         rendered = RenderedMessage(
@@ -211,6 +231,7 @@ def deliver(business_id: uuid.UUID, outbox_id: uuid.UUID) -> str:
                 run_at=m.next_attempt_at,
                 dedupe_key=f"deliver:{m.id}:{attempts}",
                 priority=20,
+                ctx=ctx,
             )
         elif isinstance(result, Unknown):
             m.status, m.last_error, outcome = "unknown", result.error, "unknown"
@@ -288,6 +309,7 @@ def resolve(db: Session, ctx: Context, outbox_id: uuid.UUID, resolution: str) ->
             business_id=ctx.business_id,
             dedupe_key=f"deliver:{m.id}:manual:{m.attempts}",
             priority=20,
+            ctx=_workflow_context(db, ctx, m),
         )
     audit.record(
         db,

@@ -150,7 +150,7 @@ def _run(
     ctx.require("ai.assistant.use")
     ctx.require("conversations.thread.read")
     assert ctx.business_id is not None and ctx.user_id is not None
-    factory = staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "summary")
+    factory = staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "summary", parent=ctx)
     with transaction(ctx) as db:
         thread = conversations.get_thread(db, ctx, conversation_id, last_n=30)
     data = {

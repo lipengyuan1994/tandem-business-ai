@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import threading
 import uuid
-from collections.abc import AsyncGenerator, Callable
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 
 import structlog
@@ -26,14 +25,18 @@ from ..agent.contexts import staff_ctx_factory, staff_permissions
 from ..agent.prompts import load_prompt
 from ..agent.protocol import ContextBlock, RunSpec, StepEvent
 from ..agent.runner import StopRun, run_agent
+from ..agents import get_agent
+from ..errors import AiError
 from ..gateway.router import Router, load_router
 from ..gateway.routes import ModelClass, RouteEntry
 from ..gateway.types import ChatRequest, ChatResult
 from ..models import AiRun, AssistantMessage
 from ..schemas import Policy
+from ..team_settings import enabled
 from ..tools.registry import authorized_tools
 from .copilot_cards import cards
 from .copilot_cards import owned as _owned
+from .copilot_stream import stream_message as stream_message
 from .copilot_threads import (
     CopilotThreadDetailOut as CopilotThreadDetailOut,
 )
@@ -123,16 +126,24 @@ def prepare_message(
 ) -> PreparedMessage:
     """Ownership, validation and rate-limit errors happen before the HTTP stream starts."""
     business_id, user_id = _staff(ctx)
+    selected = get_agent(body.agent or "operations_manager")
+    ctx = replace(ctx, agent_key=selected.key)
     prompt = load_prompt("copilot", 3)
     permissions = staff_permissions(ctx.permissions, "copilot")
     tools = authorized_tools(
-        staff_ctx_factory(business_id, user_id, permissions, "copilot")(uuid.uuid4()), list(STATUS_TEXT)
+        staff_ctx_factory(business_id, user_id, permissions, "copilot", parent=ctx)(uuid.uuid4()),
+        list(STATUS_TEXT) if selected.key == "operations_manager" else [n for n in selected.tools if n in STATUS_TEXT],
     )
     acquired = False
     try:
         with transaction(ctx) as db:
             thread = _owned(db, ctx, thread_id, lock=True)
-            op = claim_operation(db, ctx, "copilot", thread_id, idempotency_key or str(uuid.uuid4()), body.model_dump())
+            for key in dict.fromkeys(("operations_manager", selected.key)):
+                if not enabled(db, ctx, key):
+                    raise AiError("ai.agent_disabled", f"{get_agent(key).name} is off. Ask an owner to turn it on.")
+            op = claim_operation(
+                db, ctx, "copilot", thread_id, idempotency_key or str(uuid.uuid4()), body.model_dump(exclude_none=True)
+            )
             replay = None
             if op.status in {"succeeded", "failed"}:
                 run = db.get(AiRun, op.run_id) if op.run_id is not None else None
@@ -194,6 +205,8 @@ def prepare_message(
             ]
             for message in reversed(recent):
                 action_cards = cards(db, ctx, message)
+                if selected.key != "operations_manager":
+                    action_cards = [card for card in action_cards if card.action_type in selected.action_types]
                 if action_cards:
                     blocks.append(
                         ContextBlock(
@@ -205,7 +218,8 @@ def prepare_message(
                     )
             spec = RunSpec(
                 use_case="copilot", prompt=prompt, tools=tools,
-                task="Answer the latest staff message using the available tools and the thread history.",
+                task=(f"You are {selected.name}. Your job: {selected.job} "
+                      "Answer the latest staff message using only the available tools and the thread history."),
                 context_blocks=blocks, trigger_type="api", trigger_key=f"copilot:{message_id}",
             )  # fmt: skip
     except BaseException:
@@ -265,7 +279,7 @@ def _run_message(prepared: PreparedMessage, emit: Callable[[StepEvent], None], s
     if stopped.is_set():
         return
     business_id, user_id = _staff(prepared.ctx)
-    factory = staff_ctx_factory(business_id, user_id, prepared.ctx.permissions, "copilot")
+    factory = staff_ctx_factory(business_id, user_id, prepared.ctx.permissions, "copilot", parent=prepared.ctx)
     run_ctx: Context | None = None
     terminal: StepEvent | None = None
 
@@ -305,7 +319,8 @@ def _run_message(prepared: PreparedMessage, emit: Callable[[StepEvent], None], s
             op = db.get(Operation, prepared.operation_id)
             assert op is not None
             op.status = "succeeded" if result.status == "succeeded" else "failed"
-            op.run_id = result.run_id
+            if not result.extra.get("not_started"):
+                op.run_id = result.run_id
         if terminal is not None:
             emit(terminal)
     except Exception:
@@ -320,51 +335,6 @@ def _run_message(prepared: PreparedMessage, emit: Callable[[StepEvent], None], s
             emit(StepEvent(kind="error", run_id=run_ctx.ai_run_id, error_code="ai.interrupted"))
         else:
             raise
-
-
-async def stream_message(prepared: PreparedMessage) -> AsyncGenerator[str]:
-    """A cancelled/disconnected StreamingResponse sets the worker's stop flag without waiting on inference."""
-    if prepared is not None and prepared.replay is not None:
-        replay = prepared.replay
-        yield f"event: {replay.kind}\ndata: {replay.model_dump_json()}\n\n"
-        return
-    loop = asyncio.get_running_loop()
-    queue: asyncio.Queue[StepEvent | None] = asyncio.Queue()
-    stopped = threading.Event()
-    started = threading.Event()
-    ownership = threading.Lock()
-
-    def put(event: StepEvent | None) -> None:
-        if not stopped.is_set():
-            loop.call_soon_threadsafe(queue.put_nowait, event)
-
-    def worker() -> None:
-        with ownership:
-            if stopped.is_set():
-                return
-            started.set()
-        try:
-            run_message(prepared, put, stopped)
-        finally:
-            if prepared is not None:
-                release_generation(prepared)
-            put(None)
-
-    future = loop.run_in_executor(None, worker)
-    try:
-        while (event := await queue.get()) is not None:
-            yield f"event: {event.kind}\ndata: {event.model_dump_json()}\n\n"
-            if event.kind in ("final", "error"):
-                break
-        # Propagate only failures that happened before the worker could create a run/error event.
-        if future.done():
-            future.result()
-    finally:
-        with ownership:
-            stopped.set()
-            future.cancel()
-            if not started.is_set() and prepared is not None:
-                release_generation(prepared)
 
 
 class CopilotResponse(StreamingResponse):

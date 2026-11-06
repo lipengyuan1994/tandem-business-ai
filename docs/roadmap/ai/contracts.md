@@ -8,6 +8,70 @@ Conventions: `db: Session` (SQLAlchemy), `ctx: Context` (`app.platform.context`)
 timezone-aware UTC `datetime`, money is integer minor units, Pydantic v2 models with `extra="forbid"` for inputs.
 Revision: 2 (2026-11-03, after cold reads and a consistency review).
 
+## P10-B1: AI team
+
+Agents are immutable code configurations over existing use cases, events, jobs and proposals. There is no
+second task queue. Keys: `front_desk`, `customer_care`, `marketing`, `inventory`, `purchasing`, `finance`,
+`operations_manager`. Each declares its job, use cases/triggers, action types, model classes, tools and hand-offs.
+All current capabilities default enabled; Customer Care is reserved for B2, disabled and has no triggers.
+Summary belongs to Front Desk; safety/grounding inherit their calling agent; dictation remains a utility outside
+the team. Action ownership is unique; the Manager can route to every agent without taking its action ownership.
+Targeted copilot uses the agent model class as well as the agent's background classes. Untargeted copilot keeps
+its current tools and records the Manager as producer; a targeted turn records the selected agent as producer.
+
+`ai_agent_settings`: business-scoped forced RLS, agent key unique per business, enabled, nullable non-negative
+daily USD ceiling (six decimal places), updated_by, version/timestamps. Missing rows use registry defaults and
+version 0; the first PATCH creates version 1. Existing businesses need no backfill. Updates require exact version,
+are audited, and serialize with execution checks including the absent-row case. Disabling stops admission at
+trigger/job boundaries and run/provider/tool boundaries. A queued policy action from a disabled producer returns
+to pending human review with `ai.agent_disabled` evidence; explicit human approvals remain available. The global
+autonomy pause retains A0 semantics: it revokes automatic execution, not staff chat or model generation.
+Operations Manager off means copilot is off, including targeted messages, with a readable explanation and no run.
+
+Context carries nullable correlation_id, causation_id, agent_key and chain_depth. These are persisted on runs,
+proposals, domain events and jobs with tenant/correlation indexes. Roots receive a UUID; historical rows remain
+null. Event delivery causes the subscriber job; the job causes a run; a run causes its proposal; execution carries
+the proposal as cause into emitted events/outbox jobs. Context is immutable and scoped per request/job; no shared
+mutable chain state. Nested safety/grounding stay in their parent's correlation. Legacy producer attribution uses
+the recorded run/use case or uniquely owned action, never model text.
+
+Fixed edges: every agent may continue itself; Inventory → Purchasing; Front Desk → Customer Care;
+Operations Manager → every agent. Other transitions are blocked before inference and recorded as policy-blocked
+runs with `ai.chain_transition_blocked`, visible in Exceptions and chain/activity reads. Maximum agent-run depth
+is 6 (root depth 1). Each correlation has atomic ceilings of 30 provider attempts (including repairs/fallbacks),
+10 committed executor actions and USD 0.50. Counter rows are accounting, not tasks. Reservations share the existing
+installation/business reservation transaction, roll back together on denial, and reconcile known usage against
+the original UTC reservation day. Unknown usage retains its cost; attempts are never refunded. Executor action
+reservations commit with the effect and roll back on failure. Limit reasons: `ai.chain_depth_exceeded`,
+`ai.chain_call_limit`, `ai.chain_action_limit`, `ai.chain_cost_limit`, `ai.agent_limit_reached`. Exhausting a chain
+stops further work in that correlation, including human-approved AI actions; a person can create a manual proposal
+outside the stopped chain. Agent USD ceilings use the
+same accounting, UTC day, conservative in-flight reservations and once-per-agent/day in-app notification.
+
+Read permission is `approvals.proposal.read` (AI Activity); write is `org.settings.write` (autonomy rules).
+`GET /ai/agents` returns `{items:[...]}` with registry identity, version, enabled, autonomy rules (implicit ask
+for ineligible actions), today's runs/proposals/human and policy executions/handoffs, reserved/reconciled cost,
+limit, pending count/oldest, last activity and status. Status precedence: off, paused, unavailable (any required
+class has no E0 allowed route), limit_reached, on. `PATCH /ai/agents/{key}` accepts
+`{enabled?,daily_cost_limit_usd?,version}`; explicit null removes the limit; unknown keys 404, stale versions 409.
+`GET /ai/agents/{key}/activity?cursor=&limit=` merges runs, proposals, autonomy evaluations, decisions, execution
+and delivery evidence newest first, using Activity's id/proposal_id/title/action_type/status/reasons/result_link/
+delivery_state vocabulary. `GET /ai/chains/{correlation_id}` returns ordered steps and accounting, tenant-scoped;
+unknown/foreign chains 404. Metadata only: never prompts, customer/supplier bodies or raw completions.
+Copilot messages accept optional `agent` (registry key); selected job/context and tool allowlist intersect the
+staff member's existing permissions. Without it the Manager retains current routing. Targeted agents must also
+be enabled; neither targeting nor hand-offs grants permissions or expands rule eligibility.
+
+Export includes settings/counters and new columns on existing rows. Erasure is unchanged; metadata contains
+identifiers and fixed reason codes only. Chain history follows source-row retention; aggregate accounting is
+retained conservatively to prevent replay resetting a budget. No new service/dependency or external model call.
+Scans are discovery, not one chain for the entire business: procurement resumes each quote request/PO's original
+execution lineage across supplier waits and hourly scans; standalone subjects use stable subject roots. Payment
+scans use independent invoice/UTC-day roots. Rejected chain reservations persist a terminal stopped_reason after
+rolling back the attempted reservation; later admissions and effects respect it. Holds and direct campaign draft
+revisions count as actions alongside proposal executors, including executors approved by people. A rejected final
+campaign effect closes its generated run with an exception instead of reporting a completed revision.
+
 ## P10-E0: local-only regulated routing
 
 Owner-authorized Tier A / EVENT, routing half (2026-11-06); implements ADR-020 decision 5.

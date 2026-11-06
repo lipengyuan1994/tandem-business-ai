@@ -20,6 +20,7 @@ from .agent.fencing import fence
 from .agent.prompts import Prompt
 from .agent.protocol import ContextBlock
 from .agent.runner import ModelCaller, StopRun, blocked_code, repair_message
+from .chains import run_context
 from .errors import AiError
 from .gateway.router import Router, effective_policy, load_router
 from .gateway.types import ChatMessage
@@ -51,7 +52,7 @@ def complete[T: BaseModel](
     """One call (+ one repair, also used when `validate` raises ValueError, e.g. invented numbers), recorded as a run
     with one 'completion' step. Raises AiError (§15) on budget/policy/provider/invalid output. Owns its transactions."""
     run_id = uuid.uuid4()
-    ctx = ctx_factory(run_id)
+    ctx = run_context(ctx_factory(run_id), use_case)
     router = router if router is not None else load_router()
     meta = recording.RunMeta(
         use_case=use_case, prompt=prompt, trigger_type=trigger_type,

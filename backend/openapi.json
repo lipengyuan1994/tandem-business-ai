@@ -195,6 +195,177 @@
         "title": "ActivityPage",
         "type": "object"
       },
+      "AgentOut": {
+        "properties": {
+          "autonomy": {
+            "items": {
+              "$ref": "#/components/schemas/RuleOut"
+            },
+            "title": "Autonomy",
+            "type": "array"
+          },
+          "cost_today_micros": {
+            "title": "Cost Today Micros",
+            "type": "integer"
+          },
+          "daily_cost_limit_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Cost Limit Usd"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "job": {
+            "title": "Job",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "last_activity_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "on",
+              "off",
+              "paused",
+              "limit_reached",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "today": {
+            "$ref": "#/components/schemas/TodayWork"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "waiting": {
+            "$ref": "#/components/schemas/WaitingItems"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "job",
+          "enabled",
+          "version",
+          "autonomy",
+          "today",
+          "cost_today_micros",
+          "daily_cost_limit_usd",
+          "waiting",
+          "last_activity_at",
+          "status"
+        ],
+        "title": "AgentOut",
+        "type": "object"
+      },
+      "AgentPatch": {
+        "additionalProperties": false,
+        "properties": {
+          "daily_cost_limit_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Cost Limit Usd"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "version": {
+            "minimum": 0.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "AgentPatch",
+        "type": "object"
+      },
+      "AgentsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AgentOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AgentsOut",
+        "type": "object"
+      },
       "AiStatus": {
         "properties": {
           "budget_percent": {
@@ -2463,6 +2634,74 @@
           "version"
         ],
         "title": "CatalogItemUpdate",
+        "type": "object"
+      },
+      "ChainOut": {
+        "properties": {
+          "actions": {
+            "title": "Actions",
+            "type": "integer"
+          },
+          "correlation_id": {
+            "format": "uuid",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "cost_limit_micros": {
+            "default": 500000,
+            "title": "Cost Limit Micros",
+            "type": "integer"
+          },
+          "cost_micros": {
+            "title": "Cost Micros",
+            "type": "integer"
+          },
+          "max_actions": {
+            "default": 10,
+            "title": "Max Actions",
+            "type": "integer"
+          },
+          "max_depth": {
+            "default": 6,
+            "title": "Max Depth",
+            "type": "integer"
+          },
+          "max_model_calls": {
+            "default": 30,
+            "title": "Max Model Calls",
+            "type": "integer"
+          },
+          "model_calls": {
+            "title": "Model Calls",
+            "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TeamActivityItem"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "stopped_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stopped Reason"
+          }
+        },
+        "required": [
+          "correlation_id",
+          "model_calls",
+          "actions",
+          "cost_micros",
+          "steps"
+        ],
+        "title": "ChainOut",
         "type": "object"
       },
       "ChatCard": {
@@ -5938,6 +6177,18 @@
       },
       "MessageCreate": {
         "properties": {
+          "agent": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent"
+          },
           "content": {
             "maxLength": 4000,
             "minLength": 1,
@@ -11082,6 +11333,178 @@
         "title": "TagsIn",
         "type": "object"
       },
+      "TeamActivityItem": {
+        "properties": {
+          "action_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Type"
+          },
+          "agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent"
+          },
+          "causation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Causation Id"
+          },
+          "correlation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation Id"
+          },
+          "cost_micros": {
+            "default": 0,
+            "title": "Cost Micros",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "delivery_state": {
+            "default": "none",
+            "enum": [
+              "none",
+              "scheduled",
+              "sending",
+              "delivered",
+              "failed",
+              "unknown",
+              "stopped",
+              "withheld",
+              "published"
+            ],
+            "title": "Delivery State",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal Id"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "result_link": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Link"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "agent",
+          "kind",
+          "created_at",
+          "status",
+          "title"
+        ],
+        "title": "TeamActivityItem",
+        "type": "object"
+      },
+      "TeamActivityPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TeamActivityItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TeamActivityPage",
+        "type": "object"
+      },
       "TestEmailIn": {
         "additionalProperties": false,
         "properties": {
@@ -11543,6 +11966,37 @@
         "title": "TodaySummary",
         "type": "object"
       },
+      "TodayWork": {
+        "properties": {
+          "actions_executed_by_people": {
+            "default": 0,
+            "title": "Actions Executed By People",
+            "type": "integer"
+          },
+          "actions_executed_by_rules": {
+            "default": 0,
+            "title": "Actions Executed By Rules",
+            "type": "integer"
+          },
+          "handed_to_person": {
+            "default": 0,
+            "title": "Handed To Person",
+            "type": "integer"
+          },
+          "proposals_created": {
+            "default": 0,
+            "title": "Proposals Created",
+            "type": "integer"
+          },
+          "runs": {
+            "default": 0,
+            "title": "Runs",
+            "type": "integer"
+          }
+        },
+        "title": "TodayWork",
+        "type": "object"
+      },
       "UsageDayOut": {
         "properties": {
           "cost_micros": {
@@ -11752,6 +12206,29 @@
         "title": "VersionOut",
         "type": "object"
       },
+      "WaitingItems": {
+        "properties": {
+          "count": {
+            "default": 0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "oldest_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldest At"
+          }
+        },
+        "title": "WaitingItems",
+        "type": "object"
+      },
       "WorkItem": {
         "properties": {
           "action_type": {
@@ -11827,7 +12304,8 @@
               "outbound_mail",
               "supplier_quote",
               "autonomy_fallback",
-              "web_reply"
+              "web_reply",
+              "chain_blocked"
             ],
             "title": "Kind",
             "type": "string"
@@ -12252,6 +12730,201 @@
         ]
       }
     },
+    "/api/v1/ai/agents": {
+      "get": {
+        "operationId": "agents_api_v1_ai_agents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          }
+        },
+        "summary": "Agents",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/v1/ai/agents/{key}": {
+      "patch": {
+        "operationId": "patch_agent_api_v1_ai_agents__key__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Patch Agent",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/v1/ai/agents/{key}/activity": {
+      "get": {
+        "operationId": "agent_activity_api_v1_ai_agents__key__activity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamActivityPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Agent Activity",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/api/v1/ai/autonomy/activity": {
       "get": {
         "operationId": "activity_api_v1_ai_autonomy_activity_get",
@@ -12651,6 +13324,67 @@
           }
         },
         "summary": "Draft an assistant campaign revision for staff to edit and submit",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/v1/ai/chains/{correlation_id}": {
+      "get": {
+        "operationId": "chain_api_v1_ai_chains__correlation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "correlation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Correlation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChainOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chain",
         "tags": [
           "ai"
         ]

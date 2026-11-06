@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hmac
 import uuid
+from dataclasses import replace
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 from urllib.parse import urlsplit
@@ -12,6 +13,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.modules.approvals import public as approvals
 from app.modules.notifications import public as notifications
 from app.modules.org import public as org
 from app.platform import audit, clock, events
@@ -184,6 +186,9 @@ def validate_record(db: Session, ctx: Context, p: RecordSupplierQuote) -> None:
 
 def answered_event(db: Session, ctx: Context, request_id: uuid.UUID, supplier_id: uuid.UUID, *, declined: bool) -> None:
     db.flush()
+    source = approvals.workflow_for_result(db, ctx, "quote_request_id", request_id)
+    if source is not None:
+        ctx = replace(ctx, **source)
     events.publish(
         db,
         ctx,

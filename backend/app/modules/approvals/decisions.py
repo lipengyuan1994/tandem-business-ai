@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from sqlalchemy.orm import Session
 
 from app.platform import audit, events, jobs
@@ -12,6 +14,13 @@ from .models import ActionProposal, ApprovalDecision
 
 
 def record_decision(db: Session, ctx: Context, proposal: ActionProposal, decision: ApprovalDecision) -> None:
+    ctx = replace(
+        ctx,
+        correlation_id=proposal.correlation_id or (proposal.id if proposal.origin_kind == "assistant" else None),
+        causation_id=proposal.id,
+        agent_key=proposal.agent_key,
+        chain_depth=proposal.chain_depth or 0,
+    )
     db.add(decision)
     proposal.status = "approved" if decision.decision == "approve" else "rejected"
     proposal.version += 1
@@ -42,6 +51,7 @@ def record_decision(db: Session, ctx: Context, proposal: ActionProposal, decisio
             business_id=ctx.business_id,
             dedupe_key=f"exec:{proposal.id}:{decision.revision_id}",
             priority=10,
+            ctx=ctx,
         )
     else:
         events.publish(

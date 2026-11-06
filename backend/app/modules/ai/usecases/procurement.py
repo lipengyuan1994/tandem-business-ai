@@ -76,8 +76,8 @@ class SupplierFollowup(BaseModel):
 def _factory(ctx: Context) -> CtxFactory:
     assert ctx.business_id is not None
     if ctx.user_id is not None:
-        return staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "procurement")
-    return background_ctx_factory(ctx.business_id)
+        return staff_ctx_factory(ctx.business_id, ctx.user_id, ctx.permissions, "procurement", parent=ctx)
+    return background_ctx_factory(ctx.business_id, use_case="procurement", parent=ctx)
 
 
 def _json(value: Any) -> str:
@@ -170,7 +170,7 @@ def _skip(factory: CtxFactory, key: str, reason: str, *, api: bool) -> RequestQu
 def request_quotes(
     item_id: uuid.UUID, business_id: uuid.UUID, *, ctx: Context | None = None, router: Router | None = None
 ) -> RequestQuotesOut:
-    factory = _factory(ctx) if ctx is not None else background_ctx_factory(business_id)
+    factory = _factory(ctx) if ctx is not None else background_ctx_factory(business_id, use_case="procurement")
     read_ctx = factory(uuid.uuid4())
     key = f"procurement:request:{item_id}:{clock.now().astimezone(UTC).date()}"
     reason = None
@@ -541,6 +541,10 @@ def extract_reply(
 def _extract_reply(
     ctx: Context, request_id: uuid.UUID, body: ExtractIn, *, router: Router | None, operation_id: uuid.UUID | None
 ) -> ExtractOut:
+    from ..chains import subject_context
+
+    with transaction(ctx) as db:
+        ctx = subject_context(db, ctx, "quote_request_id", request_id)
     factory = _factory(ctx)
     read_ctx = factory(uuid.uuid4())
     with transaction(read_ctx) as db:
@@ -569,7 +573,12 @@ def _extract_reply(
             operation = db.get(Operation, operation_id)
             assert operation is not None
             recorded = db.get(AiRun, operation.run_id) if operation.run_id is not None else None
-            if recorded is not None and recorded.status == "succeeded":
+            if (
+                recorded is not None
+                and recorded.status == "succeeded"
+                and (recorded.correlation_id, recorded.causation_id, recorded.chain_depth, recorded.agent_key)
+                == (read_ctx.correlation_id, read_ctx.causation_id, read_ctx.chain_depth, read_ctx.agent_key)
+            ):
                 cached = (recorded.id, SupplierQuoteExtract.model_validate(recorded.result), operation.details)
     if cached is not None:
         run_id, value, details = cached
@@ -682,7 +691,7 @@ def validate_recommendation(value: ProcurementRecommendation, comparison: purcha
 
 
 def compare(request_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None = None) -> uuid.UUID | None:
-    factory = background_ctx_factory(business_id)
+    factory = background_ctx_factory(business_id, use_case="procurement")
     read_ctx = factory(uuid.uuid4())
     with transaction(read_ctx) as db:
         comparison = purchasing.compare_quotes(db, read_ctx, request_id)
@@ -742,7 +751,7 @@ def compare(request_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | N
 def _followup(
     business_id: uuid.UUID, target: purchasing.LatePO | purchasing.UnansweredInvite, *, router: Router | None
 ) -> uuid.UUID | None:
-    factory = background_ctx_factory(business_id)
+    factory = background_ctx_factory(business_id, use_case="procurement")
     ctx = factory(uuid.uuid4())
     is_po = isinstance(target, purchasing.LatePO)
     key = f"procurement:followup:{'po' if is_po else 'invite'}:{target.id}"
@@ -803,7 +812,7 @@ def followup(
         quote_request_id is not None and supplier_id is None
     ):
         raise ValueError("one purchase order or a request and supplier is required")
-    ctx = background_ctx_factory(business_id)(uuid.uuid4())
+    ctx = background_ctx_factory(business_id, use_case="procurement")(uuid.uuid4())
     with transaction(ctx) as db:
         target: purchasing.LatePO | purchasing.UnansweredInvite | None
         if purchase_order_id is not None:
@@ -816,7 +825,9 @@ def followup(
 
 def scan(business_id: uuid.UUID, *, router: Router | None = None) -> None:
     """Discover and enqueue only. Inference belongs to independently retried per-target jobs."""
-    ctx = background_ctx_factory(business_id)(uuid.uuid4())
+    ctx = background_ctx_factory(business_id, use_case="procurement")(uuid.uuid4())
+    from ..chains import subject_context
+
     with transaction(ctx) as db:
         for due in purchasing.list_quote_requests_due(db, ctx):
             jobs.enqueue(
@@ -825,6 +836,7 @@ def scan(business_id: uuid.UUID, *, router: Router | None = None) -> None:
                 {"quote_request_id": str(due.quote_request_id)},
                 business_id=business_id,
                 dedupe_key=f"procurement_compare:{due.quote_request_id}",
+                ctx=subject_context(db, ctx, "quote_request_id", due.quote_request_id),
             )
         late = purchasing.list_late_purchase_orders(db, ctx)
         unanswered = purchasing.list_unanswered_invites(db, ctx)
@@ -860,4 +872,10 @@ def scan(business_id: uuid.UUID, *, router: Router | None = None) -> None:
                 payload,
                 business_id=business_id,
                 dedupe_key=f"procurement_followup:{business_id}:{'po' if is_po else 'invite'}:{target.id}:{slot}",
+                ctx=subject_context(
+                    db,
+                    ctx,
+                    "purchase_order_id" if is_po else "quote_request_id",
+                    target.id if isinstance(target, purchasing.LatePO) else target.quote_request_id,
+                ),
             )

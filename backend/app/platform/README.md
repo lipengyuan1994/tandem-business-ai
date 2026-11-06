@@ -5,12 +5,13 @@ Spec: [docs/roadmap/modules/M00-platform.md](../../../docs/roadmap/modules/M00-p
 | File | Use it for |
 |---|---|
 | `db.py` | `transaction(ctx)` in endpoints/job handlers; `system_transaction()` for queue tables only |
-| `context.py` | `Context`, `system_context()`, `assistant_context()` |
+| `context.py` | Immutable `Context`, `system_context()`, `assistant_context()`, per-job `workflow_scope(ctx)` |
 | `permissions.py` | `require("x.y.z")`, `require_session()`, `public_context` route dependencies |
 | `registry.py` | `Registry` (what modules register), `ExecutorSpec`, `PreviewLine`, `ExecutionMeta` |
 | `audit.py` | `record(...)` once per logical mutation; `diff(before, after, fields, redact)` |
 | `jobs.py` | `enqueue(db, kind, payload, ...)`; worker primitives |
 | `events.py` | `DomainEventPayload` base; `publish(db, ctx, event)` |
+| P10-B1 | Nullable correlation/causation/agent/depth on jobs/events; transaction-local context propagation and composition hooks for AI controls; no reverse module imports |
 | `errors.py` | `NotFound`, `Conflict`, `Forbidden`, `Invalid`, `RateLimited` (adds `Retry-After`) with `<module>.<reason>` codes; plain `errors[].field` paths under `/api/v1/public/` |
 | `http.py` | `client(local=False)` — the only way to make outbound HTTP calls |
 | `idempotency.py`, `ratelimit.py` | Create-endpoint idempotency; fixed-window limits |

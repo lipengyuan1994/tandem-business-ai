@@ -89,3 +89,26 @@ AiStatus adds model_classes with per-class enabled/reason; backend OpenAPI regen
 System screen still has its pre-AI placeholder: inspect /api/v1/ai/status for class diagnostics.
 Local example/config guidance included; benchmark, real local-server/modalities and deployment separate.
 Evidence and remaining checks: cards/P10-E0-routing.md.
+
+## P10-D screens — 2026-11-06 (Codex)
+
+Shared useDictation/DictationButton through opt-in Textarea, wired to staff assistant/Inbox/knowledge and
+prose/notes; no visitor mic. Multipart context/UUIDs/CSRF/same-key retry, two-minute limit, memory-only audio,
+raw review, cursor insertion without sending, permission/browser/STT gating and settings reason.
+Frontend typecheck/lint/build pass; 424 tests / 40 files pass. Aggregate JS/CSS gzip growth +4,978 bytes.
+Browser specs/config are offline and avoid global-setup DB reset; Chromium launch denied by sandbox.
+Final restricted make check passes lint/types/frontend/deploy/license checks, but Gitleaks flags
+backend/app/modules/ai/chains.py:25 (generic-api-key); backend file left untouched, matched value not printed.
+Full evidence, files, commands and untested conditions: [P10-D screens](cards/P10-D-screens.md).
+No installs, external network/API/model calls, commits or release by this task.
+
+## P10-B1 backend — 2026-11-06 (Codex)
+
+Backend DONE, uncommitted and unreleased. Seven agents, versioned/RLS settings, disabled-policy human fallback,
+scoped copilot, causal event/job/run/proposal/execution chains, fixed graph, atomic chain/agent budgets and
+unified evidence APIs. Migration `20261106_1000_ai_team` follows committed voice; only `smb_team` was migrated/tested.
+Full backend: 2,120 passed / 96% coverage; scoped make check passed; final focused 40 passed after the readout
+correction. Ruff/format/mypy, fixtures, backend licenses and Gitleaks pass. Earlier chains.py scanner false positive
+was resolved by formatting; no scanner allowlist was added. Tier-A second-agent review findings corrected.
+Frontend/types/browser/live-provider/deployment verification remains separate; no frontend edits or commits here.
+Contract, file inventory, decisions and exact evidence: [P10-B1 backend card](cards/P10-B1-backend.md).

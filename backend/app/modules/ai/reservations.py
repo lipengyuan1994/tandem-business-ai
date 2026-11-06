@@ -22,6 +22,7 @@ from app.platform.config import get_settings
 from app.platform.context import Context
 from app.platform.db import transaction
 
+from . import team_budget
 from .budget_models import CostPeriod, PublicAllowance
 from .errors import AiError
 from .gateway.pricing import cost_micros
@@ -147,6 +148,7 @@ def reserve(ctx: Context, entry: RouteEntry, req: ChatRequest | TranscriptionReq
             if claimed is None:
                 raise AiError("ai.budget_exceeded")
         maybe_notify_80_percent(db, ctx)
+        team_budget.reserve_model(db, ctx, cost, day)
     return result
 
 
@@ -210,6 +212,8 @@ def reconcile(ctx: Context, r: Reservation, entry: RouteEntry, result: ChatResul
                 )
             )
         maybe_notify_80_percent(db, ctx)
+        team_budget.reconcile_model(db, ctx, r.day, delta_cost)
+    team_budget.notify_limit(ctx, day=r.day)
 
 
 class ReservedAdapter:
@@ -231,11 +235,16 @@ class ReservedAdapter:
         with model_slot():
             try:
                 r = reserve(self.ctx, entry, req)
-            except AiError:
+            except AiError as exc:
                 # The failed reservation was rolled back; notices about an already exhausted budget
                 # need their own committed transaction (including zero limits or an upgrade at 100%).
                 with transaction(self.ctx) as db:
                     maybe_notify_80_percent(db, self.ctx)
+                if exc.code == "ai.agent_limit_reached":
+                    team_budget.notify_limit(self.ctx, force=True)
+                elif exc.code.startswith("ai.chain_"):
+                    with transaction(self.ctx) as db:
+                        team_budget.stop_chain(db, self.ctx, exc.code)
                 raise
             result = None
             try:

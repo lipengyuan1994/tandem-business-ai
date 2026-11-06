@@ -58,6 +58,10 @@ def demo(owner_engine: Engine, registry: Registry) -> Demo:
 def endpoints() -> list[tuple[str, str, dict | None]]:
     ident = str(uuid.uuid4())
     return [
+        ("GET", "/agents", None),
+        ("PATCH", "/agents/inventory", {"version": 0, "enabled": False}),
+        ("GET", "/agents/inventory/activity", None),
+        ("GET", f"/chains/{ident}", None),
         ("GET", "/work-queue", None),
         ("GET", "/exceptions", None),
         (
@@ -96,7 +100,7 @@ def test_every_ai_endpoint_requires_its_permission(registry: Registry) -> None:
         response = client.request(method, BASE + path, json=body)
         assert response.status_code == 403, (method, path, response.text)
     assistant = client_for(app, registry, business, {"ai.assistant.use"})
-    for path in ("/runs", "/usage"):
+    for path in ("/runs", "/usage", "/agents", "/agents/inventory/activity", f"/chains/{uuid.uuid4()}"):
         assert assistant.get(BASE + path).status_code == 403
     for method, path, body in cases:
         if path.startswith(("/conversations/", "/procurement/", "/campaigns/", "/autonomy/")):

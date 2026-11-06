@@ -34,7 +34,7 @@ def run(item_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None = N
     Every database transaction is short; the model call holds none. Daily trigger/effect keys keep retries
     idempotent, while the public pending lookup also catches proposals made by staff or on another day.
     """
-    factory = background_ctx_factory(business_id)
+    factory = background_ctx_factory(business_id, use_case="reorder_note")
     read_ctx = factory(uuid.uuid4())
     with transaction(read_ctx) as db:
         try:

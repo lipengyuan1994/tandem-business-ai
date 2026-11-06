@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import traceback
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Any, ClassVar
 from uuid import UUID
 
@@ -51,6 +52,10 @@ def publish(db: Session, ctx: Context, event: DomainEventPayload, registry: Regi
             actor_kind=ctx.actor_kind,
             actor_id=ctx.user_id,
             request_id=ctx.request_id,
+            correlation_id=ctx.correlation_id or event_id,
+            causation_id=ctx.causation_id,
+            agent_key=ctx.agent_key,
+            chain_depth=ctx.chain_depth,
         )
     )
     for subscriber in sorted(reg.subscribers.get(event.event_type, {})):
@@ -68,7 +73,8 @@ CLAIM_SQL = text(
             select event_id, subscriber from event_deliveries
              where status = 'pending' and run_at <= :now
              order by run_at for update skip locked limit 1)
-    returning d.event_id, d.subscriber, d.attempts, e.type, e.business_id, e.payload
+    returning d.event_id, d.subscriber, d.attempts, e.type, e.business_id, e.payload,
+              e.correlation_id, e.agent_key, e.chain_depth
     """
 )
 
@@ -89,7 +95,13 @@ def _claim_key(d: dict[str, Any]) -> Any:
 
 def deliver(registry: Registry, d: dict[str, Any]) -> bool:
     handler = registry.subscribers.get(d["type"], {}).get(d["subscriber"])
-    ctx = system_context(d["business_id"])
+    ctx = replace(
+        system_context(d["business_id"]),
+        correlation_id=d.get("correlation_id") or d["event_id"],
+        causation_id=d["event_id"],
+        agent_key=d.get("agent_key"),
+        chain_depth=d.get("chain_depth") or 0,
+    )
     try:
         with transaction(ctx) as db:
             delivery = db.scalar(select(EventDelivery).where(_key(d)).with_for_update())

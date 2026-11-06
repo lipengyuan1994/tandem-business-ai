@@ -65,3 +65,7 @@ P10-C1: public `invalidate_ai_replies(db,ctx,conversation_id,generation)` cancel
 from older ownership generations, records failure_code conversations.ai_paused and an audit/event. Staff proposals
 are preserved. Row locks use SKIP LOCKED to avoid inversion with conversation takeover; the reply executor checks
 ownership again and durable hand-over/ownership subscribers clean up skipped proposals.
+
+P10-B1: proposal causality/producer fields; registered AI execution guards and atomic chain action accounting.
+Disabled producer policy actions return to a fresh human-review revision; immutable decisions remain. Public
+`team_summary`, `team_activity`, `team_return_items`, `workflow_for_result` supply scoped metadata and durable lineage.

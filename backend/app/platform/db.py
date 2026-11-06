@@ -63,6 +63,7 @@ def transaction(ctx: Context) -> Iterator[Session]:
     """One transaction with row-level-security variables set (transaction-local). Commits on clean exit."""
     with _factory()() as db, db.begin():
         db.execute(SET_TENANT, {"b": str(ctx.business_id or ""), "u": str(ctx.user_id or "")})
+        db.info["context"] = ctx
         yield db
 
 

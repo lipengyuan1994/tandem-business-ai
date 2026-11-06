@@ -14,7 +14,7 @@ from app.modules.org import public as org
 from app.platform import clock
 from app.platform.context import Context
 from app.platform.errors import Conflict
-from app.platform.registry import ExecutorSpec
+from app.platform.registry import ExecutorSpec, get_registry
 
 from .decisions import record_decision
 from .models import (
@@ -98,6 +98,9 @@ def evaluate(
             reasons.extend(spec.autonomy_reasons(db, ctx, spec.payload_model.model_validate(revision.payload)))
         if paused:
             reasons.append("autonomy_paused")
+        check = get_registry().ai_policy_enabled
+        if check is not None and not check(db, ctx):
+            reasons.append("agent_disabled")
         if not identity.has_permission_now(db, rule.granted_by, proposal.business_id, spec.approve_permission):
             reasons.append("grantor_not_authorized")
         if not reasons and not _reserve(db, ctx, rule):

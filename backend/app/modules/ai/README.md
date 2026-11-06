@@ -1,6 +1,6 @@
 # ai · M13
 
-Assistant runs, tools and use cases. Contracts: `docs/roadmap/ai/contracts.md`; build order/state: `docs/roadmap/ai/{README,HANDOFF}.md`.
+Assistant runs, tools, use cases and AI team controls. Contracts: `docs/roadmap/ai/contracts.md`; build order/state: `docs/roadmap/ai/{README,HANDOFF}.md`. P10-B1's registry, settings, chain counters, APIs and evidence: [backend card](../../../../docs/roadmap/ai/cards/P10-B1-backend.md).
 Imports other modules only through their `public.py`.
 - `ai_runs` — one per run: use case, trigger (`trigger_key`), prompt name/version, model, status, tokens, cost,
   `result` (validated final output only). `ai_run_steps` (append-only) — per step: kind, tool, redacted arguments,

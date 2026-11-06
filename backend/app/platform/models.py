@@ -85,9 +85,14 @@ class Job(TimestampMixin, Base):
     locked_until: Mapped[datetime | None]
     dedupe_key: Mapped[str | None] = mapped_column(String(300), unique=True)
     last_error: Mapped[str | None] = mapped_column(Text)
+    correlation_id: Mapped[uuid.UUID | None]
+    causation_id: Mapped[uuid.UUID | None]
+    agent_key: Mapped[str | None] = mapped_column(String(32))
+    chain_depth: Mapped[int | None]
     __table_args__ = (
         CheckConstraint("status in ('queued','running','succeeded','failed','dead')", name="status"),
         Index("ix_jobs_ready", "priority", "run_at", postgresql_where=text("status = 'queued'")),
+        Index("ix_jobs_chain", "business_id", "correlation_id"),
     )
 
 
@@ -102,6 +107,11 @@ class DomainEvent(Base):
     actor_id: Mapped[uuid.UUID | None]
     request_id: Mapped[str | None] = mapped_column(String(64))
     occurred_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    correlation_id: Mapped[uuid.UUID | None]
+    causation_id: Mapped[uuid.UUID | None]
+    agent_key: Mapped[str | None] = mapped_column(String(32))
+    chain_depth: Mapped[int | None]
+    __table_args__ = (Index("ix_domain_events_chain", "business_id", "correlation_id"),)
 
 
 class EventDelivery(Base):

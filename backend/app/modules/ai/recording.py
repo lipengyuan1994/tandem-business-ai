@@ -22,6 +22,8 @@ from app.platform.db import transaction
 from . import usage
 from .agent.prompts import Prompt
 from .agent.protocol import RunResult, RunStatus
+from .chains import admission_reason, run_context
+from .errors import AiError
 from .gateway.pricing import cost_micros
 from .gateway.routes import RouteEntry
 from .gateway.types import ChatResult
@@ -157,20 +159,44 @@ def close_stale_runs(ctx: Context, trigger_key: str, older_than_s: int) -> int:
 
 
 def open_run(ctx: Context, spec_or_meta: RunMeta) -> uuid.UUID:
-    """Insert the run (`running`) with id `ctx.ai_run_id` (set by the context factory) and count it for today."""
+    """Insert the run with id `ctx.ai_run_id` and count it for today.
+
+    Budget-counter lock order follows reserve/reconcile: installation month/day (if used), business usage,
+    public/agent daily counters (if used), then chain. Rejected admission must count usage before locking
+    the chain to persist its stop, in the same transaction as its blocked run.
+    """
     meta = spec_or_meta
+    ctx = run_context(ctx, meta.use_case)
     run_id = ctx.ai_run_id or uuid.uuid4()
-    with transaction(ctx) as db:
-        db.add(
-            AiRun(
-                id=run_id, business_id=ctx.business_id, use_case=meta.use_case, trigger_type=meta.trigger_type,
-                trigger_key=meta.trigger_key, on_behalf_of_user_id=meta.on_behalf_of_user_id,
-                prompt_name=meta.prompt.name, prompt_version=meta.prompt.version, model_class=meta.prompt.model_class,
-                status="running", started_at=clock.now(),
-            )
-        )  # fmt: skip
-        db.flush()
-        _add_usage(db, ctx, input_tokens=0, output_tokens=0, cost=0, runs=1)
+    try:
+        with transaction(ctx) as db:
+            reason = admission_reason(db, ctx)
+            db.add(
+                AiRun(
+                    id=run_id, business_id=ctx.business_id, use_case=meta.use_case, trigger_type=meta.trigger_type,
+                    trigger_key=meta.trigger_key, on_behalf_of_user_id=meta.on_behalf_of_user_id,
+                    prompt_name=meta.prompt.name, prompt_version=meta.prompt.version,
+                    model_class=meta.prompt.model_class,
+                    status="policy_blocked" if reason else "running", started_at=clock.now(),
+                    correlation_id=ctx.correlation_id, causation_id=ctx.causation_id, agent_key=ctx.agent_key,
+                    chain_depth=ctx.chain_depth, error_code=reason, needs_human=bool(reason),
+                    finished_at=clock.now() if reason else None,
+                )
+            )  # fmt: skip
+            db.flush()
+            _add_usage(db, ctx, input_tokens=0, output_tokens=0, cost=0, runs=1)
+            if reason:
+                from .team_budget import stop_chain
+
+                stop_chain(db, ctx, reason)
+    except AiError as exc:
+        if exc.code == "ai.agent_limit_reached":
+            from .team_budget import notify_limit
+
+            notify_limit(ctx, force=True)
+        raise
+    if reason:
+        raise AiError(reason, run_id=str(run_id))
     return run_id
 
 

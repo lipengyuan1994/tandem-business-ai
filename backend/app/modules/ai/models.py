@@ -58,6 +58,10 @@ class AiRun(BusinessScopedBase):
     result: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default=sql("'{}'::jsonb"))
     started_at: Mapped[datetime] = mapped_column(server_default=sql("now()"))
     finished_at: Mapped[datetime | None]
+    correlation_id: Mapped[uuid.UUID | None]
+    causation_id: Mapped[uuid.UUID | None]
+    agent_key: Mapped[str | None] = mapped_column(String(32))
+    chain_depth: Mapped[int | None]
     __table_args__ = scoped_table_args(
         CheckConstraint(_in("use_case", USE_CASES), name="use_case"),
         CheckConstraint(_in("trigger_type", TRIGGER_TYPES), name="trigger_type"),
@@ -65,6 +69,7 @@ class AiRun(BusinessScopedBase):
         CheckConstraint(_in("model_class", MODEL_CLASSES), name="model_class"),
         Index("ix_ai_runs_started", "business_id", sql("started_at desc")),
         Index("ix_ai_runs_trigger", "business_id", "trigger_key"),
+        Index("ix_ai_runs_chain", "business_id", "correlation_id"),
     )
 
 

@@ -19,6 +19,8 @@ from app.platform.db import transaction
 from app.platform.errors import DomainError
 
 from .. import effects
+from ..chains import effect_context, require_enabled
+from ..team_budget import require_active_chain, reserve_action
 from .base import RunState, Tool
 
 _TOOLS: dict[str, Tool] = {}
@@ -164,6 +166,9 @@ def execute_tool(
     if tool.kind == "read":
         try:
             with transaction(ctx) as db:
+                ctx = effect_context(db, ctx)
+                require_enabled(db, ctx)
+                require_active_chain(db, ctx)
                 data = tool.run(db, ctx, args, state)
         except DomainError as exc:
             return error_observation(exc.code, exc.detail)
@@ -208,10 +213,13 @@ def _hold_key(
 def _execute_effect(ctx: Context, tool: Tool, args: BaseModel, state: RunState) -> dict[str, Any]:
     key = effects.effect_key(tool.name, args, trigger_key=state.trigger_key)
     claim = _intake_claim_key(tool, state)
-    if tool.kind == "propose" and key in state.proposals:
-        return ok_observation({"proposal_id": state.proposals[key], "replayed": True})
     try:
         with transaction(ctx) as db:
+            ctx = effect_context(db, ctx)
+            require_enabled(db, ctx)
+            require_active_chain(db, ctx)
+            if tool.kind == "propose" and key in state.proposals:
+                return ok_observation({"proposal_id": state.proposals[key], "replayed": True})
             key, recorded, expired = _hold_key(db, ctx, tool, args, state, key)
             if expired:
                 return error_observation("ai.hold_expired", "The hold expired or was released; call hold_slot again.")
@@ -223,6 +231,8 @@ def _execute_effect(ctx: Context, tool: Tool, args: BaseModel, state: RunState) 
                 # Also recognize effects created before shared claims were introduced. Exact retries already
                 # replayed above; a different proposal is refused regardless of the old proposal's status.
                 return error_observation("ai.intake_outcome_exists", "This inbound message already has a proposal.")
+            if tool.kind == "hold":
+                reserve_action(db, ctx)
             data = tool.run(db, ctx, args, state)
             ref_id = uuid.UUID(str(data[_REF_FIELD[tool.kind]]))
             effects.record_effect(
@@ -247,6 +257,11 @@ def _execute_effect(ctx: Context, tool: Tool, args: BaseModel, state: RunState) 
                     ref_id=ref_id,
                 )
     except DomainError as exc:
+        if exc.code.startswith("ai.chain_"):
+            from ..team_budget import stop_chain
+
+            with transaction(ctx) as db:
+                stop_chain(db, ctx, exc.code)
         return error_observation(exc.code, exc.detail)
     except IntegrityError:
         # The losing transaction is rolled back before inspecting the winner's committed effects.

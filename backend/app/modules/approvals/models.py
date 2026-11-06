@@ -41,10 +41,15 @@ class ActionProposal(BusinessScopedBase):
     title: Mapped[str] = mapped_column(String(300))
     expires_at: Mapped[datetime]
     failure_code: Mapped[str | None] = mapped_column(String(120))
+    correlation_id: Mapped[uuid.UUID | None]
+    causation_id: Mapped[uuid.UUID | None]
+    agent_key: Mapped[str | None] = mapped_column(String(32))
+    chain_depth: Mapped[int | None]
     __table_args__ = scoped_table_args(
         CheckConstraint(f"status in {STATUSES}", name="status"),
         CheckConstraint("origin_kind in ('staff','assistant','rule')", name="origin_kind"),
         Index("ix_action_proposals_queue", "business_id", "status", "created_at"),
+        Index("ix_action_proposals_chain", "business_id", "correlation_id"),
     )
 
 

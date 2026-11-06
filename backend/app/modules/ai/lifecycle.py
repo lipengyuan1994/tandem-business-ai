@@ -16,8 +16,19 @@ from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import AiEffect, AiRun, AiRunStep, AiUsageDaily, AssistantMessage, AssistantThread
+from .team_models import AgentSettings, AgentUsageDaily, ChainBudget
 
-TABLES = [AiRun, AiRunStep, AiEffect, AiUsageDaily, AssistantThread, AssistantMessage]
+TABLES = [
+    AiRun,
+    AiRunStep,
+    AiEffect,
+    AiUsageDaily,
+    AssistantThread,
+    AssistantMessage,
+    AgentSettings,
+    AgentUsageDaily,
+    ChainBudget,
+]
 ERASED = "[erased]"
 
 

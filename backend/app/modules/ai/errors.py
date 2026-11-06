@@ -8,6 +8,13 @@ from app.platform.errors import DomainError
 
 # code -> (HTTP status, problem title). Codes without a mapping in §15 are internal (runner, tool observations).
 AI_ERROR_CODES: dict[str, tuple[int, str]] = {
+    "ai.agent_disabled": (409, "AI agent is off"),
+    "ai.chain_transition_blocked": (409, "Agent hand-off is not allowed"),
+    "ai.chain_depth_exceeded": (409, "Chain depth limit reached"),
+    "ai.chain_call_limit": (429, "Chain model call limit reached"),
+    "ai.chain_action_limit": (429, "Chain action limit reached"),
+    "ai.chain_cost_limit": (429, "Chain cost limit reached"),
+    "ai.agent_limit_reached": (429, "Agent daily cost limit reached"),
     "ai.conversation_paused": (409, "Conversation handed to a person"),
     "ai.disabled_by_policy": (409, "Conflict"),
     "ai.not_configured": (409, "Conflict"),

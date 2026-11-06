@@ -22,6 +22,7 @@ from app.platform.db import transaction
 from app.platform.errors import Conflict
 
 from .. import effects, recording
+from ..chains import run_context
 from ..errors import AiError
 from ..gateway.router import PolicyBlocked, Router, effective_policy, load_router
 from ..gateway.routes import Limits, ModelClass
@@ -34,6 +35,7 @@ from ..tools.knowledge import resolve_citations
 from ..tools.registry import authorized_tools, execute_tool, get_tool, tool_catalog
 from .context import InputTooLarge, append_step, build_messages, trim_to_budget
 from .contexts import CtxFactory
+from .proposal_events import collect_proposal as _collect_proposal
 from .protocol import FinalStep, RunResult, RunSpec, StepEvent, ToolCallStep, agent_step_json_schema
 
 log = structlog.get_logger(__name__)
@@ -130,7 +132,14 @@ class ModelCaller:
             with budget_scope(self.ctx), policy_scope(self.current_policy):
                 result, _entry = self.router.complete(self.model_class, self.policy, req)
         except AiError as exc:
-            status: RunStatus = "budget_exceeded" if exc.code == "ai.budget_exceeded" else "failed"
+            status: RunStatus = (
+                "budget_exceeded"
+                if exc.code
+                in {"ai.budget_exceeded", "ai.agent_limit_reached", "ai.chain_call_limit", "ai.chain_cost_limit"}
+                else "policy_blocked"
+                if exc.code.startswith("ai.chain_") or exc.code == "ai.agent_disabled"
+                else "failed"
+            )
             raise StopRun(status, exc.code) from None
         except PolicyBlocked:
             raise StopRun("policy_blocked", blocked_code(self.router, self.model_class)) from None
@@ -184,7 +193,7 @@ def run_agent(
     on_event: Callable[[StepEvent], None] | None = None,
 ) -> RunResult:
     run_id = uuid.uuid4()
-    ctx = ctx_factory(run_id)
+    ctx = run_context(ctx_factory(run_id), spec.use_case)
     router = router if router is not None else load_router()
     limits = router.limits if router is not None else Limits()
     emit = on_event or (lambda _event: None)
@@ -195,7 +204,18 @@ def run_agent(
     )  # fmt: skip
 
     recording.close_stale_runs(ctx, spec.trigger_key, limits.run_timeout_s)
-    recording.open_run(ctx, meta)
+    try:
+        recording.open_run(ctx, meta)
+    except AiError as exc:
+        emit(StepEvent(kind="error", run_id=run_id, error_code=exc.code, text=exc.detail))
+        return RunResult(
+            run_id=run_id,
+            status="policy_blocked",
+            final=None,
+            proposal_ids=[],
+            error_code=exc.code,
+            extra={"not_started": exc.code in {"ai.agent_disabled", "ai.agent_limit_reached"}},
+        )
     try:
         state = _rebuild_state(ctx, spec, run_id)
         proposal_ids: list[uuid.UUID] = []
@@ -332,7 +352,13 @@ def _run_tool(
         else:
             if not args.knowledge_missing and not args.request_handoff:
                 state.reply_grounding = check(
-                    lambda run_id: replace(ctx, ai_run_id=run_id),
+                    lambda run_id: replace(
+                        ctx,
+                        ai_run_id=run_id,
+                        causation_id=ctx.ai_run_id,
+                        causing_agent_key=ctx.agent_key,
+                        chain_depth=ctx.chain_depth + 1,
+                    ),
                     reply=args.text,
                     articles=[state.knowledge_citations[(c.article_id, c.version)] for c in citations],
                     db_facts=state.db_facts,
@@ -347,28 +373,6 @@ def _run_tool(
     if observation.get("ok") and step.tool in {"list_services", "get_service_parts", "check_stock", "find_slots"}:
         state.db_facts.setdefault(step.tool, []).append(observation["data"])
     return observation
-
-
-def _collect_proposal(
-    observation: dict[str, Any],
-    proposal_ids: list[uuid.UUID],
-    titles: list[str],
-    emit: Callable[[StepEvent], None],
-    run_id: uuid.UUID,
-) -> None:
-    data = observation.get("data")
-    if not observation.get("ok") or not isinstance(data, dict) or "proposal_id" not in data:
-        return
-    try:
-        proposal_id = uuid.UUID(str(data["proposal_id"]))
-    except ValueError:
-        return
-    if proposal_id in proposal_ids:
-        return
-    title = str(data.get("title") or "")[:200]
-    proposal_ids.append(proposal_id)
-    titles.append(title)
-    emit(StepEvent(kind="proposal", run_id=run_id, proposal_id=proposal_id, proposal_title=title or None))
 
 
 __all__ = ["blocked_code", "repair_message", "run_agent"]

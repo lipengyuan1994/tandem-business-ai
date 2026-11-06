@@ -7,6 +7,7 @@ platform registry.
 from __future__ import annotations
 
 import uuid
+from dataclasses import replace
 from datetime import timedelta
 from typing import Any
 
@@ -113,6 +114,9 @@ def create_proposal(
     conversation_id: uuid.UUID | None = None,
 ) -> ActionProposal:
     _can_create(ctx)
+    hook = get_registry().ai_proposal_context
+    if hook is not None:
+        ctx = hook(db, ctx, action_type)
     spec = executor_for(action_type)
     model = _validated(spec, payload)
     rule, paused = autonomy.creation_rule(db, ctx, action_type)
@@ -126,6 +130,10 @@ def create_proposal(
         origin_kind=origin,
         origin_user_id=ctx.user_id or ctx.on_behalf_of_user_id,
         ai_run_id=ctx.ai_run_id,
+        correlation_id=ctx.correlation_id,
+        causation_id=ctx.ai_run_id or ctx.causation_id,
+        agent_key=ctx.agent_key,
+        chain_depth=ctx.chain_depth,
         conversation_id=conversation_id,
         title=title,
         expires_at=clock.now() + (expires_in or DEFAULT_TTL),
@@ -134,6 +142,7 @@ def create_proposal(
     db.flush()
     revision = _revision(db, ctx, proposal, spec, model, 1, evidence or [], title)
     proposal.current_revision_id = revision.id
+    ctx = replace(ctx, causation_id=proposal.id)
     audit.record(
         db,
         ctx,

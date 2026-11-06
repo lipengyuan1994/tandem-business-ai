@@ -74,3 +74,50 @@ OpenAPI and native caddy validate passed. Initial failed run and the test-move s
 in docs/roadmap/ai/cards/P10-D-backend.md. Live evals, actual STT servers/codecs, browser UI, independent
 review and deployment remain unverified. No commits were made.
 | 2026-11-06 ~15:50 | **P10-D backend verified by the supervisor:** live `dictation` eval 87.5 % (24 cases, threshold 85 %, p50 0.8 s, guard fallbacks 0; the 3 misses are currency/thousands formatting); real audio through the new gateway (WebM/Opus and MP4/AAC, synthetic 8 s clip) transcribed by Vultr `whisper-large-v3-turbo` in 1.0–1.3 s; reviewed upload cap (streamed, 4 MB, magic bytes), polish guard and memory-only replay (transcripts never stored); TS types regenerated; `make fixtures lint typecheck` passed | EVENT | `backend/app/modules/voice/`, `backend/app/modules/ai/dictation*.py` |
+
+## 2026-11-06 — P10-D staff dictation screens (Codex)
+
+EVENT frontend-only implementation: reusable recorder/button and opt-in Textarea, assistant/Inbox/knowledge
+and staff prose fields, cursor/selection insertion without sending, raw review, permissions/STT status and
+plain-word errors. Frontend typecheck/lint/build pass; 424 tests in 40 files; total JS/CSS gzip +4,978 bytes.
+Offline Playwright tests added, but Chromium launch denied by macOS sandbox; browser checks unverified.
+Final restricted make check: fixtures/lint/types/frontend/deploy/licenses pass; Gitleaks flags
+backend/app/modules/ai/chains.py:25 (generic-api-key). Backend not edited; matched value not printed.
+No installs, external network/provider calls, real keys, commits or deployment. Evidence and outstanding
+verification: [P10-D screens card](docs/roadmap/ai/cards/P10-D-screens.md).
+
+## 2026-11-06 — P10-B1 backend AI team (Codex)
+
+EVENT backend implementation completed after kickoff: contract first; seven-agent registry and tenant settings,
+causal workflow metadata, fixed hand-off graph, atomic chain and agent/day budgets, disabled-policy fallback,
+scoped copilot and team/chain/evidence APIs. Builds on committed voice. Only the supplied `smb_team` database used.
+Full backend suite: 2,120 passed (96% total coverage); scoped make check passed backend lint/format/mypy/tests,
+fixtures, backend licenses and secret scanning. Final targeted run: 40 passed in 18.63 s. Second-agent Tier-A
+review performed and findings fixed. Frontend/types, browser, live models/delivery and deployment not verified here.
+No installs, downloads, external calls, Docker, commits or release. Details: [P10-B1 backend card](docs/roadmap/ai/cards/P10-B1-backend.md).
+
+## 2026-11-06 — P10-B3 AI Team screens (Codex)
+
+Built Team cards, agent detail/cursor timelines, chain views, targeted assistant chips and Activity/Autonomy/Work
+queue filters against the supplied generated API schema. Frontend changes only; no backend edits, installs,
+external network calls, commits or release. Read/write gates, confirmation, version conflicts, USD validation,
+delivery evidence and retry target retention have MSW coverage. Full command results, files, bundle comparison
+and explicit API gaps (depth usage, Customer Care capability, assistant-only discovery) are in
+[the P10-B3 card](docs/roadmap/ai/cards/P10-B3-screens.md). Scoped offline make check passed; database/runtime
+checks are excluded as documented. TypeSafe was considered; these screens use deterministic backend fields.
+
+P10-B3 final verification: 42 frontend files / 451 tests passed (27 new); typecheck/lint/build passed; total
+production JS+CSS+HTML gzip growth 9,779 bytes. No live/browser acceptance claim; API gaps remain in the card.
+
+## 2026-11-06 — P10-B1 backend review fixes (Codex)
+
+Fixed the four independent-review findings: domain-event subscribers retain chain budgets/depth without
+inventing agent hand-offs; supplier extraction resolves durable request lineage, including interrupted caches;
+execution recovery selects the exact current revision/attempt; rejected admission follows the existing budget
+counter lock order. Added eleven regression cases across three integration files. Before fixes, six SQL cases
+and three cache cases failed; after fixes, all seven SQL and all four cache cases passed. The first full run
+passed 2,127 tests; final full verification after the cache guard passed **2,131 tests in 1,488.31 s**, 96%
+coverage. Scoped `make check` passed: Ruff/format/mypy, backend tests, fixtures, backend licenses and secret
+scanning; frontend/Docker/deployment checks excluded. Regenerated OpenAPI matches the existing schema. Only
+`smb_team`; no frontend edits, installs, downloads, external calls, Docker, commits or deployment. Details and
+final verification: [P10-B1 backend card](docs/roadmap/ai/cards/P10-B1-backend.md#review-fixes).
