@@ -67,12 +67,13 @@ Every module may import `app.platform.*` and the `public.py` of the modules list
 | `catalog` | org, approvals | 2 |
 | `inventory` | org, catalog, approvals | 3 |
 | `scheduling` | org, crm, catalog, inventory, conversations, approvals, notifications | 3 |
-| `conversations` | org, crm, approvals, notifications | 3 |
+| `conversations` | org, identity, crm, approvals, notifications | 3 |
+| `knowledge` | org, conversations | 4 |
 | `marketing` | org, crm, catalog, scheduling, approvals, notifications | 4 |
 | `sales` (v1) | org, crm, catalog, inventory, scheduling, approvals, notifications | 4 |
 | `purchasing` (v1) | org, catalog, inventory, approvals, notifications | 3 |
 | `dashboard` | org, crm, scheduling, inventory, conversations, approvals, notifications | 4 |
-| `ai` | org, identity, crm, catalog, scheduling, inventory, conversations, marketing, approvals, sales, purchasing, dashboard, notifications | 4 |
+| `ai` | org, identity, crm, catalog, scheduling, inventory, conversations, knowledge, marketing, approvals, sales, purchasing, dashboard, notifications | 4 |
 | `voice` | ai, conversations | 5 |
 | `admin_ops` (v1) | org, identity, files, notifications, crm | 4 |
 
@@ -97,6 +98,9 @@ flowchart BT
   conversations --> dashboard
   scheduling --> ai
   conversations --> ai
+  identity --> conversations
+  conversations --> knowledge
+  knowledge --> ai
   marketing --> ai
   ai --> voice
 ```

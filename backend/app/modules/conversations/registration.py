@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from app.platform.registry import Registry
 
-from . import api, executors, lifecycle, service
+from . import api, executors, lifecycle, publication, service
 from . import permissions as P
 
 
@@ -11,6 +11,8 @@ def register(reg: Registry) -> None:
     reg.add_router(api.router, "/conversations", ["conversations"])
     reg.add_router(api.public_router, "/public", ["public"])
     reg.add_executor(executors.SEND_REPLY)
+    reg.add_job("conversations.publish_reply", publication.publish)
+    reg.proposal_delivery_readers.append(publication.delivery_state)
     reg.add_export_handler("conversations", lifecycle.export)
     reg.add_erasure_handler("conversations", lifecycle.erase)
     reg.add_restriction_handler("conversations", lifecycle.restrict)

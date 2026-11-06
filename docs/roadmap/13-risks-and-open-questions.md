@@ -29,6 +29,11 @@
 
 ## Open questions
 
+P10-C1 part 1 (2026-11-05): an extra `data/validate_fixtures.py` check fails on existing
+`autonomy_rules` fixtures because `data/schema.sql` has no corresponding SQLite table. This predates C1.
+Owner clarification requested in chat before adding that unrelated portable contract; C1's knowledge table
+is included. Backend seed/migrations are verified separately. Pending answer, the unrelated schema is unchanged.
+
 | # | Question | Needed by | Default if unanswered | Status |
 |---|---|---|---|---|
 | Q1 | Do the organisers accept a non-AI ERP base built before kickoff (disclosed)? | P1 start (Nov 3) | Proceed with disclosure per ADR-014; present the AI layer as the event work | ANSWERED 2026-11-03 by the owner: lablab allows building locally before kickoff. ADR-014 split (AI after kickoff) kept as the safe default |

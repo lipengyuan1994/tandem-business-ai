@@ -41,3 +41,10 @@ export function useUpdateConversation(id: string) {
   return useConversationMutation(async (body: { version: number; customer_id?: string | null; status?: Thread["status"] | null }) =>
     unwrap(await api.PATCH("/api/v1/conversations/{conversation_id}", { params: { path: { conversation_id: id } }, body })))
 }
+
+export function useOwnership(id: string) {
+  return useConversationMutation(async (mode: "auto" | "human") => {
+    const params = { path: { conversation_id: id } }
+    return mode === "human" ? unwrap(await api.POST("/api/v1/conversations/{conversation_id}/take-over", { params })) : unwrap(await api.POST("/api/v1/conversations/{conversation_id}/hand-back", { params }))
+  })
+}

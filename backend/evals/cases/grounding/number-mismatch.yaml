@@ -1,0 +1,24 @@
+{
+  "id": "grounding-number-mismatch",
+  "suite": "grounding",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "message": "Brake service costs 50.00 USD.",
+    "articles": [],
+    "db_facts": {
+      "list_services": [
+        {
+          "name": "Brake service",
+          "price": "65.00 USD"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "verdict": "contradicted"
+    }
+  }
+}

@@ -310,7 +310,7 @@ def test_example_and_dev_route_files_validate(monkeypatch: pytest.MonkeyPatch) -
     adapter = ScriptFileAdapter("fake", script)
     replies = yaml.safe_load(script.read_text(encoding="utf-8"))
     use_cases = ("intake", "copilot", "summary", "reorder_note", "briefing", "procurement", "campaign_draft",
-                 "payment_followup", "safety")  # fmt: skip
+                 "payment_followup", "safety", "grounding")  # fmt: skip
     assert set(replies) == set(use_cases)
     for use_case in use_cases:
         assert adapter.chat(ChatRequest(messages=[], use_case=use_case)).text == replies[use_case][0]

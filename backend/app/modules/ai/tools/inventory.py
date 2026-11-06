@@ -8,7 +8,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.orm import Session
 
 from app.modules.catalog import public as catalog
@@ -23,7 +23,20 @@ READ = "inventory.stock.read"
 
 
 class CheckStockArgs(ToolArgs):
-    item_ids: list[uuid.UUID] = Field(min_length=1, max_length=20)
+    item_ids: list[uuid.UUID] = Field(default_factory=list, max_length=20)
+    query: str | None = Field(
+        default=None, min_length=1, max_length=100, description="Product name when no item id is supplied."
+    )
+
+    @model_validator(mode="after")
+    def require_lookup(self) -> CheckStockArgs:
+        if self.query is not None:
+            self.query = self.query.strip()
+            if not self.query:
+                raise ValueError("Product-name query must not be blank.")
+        if bool(self.item_ids) == bool(self.query):
+            raise ValueError("Supply item_ids or a nonempty product-name query, not both.")
+        return self
 
     @field_validator("item_ids")
     @classmethod
@@ -41,11 +54,20 @@ def suggestion_view(s: inventory.ReorderSuggestion) -> dict[str, Any]:
 
 def _check_stock(db: Session, ctx: Context, args: BaseModel, state: RunState) -> dict[str, Any]:
     assert isinstance(args, CheckStockArgs)
-    known = catalog.get_items(db, ctx, set(args.item_ids))
-    missing = [i for i in args.item_ids if i not in known]
+    item_ids = args.item_ids
+    if args.query:
+        item_ids = [item.id for item in catalog.search_items(db, ctx, args.query.strip(), "product", limit=20)]
+        if not item_ids:
+            return {
+                "items": [],
+                "not_found": True,
+                "next_action": "Ask which product they mean; do not infer zero stock.",
+            }
+    known = catalog.get_items(db, ctx, set(item_ids))
+    missing = [i for i in item_ids if i not in known]
     if missing:
         raise NotFound("catalog.item_not_found", detail=", ".join(str(i) for i in missing))
-    rows = inventory.get_availability(db, ctx, args.item_ids)
+    rows = inventory.get_availability(db, ctx, item_ids)
     tracked = {a.item_id for a in rows}
     data = listing(
         "items",
@@ -56,10 +78,10 @@ def _check_stock(db: Session, ctx: Context, args: BaseModel, state: RunState) ->
             for a in rows
         ],
     )  # fmt: skip
-    untracked = [i for i in args.item_ids if i not in tracked]
+    untracked = [i for i in item_ids if i not in tracked]
     if untracked:
         data["not_stock_tracked"] = untracked
-    cite(state, "check_stock", args.item_ids[0] if len(args.item_ids) == 1 else None, data)
+    cite(state, "check_stock", item_ids[0] if len(item_ids) == 1 else None, data)
     return data
 
 
@@ -72,7 +94,8 @@ def _list_low_stock(db: Session, ctx: Context, args: BaseModel, state: RunState)
 TOOLS = (
     Tool(
         name="check_stock",
-        description="Stock of up to 20 items: on hand, reserved, available, reorder point, whether below it.",
+        description="Stock of up to 20 item_ids, or search a product-name query when ids are missing: "
+                    "on hand, reserved, available, reorder point, whether below it. Never use knowledge for stock.",
         kind="read", permission=READ, args_model=CheckStockArgs, run=_check_stock,
     ),
     Tool(

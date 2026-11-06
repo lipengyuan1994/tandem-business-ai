@@ -53,12 +53,13 @@ function RuleCard({ rule, onReload }: { rule: AutonomyRule; onReload: () => void
   const [active, setActive] = useState(rule.active)
   const [cap, setCap] = useState(String(rule.daily_cap))
   const [conflict, setConflict] = useState(false)
-  const canSave = permissions.has("inventory.proposal.approve")
+  const canSave = permissions.has(rule.action_type === "conversations.send_reply" ? "conversations.proposal.approve" : "inventory.proposal.approve")
   const capValue = /^\d+$/.test(cap) && Number(cap) <= 2147483647 ? Number(cap) : undefined
   const prefix = rule.action_type
   return <Card>
     <CardHeader><CardTitle>{t(`ai.autonomy.actions.${rule.action_type.replaceAll(".", "_")}`, { defaultValue: rule.action_type })}</CardTitle></CardHeader>
     <CardContent>
+      {rule.action_type === "conversations.send_reply" ? <section className="mb-4 space-y-2 text-sm"><h3 className="font-medium">{t("ai.autonomy.replyFallbacks")}</h3><ul className="list-disc pl-5">{["not_intake", "safety_unchecked", "ungrounded", "contradicted", "grounding_unavailable", "human_mode", "bundled_action", "stale_reply", "conversation_closed"].map((reason) => <li key={reason}>{t(`ai.activity.reasons.${reason}`)}</li>)}</ul></section> : null}
       <form className="space-y-5" onSubmit={(e) => {
         e.preventDefault()
         if (capValue === undefined || !canSave || conflict) return
@@ -80,7 +81,7 @@ function RuleCard({ rule, onReload }: { rule: AutonomyRule; onReload: () => void
         </div>
         <div className="flex items-center gap-2"><Switch id={`${prefix}-active`} checked={active} onCheckedChange={setActive} disabled={!canSave || save.isPending} /><Label htmlFor={`${prefix}-active`}>{t("ai.autonomy.active")}</Label></div>
         <section className="space-y-1"><h3 className="font-medium">{t("ai.autonomy.summary")}</h3><p className="text-sm">{t("ai.autonomy.counts", rule.summary)}</p></section>
-        {!canSave ? <p>{t("ai.autonomy.cannotGrant")}</p> : null}
+        {!canSave ? <p>{t(rule.action_type === "conversations.send_reply" ? "ai.autonomy.cannotGrantReply" : "ai.autonomy.cannotGrant")}</p> : null}
         <Button type="submit" disabled={!canSave || save.isPending || capValue === undefined || conflict}>{t("common.save")}</Button>
         <ConflictDialog open={conflict} onOpenChange={setConflict} onReload={() => { setConflict(false); onReload() }} />
       </form>

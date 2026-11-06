@@ -24,6 +24,7 @@ from app.modules.approvals import public as approvals
 from app.modules.catalog import public as catalog
 from app.modules.conversations import public as conversations
 from app.modules.crm import public as crm
+from app.modules.knowledge import public as knowledge
 from app.modules.org import public as org
 from app.modules.scheduling import public as scheduling
 from app.platform import clock
@@ -33,6 +34,7 @@ from app.platform.errors import Conflict, Invalid, NotFound
 from .. import effects
 from .base import RunState, Tool
 from .common import ToolArgs, local_label, utc
+from .knowledge import ReplyCitation, resolve_citations
 from .proposing import PlainText, gather, note, propose, run_conversation, tool_result
 from .reorders import TOOL as REORDER_TOOL
 
@@ -185,6 +187,11 @@ def _new_customer_booking(
 
 def _propose_booking(db: Session, ctx: Context, args: BaseModel, state: RunState) -> dict[str, Any]:
     assert isinstance(args, ProposeBookingArgs)
+    if state.trigger_key.startswith("intake:") and state.trigger_message_id is not None:
+        source = conversations.get_message_context(db, ctx, state.trigger_message_id)
+        conversations.ensure_ai_active(
+            db, ctx, source.conversation_id, state.server_facts.get("ai_generation"), lock=True
+        )
     _one_booking_per_run(db, ctx, state)
     reply = _check_reply(state, args.reply)
     build = _held_booking if args.hold_id is not None else _new_customer_booking
@@ -213,6 +220,13 @@ class ProposeReplyArgs(ToolArgs):
     effect_fields: ClassVar[tuple[str, ...]] = ("conversation_id",)
     conversation_id: uuid.UUID
     text: PlainText = Field(max_length=4000)
+    citations: list[uuid.UUID | ReplyCitation] = Field(
+        default_factory=list,
+        max_length=3,
+        description="Article ids from the latest search results; versions are filled by the server.",
+    )
+    knowledge_missing: bool = False
+    request_handoff: bool = False
 
 
 CHANNELS = {"web_chat": "web chat", "email": "email", "phone_log": "phone", "walk_in": "walk-in", "sms": "SMS"}
@@ -222,19 +236,82 @@ def _propose_reply(db: Session, ctx: Context, args: BaseModel, state: RunState) 
     assert isinstance(args, ProposeReplyArgs)
     if args.conversation_id not in state.read_conversation_ids:
         raise Conflict("ai.conversation_not_read", detail="read the conversation with get_conversation first")
+    citations = resolve_citations(args.citations, state)
+    generation = None
+    if state.trigger_key.startswith("intake:"):
+        if state.trigger_message_id is not None:
+            source = conversations.get_message_context(db, ctx, state.trigger_message_id)
+            if source.conversation_id != args.conversation_id:
+                raise Conflict("ai.conversation_not_read")
+        generation = conversations.ensure_ai_active(
+            db, ctx, args.conversation_id, state.server_facts.get("ai_generation"), lock=True
+        )
+    if args.knowledge_missing and (
+        not state.trigger_key.startswith("intake:")
+        or not state.knowledge_searched
+        or not (state.knowledge_empty or state.knowledge_search_complete)
+        or citations
+    ):
+        raise Conflict(
+            "ai.knowledge_search_required",
+            detail="An empty or completed public knowledge search in this intake run is required.",
+        )
     thread = conversations.get_thread(db, ctx, args.conversation_id, last_n=5)
     who = thread.visitor_name or "visitor"
     if thread.customer_id is not None:
         ctx.require("crm.customer.read")
         who = crm.customer_names(db, ctx, {thread.customer_id}).get(thread.customer_id, who)
     title = f"Reply to {who} ({CHANNELS.get(thread.channel, thread.channel.replace('_', ' '))})"
-    payload = {"conversation_id": str(args.conversation_id), "body": args.text}
+    payload: dict[str, Any] = {
+        "conversation_id": str(args.conversation_id),
+        "body": "A person will follow up here." if args.knowledge_missing else args.text,
+        "citations": [c.model_dump(mode="json") for c in citations],
+    }
+    if generation is not None:
+        payload["ai_generation"] = generation
+        payload["answers_message_id"] = str(state.trigger_message_id) if state.trigger_message_id else None
+        payload["grounding"] = (
+            state.reply_grounding.model_dump(mode="json")
+            if state.reply_grounding is not None and state.checked_reply == args.text
+            else {"verdict": "unavailable", "claims": []}
+        )
+        payload["safety_clean"] = state.server_facts.get("safety_clean") is True
+        payload["bundled_action"] = bool(
+            state.holds or state.proposals or args.request_handoff or args.knowledge_missing
+        )
+        if payload["grounding"]["verdict"] in {"unsupported", "contradicted"} and state.trigger_message_id:
+            source = conversations.get_message_context(db, ctx, state.trigger_message_id)
+            knowledge.suggest(db, ctx, args.conversation_id, source.body)
     facts = {"conversation_id": thread.conversation_id, "channel": thread.channel, "status": thread.status,
              "messages": len(thread.messages)}  # fmt: skip
     own = [tool_result("propose_reply", thread.conversation_id, facts)]
+    own.extend(
+        tool_result("search_knowledge", c.article_id, state.knowledge_citations[(c.article_id, c.version)])
+        for c in citations
+    )
     evidence = gather(db, ctx, state, own, [thread.conversation_id, thread.customer_id])
-    return propose(db, ctx, action_type="conversations.send_reply", payload=payload, title=title, evidence=evidence,
-                   conversation_id=thread.conversation_id)  # fmt: skip
+    data = propose(
+        db,
+        ctx,
+        action_type="conversations.send_reply",
+        payload=payload,
+        title=title,
+        evidence=evidence,
+        conversation_id=thread.conversation_id,
+    )
+    if args.knowledge_missing or args.request_handoff:
+        if not state.trigger_key.startswith("intake:") or state.trigger_message_id is None:
+            raise Conflict("ai.handoff_requires_intake")
+        assert state.trigger_message_id is not None
+        source = conversations.get_message_context(db, ctx, state.trigger_message_id)
+        if source.conversation_id != args.conversation_id:
+            raise Conflict("ai.conversation_not_read")
+        if args.knowledge_missing:
+            knowledge.suggest(db, ctx, args.conversation_id, source.body)
+        reason = "No published knowledge answer found" if args.knowledge_missing else "AI requested a person"
+        conversations.request_handoff(db, ctx, args.conversation_id, reason)
+        data.update(handoff_requested=True, status="cancelled", needs_approval=False)
+    return data
 
 
 # ----------------------------------------------------------------------------------------------- propose_customer
@@ -291,8 +368,9 @@ TOOLS = (
     ),
     Tool(
         name="propose_reply",
-        description="Propose a plain-text reply (no HTML) to a conversation you read with get_conversation in this "
-        "run. A person approves before it is sent.",
+        description="Prepare a short customer reply using trusted DB facts or retrieved policy passages. "
+        "For knowledge citations pass article ids from the latest search; server fills versions. "
+        "Intake's conversation is already read. Call this before final; final is staff-only.",
         kind="propose", permission=PROPOSE, args_model=ProposeReplyArgs, run=_propose_reply,
     ),
     Tool(

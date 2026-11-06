@@ -57,7 +57,8 @@ def list_rules(db: Session, ctx: Context) -> RulesOut:
     return RulesOut(
         paused=org.autonomy_paused(db, ctx),
         items=[
-            rule_out(db, ctx, rows[a]) if a in rows else RuleOut(action_type=a) for a in sorted(RULE_ELIGIBLE_ACTIONS)
+            rule_out(db, ctx, rows[a]) if a in rows else RuleOut(action_type=a)
+            for a in sorted(RULE_ELIGIBLE_ACTIONS, key=lambda a: (a != "inventory.create_reorder_draft", a))
         ],
     )
 

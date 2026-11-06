@@ -117,15 +117,16 @@ def test_intake_competing_proposals_commit_only_one(
     for _, state in pairs:
         state.server_facts["visitor_name"] = "Rowan Example"
         state.read_conversation_ids.add(conv)
-    # Both transactions must get past their ordinary prechecks before either commits.
+    # Both transactions reach the ownership lock concurrently. A barrier after acquiring that
+    # lock would prevent the other contender from reaching it; uniqueness is still checked on commit.
     barrier = Barrier(2)
-    original = proposals.propose
+    original = proposals.conversations.ensure_ai_active
 
     def simultaneous(*args: Any, **kwargs: Any) -> Any:
         barrier.wait(timeout=15)
         return original(*args, **kwargs)
 
-    monkeypatch.setattr(proposals, "propose", simultaneous)
+    monkeypatch.setattr(proposals.conversations, "ensure_ai_active", simultaneous)
     with ThreadPoolExecutor(max_workers=2) as pool:
         jobs = [
             pool.submit(call, *pairs[0], "propose_reply", {"conversation_id": str(conv), "text": "When?"}),
@@ -269,7 +270,15 @@ def test_tool_dates_bounded_before_scheduling_lookup(
 
 def test_outcome_marker_uses_public_point_query(demo: Demo, monkeypatch: pytest.MonkeyPatch) -> None:
     conv, message = inbound(demo.business, channel="email")
-    result = intake.run(message, demo.business, router=fake_router_by_class(agent=FakeGateway([step_final()])))
+    result = intake.run(
+        message,
+        demo.business,
+        router=fake_router_by_class(
+            agent=FakeGateway(
+                [step_tool("propose_reply", conversation_id=conv, text="A person will help.", request_handoff=True)]
+            )
+        ),
+    )
 
     def forbidden(*a: Any, **kw: Any) -> Any:
         pytest.fail("marker check loaded thread history")

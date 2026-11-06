@@ -4,15 +4,33 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
 
 from . import service
 from .intake import limit_public_creation, require_public_intake
+from .ownership import ensure_ai_active as ensure_ai_active
+from .ownership import hand_back as hand_back
+from .ownership import take_over as take_over
+from .publication import queue_items as publication_queue_items
+from .schemas import Citation as Citation
+from .schemas import GroundingResult as GroundingResult
 from .schemas import MessageContext, MessageOut, ThreadDto
 from .service import HandoffRequested, MessageReceived, lock_for_customer
 from .visitors import issue_visitor_token, set_visitor_cookie
+
+
+def retention_eligible_conversations(ctx: Context) -> Select[uuid.UUID]:
+    """Scoped ID subquery for derived-data cleanup; persistent retention holds survive profile switches."""
+    from .models import Conversation
+
+    if ctx.business_id is None:
+        raise ValueError("Conversation retention requires a business")
+    return select(Conversation.id).where(
+        Conversation.business_id == ctx.business_id, Conversation.restricted_at.is_(None)
+    )
 
 
 def get_thread(db: Session, ctx: Context, conversation_id: uuid.UUID, last_n: int = 20) -> ThreadDto:
@@ -110,6 +128,8 @@ def count_open_by_status(db: Session, ctx: Context) -> dict[str, int]:
 
 
 __all__ = [
+    "Citation",
+    "GroundingResult",
     "HandoffRequested",
     "MessageContext",
     "MessageOut",
@@ -117,16 +137,21 @@ __all__ = [
     "ThreadDto",
     "add_internal_note",
     "count_open_by_status",
+    "ensure_ai_active",
     "get_message_context",
     "get_thread",
+    "hand_back",
     "has_internal_note_marker",
     "issue_visitor_token",
     "limit_public_creation",
     "link_customer",
     "lock_for_customer",
+    "publication_queue_items",
     "request_handoff",
     "require_public_intake",
+    "retention_eligible_conversations",
     "send_reply",
     "set_visitor_cookie",
     "start_conversation",
+    "take_over",
 ]

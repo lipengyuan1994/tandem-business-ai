@@ -13,6 +13,8 @@ def register(reg: Registry) -> None:
     reg.add_erasure_handler("ai", lifecycle.erase)
     reg.add_router(api.router, "/ai", ["ai"])
     reg.subscribe("conversations.message_received", "ai.intake-trigger", subscribers.intake_trigger)
+    reg.subscribe("conversations.handoff_requested", "ai.handoff-trigger", subscribers.handoff_trigger)
+    reg.subscribe("conversations.ai_ownership_changed", "ai.ownership-trigger", subscribers.handoff_trigger)
     reg.add_job("ai.intake", jobs.intake_job, transactional=False)
     reg.subscribe("inventory.stock_below_reorder_level", "ai.reorder-trigger", subscribers.reorder_trigger)
     reg.add_job("ai.reorder_note", jobs.reorder_note_job, transactional=False)

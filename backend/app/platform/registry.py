@@ -41,7 +41,9 @@ class ChatMoney:
     subject: str
 
 
-DeliveryState = Literal["none", "scheduled", "sending", "delivered", "failed", "unknown", "stopped"]
+DeliveryState = Literal[
+    "none", "scheduled", "sending", "delivered", "failed", "unknown", "stopped", "withheld", "published"
+]
 
 
 @dataclass(frozen=True)
@@ -145,6 +147,7 @@ class Registry:
     restriction_handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)
     retention_handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)
     proposal_delivery_reader: Callable[[Session, Context, UUID], DeliveryState] | None = None
+    proposal_delivery_readers: list[Callable[[Session, Context, UUID], DeliveryState]] = field(default_factory=list)
     public_routes: set[str] = field(default_factory=set)
     _frozen: bool = False
 

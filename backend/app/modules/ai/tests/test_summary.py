@@ -63,7 +63,16 @@ def test_summary_creates_one_reply_proposal_with_evidence(registry: Registry, ow
         proposal = rows[0]
         assert str(proposal.id) == body["proposal_id"] and str(proposal.ai_run_id) == body["run_id"]
         assert proposal.origin_kind == "assistant" and proposal.conversation_id == conv
-        assert proposal.payload == {"conversation_id": str(conv), "body": SUMMARY.suggested_reply}
+        assert proposal.payload == {
+            "conversation_id": str(conv),
+            "body": SUMMARY.suggested_reply,
+            "citations": [],
+            "ai_generation": 0,
+            "answers_message_id": None,
+            "grounding": None,
+            "safety_clean": False,
+            "bundled_action": False,
+        }
         assert any(e.get("ref_id") == str(conv) for e in proposal.evidence)
         assert (
             conn.execute(text("select count(*) from ai_effects where run_id=:r"), {"r": body["run_id"]}).scalar_one()

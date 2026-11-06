@@ -156,3 +156,65 @@ it("shows a failed chat resume and clears the error after a successful retry", a
   await screen.findByText("A saved message")
   expect(screen.queryByRole("alert")).not.toBeInTheDocument()
 })
+
+it.each(["A person will reply here.", "We're currently closed. A person will reply here when we're open."])("uses the backend greeting and hand-over acknowledgement: %s", async (acknowledgement) => {
+  const greeting = "You're chatting with Example Cycle Works's AI assistant."
+  const thread = { conversation_id: "c1", business_name: "Example Cycle Works", ai_greeting: greeting, next_cursor: "cursor1", messages: [{ id: "m1", body: "Hello", from_business: false, is_system: false, created_at: "2026-11-05T17:00:00Z" }] }
+  let handoffs = 0
+  server.use(
+    http.get(`${BASE}/profile`, () => HttpResponse.json({ ...profile("hosted_vultr"), ai_greeting: greeting })),
+    http.get(`${BASE}/chat`, () => HttpResponse.json(thread)),
+    http.post(`${BASE}/chat/handoff`, () => { handoffs++; return HttpResponse.json({ ...thread, next_cursor: "cursor2", messages: [...thread.messages, { id: "system1", body: acknowledgement, from_business: true, is_system: true, created_at: "2026-11-05T17:00:01Z" }] }) }),
+  )
+  render(<Widget slug="example-cycle-works" page="chat" />)
+  expect(await screen.findByText(greeting)).toBeInTheDocument()
+  await userEvent.click(screen.getByRole("button", { name: "Talk to a person" }))
+  const systemMessage = (await screen.findByText(acknowledgement)).closest("li")!
+  expect(systemMessage).toHaveAttribute("data-system", "true")
+  expect(systemMessage).toHaveClass("border-dashed", "text-center")
+  expect(systemMessage).toHaveTextContent("System message")
+  expect(screen.getByText("Hello").closest("li")).not.toHaveAttribute("data-system")
+  expect(handoffs).toBe(1)
+})
+
+it("shows the backend greeting before a visitor starts chatting", async () => {
+  const greeting = "You're chatting with Example Cycle Works's AI assistant."
+  server.use(http.get(`${BASE}/profile`, () => HttpResponse.json({ ...profile("hosted_vultr"), ai_greeting: greeting })), http.get(`${BASE}/chat`, () => HttpResponse.json({ code: "conversations.visitor_token_invalid" }, { status: 403 })))
+  render(<Widget slug="example-cycle-works" page="chat" />)
+  expect(await screen.findByText(greeting)).toBeInTheDocument()
+  expect(screen.queryByRole("button", { name: "Talk to a person" })).not.toBeInTheDocument()
+})
+
+it("keeps polling after an empty page and receives a delayed published reply without losing history or regressing the cursor", async () => {
+  const { act } = await import("@testing-library/react")
+  const { vi } = await import("vitest")
+  let poll: (() => void) | undefined
+  const original = globalThis.setInterval
+  const spy = vi.spyOn(globalThis, "setInterval").mockImplementation((callback, ms, ...args) => { if (ms === 5000 && typeof callback === "function") poll = callback as () => void; return original(callback, ms, ...args) })
+  const cursors: (string | null)[] = []
+  const thread = (messages: object[], next_cursor: string) => ({ conversation_id: "c1", business_name: "Example Cycle Works", ai_greeting: "Business AI assistant", messages, next_cursor })
+  server.use(
+    http.get(`${BASE}/profile`, () => HttpResponse.json(profile("hosted_vultr"))),
+    http.get(`${BASE}/chat`, ({ request }) => {
+      cursors.push(new URL(request.url).searchParams.get("cursor"))
+      // Withheld replies never enter this public response. On release, created_at is the publication time.
+      if (cursors.length === 1) return HttpResponse.json(thread([{ id: "m2", body: "Latest visitor message", from_business: false, created_at: "2026-11-05T17:01:00Z" }], "visitor-cursor"))
+      if (cursors.length === 2) return HttpResponse.json(thread([], "visitor-cursor"))
+      if (cursors.length === 3) return HttpResponse.json(thread([{ id: "m1", body: "Released AI reply", from_business: true, created_at: "2026-11-05T17:02:00Z" }], "publication-cursor"))
+      return HttpResponse.json(thread([], "publication-cursor"))
+    }),
+  )
+  try {
+    render(<Widget slug="example-cycle-works" page="chat" />)
+    await screen.findByText("Latest visitor message")
+    expect(screen.queryByText("Released AI reply")).not.toBeInTheDocument()
+    await act(async () => { await poll?.() })
+    await waitFor(() => expect(cursors).toHaveLength(2))
+    expect(screen.queryByText("Released AI reply")).not.toBeInTheDocument()
+    await act(async () => { await poll?.() })
+    await screen.findByText("Released AI reply")
+    expect(screen.getByText("Latest visitor message")).toBeInTheDocument()
+    await act(async () => { await poll?.() })
+    await waitFor(() => expect(cursors).toEqual([null, "visitor-cursor", "visitor-cursor", "publication-cursor"]))
+  } finally { spy.mockRestore() }
+})

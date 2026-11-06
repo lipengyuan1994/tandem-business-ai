@@ -28,6 +28,7 @@ def test_seed_reproduces_the_demo_story(registry) -> None:  # type: ignore[no-un
     counts = seed()
     assert counts["example-cycle-works"] == {
         "staff": 7,
+        "kb_articles": 6,
         "catalog_items": 7,
         "customers": 6,
         "appointments": 3,

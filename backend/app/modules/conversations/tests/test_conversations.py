@@ -146,6 +146,9 @@ def test_get_message_context_fields_and_isolation(app: Any, biz: uuid.UUID, staf
             "visitor_email": "ada@example.com",
             "visitor_phone": "+12025550123",
             "created_at": datetime.fromisoformat(message["created_at"].replace("Z", "+00:00")),
+            "ai_mode": "auto",
+            "ai_generation": 0,
+            "message_ai_generation": 0,
         }
         with pytest.raises(NotFound):
             conversations.get_message_context(db, ctx, new_id())

@@ -267,9 +267,33 @@ def _execute_effect(ctx: Context, tool: Tool, args: BaseModel, state: RunState) 
 # ------------------------------------------------------------------------------------------- built-in tools
 def _register_builtin_tools() -> None:
     """Register every tool of the area files (AI-06 read tools, AI-07 hold and propose tools) once, at import."""
-    from . import catalog, conversations, crm, dashboard, inventory, orders, proposals, purchasing, sales, scheduling
+    from . import (
+        catalog,
+        conversations,
+        crm,
+        dashboard,
+        inventory,
+        knowledge,
+        orders,
+        proposals,
+        purchasing,
+        sales,
+        scheduling,
+    )
 
-    for area in (conversations, crm, catalog, scheduling, inventory, purchasing, sales, dashboard, proposals, orders):
+    for area in (
+        conversations,
+        crm,
+        catalog,
+        scheduling,
+        inventory,
+        knowledge,
+        purchasing,
+        sales,
+        dashboard,
+        proposals,
+        orders,
+    ):
         for tool in area.TOOLS:
             register_tool(tool)
 

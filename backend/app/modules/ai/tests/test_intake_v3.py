@@ -24,10 +24,10 @@ def demo(owner_engine: Engine) -> Demo:
     return seed_demo(owner_engine)
 
 
-def test_intake_loads_v3_and_keeps_older_versions() -> None:
-    assert load_prompt("intake").version == 3
+def test_intake_loads_v5_and_keeps_older_versions() -> None:
+    assert load_prompt("intake").version == 5
     assert load_prompt("intake").output == "AgentStep"
-    assert [load_prompt("intake", version).version for version in (1, 2)] == [1, 2]
+    assert [load_prompt("intake", version).version for version in (1, 2, 3, 4)] == [1, 2, 3, 4]
 
 
 def assert_reply_draft(
@@ -38,9 +38,18 @@ def assert_reply_draft(
     assert result.final.proposal_ids == result.proposal_ids
     row = proposal(owner_engine, result.proposal_ids[0])
     assert row["action_type"] == "conversations.send_reply"
-    assert row["payload"] == {"conversation_id": str(conv), "body": body}
     recorded = run_row(demo.business, result)
-    assert (recorded.prompt_name, recorded.prompt_version, recorded.needs_human) == ("intake", 3, needs_human)
+    assert row["payload"] == {
+        "conversation_id": str(conv),
+        "body": body,
+        "citations": [],
+        "ai_generation": 0,
+        "answers_message_id": recorded.trigger_key.removeprefix("intake:"),
+        "grounding": {"claims": [], "verdict": "unavailable"},
+        "safety_clean": False,
+        "bundled_action": False,
+    }
+    assert (recorded.prompt_name, recorded.prompt_version, recorded.needs_human) == ("intake", 5, needs_human)
     assert recorded.result["needs_human"] is needs_human
     with owner_engine.connect() as db:
         assert (

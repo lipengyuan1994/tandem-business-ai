@@ -21,7 +21,7 @@ from app.modules.org import public as org
 from app.platform import clock
 from app.platform.context import system_context
 from app.platform.db import transaction
-from app.platform.errors import NotFound
+from app.platform.errors import Conflict, NotFound
 
 from .. import recording
 from ..agent.contexts import CtxFactory, background_ctx_factory
@@ -30,8 +30,9 @@ from ..agent.protocol import ContextBlock, RunResult, RunSpec
 from ..agent.runner import run_agent
 from ..errors import AiError
 from ..gateway.router import Router
+from ..model_calls import call_guard
 from ..public_intake import admit_run
-from ..tools.common import redact_contacts
+from ..tools.common import money, redact_contacts
 from ..tools.crm import customer_view
 from . import safety
 
@@ -121,7 +122,9 @@ def run_agent_step(
             # Matching and context gathering use separate snapshots: a deleted/restricted customer needs staff,
             # never a fabricated new-customer booking or a run left without an outcome.
             return _early_result(ctx_factory, state, {"reason": "customer_unavailable"})
-    service_facts = [service.model_dump() for service in services]
+    service_facts = [
+        {**service.model_dump(), "price": money(service.price_minor, service.currency)} for service in services
+    ]
     local_now = clock.to_zone(clock.now(), state.business.timezone)
     customer = (
         f"matched customer {match.customer_id}"
@@ -135,7 +138,7 @@ def run_agent_step(
         prompt=load_prompt("intake"),
         tools=[
             "get_conversation", "get_customer", "list_services", "get_service_parts", "find_slots", "check_stock",
-            "hold_slot", "propose_booking", "propose_reply",
+            "hold_slot", "propose_booking", "propose_reply", "search_knowledge",
         ],
         task=(
             f"Current business-local date and time: {local_now.isoformat()} ({state.business.timezone}).\n"
@@ -166,6 +169,8 @@ def run_agent_step(
 
 
 def _outcome_text(result: RunResult) -> str:
+    if result.extra.get("handoff_requested"):
+        return "Handed to a person. AI replies are paused and the earlier reply draft was cancelled."
     if result.proposal_ids:
         return f"Prepared for approval: {'; '.join(result.extra.get('proposal_titles', []))}."
     if result.status == "policy_blocked":
@@ -205,7 +210,7 @@ def _outcome_note(
         conversations.add_internal_note(db, ctx, conversation_id, f"{outcome} {marker}", author_kind="assistant")
 
 
-def run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None = None) -> RunResult:
+def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None = None) -> RunResult:
     ctx_factory = background_ctx_factory(business_id)
     ctx = system_context(business_id, frozenset({"conversations.thread.read", "org.business.read"}))
     with transaction(ctx) as db:
@@ -220,8 +225,10 @@ def run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None 
     state = IntakeState(
         message_id=message_id, trigger_key=f"intake:{message_id}", business=brief, router=router,
         server_facts={"visitor_name": message.visitor_name, "visitor_email": message.visitor_email,
-                      "visitor_phone": message.visitor_phone},
+                      "visitor_phone": message.visitor_phone, "ai_generation": message.message_ai_generation},
     )  # fmt: skip
+    if message.ai_mode != "auto" or message.ai_generation != message.message_ai_generation:
+        return _early_result(ctx_factory, state, {"reason": "ai_paused"})
     result: RunResult | None = None
     with transaction(ctx) as db:
         allowed = admit_run(db, ctx, message_id)
@@ -240,6 +247,8 @@ def run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None 
             with transaction(ctx) as db:
                 conversations.request_handoff(db, ctx, message.conversation_id, reason="Message needs a person")
             result = _early_result(ctx_factory, state, {"reason": "safety"})
+        else:
+            state.server_facts["safety_clean"] = verdict.category == "none"
     if result is None:
         match = _match_customer(message, business_id)
         if match.kind == "ambiguous":
@@ -251,3 +260,19 @@ def run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None 
             conversations.request_handoff(db, ctx, message.conversation_id, reason=_outcome_text(result))
     _outcome_note(ctx_factory, message.conversation_id, message_id, result)
     return result
+
+
+def run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None = None) -> RunResult:
+    ctx = system_context(business_id, frozenset({"conversations.thread.read"}))
+
+    def active() -> None:
+        # Runs immediately before EVERY provider attempt, including safety, repair and fallback.
+        with transaction(ctx) as db:
+            source = conversations.get_message_context(db, ctx, message_id)
+            try:
+                conversations.ensure_ai_active(db, ctx, source.conversation_id, source.message_ai_generation)
+            except Conflict:
+                raise AiError("ai.conversation_paused") from None
+
+    with call_guard(active):
+        return _run(message_id, business_id, router=router)

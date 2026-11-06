@@ -1,0 +1,17 @@
+{
+  "id": "grounding-no-claim",
+  "suite": "grounding",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "message": "Hello! Which service would you like? We can ask a person to help.",
+    "articles": [],
+    "db_facts": {}
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "verdict": "supported"
+    }
+  }
+}

@@ -59,3 +59,15 @@ instants; reply-by remains a calendar date. Exceptions has no total/count badge 
 Autonomy includes versioned `outbound_send_delay_seconds` (0–900 seconds, displayed in minutes, default 2).
 `actions.test.tsx` covers cards, refusal reasons, exact confirm payload, reload, delivery, Stop races, queues,
 permissions and settings through MSW. No provider calls or additional dependencies.
+
+P10-C1 part 3 adds Front-desk replies to the existing Autonomy rule UI. Save needs
+`conversations.proposal.approve`; the page still needs `org.settings.write`. Reply-specific fallback codes have
+plain-language explanations on Autonomy, Activity and Exceptions. `web_reply` queue rows use the conversations
+Stop endpoint; cancelled rows show the backend cancellation reason. Existing execution status remains separate.
+`withheld`/`published` delivery states are labelled, and reply cards/proposals continue polling while withheld.
+
+`ReplyGrounding.tsx` renders immutable reply payload citations, overall verdict and per-claim verdict/source on
+proposal detail and reply action cards. Cards fetch the existing proposal detail and check the revision matches.
+Knowledge reads need thread-read permission; missing permissions/titles/checks stay explicit. Citation titles resolve
+from the exact immutable article version and links open that version's comparison. No inference runs in the UI.
+`front-desk.test.tsx` covers evidence, Autonomy permissions/reasons, Exceptions and queued web-reply Stop through MSW.

@@ -1,0 +1,9 @@
+suite: grounding
+positive_label: unsupported_or_contradicted
+thresholds:
+  unsupported_recall: 0.90
+  unsupported_precision: 0.80
+notes: >-
+  Unavailable/invalid checks never count as detected positives. The denominator retains failed and skipped
+  positive cases. These thresholds measure the checker plus deterministic source/number guards;
+  fake-model tests exercise the harness only. Live model quality must be measured separately.

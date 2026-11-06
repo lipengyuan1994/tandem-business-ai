@@ -16,6 +16,7 @@ from app.modules.ai.tools.common import listing, redact_contacts
 from app.modules.org.testing import make_business
 
 READ_TOOLS = {
+    "search_knowledge": "conversations.thread.read",
     "get_conversation": "conversations.thread.read",
     "find_customers": "crm.customer.read",
     "get_customer": "crm.customer.read",
@@ -43,6 +44,7 @@ def demo(owner_engine: Engine) -> Demo:
 def valid_args(d: Demo) -> dict[str, dict[str, Any]]:
     """One valid call per read tool on the demo business."""
     return {
+        "search_knowledge": {"query":"warranty"},
         "get_conversation": {"conversation_id": str(d.conversations["Ada"])},
         "find_customers": {"name": "Dana"},
         "get_customer": {"customer_id": str(d.customers["Ada Example"])},

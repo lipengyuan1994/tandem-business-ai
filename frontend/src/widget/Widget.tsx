@@ -34,7 +34,7 @@ export function Widget({ slug, page }: { slug: string; page: "chat" | "request" 
     <main className="mx-auto max-w-lg space-y-6 p-4 sm:p-6">
       <h1 className="text-xl font-semibold">{page === "chat" ? S.chatTitle(profile.name) : S.requestTitle(profile.name)}</h1>
       {page === "chat" && profile.avoid_medical_details ? <p role="note" className="rounded-md border p-3 text-sm">Please do not send medical details here. We will contact you to discuss them.</p> : null}
-      {page === "chat" ? <Chat key={slug} slug={slug} businessName={profile.name} /> : <Request slug={slug} />}
+      {page === "chat" ? <Chat key={slug} slug={slug} businessName={profile.name} greeting={profile.ai_greeting} /> : <Request slug={slug} />}
       <aside aria-labelledby="privacy-h" className="rounded-md border p-3 text-sm text-muted-foreground">
         <h2 id="privacy-h" className="mb-1 font-medium text-foreground">{S.privacyTitle}</h2>
         <p>{S.privacy[profile.ai_policy]}</p>
@@ -44,7 +44,7 @@ export function Widget({ slug, page }: { slug: string; page: "chat" | "request" 
   )
 }
 
-function Chat({ slug, businessName }: { slug: string; businessName: string }) {
+function Chat({ slug, businessName, greeting }: { slug: string; businessName: string; greeting: string }) {
   const path = { params: { path: { business_slug: slug } } }
   const [thread, setThread] = useState<PublicThread | null>(null)
   const current = useRef<PublicThread | null>(null)
@@ -95,14 +95,16 @@ function Chat({ slug, businessName }: { slug: string; businessName: string }) {
   if (!checked) return <p className="text-sm">{S.loading}</p>
   return (
     <section className="min-w-0 space-y-4">
+      <p className="rounded-md border p-3 text-sm">{thread?.ai_greeting ?? greeting}</p>
       {loadError ? <div role="alert"><p>{loadError}</p><button type="button" className={button} onClick={() => setAttempt(attempt + 1)}>{S.retry}</button></div> : null}
       {error ? <p role="alert" className="rounded-md border border-destructive p-3 text-sm">{error}</p> : null}
       {thread ? (
         <>
-          <ol aria-live="polite" className="space-y-2">
+          <button type="button" className={button} disabled={busy} onClick={() => void run(() => call(client.POST("/api/v1/public/{business_slug}/chat/handoff", path)))}>{S.talkToPerson}</button>
+          <ol aria-live="polite" aria-label={S.conversation} className="space-y-2">
             {thread.messages.map((m) => (
-              <li key={m.id} className={m.from_business ? "mr-8 rounded-lg bg-muted px-3 py-2 text-sm" : "ml-8 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground"}>
-                <span className="block text-xs opacity-75">{m.from_business ? S.business(businessName) : S.you}</span>
+              <li key={m.id} data-system={m.is_system ? "true" : undefined} className={m.is_system ? "mx-2 rounded-lg border border-dashed bg-accent px-3 py-2 text-center text-sm" : m.from_business ? "mr-8 rounded-lg bg-muted px-3 py-2 text-sm" : "ml-8 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground"}>
+                <span className="block text-xs opacity-75">{m.is_system ? S.system : m.from_business ? S.business(businessName) : S.you}</span>
                 <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{m.body}</p>
               </li>
             ))}

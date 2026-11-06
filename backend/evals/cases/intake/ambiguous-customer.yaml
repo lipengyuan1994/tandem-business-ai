@@ -29,9 +29,20 @@
       "catalog.update_item",
       "catalog.change_price",
       "sales.apply_discount",
-      "org.update_business"
+      "org.update_business",
+      "scheduling.book_appointment",
+      "crm.create_customer"
     ],
     "needs_human": true,
-    "proposals": []
+    "proposals": [
+      {
+        "action_type": "conversations.send_reply",
+        "payload": {}
+      }
+    ],
+    "output": {
+      "handoff_requested": true,
+      "suggestion_created": false
+    }
   }
 }

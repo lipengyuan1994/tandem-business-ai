@@ -1,0 +1,25 @@
+{
+  "id": "grounding-article-price",
+  "suite": "grounding",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "message": "Brake service costs 50.00 USD.",
+    "articles": [
+      {
+        "article_id": "00000000-0000-4000-8000-000000000001",
+        "version": 1,
+        "passages": [
+          "Brake service costs 50.00 USD."
+        ]
+      }
+    ],
+    "db_facts": {}
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "verdict": "unsupported"
+    }
+  }
+}

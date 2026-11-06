@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, tuple_
 from sqlalchemy.orm import Session
 
 from app.modules.crm import public as crm
@@ -12,6 +12,7 @@ from app.platform.context import Context
 from app.platform.errors import Conflict, NotFound
 
 from .models import Conversation, Message
+from .schemas import MessageContext
 
 
 def previews(db: Session, ctx: Context, ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
@@ -69,7 +70,6 @@ def public_messages(
     db: Session, ctx: Context, conversation_id: uuid.UUID, *, cursor: str | None = None
 ) -> tuple[list[Message], str | None]:
     """At most 50 visible messages after the opaque (timestamp, id) cursor, oldest first."""
-    from sqlalchemy import tuple_
 
     from app.platform.pagination import decode_cursor, encode_cursor
 
@@ -77,9 +77,81 @@ def public_messages(
         Message.business_id == ctx.business_id,
         Message.conversation_id == conversation_id,
         Message.direction != "internal",
+        Message.publication_state == "published",
     )
     if cursor:
         ts, rid = decode_cursor(cursor)
-        stmt = stmt.where(tuple_(Message.created_at, Message.id) > tuple_(ts, rid))
-    rows = list(db.scalars(stmt.order_by(Message.created_at, Message.id).limit(50)))
-    return rows, encode_cursor(rows[-1].created_at, rows[-1].id) if rows else cursor
+        stmt = stmt.where(tuple_(func.coalesce(Message.published_at, Message.created_at), Message.id) > tuple_(ts, rid))
+    rows = list(
+        db.scalars(stmt.order_by(func.coalesce(Message.published_at, Message.created_at), Message.id).limit(50))
+    )
+    return rows, encode_cursor(rows[-1].published_at or rows[-1].created_at, rows[-1].id) if rows else cursor
+
+
+def reply_blockers(
+    db: Session, ctx: Context, conversation_id: uuid.UUID, generation: int | None, answers: uuid.UUID | None
+) -> list[str]:
+    conv = lock_for_customer(db, ctx, conversation_id)
+    reasons = []
+    if conv.ai_mode != "auto":
+        reasons.append("human_mode")
+    if conv.status == "closed":
+        reasons.append("conversation_closed")
+    if conv.restricted_at is not None or conv.erased_at is not None:
+        reasons.append("conversation_restricted")
+    source = db.scalar(
+        select(Message).where(
+            Message.business_id == ctx.business_id,
+            Message.conversation_id == conversation_id,
+            Message.id == answers,
+            Message.direction == "inbound",
+            Message.author_kind.in_(("visitor", "customer")),
+        )
+    )
+    latest = db.scalar(
+        select(Message.id)
+        .where(
+            Message.business_id == ctx.business_id,
+            Message.conversation_id == conversation_id,
+            Message.direction == "inbound",
+            Message.author_kind.in_(("visitor", "customer")),
+        )
+        .order_by(Message.created_at.desc(), Message.id.desc())
+        .limit(1)
+    )
+    if source is None or latest != answers or generation != conv.ai_generation:
+        reasons.append("stale_reply")
+    return reasons
+
+
+def get_message_context(db: Session, ctx: Context, message_id: uuid.UUID) -> MessageContext:
+    ctx.require("conversations.thread.read")
+    row = db.execute(
+        select(Message, Conversation)
+        .join(
+            Conversation,
+            (Conversation.id == Message.conversation_id) & (Conversation.business_id == Message.business_id),
+        )
+        .where(
+            Message.business_id == ctx.business_id,
+            Conversation.business_id == ctx.business_id,
+            Message.id == message_id,
+        )
+    ).one_or_none()
+    if row is None:
+        raise NotFound("conversations.message_not_found")
+    message, conversation = row
+    return MessageContext(
+        conversation_id=conversation.id,
+        channel=conversation.channel,
+        author_kind=message.author_kind,
+        body=message.body,
+        customer_id=conversation.customer_id,
+        visitor_name=conversation.visitor_name,
+        visitor_email=conversation.visitor_email,
+        visitor_phone=conversation.visitor_phone,
+        created_at=message.created_at,
+        ai_mode=conversation.ai_mode,
+        ai_generation=conversation.ai_generation,
+        message_ai_generation=message.ai_generation,
+    )

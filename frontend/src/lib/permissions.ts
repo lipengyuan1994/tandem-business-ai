@@ -17,6 +17,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { to: "/today", labelKey: "nav.today" },
   { to: "/inbox", labelKey: "nav.inbox", permission: "conversations.thread.read", counter: "inbox_waiting_on_staff" },
+  { to: "/knowledge", labelKey: "nav.knowledge", permission: "conversations.thread.read" },
   { to: "/approvals", labelKey: "nav.approvals", permission: "approvals.proposal.read", counter: "approvals_i_can_decide" },
   { to: "/customers", labelKey: "nav.customers", permission: "crm.customer.read" },
   { to: "/schedule", labelKey: "nav.schedule", permission: "scheduling.appointment.read" },

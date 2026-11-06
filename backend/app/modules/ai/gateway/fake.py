@@ -97,17 +97,25 @@ class ScriptFileAdapter:
         return _result(replies[i], self.name, req.model)
 
 
-def fake_router(gateway: FakeGateway) -> Router:
-    """Router whose every model class routes to this one FakeGateway (vendor vultr, so default policies allow it)."""
+def fake_router(gateway: FakeGateway, *, grounding: FakeGateway | None = None) -> Router:
+    """Fake routes with an independent checker. Without explicit checker output, grounding fails closed."""
     from .router import Router
     from .routes import ProviderCfg, RouteEntry, RoutesFile
 
     classes = ("agent", "fast_extract", "writer", "safety", "embed", "stt", "tts")
     routes = RoutesFile(
-        providers={gateway.name: ProviderCfg(kind="fake", vendor="vultr")},
-        routes={c: [RouteEntry(provider=gateway.name, model=f"fake-{c}")] for c in classes},
+        providers={
+            gateway.name: ProviderCfg(kind="fake", vendor="vultr"),
+            "checker": ProviderCfg(kind="fake", vendor="vultr"),
+        },
+        routes={
+            **{c: [RouteEntry(provider=gateway.name, model=f"fake-{c}")] for c in classes},
+            "grounding": [RouteEntry(provider="checker", model="fake-grounding")],
+        },
     )
-    return Router(routes, {gateway.name: gateway})
+    # Old generator scripts do not masquerade as independent checker evidence. Tests opt in with labelled output.
+    checker = grounding or FakeGateway(['{"claims":[],"verdict":"unavailable"}'])
+    return Router(routes, {gateway.name: gateway, "checker": checker})
 
 
 __all__ = ["FakeGateway", "ScriptFileAdapter", "fake_router"]

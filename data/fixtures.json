@@ -26,28 +26,6 @@
     "dana_conflict": "Dana's requested slot (Tue 10 Nov 10:00 MST) overlaps Ben's confirmed tune-up for resource res-jordan; Sky does not work Tuesdays"
   },
   "tables": {
-    "autonomy_rules": [
-      {
-        "id": "autonomy-biz-cycle",
-        "business_id": "biz-cycle",
-        "action_type": "inventory.create_reorder_draft",
-        "level": "act_notify",
-        "shadow": true,
-        "daily_cap": 10,
-        "active": true,
-        "granted_by": "user-morgan"
-      },
-      {
-        "id": "autonomy-biz-garden",
-        "business_id": "biz-garden",
-        "action_type": "inventory.create_reorder_draft",
-        "level": "act_notify",
-        "shadow": true,
-        "daily_cap": 10,
-        "active": true,
-        "granted_by": "user-sam"
-      }
-    ],
     "businesses": [
       {
         "id": "biz-cycle",
@@ -343,6 +321,48 @@
         "business_id": "biz-garden",
         "membership_id": "mem-garden-morgan",
         "role": "operator"
+      }
+    ],
+    "autonomy_rules": [
+      {
+        "id": "autonomy-biz-cycle",
+        "business_id": "biz-cycle",
+        "action_type": "inventory.create_reorder_draft",
+        "level": "act_notify",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-morgan"
+      },
+      {
+        "id": "autonomy-biz-garden",
+        "business_id": "biz-garden",
+        "action_type": "inventory.create_reorder_draft",
+        "level": "act_notify",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-sam"
+      },
+      {
+        "id": "autonomy-biz-cycle-reply",
+        "business_id": "biz-cycle",
+        "action_type": "conversations.send_reply",
+        "level": "act_notify",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-morgan"
+      },
+      {
+        "id": "autonomy-biz-garden-reply",
+        "business_id": "biz-garden",
+        "action_type": "conversations.send_reply",
+        "level": "act_notify",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-sam"
       }
     ],
     "customers": [
@@ -1273,6 +1293,129 @@
         "channel": "email",
         "value_normalized": "dan.example@example.com",
         "reason": "unsubscribed"
+      }
+    ],
+    "kb_articles": [
+      {
+        "id": "kb-biz-cycle-repair-warranty",
+        "business_id": "biz-cycle",
+        "title": "Repair warranty",
+        "slug": "repair-warranty",
+        "visibility": "public",
+        "body_markdown": "Our repair warranty covers workmanship for thirty days after collection. Bring the bicycle and receipt so our team can inspect the repair. Wear, accidental damage and unrelated parts are excluded.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"repair-warranty\"]"
+      },
+      {
+        "id": "kb-biz-cycle-returns",
+        "business_id": "biz-cycle",
+        "title": "Returns",
+        "slug": "returns",
+        "visibility": "public",
+        "body_markdown": "Return unused accessories in their original packaging with the receipt within thirty days. Installed parts and used consumables are assessed by staff. A person must review any refund request.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"returns\"]"
+      },
+      {
+        "id": "kb-biz-cycle-tune-up",
+        "business_id": "biz-cycle",
+        "title": "What a tune-up includes",
+        "slug": "tune-up",
+        "visibility": "public",
+        "body_markdown": "A tune-up includes a safety inspection, brake and gear adjustment, chain lubrication, tyre checks and a written list of recommended work. Replacement parts require separate approval. Current price and service duration come from the service catalogue.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"tune-up\"]"
+      },
+      {
+        "id": "kb-biz-cycle-winter-storage",
+        "business_id": "biz-cycle",
+        "title": "Bike storage over winter",
+        "slug": "winter-storage",
+        "visibility": "public",
+        "body_markdown": "Clean and dry the bicycle before winter storage. Keep it in a dry sheltered place, inflate tyres regularly and lubricate the chain. Ask staff about battery storage instructions for an electric bicycle.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"winter-storage\"]"
+      },
+      {
+        "id": "kb-biz-cycle-holiday-hours",
+        "business_id": "biz-cycle",
+        "title": "Holiday hours",
+        "slug": "holiday-hours",
+        "visibility": "public",
+        "body_markdown": "Holiday opening arrangements may differ from the usual week. Check current opening hours in the business profile or ask our team before travelling. This article does not set opening times.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"holiday-hours\"]"
+      },
+      {
+        "id": "kb-biz-cycle-internal",
+        "business_id": "biz-cycle",
+        "title": "Internal escalation guide",
+        "slug": "internal-escalation",
+        "visibility": "internal",
+        "body_markdown": "Internal escalation: ask the duty manager to review exceptional returns and warranty disputes. Do not promise discounts or disclose this guide to visitors.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"escalation\"]"
+      },
+      {
+        "id": "kb-biz-garden-plant-guarantee",
+        "business_id": "biz-garden",
+        "title": "Plant guarantee",
+        "slug": "plant-guarantee",
+        "visibility": "public",
+        "body_markdown": "Our plant guarantee covers hardy outdoor plants for thirty days when planted and cared for as instructed. Bring the receipt and a photograph of the plant for staff review. Frost damage and neglect are excluded.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"plant-guarantee\"]"
+      },
+      {
+        "id": "kb-biz-garden-delivery",
+        "business_id": "biz-garden",
+        "title": "Delivery area and fee",
+        "slug": "delivery",
+        "visibility": "public",
+        "body_markdown": "We deliver within the fictional Example Valley area. Delivery fees depend on the destination and order; staff confirm the current quoted fee before the order is accepted. Ask a person to check delivery availability and the fee.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"delivery\"]"
+      },
+      {
+        "id": "kb-biz-garden-returns",
+        "business_id": "biz-garden",
+        "title": "Returns",
+        "slug": "returns",
+        "visibility": "public",
+        "body_markdown": "Return unused garden supplies in original packaging with the receipt within thirty days. Living plants are reviewed under the plant guarantee. A person reviews refunds and opened products.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"returns\"]"
+      },
+      {
+        "id": "kb-biz-garden-frost-advice",
+        "business_id": "biz-garden",
+        "title": "Frost advice",
+        "slug": "frost-advice",
+        "visibility": "public",
+        "body_markdown": "Move tender plants indoors before frost. Cover outdoor plants with horticultural fleece overnight and remove it in daylight. Avoid watering frozen soil and follow care instructions for each plant.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"frost-advice\"]"
+      },
+      {
+        "id": "kb-biz-garden-internal",
+        "business_id": "biz-garden",
+        "title": "Internal escalation guide",
+        "slug": "internal-escalation",
+        "visibility": "internal",
+        "body_markdown": "Internal escalation: ask the duty manager to review exceptional returns and warranty disputes. Do not promise discounts or disclose this guide to visitors.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"escalation\"]"
       }
     ]
   }

@@ -29,6 +29,7 @@ from .chat import card as chat_card
 from .chat import confirm as confirm_chat
 from .chat import origin_run_id as chat_origin_run_id
 from .events import ProposalClosed, ProposalCreated, ProposalDecided
+from .invalidation import invalidate_ai_replies as invalidate_ai_replies
 from .queue import fallback_items as fallback_queue_items
 from .queue import proposal_items as proposal_queue_items
 from .reading import outbound_authority, proposal_notification_state
@@ -141,6 +142,7 @@ __all__ = [
     "create_proposal",
     "fallback_queue_items",
     "find_open_proposals",
+    "invalidate_ai_replies",
     "list_autonomy_rules",
     "outbound_authority",
     "proposal_exists",

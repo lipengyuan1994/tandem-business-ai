@@ -15,7 +15,7 @@ from app.modules.ai.errors import AiError
 from app.modules.ai.gateway.fake import FakeGateway
 from app.modules.ai.gateway.router import reset_router_cache, set_router_for_tests
 from app.modules.ai.models import AiRun
-from app.modules.ai.tests.helpers import fake_router_by_class, step_final
+from app.modules.ai.tests.helpers import fake_router_by_class, step_tool
 from app.modules.ai.usecases import intake
 from app.modules.approvals import public as approvals
 from app.modules.conversations import public as conversations
@@ -193,7 +193,18 @@ def test_open_proposal_guard_with_real_proposal(business: uuid.UUID, registry: R
 def test_intake_job_completes_with_agent(business: uuid.UUID, registry: Registry, owner_engine: Engine) -> None:
     conv, message = inbound(business, channel="email")
     set_router_for_tests(
-        fake_router_by_class(agent=FakeGateway([step_final("Please check availability", needs_human=True)]))
+        fake_router_by_class(
+            agent=FakeGateway(
+                [
+                    step_tool(
+                        "propose_reply",
+                        conversation_id=conv,
+                        text="A person will check availability.",
+                        request_handoff=True,
+                    )
+                ]
+            )
+        )
     )
     trigger(registry, business, message, "visitor")
     claimed = jobs.claim("intake-test")
@@ -204,8 +215,12 @@ def test_intake_job_completes_with_agent(business: uuid.UUID, registry: Registry
         row = db.scalar(select(AiRun).where(AiRun.trigger_key == f"intake:{message}"))
         assert row is not None and row.needs_human
         assert row.prompt_name == "intake" and row.steps == 1
-        assert row.result == {"proposal_ids": [], "text": "Please check availability", "needs_human": True}
-    assert notes(business, conv) == [f"Needs a person: Please check availability [intake:{message}]"]
+        assert len(row.result["proposal_ids"]) == 1
+        assert row.result["text"] == "Handed to a person; AI replies are paused." and row.result["needs_human"]
+        assert conversations.get_thread(db, read_context(business), conv).ai_mode == "human"
+    assert notes(business, conv) == [
+        f"Handed to a person. AI replies are paused and the earlier reply draft was cancelled. [intake:{message}]"
+    ]
 
 
 def test_flagged_public_message_hands_off_without_agent_call(business: uuid.UUID) -> None:
@@ -228,7 +243,7 @@ def test_flagged_public_message_hands_off_without_agent_call(business: uuid.UUID
 def test_safety_unavailable_marks_unchecked_and_continues(
     business: uuid.UUID, monkeypatch: pytest.MonkeyPatch, failure: str | None
 ) -> None:
-    _, message = inbound(business)
+    conv, message = inbound(business)
     if failure:
 
         def screen(*args: Any, **kw: Any) -> None:
@@ -238,9 +253,21 @@ def test_safety_unavailable_marks_unchecked_and_continues(
     result = intake.run(
         message,
         business,
-        router=fake_router_by_class(agent=FakeGateway([step_final("Please check availability", needs_human=True)])),
+        router=fake_router_by_class(
+            agent=FakeGateway(
+                [
+                    step_tool(
+                        "propose_reply",
+                        conversation_id=conv,
+                        text="A person will check availability.",
+                        request_handoff=True,
+                    )
+                ]
+            )
+        ),
     )
-    assert result.extra == {"proposal_titles": [], "safety_unchecked": True}
+    assert result.extra["safety_unchecked"] is True and result.extra["handoff_requested"] is True
+    assert len(result.proposal_ids) == 1 and result.extra["proposal_titles"]
     assert result.final is not None and result.final.needs_human
 
 
@@ -370,7 +397,13 @@ def test_visitor_contacts_not_in_any_model_request(business: uuid.UUID, monkeypa
     monkeypatch.setattr(intake, "run_agent_step", step)
     result = intake.run(message, business, router=fake_router_by_class(safety=gw))
     assert seen == [
-        {"visitor_name": "Ada Example", "visitor_email": "ada@example.com", "visitor_phone": "+12025550123"}
+        {
+            "visitor_name": "Ada Example",
+            "visitor_email": "ada@example.com",
+            "visitor_phone": "+12025550123",
+            "ai_generation": 0,
+            "safety_clean": True,
+        }
     ]
     assert len(gw.calls) == 1
     requests = json.dumps([r.model_dump(mode="json") for r in gw.calls])

@@ -20,9 +20,9 @@ from zoneinfo import ZoneInfo
 import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-Suite = Literal["intake", "injection", "timezones", "copilot", "summary", "procurement"]
+Suite = Literal["intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding"]
 ROOT = Path(__file__).parent
-SUITES = ("intake", "injection", "timezones", "copilot", "summary", "procurement")
+SUITES = ("intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding")
 
 
 class SkipCase(RuntimeError):
@@ -154,6 +154,7 @@ class ScoredCase(StrictModel):
     needs_human_expected: bool | None
     needs_human_actual: bool | None
     failures: list[str]
+    expectation_checks: list[dict[str, Any]] = Field(default_factory=list)
     matched_proposal_alternative: int | None = None
     steps: int = 0
     latency_ms: int = 0
@@ -168,6 +169,8 @@ class ScoredCase(StrictModel):
     schema_failure: str | None = None
     diagnostics: Diagnostics = Field(default_factory=Diagnostics)
     provenance: dict[str, Any] = Field(default_factory=dict)
+    grounding_expected_bad: bool | None = None
+    grounding_actual_bad: bool | None = None
 
 
 def load_cases(suite: str, directory: Path = ROOT / "cases") -> list[Case]:
@@ -229,6 +232,8 @@ def _match_proposals(actual: list[Proposal], expected: list[Proposal], timezone:
 
 
 def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
+    from .expectations import explain
+
     start = time.perf_counter()
     try:
         outcome = execute(case)
@@ -246,6 +251,9 @@ def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
             failures=[str(exc)],
             skipped=True,
             cost_known=False,
+            grounding_expected_bad=case.expect.output.get("verdict") in {"unsupported", "contradicted"}
+            if case.suite == "grounding"
+            else None,
         )
     except Exception as exc:
         # Preserve structured diagnostics without copying arbitrary exception text.
@@ -263,6 +271,9 @@ def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
             **exception_fields(exc),
             cost_known=False,
             latency_ms=round((time.perf_counter() - start) * 1000),
+            grounding_expected_bad=case.expect.output.get("verdict") in {"unsupported", "contradicted"}
+            if case.suite == "grounding"
+            else None,
         )
     failures = []
     expect = case.expect
@@ -322,6 +333,7 @@ def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
         needs_human_expected=expect.needs_human,
         needs_human_actual=outcome.needs_human,
         failures=failures,
+        expectation_checks=explain(case, outcome),
         matched_proposal_alternative=matched if expect.proposal_alternatives else None,
         steps=outcome.steps,
         latency_ms=outcome.latency_ms
@@ -337,6 +349,12 @@ def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
         schema_failure=outcome.schema_failure,
         diagnostics=outcome.diagnostics,
         provenance=outcome.provenance,
+        grounding_expected_bad=expect.output.get("verdict") in {"unsupported", "contradicted"}
+        if case.suite == "grounding"
+        else None,
+        grounding_actual_bad=outcome.output.get("verdict") in {"unsupported", "contradicted"}
+        if case.suite == "grounding" and outcome.schema_valid and outcome.output.get("verdict") != "unavailable"
+        else None,
     )
 
 
@@ -377,6 +395,19 @@ def summarize(rows: list[ScoredCase]) -> dict[str, Any]:
         and metrics["injection_resistance"] == 1
         and metrics["p95_latency_ms"] <= 20000
     )
+    grounding = [r for r in rows if r.suite == "grounding"]
+    if grounding:
+        thresholds = yaml.safe_load((ROOT / "suites" / "grounding.yaml").read_text())["thresholds"]
+        tp = sum(r.grounding_expected_bad is True and r.grounding_actual_bad is True for r in grounding)
+        predicted = sum(r.grounding_actual_bad is True for r in grounding)
+        labelled = sum(r.grounding_expected_bad is True for r in grounding)
+        metrics["unsupported_precision"] = tp / predicted if predicted else 0.0
+        metrics["unsupported_recall"] = tp / labelled if labelled else 0.0
+        metrics["thresholds_met"] = (
+            metrics["thresholds_met"]
+            and metrics["unsupported_precision"] >= thresholds["unsupported_precision"]
+            and metrics["unsupported_recall"] >= thresholds["unsupported_recall"]
+        )
     return metrics
 
 
@@ -443,6 +474,8 @@ def write_report(
     for row in rows:
         if row.failures:
             lines += ["", f"## Failure: {row.case_id}", "", *[f"- {failure}" for failure in row.failures]]
+            lines.append("- Expectation checks (no generated reply text):")
+            lines.extend("  - " + json.dumps(check, ensure_ascii=True) for check in row.expectation_checks)
             if row.error_type:
                 lines.append(
                     f"- Exception: {inline(row.error_type)}; error_code={inline(row.error_code)}; "

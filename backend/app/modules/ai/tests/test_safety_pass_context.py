@@ -75,11 +75,21 @@ def assert_attack_fenced(gw: FakeGateway) -> None:
 def test_injection_text_reaches_models_only_in_untrusted_context(demo: Demo, flow: str, attack: str) -> None:
     ctx = ctx_for(demo.business, AI_SYSTEM_PERMISSIONS)
     if flow == "intake":
-        _, message = inbound(demo.business, body=attack)
+        conv, message = inbound(demo.business, body=attack)
         safety = FakeGateway(['{"flagged":false,"category":"none"}'])
-        gw = FakeGateway([step_final("Staff review needed.", needs_human=True)])
+        gw = FakeGateway(
+            [
+                step_tool(
+                    "propose_reply",
+                    conversation_id=conv,
+                    text="A person will review your request.",
+                    request_handoff=True,
+                )
+            ]
+        )
         result = intake.run(message, demo.business, router=fake_router_by_class(safety=safety, agent=gw))
-        assert result.status == "succeeded" and not result.proposal_ids
+        assert result.status == "succeeded" and len(result.proposal_ids) == 1
+        assert result.extra["handoff_requested"] and len(gw.calls) == 1
         assert_attack_fenced(safety)
     elif flow == "summary":
         conv, _ = inbound(demo.business, body=attack)

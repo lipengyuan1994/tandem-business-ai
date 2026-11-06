@@ -19,11 +19,11 @@ from app.platform.models import BusinessScopedBase, scoped_table_args
 
 USE_CASES = (
     "intake", "copilot", "summary", "reorder_note", "briefing", "procurement", "campaign_draft", "payment_followup",
-    "safety",
+    "safety", "grounding",
 )  # fmt: skip
 TRIGGER_TYPES = ("event", "job", "api", "cron")
 RUN_STATUSES = ("running", "succeeded", "failed", "step_limit", "budget_exceeded", "policy_blocked")
-MODEL_CLASSES = ("agent", "fast_extract", "writer", "safety", "embed", "stt", "tts")
+MODEL_CLASSES = ("agent", "fast_extract", "writer", "safety", "grounding", "embed", "stt", "tts")
 STEP_KINDS = ("tool_call", "final", "repair", "completion")
 EFFECT_KINDS = ("hold", "proposal")
 

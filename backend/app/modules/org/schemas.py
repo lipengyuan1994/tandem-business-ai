@@ -55,6 +55,9 @@ class BusinessSettings(BaseModel):
     ai_daily_token_budget: int | None = Field(default=None, ge=0)
     retention_days_conversations: int = Field(default=730, ge=30)
     public_chat_enabled: bool = True
+    handoff_after_hours_text: str = Field(
+        default="We're currently closed. A person will reply here when we're open.", min_length=1, max_length=1000
+    )
     sales_tax_rate: Decimal = Field(default=Decimal("0"), ge=0, le=1, max_digits=6, decimal_places=4)
 
 
@@ -159,6 +162,7 @@ class SettingsUpdate(BaseModel):
 
 
 class PublicProfileOut(BaseModel):
+    ai_greeting: str
     avoid_medical_details: bool
     name: str
     timezone: str

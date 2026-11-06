@@ -24,6 +24,7 @@ from .errors import AiError
 from .gateway.router import Router, effective_policy, load_router
 from .gateway.types import ChatMessage
 from .schemas import UseCaseId
+from .tools.intake import validation_summary
 
 TriggerType = Literal["event", "job", "api", "cron"]
 
@@ -90,7 +91,17 @@ def complete[T: BaseModel](
                     validate(value)
             except (ValidationError, ValueError) as exc:  # ValidationError is a ValueError; validate raises ValueError
                 recording.record_step(
-                    ctx, run_id, record.model_copy(update={"kind": "repair", "error_code": "ai.invalid_model_output"})
+                    ctx,
+                    run_id,
+                    record.model_copy(
+                        update={
+                            "kind": "repair",
+                            "error_code": "ai.invalid_model_output",
+                            "result_summary": validation_summary(exc)
+                            + f"; output_tokens={result.usage.output_tokens}"
+                            + f"; output_cap={router.limits.max_output_tokens_per_step}",
+                        }
+                    ),
                 )
                 if attempt == 2:
                     raise StopRun("failed", "ai.invalid_model_output") from None

@@ -8,6 +8,7 @@ from app.platform.errors import DomainError
 
 # code -> (HTTP status, problem title). Codes without a mapping in §15 are internal (runner, tool observations).
 AI_ERROR_CODES: dict[str, tuple[int, str]] = {
+    "ai.conversation_paused": (409, "Conversation handed to a person"),
     "ai.disabled_by_policy": (409, "Conflict"),
     "ai.not_configured": (409, "Conflict"),
     "ai.budget_exceeded": (429, "Too many requests"),

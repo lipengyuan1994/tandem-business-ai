@@ -7,6 +7,7 @@ import { LocalTime } from "@/components/common/LocalTime"
 import { PageHeader } from "@/components/common/PageHeader"
 import { PermissionGate } from "@/components/common/PermissionGate"
 import { StatusBadge } from "@/components/common/StatusBadge"
+import { ScheduledReply } from "@/features/conversations/ReplyPublication"
 import { useWorkQueue, type WorkItem } from "./actions-api"
 import { useClock } from "./useClock"
 import { DeliveryBadge, ScheduledMail } from "./DeliveryStatus"
@@ -37,8 +38,9 @@ function QueueList({ exceptions }: { exceptions: boolean }) {
     } },
     { header: t("ai.queues.state"), cell: ({ row: { original: item } }) => <div className="space-y-2">
       {item.kind === "outbound_mail" ? <><DeliveryBadge state={item.status === "pending" ? "scheduled" : item.status === "cancelled" ? "stopped" : item.status === "sending" || item.status === "delivered" || item.status === "failed" || item.status === "unknown" ? item.status : "none"} />{!exceptions && item.status === "pending" ? <ScheduledMail id={item.id} sendAt={item.stop_until} /> : null}</> : <StatusBadge status={item.status} />}
+      {item.kind === "web_reply" && item.status === "withheld" && !exceptions ? <ScheduledReply id={item.id} sendAt={item.stop_until} /> : null}
       {item.kind === "proposal" && !exceptions ? <p>{t("ai.queues.waitingOn", { roles: item.waiting_on_roles?.length ? item.waiting_on_roles.map((role) => t(`roles.${role}`, { defaultValue: role.replaceAll("_", " ") })).join(", ") : t("ai.queues.approver") })}</p> : null}
-      {item.failure_code ? <p>{t(`ai.cards.failures.${item.failure_code.replaceAll(".", "_")}`, { defaultValue: t(`ai.activity.failures.${item.failure_code.replaceAll(".", "_")}`, { defaultValue: t("ai.activity.failedHint") }) })}</p> : null}
+      {item.failure_code && item.kind === "web_reply" ? <p>{t("inbox.ai.cancelled", { reason: t(`ai.activity.reasons.${item.failure_code}`, { defaultValue: t("ai.activity.unknownReason") }) })}</p> : item.failure_code ? <p>{t(`ai.cards.failures.${item.failure_code.replaceAll(".", "_")}`, { defaultValue: t(`ai.activity.failures.${item.failure_code.replaceAll(".", "_")}`, { defaultValue: t("ai.activity.failedHint") }) })}</p> : null}
       {item.reasons?.map((reason) => <p key={reason}>{t(`ai.activity.reasons.${reason}`, { defaultValue: t("ai.activity.unknownReason") })}</p>)}
     </div> },
     { header: t("ai.queues.timing"), cell: ({ row: { original: item } }) => <div className="space-y-1 text-sm">

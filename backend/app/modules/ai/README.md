@@ -32,12 +32,12 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
 - `tools/base.py`: `Tool`, `RunState`; `tools/registry.py`: `register_tool`, `get_tool`, `tool_catalog`,
   `execute_tool(ctx, name, raw_args, allowed, state)` (own transaction; errors become observations; hold/propose
   effects recorded in `ai_effects` in the same transaction and replayed by effect key, which includes `trigger_key`).
-- 27 tools in `tools/` (registered on import of `tools.registry`): 16 read (`get_conversation`, `find_customers`,
+- 28 tools in `tools/` (registered on import of `tools.registry`): 17 read (`get_conversation`, `find_customers`,
   `get_customer`, `customer_history`, `list_services`, `get_service_parts`, `find_slots`, `list_appointments`,
   `check_stock`, `list_low_stock`, `list_suppliers_for_item`, `get_quote_request`, `compare_quotes`,
-  `list_late_purchase_orders`, `list_overdue_invoices`, `today_summary`), `hold_slot` (the only direct write) and 10
-  propose tools (`propose_booking`, `_reply`, `_customer`, `_reorder`, `_payment_reminder`, `_quote_request`,
-  `_supplier_quote`, `_po_from_quote`, `_supplier_followup`, `_send_po`). Read tools never return contact values (free text is
+  `list_late_purchase_orders`, `list_overdue_invoices`, `today_summary`, `search_knowledge`), `hold_slot` (direct hold write) and 10
+  propose tools (also deterministic hand-over/suggestion side effects): `propose_booking`, `_reply`, `_customer`, `_reorder`, `_payment_reminder`, `_quote_request`,
+  `_supplier_quote`, `_po_from_quote`, `_supplier_followup`, `_send_po`. Read tools never return contact values (free text is
   redacted) and add evidence to `RunState.evidence`; titles come from looked-up data, never model text.
 - Intake (U1): `conversations.message_received` (visitor/customer) → job `ai.intake` (non-transactional) →
   `usecases.intake.run(message_id, business_id)`: open-proposal guard, safety screen (`usecases.safety.screen`,
@@ -47,8 +47,10 @@ state in `docs/roadmap/ai/README.md` and `HANDOFF.md`. Imports other modules onl
 `GET /status` (`ai.assistant.use`) → `AiStatus`; `GET /runs?cursor&use_case&status&limit` (`ai.settings.read`) →
 `Page[RunOut]` (no text); `GET /usage` (`ai.settings.read`) → `UsageOut{today, days (30, oldest first)}`.
 
-Config: `deploy/config/ai-routes.example.yaml` (placeholders), `ai-routes.dev.yaml` + `ai-fake-script.dev.yaml` (dev, no key).
-- Intake agent (AI-08B): prompt `intake.v1`, tools to read, hold and propose one booking or one question.
+- P10-C1: intake v4, run-scoped citations, empty-search hand-over; `grounding.check` uses a separate recorded class.
+- Typed claims (≤8), source/field-bound numbers and safety gate reply autonomy; failures retain staff review.
+- Ownership is checked before admission, every provider attempt (safety/repair/fallback), and under the thread lock.
+- search_knowledge is public-only for intake; authenticated copilot can read internal with current thread.read.
 - Copilot (U2, `usecases/copilot.py`): `/copilot/threads*` (own threads, `CopilotThreadOut`), SSE message stream,
   tools limited to the user's permissions, 30 runs/user/hour, cron + job `ai.assistant_retention` (90 days). Earlier
   assistant answers are replayed fenced as untrusted. One active turn/thread, four generations/process; optional operation keys.
@@ -58,21 +60,19 @@ Config: `deploy/config/ai-routes.example.yaml` (placeholders), `ai-routes.dev.ya
 - Procurement (U9, `usecases/procurement.py`): request quotes (job + `POST /procurement/items/{id}/request-quotes`),
   extract a pasted supplier reply (`POST /procurement/quote-requests/{id}/extract`, numbers verified against the text; supports operation keys),
   compare and propose a PO (`ai.compare-trigger`), chase late orders/invites (cron `ai-procurement-scan`).
-  `procurement_fake.py` only adapts the dev scripted provider (refused in production).
-- Evals: `backend/evals/` (136 cases, `AI_LIVE=1 make eval suite=…`); safety review `docs/security/2026-11-03-ai-review.md`.
+- Evals: intake shadow outcomes and labelled grounding precision/recall; live quality is supervisor-owned.
 - Payment follow-up (U10): paged scan → deduplicated per-invoice jobs; proposals lock/recheck version, pending proposals
   and cooldown. Live-provider verification remains owner-run.
 
 P10-A0: `/autonomy/rules` GET/PUT (owner/admin via `org.settings.write`, versioned), `/autonomy/pause|resume`
 POST, `/autonomy/activity` GET (`approvals.proposal.read`, cursor pagination). Policy is owned by approvals;
-org exposes `ai_autonomy_paused` and atomic pause/resume. Only AI reorder-draft proposals are eligible.
+org exposes `ai_autonomy_paused` and atomic pause/resume. AI reorder drafts and qualifying intake replies are eligible.
 U4 checks open proposals (including executing) and inventory's open-draft intent before generation and proposing;
 `off` ends the job without model calls/retries (also handled if changed during generation). Quantity and stock are
 re-checked under stock locks at execution. Shadow is the seeded default. See contracts “Autonomy rules (P10-A0)”.
 
 P10-A1: copilot.v3 keeps v1/v2; bounded staff quantities are copied, unchanged suggestions accepted, errors guide retry.
-U4 stays computed-only. `copilot_threads.py` owns thread DTOs/reads/retention;
-`copilot_cards.py` verifies own thread + linked copilot run/requester and provides explicit Confirm.
+U4 stays computed-only. `copilot_threads.py` owns DTOs/retention; `copilot_cards.py` verifies own-thread Confirm.
 Cards carry revision/hash, preview, eligibility/reason, delivery state and whitelisted result UUIDs;
 current status/results are fenced context on later turns. Typed yes never approves. Read-only
 `/work-queue` and `/exceptions` require proposal read, merge scoped public readers with pagination;

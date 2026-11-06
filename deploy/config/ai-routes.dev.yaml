@@ -7,5 +7,6 @@ routes:
   agent:        [{provider: fake, model: fake-dev}]
   fast_extract: [{provider: fake, model: fake-dev}]
   writer:       [{provider: fake, model: fake-dev}]
+  grounding:    [{provider: fake, model: fake-grounding}]
   safety:       [{provider: fake, model: fake-dev}]
 limits: {max_steps: 8, max_input_tokens_per_step: 12000, max_output_tokens_per_step: 800, run_timeout_s: 90, step_timeout_s: 30}

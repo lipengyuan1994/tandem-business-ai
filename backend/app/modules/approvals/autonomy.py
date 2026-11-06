@@ -26,7 +26,7 @@ from .models import (
     ProposalRevision,
 )
 
-RULE_ELIGIBLE_ACTIONS = frozenset({"inventory.create_reorder_draft"})
+RULE_ELIGIBLE_ACTIONS = frozenset({"inventory.create_reorder_draft", "conversations.send_reply"})
 
 
 def creation_rule(db: Session, ctx: Context, action_type: str) -> tuple[AutonomyRule | None, bool]:
@@ -159,4 +159,15 @@ def check_execution(
         or spec.approve_permission not in ctx.permissions
     ):
         raise Conflict("approvals.autonomy_revoked")
+    # Reorder execution retains its domain-owned validation and failure codes. Reply safety is rechecked here.
+    if proposal.action_type == "conversations.send_reply" and spec.autonomy_reasons is not None:
+        revision = db.scalar(
+            select(ProposalRevision).where(
+                ProposalRevision.business_id == ctx.business_id, ProposalRevision.id == decision.revision_id
+            )
+        )
+        if revision is None or spec.autonomy_reasons(
+            db, policy_context(ctx, decision), spec.payload_model.model_validate(revision.payload)
+        ):
+            raise Conflict("approvals.autonomy_revoked")
     return policy_context(ctx, decision)

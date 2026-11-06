@@ -15,6 +15,9 @@ routes:
   writer:
     - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}
     - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
+  grounding:
+    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}
+    - {provider: vultr, model: qwen3.8-flash-next, price_in_per_m: 0.20, price_out_per_m: 0.20}
   safety:
     - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
 limits: {max_steps: 8, max_input_tokens_per_step: 12000, max_output_tokens_per_step: 800, run_timeout_s: 90, step_timeout_s: 30}

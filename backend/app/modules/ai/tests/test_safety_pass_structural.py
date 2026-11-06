@@ -47,7 +47,7 @@ def run_spec(tool: str) -> RunSpec:
 def test_every_write_path_is_hold_or_proposal(owner_engine: Engine) -> None:
     demo = seed_demo(owner_engine)
     tools = list(registry._TOOLS.values())
-    assert len(tools) == 27
+    assert len(tools) == 28
     assert {t.kind for t in tools} == {"read", "hold", "propose"}
     assert [t.name for t in tools if t.kind == "hold"] == ["hold_slot"]
     assert all(t.kind == "propose" for t in tools if t.name.startswith("propose_"))
@@ -124,6 +124,7 @@ def test_malicious_model_foreign_ids_never_read_or_write_foreign_business(owner_
     assert set(args_by_name) == set(registry._TOOLS) - {"propose_customer"}
     # Parameterless/list/search tools return only Garden data; record-addressing tools must deny Cycle ids.
     tenant_lists = {
+        "search_knowledge",
         "find_customers",
         "list_services",
         "list_low_stock",

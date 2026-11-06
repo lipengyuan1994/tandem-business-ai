@@ -8,23 +8,27 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.modules.crm import public as crm
-from app.modules.notifications import public as notifications
 from app.platform import audit, clock, crud, events
 from app.platform.context import Context
-from app.platform.errors import Conflict, Invalid, NotFound
+from app.platform.errors import Conflict, Invalid
 from app.platform.events import DomainEventPayload
 from app.platform.ids import new_id
 
 from . import permissions as P
+from . import publication
 from .consent import CONTACT_CONSENT_TEXT, promote_contact_consent
 from .delivery import on_delivery_status as on_delivery_status
 from .models import Conversation, Message
+from .ownership import HandoffRequested as HandoffRequested
+from .ownership import request_handoff as request_handoff
+from .replies import send_reply as send_reply
 from .repository import counts as counts
 from .repository import get_conversation as _conv
+from .repository import get_message_context as get_message_context
 from .repository import lock_for_customer as lock_for_customer
 from .repository import previews as previews
 from .repository import public_messages as public_messages
-from .schemas import ConversationCreate, ConversationUpdate, MessageContext, MessageOut, ThreadDto
+from .schemas import ConversationCreate, ConversationUpdate, MessageOut, ThreadDto
 from .visitors import VISITOR_TTL as VISITOR_TTL
 from .visitors import issue_visitor_token as issue_visitor_token
 from .visitors import visitor_conversation as visitor_conversation
@@ -39,14 +43,8 @@ class MessageReceived(DomainEventPayload):
     is_first_message: bool
 
 
-class HandoffRequested(DomainEventPayload):
-    event_type = "conversations.handoff_requested"
-    conversation_id: uuid.UUID
-    reason: str
-
-
 def _timeline(db: Session, ctx: Context, conv: Conversation, msg: Message) -> None:
-    if conv.customer_id is None or msg.direction == "internal":
+    if conv.customer_id is None or msg.direction == "internal" or msg.publication_state != "published":
         return
     word = "Message from customer" if msg.direction == "inbound" else "Reply sent"
     crm.add_timeline_entry(
@@ -54,7 +52,7 @@ def _timeline(db: Session, ctx: Context, conv: Conversation, msg: Message) -> No
         ctx,
         crm.TimelineEntryIn(
             customer_id=conv.customer_id,
-            occurred_at=msg.created_at or clock.now(),
+            occurred_at=msg.published_at or msg.created_at or clock.now(),
             kind="message",
             ref_module="conversations",
             ref_type="message",
@@ -74,6 +72,9 @@ def _add(
     body: str,
     proposal_id: uuid.UUID | None = None,
     source_ref: str | None = None,
+    withheld: bool = False,
+    answers_message_id: uuid.UUID | None = None,
+    ai_generation: int | None = None,
 ) -> Message:
     if len(body) > 8000:
         raise Invalid("conversations.message_too_long")
@@ -89,6 +90,10 @@ def _add(
     # Use the insertion time after the thread lock, not PostgreSQL's transaction-start timestamp:
     # a writer that waited behind another request must remain visible after that request's cursor.
     now = clock.now()
+    # The thread lock, not timestamp/UUID ordering, determines freshness. Keep the first input at generation 0;
+    # every subsequent visitor/customer input invalidates earlier work even if clocks tie or move backwards.
+    if not first and direction == "inbound" and author_kind in {"visitor", "customer"}:
+        conv.ai_generation += 1
     msg = Message(
         created_at=now,
         id=new_id(),
@@ -100,12 +105,17 @@ def _add(
         body=body,
         proposal_id=proposal_id,
         source_ref=source_ref,
+        ai_generation=conv.ai_generation if ai_generation is None else ai_generation,
+        publication_state="withheld" if withheld else "published",
+        publish_at=publication.send_time(db, ctx) if withheld else None,
+        answers_message_id=answers_message_id,
     )
     db.add(msg)
-    conv.last_message_at = now
+    if not withheld:
+        conv.last_message_at = now
     if direction == "inbound":
         conv.status = "waiting_on_staff"
-    elif direction == "outbound":
+    elif direction == "outbound" and not withheld:
         conv.status = "waiting_on_customer"
     conv.version += 1
     db.flush()
@@ -241,50 +251,6 @@ def link_customer(db: Session, ctx: Context, conversation_id: uuid.UUID, custome
     )
 
 
-def send_reply(
-    db: Session, ctx: Context, conversation_id: uuid.UUID, body: str, *, proposal_id: uuid.UUID | None = None
-) -> Message:
-    """Outbound message + outbox delivery in the caller's transaction (web chat: visible to the visitor)."""
-    ctx.require(P.THREAD_WRITE)
-    conv = lock_for_customer(db, ctx, conversation_id)
-    if conv.restricted_at is not None or conv.erased_at is not None:
-        raise Conflict("conversations.restricted", detail="Replies to a restricted conversation are blocked")
-    if conv.customer_id is not None:
-        crm.get_customer_summary(db, ctx, conv.customer_id)
-    msg = _add(
-        db, ctx, conv, direction="outbound", author_kind="staff", body=body, proposal_id=proposal_id or ctx.proposal_id
-    )
-    channel = "web_chat" if conv.channel == "web_chat" else "simulated"
-    recipient = None
-    if channel != "web_chat":
-        recipient = (
-            crm.get_customer_contact(db, ctx, conv.customer_id, "email") if conv.customer_id else None
-        ) or conv.visitor_email
-    msg.outbox_message_id = notifications.enqueue_message(
-        db,
-        ctx,
-        channel=channel,
-        recipient=recipient,
-        template_key="conversation_reply",
-        variables={"body": body},
-        idempotency_key=f"reply:{msg.id}",
-        related_type="message",
-        related_id=msg.id,
-        proposal_id=msg.proposal_id,
-    )
-    msg.delivery_status = "pending"
-    audit.record(
-        db,
-        ctx,
-        action="conversations.reply_sent",
-        target_type="conversation",
-        target_id=conv.id,
-        summary=f"Reply queued ({channel.replace('_', ' ')})",
-        proposal_id=msg.proposal_id,
-    )
-    return msg
-
-
 def add_internal_note(
     db: Session, ctx: Context, conversation_id: uuid.UUID, body: str, author_kind: str = "staff"
 ) -> Message:
@@ -298,25 +264,6 @@ def staff_message(db: Session, ctx: Context, conversation_id: uuid.UUID, directi
     if direction == "outbound":
         return send_reply(db, ctx, conversation_id, body)
     return add_internal_note(db, ctx, conversation_id, body)
-
-
-def request_handoff(db: Session, ctx: Context, conversation_id: uuid.UUID, reason: str) -> None:
-    conv = lock_for_customer(db, ctx, conversation_id)
-    if conv.handoff_requested_at is not None:
-        return
-    conv.handoff_requested_at = clock.now()
-    conv.status = "waiting_on_staff"
-    events.publish(db, ctx, HandoffRequested(conversation_id=conv.id, reason=reason[:300]))
-    staff = [conv.assigned_to] if conv.assigned_to else []
-    notifications.notify_users(
-        db,
-        ctx,
-        staff,
-        kind="handoff",
-        title="A conversation needs a person",
-        body=reason[:300],
-        link=f"/inbox/{conv.id}",
-    )
 
 
 # ------------------------------------------------------------------------------------------------------- reads
@@ -356,36 +303,6 @@ def messages(
     return list(db.scalars(stmt.order_by(Message.created_at)))
 
 
-def get_message_context(db: Session, ctx: Context, message_id: uuid.UUID) -> MessageContext:
-    ctx.require(P.THREAD_READ)
-    row = db.execute(
-        select(Message, Conversation)
-        .join(
-            Conversation,
-            (Conversation.id == Message.conversation_id) & (Conversation.business_id == Message.business_id),
-        )
-        .where(
-            Message.business_id == ctx.business_id,
-            Conversation.business_id == ctx.business_id,
-            Message.id == message_id,
-        )
-    ).one_or_none()
-    if row is None:
-        raise NotFound("conversations.message_not_found")
-    message, conversation = row
-    return MessageContext(
-        conversation_id=conversation.id,
-        channel=conversation.channel,
-        author_kind=message.author_kind,
-        body=message.body,
-        customer_id=conversation.customer_id,
-        visitor_name=conversation.visitor_name,
-        visitor_email=conversation.visitor_email,
-        visitor_phone=conversation.visitor_phone,
-        created_at=message.created_at,
-    )
-
-
 def get_thread(db: Session, ctx: Context, conversation_id: uuid.UUID, last_n: int = 20) -> ThreadDto:
     ctx.require(P.THREAD_READ)
     conv = _conv(db, ctx, conversation_id)
@@ -393,6 +310,8 @@ def get_thread(db: Session, ctx: Context, conversation_id: uuid.UUID, last_n: in
         conversation_id=conv.id,
         channel=conv.channel,
         status=conv.status,
+        ai_mode=conv.ai_mode,
+        ai_generation=conv.ai_generation,
         customer_id=conv.customer_id,
         visitor_name=conv.visitor_name,
         messages=[MessageOut.model_validate(m) for m in messages(db, ctx, conv.id, last_n=last_n)],

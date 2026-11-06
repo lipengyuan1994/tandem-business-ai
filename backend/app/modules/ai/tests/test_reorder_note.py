@@ -244,7 +244,11 @@ def autonomy_rule(demo: Demo, owner_engine: Engine, *, level: str = "act_notify"
 
     with owner_engine.connect() as db:
         grantor, version = db.execute(
-            text("select granted_by,version from autonomy_rules where business_id=:b"), {"b": demo.business}
+            text(
+                "select granted_by,version from autonomy_rules where business_id=:b "
+                "and action_type='inventory.create_reorder_draft'"
+            ),
+            {"b": demo.business},
         ).one()
     ctx = Context("test", "user", grantor, demo.business, identity.ROLES["owner"])
     with transaction(ctx) as db:

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PreviewDiff } from "@/features/approvals/components/PreviewDiff"
 import { ApiProblem } from "@/lib/problem"
 import { useConfirmAction, type ChatCard } from "./actions-api"
+import { CardReplyGrounding } from "./ReplyGrounding"
 import { ProposalDelivery } from "./DeliveryStatus"
 
 function confirmReason(code: string | null | undefined) {
@@ -41,6 +42,7 @@ export function ActionCard({ card, threadId, onReload }: { card: ChatCard; threa
       <CardContent className="mt-3 space-y-3 px-3">
         {collapsed ? <Button size="sm" variant="ghost" onClick={() => setCollapsed(false)}>{t("ai.cards.show")}</Button> : <>
           <PreviewDiff lines={card.preview} />
+          {card.action_type === "conversations.send_reply" ? <CardReplyGrounding proposalId={card.id} revisionId={card.revision_id} /> : null}
           <ProposalDelivery proposalId={card.id} state={card.delivery_state} />
           {card.status === "succeeded" && result.purchase_order_id && permissions.has("purchasing.po.read") ? <Link className="record-link block" to="/purchasing/purchase-orders/$id" params={{ id: result.purchase_order_id }}>{t(`ai.cards.results.${card.action_type === "purchasing.send_po" ? "sent" : card.action_type === "purchasing.approve_po" ? "approved" : "created"}`)}</Link> : null}
           {card.status === "succeeded" && result.reorder_draft_id && permissions.has("inventory.reorder.read") ? <a className="record-link block" href={`/api/v1/inventory/reorder-drafts/${result.reorder_draft_id}`}>{t("ai.activity.draftCreated")}</a> : null}

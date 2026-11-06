@@ -4,7 +4,7 @@
 |---|---|
 | Release / phase | MVP · P3 |
 | Tier / kind | B · PRE (AI suggestions appear in P5 through the ai module) |
-| Depends on | platform, org, crm, approvals, notifications |
+| Depends on | platform, org, identity, crm, approvals, notifications |
 | Owns tables | `conversations`, `messages`, `visitor_tokens` |
 
 ## Purpose
@@ -25,6 +25,7 @@ A shared inbox. Threads come from the public chat widget, from staff logging a p
 | contact_consent_at | timestamptz | yes | Original public submission time, only when ticked with an e-mail address |
 | contact_consent_text | text | yes | Versioned server-owned label; paired with contact_consent_at |
 | handoff_requested_at | timestamptz | yes | |
+| ai_mode, ai_generation, ai_paused_at | text, integer, timestamptz | paused only | Ownership mode and epoch; P10-C1 contract |
 
 `messages`
 
@@ -39,6 +40,7 @@ A shared inbox. Threads come from the public chat widget, from staff logging a p
 | outbox_message_id | uuid | yes | |
 | source_ref | text | yes | Unique per business when present (deduplicates imports and email) |
 | proposal_id | uuid | yes | Reply created by an approved proposal |
+| ai_generation | integer | no | Ownership epoch when message was inserted; stale queued intake is ineligible |
 
 `visitor_tokens` — `conversation_id`, `token_hash`, `expires_at`, `revoked_at`.
 
@@ -60,6 +62,9 @@ def get_message_context(db, ctx, message_id) -> MessageContext
 def send_reply(db, ctx, conversation_id, body: str, *, proposal_id=None) -> MessageDto   # used by executor and UI
 def link_customer(db, ctx, conversation_id, customer_id) -> None
 def request_handoff(db, ctx, conversation_id, reason: str) -> None              # also calls notifications.notify_users
+def take_over(db, ctx, conversation_id): ...                                  # staff write permission
+def hand_back(db, ctx, conversation_id): ...                                  # new inbound messages resume
+def ensure_ai_active(db, ctx, conversation_id, generation=None, *, lock=False, staff_requested=False) -> int: ...
 def add_internal_note(db, ctx, conversation_id, body: str, author_kind: str) -> MessageDto   # ai posts its staff note here
 def count_open_by_status(db, ctx) -> dict[str, int]                               # dashboard
 ```
@@ -76,9 +81,11 @@ missing or foreign-business messages raise `conversations.message_not_found`. Co
 | GET | `/conversations/{id}` | read | Thread with messages |
 | PATCH | `/conversations/{id}` | write | Assign, status, subject, `customer_id` |
 | POST | `/conversations/{id}/messages` | write | `{direction: outbound \| internal, body}` |
+| POST | `/conversations/{id}/take-over`, `/hand-back` | write | Explicit human/auto ownership |
 | POST | `/public/{slug}/chat` | public | Start: `{name, email?, phone?, message, consent_to_contact: bool}` → sets visitor cookie |
 | GET | `/public/{slug}/chat` | visitor token | Own thread (no internal notes), at most 50 messages; optional `cursor` returns subsequent messages and `next_cursor` advances polling |
 | POST | `/public/{slug}/chat/messages` | visitor token | Optional `cursor`; response uses the same bounded history page as GET |
+| POST | `/public/{slug}/chat/handoff` | visitor token | Idempotent request, deterministic system acknowledgement; message-equivalent limits |
 | POST | `/public/{slug}/appointment-requests` | public | **As built: owned by scheduling (M06)**, which validates the service and windows, then calls `conversations.start_conversation` to create the conversation with a formatted first message; **never books directly** |
 
 ## Permissions
@@ -88,7 +95,10 @@ missing or foreign-business messages raise `conversations.message_not_found`. Co
 Published: `conversations.message_received`, `conversations.handoff_requested`, `conversations.conversation_linked`. Subscribed: `notifications.delivery_status_changed` (update `delivery_status`).
 
 ## Executors
-`conversations.send_reply` (payload: `conversation_id`, `body`, `conversation_version`). `describe()` shows the full message text and recipient channel.
+`conversations.send_reply` (payload: `conversation_id`, `body`, optional `ai_generation`, `citations`).
+`describe()` shows the full message text and recipient channel. Assistant proposals bind ownership generation at
+creation and check it under the thread lock at execution. Direct staff replies take ownership; executing an approved
+AI reply does not impersonate a new staff takeover. See the P10-C1 section of the AI contracts.
 
 ## Error codes
 `conversations.not_found`, `conversations.closed`, `conversations.visitor_token_invalid`, `conversations.public_chat_disabled`, `conversations.message_too_long`.
@@ -122,3 +132,8 @@ Public intake hardening:
   Composite booking-with-reply acquires both customer locks before booking.
 - Delivery events project the locked authoritative outbox status, so delayed events cannot restore older states.
 - The widget retains earlier messages while polling with `next_cursor`, and bounds its in-memory display to 200 messages.
+
+P10-C1 part 2 extends replies with withheld/published/stopped/cancelled publication and durable release jobs; see
+[the frozen part 2 contract](../ai/contracts.md#p10-c1-part-2). Subsequent visitor inputs advance ai_generation under
+the existing thread lock. Staff countdown/Stop fields, public release-time cursors and cancellation Exceptions are
+backend contracts; rendered widget/Inbox changes belong to part 3.

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useSession } from "@/app/session-context"
 import { DeliveryBadge, ScheduledMail } from "@/features/ai/DeliveryStatus"
+import { ReplyGrounding } from "@/features/ai/ReplyGrounding"
 import { AiBadge } from "@/features/ai/AiBadge"
 import { ConfirmDialog } from "@/components/common/ConfirmDialog"
 import { EmptyState } from "@/components/common/EmptyState"
@@ -81,6 +82,8 @@ export function ProposalDetailPage() {
               <PreviewDiff lines={rev.preview} />
             )}
           </section>
+
+          {p.action_type === "conversations.send_reply" ? <ReplyGrounding payload={rev.payload} /> : null}
 
           {p.status === "pending_review" && !editing ? (
             <div className="flex flex-wrap gap-2">

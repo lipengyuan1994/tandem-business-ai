@@ -10,7 +10,7 @@ import { useClock } from "./useClock"
 import { useStopMail } from "./actions-api"
 
 type DeliveryState = Schemas["ChatCard"]["delivery_state"]
-const TONES = { none: "neutral", scheduled: "pending", sending: "approved", delivered: "success", failed: "failed", unknown: "neutral", stopped: "neutral" } as const
+const TONES = { withheld: "pending", published: "success", none: "neutral", scheduled: "pending", sending: "approved", delivered: "success", failed: "failed", unknown: "neutral", stopped: "neutral" } as const
 export function DeliveryBadge({ state }: { state: DeliveryState }) {
   const { t } = useTranslation()
   return <span className="status-badge" data-tone={TONES[state]}>{t(`ai.delivery.${state ?? "none"}`)}</span>

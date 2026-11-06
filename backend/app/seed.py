@@ -38,6 +38,8 @@ from app.modules.identity.roles import ROLES
 from app.modules.inventory import public as inventory
 from app.modules.inventory import service as inventory_service
 from app.modules.inventory.schemas import ReorderRuleIn
+from app.modules.knowledge import service as knowledge
+from app.modules.knowledge.schemas import ArticleCreate
 from app.modules.marketing import service as marketing
 from app.modules.marketing.schemas import CampaignCreate, SegmentDefinition, SegmentIn
 from app.modules.notifications import public as notifications
@@ -437,6 +439,19 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
             k.ids[u["id"]] = identity.ensure_user(db, u["email"], u["display_name"])
             identity.ensure_membership(db, ctx, k[u["id"]], roles_by_membership.get(m["id"], []), m.get("title"))
         counts["staff"] = len(_rows(tables, "memberships", key))
+        for article in _rows(tables, "kb_articles", key):
+            made = knowledge.create(
+                db,
+                ctx,
+                ArticleCreate(
+                    **{field: article[field] for field in ("title", "slug", "visibility", "body_markdown")},
+                    tags=json.loads(article["tags_json"]),
+                ),
+            )
+            if article["status"] == "published":
+                knowledge.publish(db, ctx, made.id, made.version)
+        counts["kb_articles"] = len(_rows(tables, "kb_articles", key))
+
         for rule in _rows(tables, "autonomy_rules", key):
             grantor_ctx = _ctx(business_id, k[rule["granted_by"]], ("owner",))
             approvals.put_autonomy_rule(

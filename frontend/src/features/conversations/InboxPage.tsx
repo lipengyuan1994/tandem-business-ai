@@ -1,3 +1,5 @@
+import { OwnershipControls } from "./OwnershipControls"
+import { ReplyPublication } from "./ReplyPublication"
 import { QueryError } from "@/components/common/QueryError"
 import { Link, useNavigate, useParams } from "@tanstack/react-router"
 import { useState } from "react"
@@ -54,6 +56,8 @@ export function InboxPage() {
                       {c.customer_name ?? c.visitor_name ?? t("inbox.anonymous")}
                       <Badge variant="outline">{t(`inbox.channels.${c.channel}`)}</Badge>
                     </span>
+                    <span className="block text-xs">{t(c.ai_mode === "human" ? "inbox.ai.human" : "inbox.ai.auto")}</span>
+                    {c.handoff_requested_at ? <Badge variant="secondary">{t("inbox.ai.handoff")}</Badge> : null}
                     <span className="line-clamp-2 break-words text-sm text-muted-foreground">{c.last_message_preview}</span>
                   </Link>
                 </li>
@@ -99,16 +103,18 @@ function ThreadView({ thread, onClosed }: { thread: Thread; onClosed: () => void
           ) : null}
         </span>
       </header>
+      <OwnershipControls thread={thread} />
       {thread.contact_consent_at ? <p className="px-4 pt-3 text-xs text-muted-foreground">
         {t("inbox.contactConsent")} ({<LocalTime iso={thread.contact_consent_at} timeZone={businessTimeZone} pattern="d MMM yyyy" />})
       </p> : null}
       <ol className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
         {thread.messages.map((m) => (
           <li key={m.id} className={cn("max-w-[80%] rounded-lg px-3 py-2 text-sm", m.direction === "inbound" && "bg-muted",
-            m.direction === "outbound" && "ml-auto bg-primary text-primary-foreground", m.direction === "internal" && "mx-auto border border-dashed border-status-pending bg-status-pending/10")}
+            m.direction === "outbound" && (m.publication_state === "withheld" || m.publication_state === "cancelled" || m.publication_state === "stopped" || m.author_kind === "system" ? "ml-auto border border-dashed bg-muted" : "ml-auto bg-primary text-primary-foreground"), m.direction === "internal" && "mx-auto border border-dashed border-status-pending bg-status-pending/10")}
             data-direction={m.direction}>
             {m.direction === "internal" ? <span className="block text-xs font-medium">{t("inbox.internalNote")}</span> : null}
             <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{m.body}</p>
+            <ReplyPublication message={m} />
             <span className="mt-1 block text-xs opacity-75">
               <LocalTime iso={m.created_at} timeZone={businessTimeZone} pattern="d MMM HH:mm" />
               {m.delivery_status ? ` · ${t(`status.${m.delivery_status}`, { defaultValue: m.delivery_status })}` : ""}

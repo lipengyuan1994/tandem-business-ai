@@ -248,7 +248,16 @@ def test_propose_reply_requires_read_conversation(demo: Demo, owner_engine: Engi
     data = ok(call(ctx, state, "propose_reply", args))
     proposal = _proposal(owner_engine, data["proposal_id"])
     assert proposal["action_type"] == "conversations.send_reply"
-    assert proposal["payload"] == {"conversation_id": args["conversation_id"], "body": args["text"]}  # as given
+    assert proposal["payload"] == {
+        "conversation_id": args["conversation_id"],
+        "body": args["text"],
+        "citations": [],
+        "ai_generation": 0,
+        "answers_message_id": None,
+        "grounding": None,
+        "safety_clean": False,
+        "bundled_action": False,
+    }  # as given
     assert proposal["title"] == "Reply to Ada (web chat)" and proposal["conversation_id"] == demo.conversations["Ada"]
 
 

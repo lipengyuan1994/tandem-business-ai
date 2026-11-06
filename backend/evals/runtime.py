@@ -59,6 +59,7 @@ DEFAULT_CLASS: dict[str, ModelClass] = {
     "copilot": "agent",
     "summary": "fast_extract",
     "procurement": "fast_extract",
+    "grounding": "grounding",
 }
 
 
@@ -110,9 +111,33 @@ def validate_cases(cases: list[Case], path: Path = seed_module.DEFAULT_FIXTURES)
     for case in cases:
         if case.business not in businesses:
             raise ValueError(f"{case.id}: unknown seed business")
-        allowed = {"channel", "visitor", "message", "operation", "quote_request", "supplier", "references"}
+        allowed = {
+            "channel",
+            "visitor",
+            "message",
+            "operation",
+            "quote_request",
+            "supplier",
+            "references",
+            "knowledge_injection",
+        }
+        if case.suite == "grounding":
+            allowed |= {"articles", "db_facts"}
         if set(case.input) - allowed or not isinstance(case.input.get("message"), str) or not case.input["message"]:
             raise ValueError(f"{case.id}: invalid input payload")
+        if (attack := case.input.get("knowledge_injection")) is not None:
+            articles = document["tables"].get("kb_articles", [])
+            if (
+                not isinstance(attack, dict)
+                or set(attack) != {"slug", "text"}
+                or not isinstance(attack["text"], str)
+                or not 1 <= len(attack["text"]) <= 1000
+                or not any(
+                    a["business_id"] == case.business and a["slug"] == attack["slug"] and a["visibility"] == "public"
+                    for a in articles
+                )
+            ):
+                raise ValueError(f"{case.id}: invalid knowledge injection fixture")
         visitor = case.input.get("visitor", {})
         email = visitor.get("email")
         if email is not None and not email.endswith("@example.com"):
@@ -310,6 +335,17 @@ class LiveRuntime:
                     )
             timezone = next(b["timezone"] for b in document["tables"]["businesses"] if b["id"] == case.business)
             state = CaseState(business, list(ids.values()), ctx, timezone)
+            if attack := case.input.get("knowledge_injection"):
+                # Test-only hostile published source; runtime app grants remain append-only.
+                with self.owner_engine.begin() as observer:
+                    observer.execute(
+                        text(
+                            "update kb_article_versions v set body_markdown=v.body_markdown || :attack "
+                            "from kb_articles a where a.business_id=:b and v.business_id=:b and "
+                            "v.article_id=a.id and v.version_no=a.published_version and a.slug=:slug"
+                        ),
+                        {"b": business, "slug": attack["slug"], "attack": "\n" + attack["text"]},
+                    )
             if case.suite in {"intake", "injection", "timezones", "summary"}:
                 visitor = case.input.get("visitor", {})
                 with transaction(ctx) as db:
@@ -335,7 +371,20 @@ class LiveRuntime:
                 router_module.set_router_for_tests(previous_router)
 
     def _dispatch(self, case: Case, state: CaseState) -> None:
-        if case.suite in {"intake", "injection", "timezones"}:
+        if case.suite == "grounding":
+            from app.modules.ai.agent.contexts import background_ctx_factory
+            from app.modules.ai.grounding import check
+
+            value = check(
+                background_ctx_factory(state.business_id),
+                reply=case.input["message"],
+                articles=case.input.get("articles", []),
+                db_facts=case.input.get("db_facts", {}),
+                trigger_key=case.id,
+                router=self.router,
+            )
+            state.output = value.model_dump(mode="json")
+        elif case.suite in {"intake", "injection", "timezones"}:
             from app.modules.ai.usecases import intake
 
             assert state.message_id is not None
@@ -374,6 +423,20 @@ class LiveRuntime:
     def _normalize(self, payload: dict[str, Any], state: CaseState) -> tuple[dict[str, Any], bool]:
         payload = copy.deepcopy(payload)
         foreign = False
+        with self.owner_engine.connect() as observer:
+            for citation in payload.get("citations", []):
+                slug = observer.scalar(
+                    text(
+                        "select a.slug from kb_articles a join kb_article_versions v "
+                        "on v.article_id=a.id and v.business_id=a.business_id where a.business_id=:b and "
+                        "a.id=:a and v.version_no=:v and v.published_at is not null and a.visibility='public'"
+                    ),
+                    {"b": state.business_id, "a": citation["article_id"], "v": citation["version"]},
+                )
+                if slug is None:
+                    foreign = True
+                else:
+                    citation["article_slug"] = slug
         if payload.get("resource_id"):
             # No public single-resource lookup exists. Observe only this case's
             # business, as for proposal inspection; a foreign/unknown ID fails closed.
@@ -424,7 +487,7 @@ class LiveRuntime:
             )
             for recorded in [*runs, *steps]:
                 db.expunge(recorded)
-        mains = [r for r in runs if r.use_case != "safety"]
+        mains = [r for r in runs if r.use_case not in {"safety", "grounding"} or case.suite == "grounding"]
         main = next((r for r in mains if r.id == state.run_id), mains[-1] if mains else None)
         with self.owner_engine.connect() as db:
             # Test-only observer: scope by case business, include every assistant proposal (even if omitted in final).
@@ -466,6 +529,9 @@ class LiveRuntime:
             try:
                 if case.suite == "summary":
                     ThreadSummary.model_validate(output)
+                elif case.suite == "grounding":
+                    conversations.GroundingResult.model_validate(output)
+                    output = state.output
                 elif case.suite == "procurement":
                     SupplierQuoteExtract.model_validate(output)
                     output = {**state.output, "extract": output}
@@ -506,6 +572,30 @@ class LiveRuntime:
             }
             for r in runs
         ]
+        with self.owner_engine.connect() as observer:
+            if state.conversation_id is not None:
+                output["handoff_requested"] = bool(
+                    observer.scalar(
+                        text("select ai_mode='human' from conversations where business_id=:b and id=:c"),
+                        {"b": state.business_id, "c": state.conversation_id},
+                    )
+                )
+                output["suggestion_created"] = bool(
+                    observer.scalar(
+                        text("select exists(select 1 from kb_suggestions where business_id=:b and conversation_id=:c)"),
+                        {"b": state.business_id, "c": state.conversation_id},
+                    )
+                )
+                evaluations = observer.execute(
+                    text(
+                        "select e.outcome,e.reasons from autonomy_evaluations e join action_proposals p "
+                        "on p.business_id=e.business_id and p.id=e.proposal_id "
+                        "where e.business_id=:b and p.conversation_id=:c order by e.created_at,e.id"
+                    ),
+                    {"b": state.business_id, "c": state.conversation_id},
+                ).all()
+                output["autonomy_outcomes"] = [e.outcome for e in evaluations]
+                output["autonomy_reasons"] = [reason for e in evaluations for reason in e.reasons]
         return Outcome(
             status="failed" if error or main is None else main.status,
             schema_valid=schema_valid,
@@ -550,7 +640,14 @@ class LiveRuntime:
                             "status": r.status,
                             "error_code": r.error_code,
                             "steps": [
-                                f"{s.kind}:{s.tool or '-'}:{s.error_code or '-'}" for s in steps if s.run_id == r.id
+                                f"{s.kind}:{s.tool or '-'}:{s.error_code or '-'}"
+                                + (
+                                    f" [{s.result_summary}]"
+                                    if s.kind == "repair" and s.result_summary.startswith("validation: ")
+                                    else ""
+                                )
+                                for s in steps
+                                if s.run_id == r.id
                             ],
                         }
                         for r in runs

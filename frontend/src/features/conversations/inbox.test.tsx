@@ -9,9 +9,10 @@ import { server } from "@/test/server"
 const TID = "00000000-0000-7000-8000-0000000000f1"
 const THREAD: Thread = {
   id: TID, channel: "web_chat", status: "waiting_on_staff", subject: null, customer_id: null, customer_name: null, visitor_name: "Ada", visitor_email: "ada@example.com",
+  ai_mode: "auto", ai_generation: 0, ai_paused_at: null,
   assigned_to: null, handoff_requested_at: null, last_message_at: "2026-11-05T17:00:00Z", version: 2,
   contact_consent_at: null, contact_consent_text: null,
-  messages: [{ id: "m1", direction: "inbound", author_kind: "visitor", author_user_id: null, body: "My rear brake squeaks. Next Tuesday morning?", created_at: "2026-11-05T17:00:00Z", delivery_status: null, proposal_id: null }],
+  messages: [{ id: "m1", direction: "inbound", author_kind: "visitor", author_user_id: null, body: "My rear brake squeaks. Next Tuesday morning?", created_at: "2026-11-05T17:00:00Z", delivery_status: null, proposal_id: null, publication_state: "published", sending_label: null, stop_url: null }],
 }
 
 function mockInbox() {

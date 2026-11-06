@@ -4,8 +4,8 @@
 |---|---|
 | Release / phase | MVP · P5 |
 | Tier / kind | **A** · **EVENT (build only after 2026-11-03 15:00 UTC)** |
-| Depends on | platform, org, identity, crm, catalog, scheduling, inventory, conversations, marketing, approvals |
-| Owns tables | `ai_runs`, `ai_run_steps`, `assistant_threads`, `assistant_messages`, `ai_usage_daily`; stretch: `knowledge_documents`, `knowledge_chunks` |
+| Depends on | platform, org, identity, crm, catalog, scheduling, inventory, conversations, knowledge, marketing, approvals, sales, purchasing, dashboard, notifications |
+| Owns tables | `ai_runs`, `ai_run_steps`, `assistant_threads`, `assistant_messages`, `ai_usage_daily`; knowledge is owned by M19 |
 
 > Build from the [AI build kit](../ai/README.md); its [contracts](../ai/contracts.md) supersede the tables, API and
 > tests listed here where they differ.

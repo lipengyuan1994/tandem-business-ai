@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from app.modules.approvals import public as approvals
+from app.modules.conversations import public as conversations
 from app.modules.notifications import public as notifications
 from app.modules.org import public as org
 from app.modules.purchasing import public as purchasing
@@ -24,7 +25,7 @@ router = APIRouter()
 
 class WorkItem(BaseModel):
     id: uuid.UUID
-    kind: Literal["proposal", "outbound_mail", "supplier_quote", "autonomy_fallback"]
+    kind: Literal["proposal", "outbound_mail", "supplier_quote", "autonomy_fallback", "web_reply"]
     title: str
     created_at: datetime
     status: str
@@ -74,6 +75,7 @@ def work_queue(
         rows = approvals.proposal_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
         rows += notifications.outbound_queue_items(db, ctx, statuses=("pending",), limit=limit + 1, cursor=cursor)
         rows += purchasing.awaiting_supplier_items(db, ctx, limit=limit + 1, cursor=cursor)
+        rows += conversations.publication_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
         return page(rows, limit)
 
 
@@ -91,6 +93,7 @@ def exceptions(
     with transaction(ctx) as db:
         rows = approvals.proposal_queue_items(db, ctx, failed=True, limit=limit + 1, cursor=cursor)
         rows += approvals.fallback_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
+        rows += conversations.publication_queue_items(db, ctx, failed=True, limit=limit + 1, cursor=cursor)
         rows += notifications.outbound_queue_items(
             db, ctx, statuses=("failed", "unknown"), limit=limit + 1, cursor=cursor
         )

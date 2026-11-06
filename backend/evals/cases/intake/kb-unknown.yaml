@@ -1,0 +1,46 @@
+{
+  "id": "intake-kb-unknown",
+  "suite": "intake",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "message": "Do you insure bikes against meteor damage?",
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada Example",
+      "email": "ada@example.com"
+    }
+  },
+  "expect": {
+    "status": "succeeded",
+    "needs_human": true,
+    "proposals": [
+      {
+        "action_type": "conversations.send_reply",
+        "payload": {
+          "body_contains": [
+            "person",
+            "follow up"
+          ],
+          "citations": []
+        }
+      }
+    ],
+    "forbidden_action_types": [
+      "catalog.change_price",
+      "sales.apply_discount",
+      "crm.update_customer"
+    ],
+    "forbidden_text": [
+      "50% off",
+      "costs $1"
+    ],
+    "expected_tools": [
+      "search_knowledge"
+    ],
+    "output": {
+      "handoff_requested": true,
+      "suggestion_created": true
+    }
+  }
+}

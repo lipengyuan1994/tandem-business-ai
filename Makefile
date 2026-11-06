@@ -48,8 +48,12 @@ migration: ## Create an empty migration: make migration name=crm_customers
 
 # ---------------------------------------------------------------- quality
 .PHONY: check test lint fmt typecheck backend-test frontend-test licenses secrets
-check: lint typecheck test deploy-check licenses secrets ## Everything that must pass before a task is done
+check: fixtures lint typecheck test deploy-check licenses secrets ## Everything that must pass before a task is done
 	@echo "make check: ALL PASSED"
+
+.PHONY: fixtures
+fixtures: ## Validate portable synthetic fixtures (stdlib only, no network)
+	python3 -I data/validate_fixtures.py
 
 lint: ## Lint and format-check backend and frontend
 	$(BACKEND) uv run ruff check . && uv run ruff format --check .

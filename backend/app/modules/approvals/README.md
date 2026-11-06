@@ -26,7 +26,7 @@ the business enables `allow_self_approval`. Requesters retain their existing rea
 
 P10-A0: [Autonomy contract](../../../../docs/roadmap/ai/contracts.md#autonomy-rules-p10-a0).
 - New tables: `autonomy_rules`, `autonomy_evaluations` (append-only), `autonomy_counters`; forced business RLS.
-- The only rule-eligible action is `inventory.create_reorder_draft`. AI proposals may receive a policy decision;
+- Rule-eligible actions: `inventory.create_reorder_draft` and C1 `conversations.send_reply`. AI policy decisions;
   staff proposals always retain the human path. `decided_by_kind=policy` has null `decided_by`, rule id/version and
   the real grantor; execution resolves that grantor's current permissions and re-checks rule version + pause.
 - Settings/rule share locks protect execution against revocation; cap reservation uses a conditional daily upsert.
@@ -52,11 +52,16 @@ second-person checks, revalidates previews and atomically reserves business-loca
 subjects count once per day with top-ups and no refunds. Normal decisions retain allow_self_approval;
 requesters cannot self-approve second-person actions. Engine rechecks second-person for chat/self.
 Public `chat_origin_run_id`, `chat_card`, `confirm_chat` serve AI's owned-thread path; no model tool.
-`outbound_authority` returns scoped origin/action for notifications. Detail and Activity get independent
-`delivery_state` from notifications' registered reader, preserving the dependency graph. Activity still
+`outbound_authority` returns scoped origin/action and immutable source-message id. Detail and Activity get independent
+`delivery_state` from notifications/conversations' registered readers, preserving the dependency graph. Activity still
 lists autonomy evaluations. `proposal_queue_items`/`fallback_queue_items` serve the read-only work views.
 
 A1 live-eval correction: `ExecutorSpec.autonomy_reasons` supplies payload-owned conditions. Reorder
 quantities differing from current suggestions record fell_back/quantity_not_suggested before any
 shadow/live cap reservation. Human/chat decisions may use requested quantities; policy execution
 retains its strict locked recheck. No rule allowlist expansion or model-derived policy judgment.
+
+P10-C1: public `invalidate_ai_replies(db,ctx,conversation_id,generation)` cancels open assistant reply proposals
+from older ownership generations, records failure_code conversations.ai_paused and an audit/event. Staff proposals
+are preserved. Row locks use SKIP LOCKED to avoid inversion with conversation takeover; the reply executor checks
+ownership again and durable hand-over/ownership subscribers clean up skipped proposals.

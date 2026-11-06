@@ -27,6 +27,9 @@ routes:                               # ordered: the first healthy, policy-allow
   writer:
     - {provider: vultr, model: deepseek-v4.1-flash, price_in_per_m: 0.60, price_out_per_m: 0.60}
     - {provider: openai, model: gpt-5.6-luna}
+  grounding:
+    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}
+    - {provider: vultr, model: qwen3.8-flash-next, price_in_per_m: 0.20, price_out_per_m: 0.20}
   safety:
     - {provider: vultr, model: nemotron-3.5-content-safety, price_in_per_m: 0.15, price_out_per_m: 0.15}
   embed:

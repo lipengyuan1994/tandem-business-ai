@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 Policy = Literal["hosted_vultr", "hosted_any", "strict_private", "regulated"]
 UseCaseId = Literal[
     "intake", "copilot", "summary", "reorder_note", "briefing", "procurement", "campaign_draft", "payment_followup",
-    "safety",
+    "safety", "grounding",
 ]  # fmt: skip
 
 

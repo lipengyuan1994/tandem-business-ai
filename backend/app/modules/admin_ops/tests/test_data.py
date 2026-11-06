@@ -57,6 +57,7 @@ def test_export_contains_every_module_of_one_business_and_nothing_of_another(dem
         "catalog",
         "inventory",
         "conversations",
+        "knowledge",
         "scheduling",
         "marketing",
         "sales",

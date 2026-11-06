@@ -116,6 +116,7 @@ def public_profile(ctx: Context = Depends(public_context)) -> PublicProfileOut:
         business = repository.get_business(db, ctx)
         assert business is not None
         return PublicProfileOut(
+            ai_greeting=f"You're chatting with {business.name}'s AI assistant.",
             avoid_medical_details=is_regulated(),
             name=business.name,
             timezone=business.timezone,

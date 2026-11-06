@@ -55,3 +55,6 @@ without recipients/variables/capability URLs. Unknown resolution rules remain un
 
 SMTP retry tests freeze the application clock, verify no claim/SMTP send before next_attempt_at,
 then advance to the exact due time before retrying. Header/stable-ID and TLS certificate checks stay intact.
+
+C1 AI web-chat replies use conversations' withheld publication job and Stop endpoint; no simulated web outbox row
+is queued for them. Mail keeps this module's A1 path. Approvals combines the registered mail and web delivery readers.

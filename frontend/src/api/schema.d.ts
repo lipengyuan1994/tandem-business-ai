@@ -726,6 +726,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/messages/{message_id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop a withheld web-chat reply */
+        post: operations["stop_reply_api_v1_conversations_messages__message_id__stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations/{conversation_id}": {
         parameters: {
             query?: never;
@@ -744,6 +761,23 @@ export interface paths {
         patch: operations["patch_api_v1_conversations__conversation_id__patch"];
         trace?: never;
     };
+    "/api/v1/conversations/{conversation_id}/hand-back": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hand Back */
+        post: operations["hand_back_api_v1_conversations__conversation_id__hand_back_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -755,6 +789,23 @@ export interface paths {
         put?: never;
         /** Reply or add an internal note */
         post: operations["post_message_api_v1_conversations__conversation_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/take-over": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Take Over */
+        post: operations["take_over_api_v1_conversations__conversation_id__take_over_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1208,6 +1259,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/knowledge/articles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Articles */
+        get: operations["articles_api_v1_knowledge_articles_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_knowledge_articles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/articles/{article_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get */
+        get: operations["get_api_v1_knowledge_articles__article_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit */
+        patch: operations["edit_api_v1_knowledge_articles__article_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/knowledge/articles/{article_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive */
+        post: operations["archive_api_v1_knowledge_articles__article_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/articles/{article_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish */
+        post: operations["publish_api_v1_knowledge_articles__article_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suggestions */
+        get: operations["suggestions_api_v1_knowledge_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/suggestions/{suggestion_id}/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Convert */
+        post: operations["convert_api_v1_knowledge_suggestions__suggestion_id__convert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/suggestions/{suggestion_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss */
+        post: operations["dismiss_api_v1_knowledge_suggestions__suggestion_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketing/campaigns": {
         parameters: {
             query?: never;
@@ -1589,6 +1761,23 @@ export interface paths {
         put?: never;
         /** Start a chat (visitor) */
         post: operations["start_chat_api_v1_public__business_slug__chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/chat/handoff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Visitor Handoff */
+        post: operations["visitor_handoff_api_v1_public__business_slug__chat_handoff_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2631,7 +2820,7 @@ export interface components {
              * @default none
              * @enum {string}
              */
-            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped";
+            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped" | "withheld" | "published";
             /** Failure Code */
             failure_code: string | null;
             /** Granted By */
@@ -2775,6 +2964,106 @@ export interface components {
             can_decide: number;
             /** Top */
             top: components["schemas"]["PendingItem"][];
+        };
+        /** ArticleCreate */
+        ArticleCreate: {
+            /** Body Markdown */
+            body_markdown: string;
+            /** Slug */
+            slug: string;
+            /** Tags */
+            tags?: string[];
+            /** Title */
+            title: string;
+            /**
+             * Visibility
+             * @default public
+             * @enum {string}
+             */
+            visibility: "public" | "internal";
+        };
+        /** ArticleDetail */
+        ArticleDetail: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string | null;
+            /** Current Version */
+            current_version: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Published Version */
+            published_version: number | null;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+            /** Versions */
+            versions: components["schemas"]["VersionOut"][];
+            /** Visibility */
+            visibility: string;
+        };
+        /** ArticleEdit */
+        ArticleEdit: {
+            /** Body Markdown */
+            body_markdown: string;
+            /** Tags */
+            tags?: string[];
+            /** Title */
+            title: string;
+            /** Version */
+            version: number;
+            /** Visibility */
+            visibility?: ("public" | "internal") | null;
+        };
+        /** ArticleOut */
+        ArticleOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string | null;
+            /** Current Version */
+            current_version: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Published Version */
+            published_version: number | null;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+            /** Visibility */
+            visibility: string;
         };
         /** AttemptOut */
         AttemptOut: {
@@ -3053,6 +3342,11 @@ export interface components {
              */
             booking_lead_time_minutes: number;
             /**
+             * Handoff After Hours Text
+             * @default We're currently closed. A person will reply here when we're open.
+             */
+            handoff_after_hours_text: string;
+            /**
              * Hold Minutes
              * @default 30
              */
@@ -3123,6 +3417,11 @@ export interface components {
              * @default 60
              */
             booking_lead_time_minutes: number;
+            /**
+             * Handoff After Hours Text
+             * @default We're currently closed. A person will reply here when we're open.
+             */
+            handoff_after_hours_text: string;
             /**
              * Hold Minutes
              * @default 30
@@ -3445,7 +3744,7 @@ export interface components {
              * Delivery State
              * @enum {string}
              */
-            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped";
+            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped" | "withheld" | "published";
             /**
              * Id
              * Format: uuid
@@ -3612,6 +3911,15 @@ export interface components {
         };
         /** ConversationListItem */
         ConversationListItem: {
+            /** Ai Generation */
+            ai_generation: number;
+            /**
+             * Ai Mode
+             * @enum {string}
+             */
+            ai_mode: "auto" | "human";
+            /** Ai Paused At */
+            ai_paused_at: string | null;
             /** Assigned To */
             assigned_to: string | null;
             /**
@@ -3675,6 +3983,12 @@ export interface components {
             status?: ("open" | "waiting_on_staff" | "waiting_on_customer" | "closed") | null;
             /** Subject */
             subject?: string | null;
+            /** Version */
+            version: number;
+        };
+        /** ConvertIn */
+        ConvertIn: {
+            article: components["schemas"]["ArticleCreate"];
             /** Version */
             version: number;
         };
@@ -4620,6 +4934,8 @@ export interface components {
             author_user_id: string | null;
             /** Body */
             body: string;
+            /** Cancellation Reason */
+            cancellation_reason?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -4639,6 +4955,18 @@ export interface components {
             id: string;
             /** Proposal Id */
             proposal_id: string | null;
+            /**
+             * Publication State
+             * @default published
+             * @enum {string}
+             */
+            publication_state: "withheld" | "published" | "stopped" | "cancelled";
+            /** Publish At */
+            publish_at?: string | null;
+            /** Sending Label */
+            readonly sending_label: string | null;
+            /** Stop Url */
+            readonly stop_url: string | null;
         };
         /** Money */
         Money: {
@@ -5105,7 +5433,7 @@ export interface components {
              * @default none
              * @enum {string}
              */
-            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped";
+            delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped" | "withheld" | "published";
             /**
              * Expires At
              * Format: date-time
@@ -5232,9 +5560,16 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Is System
+             * @default false
+             */
+            is_system: boolean;
         };
         /** PublicProfileOut */
         PublicProfileOut: {
+            /** Ai Greeting */
+            ai_greeting: string;
             /**
              * Ai Policy
              * @enum {string}
@@ -5342,6 +5677,8 @@ export interface components {
         };
         /** PublicThreadOut */
         PublicThreadOut: {
+            /** Ai Greeting */
+            ai_greeting: string;
             /** Business Name */
             business_name: string;
             /**
@@ -6206,6 +6543,32 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** SuggestionOut */
+        SuggestionOut: {
+            /** Article Id */
+            article_id: string | null;
+            /**
+             * Conversation Id
+             * Format: uuid
+             */
+            conversation_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Question Text */
+            question_text: string;
+            /** Status */
+            status: string;
+            /** Version */
+            version: number;
+        };
         /** SummaryOut */
         SummaryOut: {
             /**
@@ -6526,6 +6889,15 @@ export interface components {
         };
         /** ThreadOut */
         ThreadOut: {
+            /** Ai Generation */
+            ai_generation: number;
+            /**
+             * Ai Mode
+             * @enum {string}
+             */
+            ai_mode: "auto" | "human";
+            /** Ai Paused At */
+            ai_paused_at: string | null;
             /** Assigned To */
             assigned_to: string | null;
             /**
@@ -6686,6 +7058,26 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** VersionOut */
+        VersionOut: {
+            /** Author */
+            author: string | null;
+            /** Body Markdown */
+            body_markdown: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Published At */
+            published_at: string | null;
+            /** Tags */
+            tags: string[];
+            /** Title */
+            title: string;
+            /** Version No */
+            version_no: number;
+        };
         /** WorkItem */
         WorkItem: {
             /** Action Type */
@@ -6712,7 +7104,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback";
+            kind: "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback" | "web_reply";
             /** Proposal Id */
             proposal_id?: string | null;
             /** Quote Request Id */
@@ -6744,6 +7136,11 @@ export interface components {
         };
         /** VersionIn */
         app__modules__crm__api__VersionIn: {
+            /** Version */
+            version: number;
+        };
+        /** VersionIn */
+        app__modules__knowledge__schemas__VersionIn: {
             /** Version */
             version: number;
         };
@@ -8134,7 +8531,7 @@ export interface operations {
         parameters: {
             query?: {
                 cursor?: string | null;
-                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety") | null;
+                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding") | null;
                 status?: ("running" | "succeeded" | "failed" | "step_limit" | "budget_exceeded" | "policy_blocked") | null;
                 limit?: number;
             };
@@ -9822,6 +10219,73 @@ export interface operations {
             };
         };
     };
+    stop_reply_api_v1_conversations_messages__message_id__stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     thread_api_v1_conversations__conversation_id__get: {
         parameters: {
             query?: never;
@@ -9960,6 +10424,73 @@ export interface operations {
             };
         };
     };
+    hand_back_api_v1_conversations__conversation_id__hand_back_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     post_message_api_v1_conversations__conversation_id__messages_post: {
         parameters: {
             query?: never;
@@ -9982,6 +10513,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    take_over_api_v1_conversations__conversation_id__take_over_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadOut"];
                 };
             };
             /** @description Authentication required */
@@ -11994,6 +12592,635 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReorderSuggestion"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    articles_api_v1_knowledge_articles_get: {
+        parameters: {
+            query?: {
+                query?: string | null;
+                status?: ("draft" | "published" | "archived") | null;
+                visibility?: ("public" | "internal") | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleOut"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    create_api_v1_knowledge_articles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArticleCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleDetail"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    get_api_v1_knowledge_articles__article_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleDetail"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    edit_api_v1_knowledge_articles__article_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArticleEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleDetail"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    archive_api_v1_knowledge_articles__article_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__knowledge__schemas__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleDetail"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    publish_api_v1_knowledge_articles__article_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__knowledge__schemas__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleDetail"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    suggestions_api_v1_knowledge_suggestions_get: {
+        parameters: {
+            query?: {
+                status?: "open" | "done" | "dismissed";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionOut"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    convert_api_v1_knowledge_suggestions__suggestion_id__convert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConvertIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleDetail"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    dismiss_api_v1_knowledge_suggestions__suggestion_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__knowledge__schemas__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionOut"];
                 };
             };
             /** @description Authentication required */
@@ -14157,6 +15384,75 @@ export interface operations {
             };
             /** @description Not found (also returned for records of another business) */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    visitor_handoff_api_v1_public__business_slug__chat_handoff_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_slug: string;
+            };
+            cookie?: {
+                smb_visitor?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicThreadOut"];
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

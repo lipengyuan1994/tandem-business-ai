@@ -4,7 +4,9 @@ import uuid
 from datetime import date, datetime, time
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field
+
+from app.platform import clock
 
 Channel = Literal["web_chat", "phone_log", "walk_in", "email", "voice"]
 Status = Literal["open", "waiting_on_staff", "waiting_on_customer", "closed"]
@@ -20,6 +22,22 @@ class MessageOut(BaseModel):
     delivery_status: str | None
     proposal_id: uuid.UUID | None
     created_at: datetime
+    publication_state: Literal["withheld", "published", "stopped", "cancelled"] = "published"
+    publish_at: datetime | None = None
+    cancellation_reason: str | None = None
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def sending_label(self) -> str | None:
+        if self.publication_state != "withheld" or self.publish_at is None:
+            return None
+        seconds = max(0, int((self.publish_at - clock.now()).total_seconds()))
+        return f"Sending in {seconds // 60}:{seconds % 60:02}"
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def stop_url(self) -> str | None:
+        return f"/api/v1/conversations/messages/{self.id}/stop" if self.publication_state == "withheld" else None
 
 
 class ConversationOut(BaseModel):
@@ -36,6 +54,9 @@ class ConversationOut(BaseModel):
     contact_consent_at: datetime | None
     contact_consent_text: str | None
     handoff_requested_at: datetime | None
+    ai_mode: Literal["auto", "human"]
+    ai_generation: int
+    ai_paused_at: datetime | None
     version: int
 
 
@@ -92,6 +113,7 @@ class PublicMessageIn(BaseModel):
 class PublicMessageOut(BaseModel):
     id: uuid.UUID
     from_business: bool
+    is_system: bool = False
     body: str
     created_at: datetime
 
@@ -100,6 +122,7 @@ class PublicThreadOut(BaseModel):
     next_cursor: str | None = None
     conversation_id: uuid.UUID
     business_name: str
+    ai_greeting: str
     messages: list[PublicMessageOut]
 
 
@@ -120,12 +143,37 @@ class AppointmentRequestIn(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
 
+class Citation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    article_id: uuid.UUID
+    version: int = Field(ge=1)
+
+
+class GroundingClaim(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: str = Field(min_length=1, max_length=240)
+    verdict: Literal["supported", "unsupported", "contradicted"]
+    source: str = Field(max_length=100)
+
+
+class GroundingResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    claims: list[GroundingClaim] = Field(max_length=8)
+    verdict: Literal["supported", "unsupported", "contradicted", "unavailable"]
+
+
 class SendReplyPayload(BaseModel):
     """conversations.send_reply proposal payload."""
 
     model_config = ConfigDict(extra="forbid")
     conversation_id: uuid.UUID
     body: str = Field(min_length=1, max_length=4000)
+    citations: list[Citation] = Field(default_factory=list, max_length=3)
+    ai_generation: int | None = Field(default=None, ge=0)
+    answers_message_id: uuid.UUID | None = None
+    grounding: GroundingResult | None = None
+    safety_clean: bool = False
+    bundled_action: bool = False
 
 
 class ThreadDto(BaseModel):
@@ -137,6 +185,8 @@ class ThreadDto(BaseModel):
     customer_id: uuid.UUID | None
     visitor_name: str | None
     messages: list[MessageOut]
+    ai_mode: Literal["auto", "human"] = "auto"
+    ai_generation: int = 0
 
 
 class MessageContext(BaseModel):
@@ -151,3 +201,6 @@ class MessageContext(BaseModel):
     visitor_email: str | None
     visitor_phone: str | None
     created_at: datetime
+    ai_mode: Literal["auto", "human"] = "auto"
+    ai_generation: int = 0
+    message_ai_generation: int = 0

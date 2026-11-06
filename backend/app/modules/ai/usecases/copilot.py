@@ -71,6 +71,7 @@ _GENERATION_SLOTS = threading.BoundedSemaphore(4)
 
 # Every read tool, plus only the five U2 action tools. This is also the single source of staff-facing step text.
 STATUS_TEXT = {
+    "search_knowledge": "Searching published knowledge…",
     "get_conversation": "Reading the conversation…",
     "find_customers": "Finding customers…",
     "get_customer": "Checking the customer…",

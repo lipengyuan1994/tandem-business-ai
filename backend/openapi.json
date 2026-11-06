@@ -45,7 +45,9 @@
               "delivered",
               "failed",
               "unknown",
-              "stopped"
+              "stopped",
+              "withheld",
+              "published"
             ],
             "title": "Delivery State",
             "type": "string"
@@ -401,6 +403,280 @@
           "top"
         ],
         "title": "ApprovalsSection",
+        "type": "object"
+      },
+      "ArticleCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "body_markdown": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Body Markdown",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "maxLength": 50,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "visibility": {
+            "default": "public",
+            "enum": [
+              "public",
+              "internal"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body_markdown",
+          "slug"
+        ],
+        "title": "ArticleCreate",
+        "type": "object"
+      },
+      "ArticleDetail": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "current_version": {
+            "title": "Current Version",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "published_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Version"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/VersionOut"
+            },
+            "title": "Versions",
+            "type": "array"
+          },
+          "visibility": {
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "visibility",
+          "status",
+          "current_version",
+          "published_version",
+          "created_by",
+          "created_at",
+          "updated_at",
+          "version",
+          "versions"
+        ],
+        "title": "ArticleDetail",
+        "type": "object"
+      },
+      "ArticleEdit": {
+        "additionalProperties": false,
+        "properties": {
+          "body_markdown": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Body Markdown",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "maxLength": 50,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          },
+          "visibility": {
+            "anyOf": [
+              {
+                "enum": [
+                  "public",
+                  "internal"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Visibility"
+          }
+        },
+        "required": [
+          "title",
+          "body_markdown",
+          "version"
+        ],
+        "title": "ArticleEdit",
+        "type": "object"
+      },
+      "ArticleOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "current_version": {
+            "title": "Current Version",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "published_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Version"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "visibility": {
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "visibility",
+          "status",
+          "current_version",
+          "published_version",
+          "created_by",
+          "created_at",
+          "updated_at",
+          "version"
+        ],
+        "title": "ArticleOut",
         "type": "object"
       },
       "AttemptOut": {
@@ -1087,6 +1363,13 @@
             "title": "Booking Lead Time Minutes",
             "type": "integer"
           },
+          "handoff_after_hours_text": {
+            "default": "We're currently closed. A person will reply here when we're open.",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Handoff After Hours Text",
+            "type": "string"
+          },
           "hold_minutes": {
             "default": 30,
             "maximum": 240.0,
@@ -1214,6 +1497,13 @@
             "minimum": 0.0,
             "title": "Booking Lead Time Minutes",
             "type": "integer"
+          },
+          "handoff_after_hours_text": {
+            "default": "We're currently closed. A person will reply here when we're open.",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Handoff After Hours Text",
+            "type": "string"
           },
           "hold_minutes": {
             "default": 30,
@@ -2185,7 +2475,9 @@
               "delivered",
               "failed",
               "unknown",
-              "stopped"
+              "stopped",
+              "withheld",
+              "published"
             ],
             "title": "Delivery State",
             "type": "string"
@@ -2568,6 +2860,30 @@
       },
       "ConversationListItem": {
         "properties": {
+          "ai_generation": {
+            "title": "Ai Generation",
+            "type": "integer"
+          },
+          "ai_mode": {
+            "enum": [
+              "auto",
+              "human"
+            ],
+            "title": "Ai Mode",
+            "type": "string"
+          },
+          "ai_paused_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Paused At"
+          },
           "assigned_to": {
             "anyOf": [
               {
@@ -2725,6 +3041,9 @@
           "contact_consent_at",
           "contact_consent_text",
           "handoff_requested_at",
+          "ai_mode",
+          "ai_generation",
+          "ai_paused_at",
           "version"
         ],
         "title": "ConversationListItem",
@@ -2823,6 +3142,25 @@
           "version"
         ],
         "title": "ConversationUpdate",
+        "type": "object"
+      },
+      "ConvertIn": {
+        "additionalProperties": false,
+        "properties": {
+          "article": {
+            "$ref": "#/components/schemas/ArticleCreate"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "article"
+        ],
+        "title": "ConvertIn",
         "type": "object"
       },
       "CopilotThreadDetailOut": {
@@ -5587,6 +5925,17 @@
             "title": "Body",
             "type": "string"
           },
+          "cancellation_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Reason"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -5628,6 +5977,53 @@
               }
             ],
             "title": "Proposal Id"
+          },
+          "publication_state": {
+            "default": "published",
+            "enum": [
+              "withheld",
+              "published",
+              "stopped",
+              "cancelled"
+            ],
+            "title": "Publication State",
+            "type": "string"
+          },
+          "publish_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publish At"
+          },
+          "sending_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "title": "Sending Label"
+          },
+          "stop_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "title": "Stop Url"
           }
         },
         "required": [
@@ -5638,7 +6034,9 @@
           "body",
           "delivery_status",
           "proposal_id",
-          "created_at"
+          "created_at",
+          "sending_label",
+          "stop_url"
         ],
         "title": "MessageOut",
         "type": "object"
@@ -6985,7 +7383,9 @@
               "delivered",
               "failed",
               "unknown",
-              "stopped"
+              "stopped",
+              "withheld",
+              "published"
             ],
             "title": "Delivery State",
             "type": "string"
@@ -7312,6 +7712,11 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "is_system": {
+            "default": false,
+            "title": "Is System",
+            "type": "boolean"
           }
         },
         "required": [
@@ -7325,6 +7730,10 @@
       },
       "PublicProfileOut": {
         "properties": {
+          "ai_greeting": {
+            "title": "Ai Greeting",
+            "type": "string"
+          },
           "ai_policy": {
             "enum": [
               "hosted_vultr",
@@ -7360,6 +7769,7 @@
           }
         },
         "required": [
+          "ai_greeting",
           "avoid_medical_details",
           "name",
           "timezone",
@@ -7637,6 +8047,10 @@
       },
       "PublicThreadOut": {
         "properties": {
+          "ai_greeting": {
+            "title": "Ai Greeting",
+            "type": "string"
+          },
           "business_name": {
             "title": "Business Name",
             "type": "string"
@@ -7668,6 +8082,7 @@
         "required": [
           "conversation_id",
           "business_name",
+          "ai_greeting",
           "messages"
         ],
         "title": "PublicThreadOut",
@@ -9773,6 +10188,60 @@
         "title": "StaffProposalOut",
         "type": "object"
       },
+      "SuggestionOut": {
+        "properties": {
+          "article_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Article Id"
+          },
+          "conversation_id": {
+            "format": "uuid",
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "question_text": {
+            "title": "Question Text",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "question_text",
+          "conversation_id",
+          "created_at",
+          "status",
+          "article_id",
+          "version"
+        ],
+        "title": "SuggestionOut",
+        "type": "object"
+      },
       "SummaryOut": {
         "properties": {
           "proposal_id": {
@@ -10645,6 +11114,30 @@
       },
       "ThreadOut": {
         "properties": {
+          "ai_generation": {
+            "title": "Ai Generation",
+            "type": "integer"
+          },
+          "ai_mode": {
+            "enum": [
+              "auto",
+              "human"
+            ],
+            "title": "Ai Mode",
+            "type": "string"
+          },
+          "ai_paused_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Paused At"
+          },
           "assigned_to": {
             "anyOf": [
               {
@@ -10804,6 +11297,9 @@
           "contact_consent_at",
           "contact_consent_text",
           "handoff_requested_at",
+          "ai_mode",
+          "ai_generation",
+          "ai_paused_at",
           "version",
           "messages"
         ],
@@ -11113,6 +11609,69 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "VersionOut": {
+        "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
+          "body_markdown": {
+            "title": "Body Markdown",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version_no": {
+            "title": "Version No",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version_no",
+          "title",
+          "body_markdown",
+          "tags",
+          "author",
+          "created_at",
+          "published_at"
+        ],
+        "title": "VersionOut",
+        "type": "object"
+      },
       "WorkItem": {
         "properties": {
           "action_type": {
@@ -11187,7 +11746,8 @@
               "proposal",
               "outbound_mail",
               "supplier_quote",
-              "autonomy_fallback"
+              "autonomy_fallback",
+              "web_reply"
             ],
             "title": "Kind",
             "type": "string"
@@ -11317,6 +11877,21 @@
       "app__modules__crm__api__VersionIn": {
         "properties": {
           "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "VersionIn",
+        "type": "object"
+      },
+      "app__modules__knowledge__schemas__VersionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "minimum": 1.0,
             "title": "Version",
             "type": "integer"
           }
@@ -12724,7 +13299,8 @@
                     "procurement",
                     "campaign_draft",
                     "payment_followup",
-                    "safety"
+                    "safety",
+                    "grounding"
                   ],
                   "type": "string"
                 },
@@ -14874,6 +15450,69 @@
         ]
       }
     },
+    "/api/v1/conversations/messages/{message_id}/stop": {
+      "post": {
+        "operationId": "stop_reply_api_v1_conversations_messages__message_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Stop a withheld web-chat reply",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
     "/api/v1/conversations/{conversation_id}": {
       "get": {
         "operationId": "thread_api_v1_conversations__conversation_id__get",
@@ -15008,6 +15647,69 @@
         ]
       }
     },
+    "/api/v1/conversations/{conversation_id}/hand-back": {
+      "post": {
+        "operationId": "hand_back_api_v1_conversations__conversation_id__hand_back_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Hand Back",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
     "/api/v1/conversations/{conversation_id}/messages": {
       "post": {
         "operationId": "post_message_api_v1_conversations__conversation_id__messages_post",
@@ -15076,6 +15778,69 @@
           }
         },
         "summary": "Reply or add an internal note",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
+    "/api/v1/conversations/{conversation_id}/take-over": {
+      "post": {
+        "operationId": "take_over_api_v1_conversations__conversation_id__take_over_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThreadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Take Over",
         "tags": [
           "conversations"
         ]
@@ -17134,6 +17899,702 @@
         ]
       }
     },
+    "/api/v1/knowledge/articles": {
+      "get": {
+        "operationId": "articles_api_v1_knowledge_articles_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 500,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "draft",
+                    "published",
+                    "archived"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "visibility",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "public",
+                    "internal"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Visibility"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ArticleOut"
+                  },
+                  "title": "Response Articles Api V1 Knowledge Articles Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Articles",
+        "tags": [
+          "knowledge"
+        ]
+      },
+      "post": {
+        "operationId": "create_api_v1_knowledge_articles_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge/articles/{article_id}": {
+      "get": {
+        "operationId": "get_api_v1_knowledge_articles__article_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "article_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Article Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Get",
+        "tags": [
+          "knowledge"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_api_v1_knowledge_articles__article_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "article_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Article Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Edit",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge/articles/{article_id}/archive": {
+      "post": {
+        "operationId": "archive_api_v1_knowledge_articles__article_id__archive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "article_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Article Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__knowledge__schemas__VersionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Archive",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge/articles/{article_id}/publish": {
+      "post": {
+        "operationId": "publish_api_v1_knowledge_articles__article_id__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "article_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Article Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__knowledge__schemas__VersionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Publish",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge/suggestions": {
+      "get": {
+        "operationId": "suggestions_api_v1_knowledge_suggestions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "open",
+              "enum": [
+                "open",
+                "done",
+                "dismissed"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SuggestionOut"
+                  },
+                  "title": "Response Suggestions Api V1 Knowledge Suggestions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Suggestions",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge/suggestions/{suggestion_id}/convert": {
+      "post": {
+        "operationId": "convert_api_v1_knowledge_suggestions__suggestion_id__convert_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "suggestion_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Suggestion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Convert",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge/suggestions/{suggestion_id}/dismiss": {
+      "post": {
+        "operationId": "dismiss_api_v1_knowledge_suggestions__suggestion_id__dismiss_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "suggestion_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Suggestion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__knowledge__schemas__VersionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Dismiss",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
     "/api/v1/marketing/campaigns": {
       "get": {
         "operationId": "list_campaigns_api_v1_marketing_campaigns_get",
@@ -19189,6 +20650,84 @@
           }
         },
         "summary": "Start a chat (visitor)",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/chat/handoff": {
+      "post": {
+        "operationId": "visitor_handoff_api_v1_public__business_slug__chat_handoff_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "smb_visitor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Smb Visitor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicThreadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Too many requests"
+          }
+        },
+        "summary": "Visitor Handoff",
         "tags": [
           "public"
         ]

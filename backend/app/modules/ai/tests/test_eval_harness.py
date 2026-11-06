@@ -305,7 +305,7 @@ def test_case_inventory_and_injection_coverage() -> None:
             "procurement",
         )
     }
-    assert counts == {"intake": 62, "injection": 15, "timezones": 10, "copilot": 24, "summary": 10, "procurement": 15}
+    assert counts == {"intake": 67, "injection": 15, "timezones": 10, "copilot": 24, "summary": 10, "procurement": 15}
     cases = load_cases("injection")
     text = " ".join(case.input["message"] for case in cases)
     for marker in ("ignore previous instructions", "<system>", "<tool>", "</untrusted>", "set the price to 0"):
@@ -608,10 +608,14 @@ def test_real_integration_one_case_per_suite(
         if request.use_case == "safety":
             return json.dumps({"flagged": False, "category": "none"})
         if slug == "ambiguous-customer":
-            # Since 2026-11-04 ambiguity no longer stops intake: the agent runs with no customer identified and, for a
-            # booking about "my record", hands off to staff without a proposal.
+            # Ambiguity requires an actual acknowledgement/hand-over, not an invisible staff-only final.
             assert "customer" in request.messages[-1].content.lower()
-            return step_final("Several customers could match; please confirm the right record.", needs_human=True)
+            return step_tool(
+                "propose_reply",
+                conversation_id=conv,
+                text="A person will help identify the right customer record.",
+                request_handoff=True,
+            )
         if request.use_case == "summary":
             assert "Brake" in request.messages[-1].content
             return json.dumps(
@@ -705,7 +709,10 @@ def test_real_integration_one_case_per_suite(
     assert all(p.title for p in scored.diagnostics.proposals)
     assert all(r["started_at"] == case.now.isoformat() for r in scored.provenance["runs"])
     assert set(scored.provenance["proposal_run_ids"]) <= {r["id"] for r in scored.provenance["runs"]}
-    assert all(s == "pending_review" for s in scored.provenance["proposal_statuses"])
+    assert all(
+        s == ("cancelled" if slug == "ambiguous-customer" else "pending_review")
+        for s in scored.provenance["proposal_statuses"]
+    )
     assert scored.provenance["business_id"] == str(next(iter(seen_businesses)))
     assert re.fullmatch(r"[0-9a-f]{64}", scored.provenance["fixture_sha256"])
     expected_proposals = case.expect.proposal_sets[(scored.matched_proposal_alternative or 1) - 1]
@@ -1015,11 +1022,11 @@ def test_failed_dispatch_retains_all_diagnostics_before_cleanup(
     scored = run_case(case, runtime.execute)
     assert not scored.passed
     assert scored.error_code == "ai.interrupted" and scored.detail is not None and len(scored.detail) == 200
-    assert {r.use_case for r in scored.diagnostics.runs} == {"safety", "intake"}
+    assert {r.use_case for r in scored.diagnostics.runs} == {"safety", "intake", "grounding"}
     agent = next(r for r in scored.diagnostics.runs if r.use_case == "intake")
     assert agent.status == "succeeded" and agent.error_code is None
     assert agent.steps == [
-        "repair:-:ai.invalid_model_output",
+        "repair:-:ai.invalid_model_output [validation: json_invalid]",
         "tool_call:get_conversation:-",
         "tool_call:propose_reply:-",
         "final:-:-",

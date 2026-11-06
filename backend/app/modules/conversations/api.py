@@ -15,10 +15,10 @@ from app.platform import audit, ratelimit
 from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import error_responses
-from app.platform.permissions import public_context, require
+from app.platform.permissions import public_context, require, require_session
 
+from . import ownership, publication, repository, service
 from . import permissions as P
-from . import repository, service
 from .intake import limit_public_creation, require_public_intake
 from .models import Conversation
 from .schemas import (
@@ -40,6 +40,14 @@ router = APIRouter()
 public_router = APIRouter()
 ERRORS = error_responses(401, 403, 404, 409, 422)
 VISITOR_COOKIE = "smb_visitor"
+
+
+@router.post(
+    "/messages/{message_id}/stop", response_model=MessageOut, summary="Stop a withheld web-chat reply", responses=ERRORS
+)
+def stop_reply(message_id: uuid.UUID, ctx: Context = Depends(require_session())) -> MessageOut:
+    with transaction(ctx) as db:
+        return MessageOut.model_validate(publication.stop(db, ctx, message_id))
 
 
 class ConversationPage(BaseModel):
@@ -142,9 +150,16 @@ def _public_thread(db: Session, ctx: Context, conv: Conversation, cursor: str | 
     return PublicThreadOut(
         conversation_id=conv.id,
         business_name=org.get_business_brief(db, ctx).name,
+        ai_greeting=f"You're chatting with {org.get_business_brief(db, ctx).name}'s AI assistant.",
         next_cursor=next_cursor,
         messages=[
-            PublicMessageOut(id=m.id, from_business=m.direction == "outbound", body=m.body, created_at=m.created_at)
+            PublicMessageOut(
+                id=m.id,
+                from_business=m.direction == "outbound",
+                is_system=m.author_kind == "system",
+                body=m.body,
+                created_at=m.published_at or m.created_at,
+            )
             for m in rows
         ],
     )
@@ -223,3 +238,32 @@ def visitor_message(
         ratelimit.hit(db, f"chat-ip:{_client_ip(request)}", limit=60, window_seconds=3600)
         service.visitor_message(db, ctx, conv, body.body)
         return _public_thread(db, ctx, conv, cursor)
+
+
+@router.post("/{conversation_id}/take-over", response_model=ThreadOut, responses=ERRORS)
+def take_over(conversation_id: uuid.UUID, ctx: Context = Depends(require(P.THREAD_WRITE))) -> ThreadOut:
+    with transaction(ctx) as db:
+        return _thread(db, ctx, ownership.take_over(db, ctx, conversation_id))
+
+
+@router.post("/{conversation_id}/hand-back", response_model=ThreadOut, responses=ERRORS)
+def hand_back(conversation_id: uuid.UUID, ctx: Context = Depends(require(P.THREAD_WRITE))) -> ThreadOut:
+    with transaction(ctx) as db:
+        return _thread(db, ctx, ownership.hand_back(db, ctx, conversation_id))
+
+
+@public_router.post(
+    "/{business_slug}/chat/handoff", response_model=PublicThreadOut, responses=error_responses(403, 404, 409, 422, 429)
+)
+def visitor_handoff(
+    business_slug: str,
+    request: Request,
+    smb_visitor: str | None = Cookie(default=None),
+    ctx: Context = Depends(public_context),
+) -> PublicThreadOut:
+    with transaction(ctx) as db:
+        conv = service.visitor_conversation(db, ctx, smb_visitor)
+        ratelimit.hit(db, f"chat-msg:{conv.id}", limit=10, window_seconds=60)
+        ratelimit.hit(db, f"chat-ip:{_client_ip(request)}", limit=60, window_seconds=3600)
+        service.request_handoff(db, ctx, conv.id, "Visitor asked to talk to a person")
+        return _public_thread(db, ctx, conv)

@@ -11,6 +11,7 @@ import json
 import time
 import uuid
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Any
 
 import structlog
@@ -18,6 +19,7 @@ from pydantic import ValidationError
 
 from app.platform.context import Context
 from app.platform.db import transaction
+from app.platform.errors import Conflict
 
 from .. import effects, recording
 from ..errors import AiError
@@ -27,10 +29,12 @@ from ..gateway.types import ChatMessage, ChatRequest, ChatResult, ProviderError
 from ..model_calls import budget_scope
 from ..schemas import Policy, RunStatus
 from ..tools.base import RunState
+from ..tools.intake import validate_step, validation_summary
+from ..tools.knowledge import resolve_citations
 from ..tools.registry import authorized_tools, execute_tool, get_tool, tool_catalog
 from .context import InputTooLarge, append_step, build_messages, trim_to_budget
 from .contexts import CtxFactory
-from .protocol import AGENT_STEP_ADAPTER, FinalStep, RunResult, RunSpec, StepEvent, ToolCallStep, agent_step_json_schema
+from .protocol import FinalStep, RunResult, RunSpec, StepEvent, ToolCallStep, agent_step_json_schema
 
 log = structlog.get_logger(__name__)
 _monotonic = time.monotonic  # tests replace it to simulate elapsed time
@@ -49,9 +53,9 @@ class StopRun(Exception):
 
 def repair_message(exc: ValidationError | ValueError) -> str:
     """`Your last reply was not valid: <error, ≤ 300 chars>. Reply with exactly one valid JSON object.` Validation
-    errors use codes only: locations can contain arbitrary model-written keys, even without input values."""
+    errors use codes and allowlisted static fields only: locations can contain arbitrary model-written keys."""
     if isinstance(exc, ValidationError):
-        detail = "; ".join(e["type"] for e in exc.errors(include_input=False))
+        detail = validation_summary(exc)
     else:
         detail = str(exc)
     return f"Your last reply was not valid: {detail[:MAX_REPAIR_ERROR]}. Reply with exactly one valid JSON object."
@@ -111,7 +115,9 @@ class ModelCaller:
         req = ChatRequest(
             messages=messages,
             json_schema=schema,
-            max_output_tokens=self.limits.max_output_tokens_per_step,
+            max_output_tokens=min(800, self.limits.max_output_tokens_per_step)
+            if self.model_class == "grounding"
+            else self.limits.max_output_tokens_per_step,
             timeout_s=min(float(self.limits.step_timeout_s), remaining),
             use_case=self.use_case,
         )
@@ -151,6 +157,8 @@ def _rebuild_state(ctx: Context, spec: RunSpec, run_id: uuid.UUID) -> RunState:
         from ..tools.common import cite
 
         for block in spec.context_blocks:
+            if block.label in {"active_services", "opening_hours"} and not block.untrusted:
+                state.db_facts[block.label] = json.loads(block.text)
             if block.label == "active_services" and not block.untrusted:
                 for service in json.loads(block.text):
                     cite(state, "get_service_parts", uuid.UUID(service["service_id"]), service)
@@ -188,7 +196,13 @@ def run_agent(
         proposal_ids: list[uuid.UUID] = []
         proposal_titles: list[str] = []
 
-        def finish(status: RunStatus, error_code: str | None = None, final: FinalStep | None = None) -> RunResult:
+        def finish(
+            status: RunStatus,
+            error_code: str | None = None,
+            final: FinalStep | None = None,
+            *,
+            handoff_requested: bool = False,
+        ) -> RunResult:
             needs_human = final.needs_human if final is not None else False
             result: dict[str, Any] = {"proposal_ids": [str(p) for p in proposal_ids]}
             if final is not None:
@@ -200,7 +214,8 @@ def run_agent(
                 emit(StepEvent(kind="error", run_id=run_id, error_code=error_code))
             return RunResult(
                 run_id=run_id, status=status, final=final, proposal_ids=list(proposal_ids), error_code=error_code,
-                extra={"proposal_titles": list(proposal_titles)},
+                extra={"proposal_titles": list(proposal_titles),
+                       **({"handoff_requested": True} if handoff_requested else {})},
             )  # fmt: skip
 
         if router is None:
@@ -221,11 +236,12 @@ def run_agent(
                 tokens = {"input_tokens": result.usage.input_tokens, "output_tokens": result.usage.output_tokens}
                 where = {"provider": result.provider, "model": result.model, "latency_ms": result.latency_ms}
                 try:
-                    step = AGENT_STEP_ADAPTER.validate_json(result.text)
-                except ValidationError as exc:
+                    step = validate_step(result.text, spec, proposal_ids, state)
+                except ValueError as exc:
                     step_no += 1
                     recording.record_step(ctx, run_id, recording.StepRecord(
-                        step_no=step_no, kind="repair", error_code="ai.invalid_model_output", **tokens, **where,
+                        step_no=step_no, kind="repair", error_code="ai.invalid_model_output",
+                        result_summary=validation_summary(exc), **tokens, **where,
                     ))  # fmt: skip
                     if step_no >= limits.max_steps:
                         raise StopRun("step_limit", "ai.step_limit") from None
@@ -238,11 +254,12 @@ def run_agent(
                     tokens = {"input_tokens": result.usage.input_tokens, "output_tokens": result.usage.output_tokens}
                     where = {"provider": result.provider, "model": result.model, "latency_ms": result.latency_ms}
                     try:
-                        step = AGENT_STEP_ADAPTER.validate_json(result.text)
-                    except ValidationError:
+                        step = validate_step(result.text, spec, proposal_ids, state)
+                    except ValueError as exc:
                         step_no += 1
                         recording.record_step(ctx, run_id, recording.StepRecord(
-                            step_no=step_no, kind="repair", error_code="ai.invalid_model_output", **tokens, **where,
+                            step_no=step_no, kind="repair", error_code="ai.invalid_model_output",
+                            result_summary=validation_summary(exc), **tokens, **where,
                         ))  # fmt: skip
                         raise StopRun("failed", "ai.invalid_model_output") from None
                 step_no += 1
@@ -265,6 +282,17 @@ def run_agent(
                     **tokens, **where,
                 ))  # fmt: skip
                 _collect_proposal(observation, proposal_ids, proposal_titles, emit, run_id)
+                if observation.get("ok") and observation.get("data", {}).get("handoff_requested"):
+                    return finish(
+                        "succeeded",
+                        handoff_requested=True,
+                        final=FinalStep(
+                            kind="final",
+                            message_to_staff="Handed to a person; AI replies are paused.",
+                            proposal_ids=list(proposal_ids),
+                            needs_human=True,
+                        ),
+                    )
                 append_step(messages, step.model_dump_json(), observation)
             return finish("step_limit", "ai.step_limit")
         except StopRun as stop:
@@ -287,7 +315,33 @@ def _run_tool(
     emit(StepEvent(kind="step", run_id=run_id, tool=step.tool, status_text=status_text(step.tool)))
     if caller.remaining() <= 0:
         raise StopRun("failed", "ai.run_timeout")
-    return execute_tool(ctx, step.tool, step.arguments, spec.tools, state)
+    if spec.use_case == "intake" and step.tool == "propose_reply" and step.tool in authorized_tools(ctx, spec.tools):
+        from ..grounding import check
+        from ..tools.proposals import ProposeReplyArgs
+
+        try:
+            args = ProposeReplyArgs.model_validate(step.arguments)
+            citations = resolve_citations(args.citations, state)
+        except (ValidationError, Conflict):
+            pass  # execute_tool owns the normal invalid-argument observation
+        else:
+            if not args.knowledge_missing and not args.request_handoff:
+                state.reply_grounding = check(
+                    lambda run_id: replace(ctx, ai_run_id=run_id),
+                    reply=args.text,
+                    articles=[state.knowledge_citations[(c.article_id, c.version)] for c in citations],
+                    db_facts=state.db_facts,
+                    trigger_key=state.trigger_key,
+                    router=caller.router,
+                )
+                state.checked_reply = args.text
+                if caller.remaining() <= 0:
+                    # Checking must not authorize an effect after its generating intake run has expired.
+                    raise StopRun("failed", "ai.run_timeout")
+    observation = execute_tool(ctx, step.tool, step.arguments, spec.tools, state)
+    if observation.get("ok") and step.tool in {"list_services", "get_service_parts", "check_stock", "find_slots"}:
+        state.db_facts.setdefault(step.tool, []).append(observation["data"])
+    return observation
 
 
 def _collect_proposal(

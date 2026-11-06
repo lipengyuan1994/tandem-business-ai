@@ -8,7 +8,113 @@ Conventions: `db: Session` (SQLAlchemy), `ctx: Context` (`app.platform.context`)
 timezone-aware UTC `datetime`, money is integer minor units, Pydantic v2 models with `extra="forbid"` for inputs.
 Revision: 2 (2026-11-03, after cold reads and a consistency review).
 
+## P10-C1: knowledge base and hand-over
+
+Owner-authorized Tier A / EVENT, part 1 (2026-11-05). This section extends the earlier frozen contracts;
+M19 owns text knowledge, conversations owns ownership state, AI consumes their public APIs.
+
+**Ownership.** Conversations add `ai_mode=auto|human` (default auto), `ai_generation=0` and
+`ai_paused_at`. Hand-over and direct staff replies/take-over set human; explicit staff hand-back sets auto,
+clears the request timestamp, and advances generation. Every manual staff reply/takeover and ownership transition advances generation, including within human mode.
+Staff actions require conversations.thread.write. Assigned hand-over notifies the assignee; unassigned
+notifies all active staff with conversations.proposal.approve (the send-reply executor permission).
+Repeated visitor/AI requests in one human episode are idempotent. A deterministic outbound system message
+uses business-local opening hours; closed hours use configurable `handoff_after_hours_text` (default:
+“We're currently closed. A person will reply here when we're open.”), otherwise “A person will reply here.”
+POST `/api/v1/public/{slug}/chat/handoff` uses the visitor cookie and message-equivalent thread/IP limits.
+Public thread and profile responses carry `ai_greeting`: “You're chatting with <Business>'s AI assistant.”
+Part 3 adds `is_system: bool` (default false) to each public message so the widget can distinguish system
+acknowledgements without exposing staff identity or internal message metadata.
+
+**Enforcement.** The message subscriber checks ownership before admission/enqueue. Intake rechecks before
+any model call (including safety/repair); server-owned message generations guard each call (also after budget-lock waits) and
+proposal creation. Old messages at/before the latest ownership boundary remain ineligible after hand-back.
+Reply proposals carry optional `ai_generation` and `citations: [{article_id, version}]` (empty by default).
+Takeover invalidates assistant-origin open reply proposals with `conversations.ai_paused`; staff proposals
+remain intact. Locked proposals may be skipped to avoid lock inversion, then cancelled by the hand-over
+event subscriber. Executor rechecks mode/generation under the conversation lock, so skipped/stale proposals
+cannot send. Staff-requested summary/copilot drafts created after takeover remain available for human review;
+they bind the current generation, and their provenance (not model arguments) permits staff assistance while human.
+These rules do not add automatic reply authorization, grounding checks or publication delay.
+
+**Knowledge and tools.** [M19](../modules/M19-knowledge.md) specifies schema, permissions and staff API.
+New read tool `search_knowledge(query, limit<=3)` returns bounded article/version/title/passages, fenced
+as untrusted by the existing runner. Intake always uses search_public. Authenticated copilot on behalf of
+a staff user can search internal published articles only with conversations.thread.read; current identity
+permissions are rechecked. No model argument selects visibility. Only results actually returned in this run
+enter the run's citation allowlist; propose_reply rejects every unreturned article/version and includes
+versioned tool evidence in the immutable proposal. Staff authors may include hostile instructions in text;
+retrieval never expands tool permissions or modifies trusted rules.
+
+**Intake v4** retains v3. Policy/FAQ answers require knowledge retrieval/citations or trusted database facts.
+Prices/hours/stock/durations come only from database facts/tools. A `knowledge_missing` reply flag is allowed
+only after an empty knowledge search in this run: code replaces its body with a short follow-up, creates a
+redacted suggestion from the actual trigger message, and requests hand-over atomically. This follow-up
+proposal is invalidated by the same hand-over rule; the deterministic visitor system message is immediate.
+The same propose_reply tool accepts request_handoff=true for other intake escalations (no suggestion).
+No unreviewed AI reply is sent. Injection guidance is evaluated with synthetic cases; fencing and citation
+membership do not constitute semantic grounding (part 2).
+
+**DAG.** knowledge → conversations. conversations adds identity (eligible notification recipients). ai adds
+knowledge; no reverse import. Changes include migration, module registration, seed, contracts, handoff,
+README cards, synthetic eval cases and local FakeGateway tests. No frontend edits or external calls.
+
 ---
+
+## P10-C1 part 2
+
+Owner-authorized Tier A / EVENT (2026-11-05), backend only. This extends part 1 and A0/A1.
+
+**Grounding.** Before an intake `propose_reply` is inserted, a separate structured completion uses model class
+`grounding`: Vultr `deepseek-v4.1-flash-1017`, then `qwen3.8-flash-next`, JSON object mode, at most 800 output
+tokens. Normal routing policy, per-attempt budget reservation and recorded usage apply; every fallback is filtered
+by the existing router. Strict_private excludes hosted models. The existing regulated policy still allows BAA-hosted
+routes; ADR-020's broader local-only conversion is scheduled for E0 and is not implemented by this slice.
+Input includes only this reply, its cited passages actually returned in this run,
+and trusted database facts supplied in this run. Reply/article text is untrusted data. Output contains at most eight
+claims `{text, verdict: supported|unsupported|contradicted, source: <article_id>@<version>|db_tool|none}` and
+`verdict`. Greetings, hand-over copy and customer questions are not factual claims. Empty claims plus supported
+means no factual claims. Missing/invalid/over-cap output, unavailable route, timeout or budget failure gives
+`unavailable`, never permission to send. Overall verdict is recomputed conservatively from claims; supported
+sources must belong to the actual inputs. Numeric validation reuses U4's complete-token validator; operational
+numbers/prices/hours/stock/durations require database evidence, not article authority. Policy numbers may use their
+cited policy passage. The immutable reply payload exposes the typed grounding result on proposal detail.
+Unsupported/contradicted replies remain pending for staff and create a redacted knowledge suggestion from the
+triggering question. Grounding inference runs outside the proposal transaction.
+
+**Reply autonomy.** `conversations.send_reply` joins A0's allowlist. Only server-identified background intake replies
+with a clean safety pass, supported grounding (including verified no-claim copy), auto ownership, current generation,
+and the original inbound message may qualify. Non-intake/staff-assisted replies, bundled actions and closed/stale
+threads fall back with explicit codes (`not_intake`, `safety_unchecked`, `ungrounded`,
+`contradicted`, `grounding_unavailable`, `human_mode`, `bundled_action`, `stale_reply`, `conversation_closed`).
+The intake's existing single-outcome claim prevents separate booking/reply proposals for the same message;
+booking-with-reply remains a booking action, outside the allowlist. A0 checks grantor, pause and atomically reserved
+per-business/local-day cap as before and rechecks reply conditions at policy execution. Manual proposals never
+enter rule evaluation. Demo reply rules are `act_notify`, shadow true, cap 10; this explicit owner request supersedes
+the earlier ask seed default for this slice. Existing shadow summaries, Activity and notifications remain the read path.
+
+**Web publication.** AI-origin executor replies in web chat commit with `publication_state=withheld`,
+`publish_at=now+outbound_send_delay_seconds`, original inbound id and ownership generation. They have no outbox
+delivery: a normal durable job scheduled for publish_at owns publication. Public reads expose only published rows;
+their cursor uses publication time for newly released messages so polling cannot skip a late publication.
+Staff DTOs expose publish_at, state, cancellation reason, countdown text and stop eligibility (UI rendering is part 3).
+The existing ai_generation also advances for each subsequent inbound visitor/customer message under the thread
+lock (first input retains generation zero). This makes freshness independent of tied/backwards clocks and random
+UUIDv7 ordering; the inbound message captures the new generation. Internal notes never advance it.
+POST `/api/v1/conversations/messages/{id}/stop` requires action approve permission or org.settings.write, explicitly
+scopes the business, and is idempotent for stopped messages. Stop and publication acquire conversation then message
+locks, refreshing ORM state: exactly one withheld→published/stopped outcome commits. Published/cancelled is too late
+(409 `conversations.too_late_to_stop`). Publication under the conversation lock checks auto mode, unchanged generation,
+no newer inbound customer message and not closed/restricted/erased. Failure cancels with a stable reason, including
+`stale_reply` or `human_mode`, visible in Exceptions. Early jobs reschedule; rollback preserves retryability.
+Manual staff replies remain immediate; email retains A1's outbox delay. Delivery projections extend A1 with
+`withheld|published|stopped` and retain failure/cancellation reasons independently from executor status.
+
+**Verification.** Migration follows `20261105_1000_knowledge_handoff`. Portable fixture schema includes autonomy
+rules and C1 publication fields; fixture validation becomes a make-check prerequisite. A new labelled synthetic
+`grounding` eval suite measures unsupported-or-contradicted recall >=0.90 and precision >=0.80, including mixed,
+numeric, no-claim and injection cases. Fake harness is local; live model quality is supervisor work. No dependency,
+frontend change, external call, installation, Docker action, commit or deployment is authorized by this slice.
 
 ## §1 Package layout
 

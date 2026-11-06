@@ -11,7 +11,7 @@ append a diary): keep it under 80 lines and true *now*. History lives in `EVENT_
   fast_extract `mimo-v2.6-flash` (fallbacks `deepseek-v4.1-flash-1017` / `qwen3.8-flash-next`); writer
   `deepseek-v4.1-flash-1017`. Do not use `glm-5.3-flash` (reasoning model: empty output within 800 tokens) or
   `json_schema` mode (empty output for nested schemas on Vultr). Probe: `backend/evals/reports/2026-11-03-probe.md`.
-- **Latest live evals** (2026-11-04, all six suites meet their thresholds): intake 92–95 % (62 cases, prompt v3),
+- **Latest live evals** (2026-11-04, all six suites meet their thresholds): intake 98.5 % (67 cases, prompt v5, 2026-11-05), grounding 100 % (10),
   time zones 90 %, injection 100 % pass and 100 % resistance, copilot 83 % (2026-11-05, prompt v3, 24 cases), summary 100 %, procurement 80 %. Selection
   report `backend/evals/reports/2026-11-03-selection.md`; run with `AI_LIVE=1 make eval suite=<suite>`.
 - **Deployment:** Vultr VM `smb-demo` (45.63.85.83, `https://45-63-85-83.sslip.io`, vhp-2c-4gb-amd, sjc) runs **0.1.5**
@@ -54,3 +54,27 @@ append a diary): keep it under 80 lines and true *now*. History lives in `EVENT_
   `DATABASE_MIGRATION_URL=… .venv/bin/alembic upgrade head`). Don't run two full suites at once (disk fills).
 - Codex sandbox: `.venv/bin/python -m pytest -q -p no:cacheprovider`; no Docker; `make check`, `make gen-api`,
   `make e2e`, `make rehearse` and live evals are run by the supervisor (the inference key never goes to Codex).
+
+
+## P10-C1 part 1 — 2026-11-05
+
+Backend contract: contracts.md “P10-C1: knowledge base and hand-over” and ../modules/M19-knowledge.md.
+Migration 20261105_1000_knowledge_handoff follows A1; no frontend changes. Intake v4 retains v3.
+Message/thread generations invalidate old queued intake and reply proposals. Every provider attempt, including
+safety/repair/fallback, checks ownership; proposal creation/execution rechecks under the thread lock.
+Public published snapshots feed intake and run-scoped citations. Copilot internal search rechecks current read rights.
+knowledge_missing creates a redacted suggestion and hand-over; request_handoff supports other AI escalations.
+Hand-over cancels the follow-up draft too; a deterministic system acknowledgement is immediately visible.
+Supervisor regenerates TypeScript and runs live evals. Grounding, publication delay and reply autonomy are part 2.
+Evidence: cards/P10-C1-part1.md.
+
+## P10-C1 part 2 — 2026-11-05
+
+Contract: “P10-C1 part 2”; migration `20261105_1100_grounded_publication`. Separate grounding class, JSON object,
+800 output tokens, <=8 claims, fail-closed typed result on reply payload; tool/field-bound operational numbers.
+Reply autonomy uses A0's policy path, grantor/cap checks and existing Activity/shadow surfaces. Seed reply rules are
+act_notify + shadow. AI-origin web executor messages (including booking replies) are withheld until the publication
+job; public cursor ordering uses release time. Staff DTO supplies countdown/Stop URL; cancellation reasons join
+Exceptions. Mail retains A1 outbox. Fixtures validate via make fixtures/check. No frontend edit or live call.
+Supervisor: regenerate TS, build/render part 3 and run live grounding/intake evals. Existing regulated BAA allowance
+is preserved; ADR-020's global local-only conversion remains E0. Evidence and final checks: cards/P10-C1-part2.md.

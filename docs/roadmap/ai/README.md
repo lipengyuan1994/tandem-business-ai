@@ -7,6 +7,10 @@ cards below.
 
 ## The rule of the kit
 
+Current C1 backend evidence: [part 1](cards/P10-C1-part1.md) (knowledge/hand-over) and
+[part 2](cards/P10-C1-part2.md) (grounding, shadow reply autonomy, withheld web publication). Frontend integration and
+live evaluation remain separate supervisor work; see HANDOFF.md for current state.
+
 **Read only what your task card lists.** Every card names its *context pack*: a short, ordered list of files (and
 sections) that together are enough to finish the task. If you feel you need something else, the card is wrong or the
 task is too big — stop and ask (see [Stop rules](#stop-rules)). Do not browse the repository "to get a feel for it".

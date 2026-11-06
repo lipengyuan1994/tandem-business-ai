@@ -20,3 +20,6 @@ locks the row and changes only this key, with audit and `org.settings_changed`.
 
 P10-A1: typed `outbound_send_delay_seconds=120` (integer 0–900) uses the existing versioned settings
 API, audit and settings-changed event. Applies only to executor mail from assistant-origin proposals.
+
+P10-C1: BusinessSettings.handoff_after_hours_text (1–1,000 chars) customizes the deterministic closed-hours
+hand-over message. PublicProfileOut.ai_greeting discloses the business's AI assistant; no model generates it.

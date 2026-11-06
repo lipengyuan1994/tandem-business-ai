@@ -210,6 +210,20 @@ repair/tool/final ordering, proposal attribution/titles, cleanup, structured
 exception detail truncation, suppressed arbitrary exception messages, and missing
 runs versus unsuccessful runs versus persisted-schema validation failures.
 
+Failure sections and JSON `expectation_checks` now identify each expected proposal field, candidate index and
+alternative. `body_contains` lists only missing fixture terms; generated bodies are never copied. Citations show
+expected/actual public article slug and published version, omitting UUIDs. Structured-output checks show actual
+autonomy outcomes/reason codes and handover/suggestion flags (an absent field is reported as absent). Grounding
+verdicts are included without claim text. Other payload assertions report the path and match result without values.
+Pairing uses distinct candidates, including repeated action types; this diagnostic pairing does not change scoring.
+Matching a proposal alternative can still fail a structured-output assertion such as `autonomy_outcomes`.
+
+Structured checker repair diagnostics now retain safe validation types/known field paths and output-token count
+versus the configured cap. No raw completion, unknown model-written key or validation input is retained. Unknown
+paths remain `field`; token usage at the cap is evidence of a possible truncation, not a provider finish reason.
+Normal intake replies require the following model final. Actual handovers deliberately finish with a persisted,
+server-created final and needs_human=true, without another model call or grounding of the handover sentence.
+
 The scoped static checks are:
 
 ```sh
@@ -218,3 +232,15 @@ The scoped static checks are:
 .venv/bin/mypy evals app/modules/ai/tests/test_eval_harness.py
 ```
 These prove application integration, not real-provider transport or model quality.
+
+## C1 grounding
+
+`--suite grounding` selects the independent grounding class and runs ten labelled synthetic cases: supported,
+unsupported, contradicted, number mismatch, mixed, article/reply injection, no-claim copy, DB price and article price.
+`suites/grounding.yaml` requires unsupported-or-contradicted recall >= 0.90 and precision >= 0.80. Failed/skipped
+positive cases stay in the recall denominator; unavailable/invalid responses do not count as detections. Reports
+include these metrics, recorded calls/usage and the ordinary schema/latency gates. The measured checker includes
+source-membership and deterministic field/number guards. Fake tests prove harness behavior, not model accuracy.
+Intake knowledge cases also require would_act shadow outcomes; the harness exposes outcomes/reasons from real A0
+rows. `fake_router(gw, grounding=checker)` gives independent scripts; the default checker fails closed. The supervisor
+runs live via `AI_LIVE=1 make eval suite=grounding model_class=grounding` after normal eval preflight/setup.

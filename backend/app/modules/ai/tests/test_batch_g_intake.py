@@ -14,7 +14,7 @@ from sqlalchemy import Engine, text
 
 from app.modules.ai.gateway.fake import FakeGateway
 from app.modules.ai.subscribers import intake_trigger
-from app.modules.ai.tests.helpers import fake_router_by_class, step_final
+from app.modules.ai.tests.helpers import fake_router_by_class, step_tool
 from app.modules.ai.tests.test_intake import inbound, notes, read_context
 from app.modules.ai.usecases import intake
 from app.modules.catalog import public as catalog
@@ -205,9 +205,11 @@ def test_intake_redacts_contacts_without_corrupting_numeric_uuid_suffixes(
         parts=[catalog.ServicePartOut(item_id=part_id, item_name="Part desk@example.com", quantity=quantity)],
     )
     monkeypatch.setattr(catalog, "list_active_service_requirements", lambda db, ctx: [service])
-    _, message = inbound(business)
+    conv, message = inbound(business)
     safety = FakeGateway(['{"flagged":false,"category":"none"}'])
-    agent = FakeGateway([step_final()])
+    agent = FakeGateway(
+        [step_tool("propose_reply", conversation_id=conv, text="A person will help.", request_handoff=True)]
+    )
     result = intake.run(message, business, router=fake_router_by_class(safety=safety, agent=agent))
     assert result.status == "succeeded" and len(agent.calls) == 1
     context = "\n".join(m.content for m in agent.calls[0].messages)

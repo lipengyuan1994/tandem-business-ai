@@ -8,7 +8,7 @@ One file per module. A module spec is the **contract** an agent implements: tabl
 | M01 | [identity](M01-identity.md) | MVP | P2 | A | PRE | org |
 | M02 | [org](M02-org.md) | MVP | P2 | B | PRE | — |
 | M03 | [crm](M03-crm.md) | MVP | P3 | B | PRE | approvals |
-| M04 | [conversations](M04-conversations.md) | MVP | P3 | B | PRE | org, crm, approvals, notifications |
+| M04 | [conversations](M04-conversations.md) | MVP | P3 / P10 | B / A | PRE / EVENT | org, identity, crm, approvals, notifications |
 | M05 | [catalog](M05-catalog.md) | MVP | P3 | B | PRE | org, approvals |
 | M06 | [scheduling](M06-scheduling.md) | MVP | P3 | A (availability, booking) / B (CRUD) | PRE | org, crm, catalog, inventory, conversations, approvals, notifications |
 | M07 | [inventory](M07-inventory.md) | MVP | P3 | A (ledger, reservations) / B (CRUD) | PRE | org, catalog, approvals |
@@ -17,12 +17,13 @@ One file per module. A module spec is the **contract** an agent implements: tabl
 | M10 | [notifications](M10-notifications.md) | MVP / v1 | P2 / P8 | A (outbox) / B (UI) | PRE | identity, approvals |
 | M11 | [dashboard](M11-dashboard.md) | MVP | P3 / P5 | B | PRE (+ EVENT briefing) | org, crm, scheduling, inventory, conversations, approvals, notifications |
 | M12 | [marketing](M12-marketing.md) | MVP (draft) | P6 | B | PRE (segments) + EVENT (AI draft) | org, crm, catalog, scheduling, approvals, notifications |
-| M13 | [ai](M13-ai.md) | MVP | P5 | A | EVENT | org, identity, crm, catalog, scheduling, inventory, conversations, marketing, approvals, sales, purchasing, dashboard, notifications |
+| M13 | [ai](M13-ai.md) | MVP | P5 / P10 | A | EVENT | org, identity, crm, catalog, scheduling, inventory, conversations, knowledge, marketing, approvals, sales, purchasing, dashboard, notifications |
 | M14 | [voice](M14-voice.md) | Stretch / v1 | P6 / P8 | A | EVENT | ai, conversations |
 | M15 | [files](M15-files.md) | v1 | P8 | B | — | — |
 | M16 | [sales](M16-sales.md) | v1 | P8 | B | — | org, crm, catalog, inventory, scheduling, approvals, notifications |
 | M17 | [purchasing](M17-purchasing.md) | v1 | P8 | B | PRE (procurement groundwork) | org, catalog, inventory, approvals, notifications |
 | M18 | [admin_ops](M18-admin-ops.md) | v1 (System page in P6) | P6 / P8 | A | PRE (System page, export, erasure) | org, identity, files, notifications, crm |
+| M19 | [knowledge](M19-knowledge.md) | v1 | P10-C1 | A | EVENT | conversations |
 
 Shared rules that apply to every module, so specs do not repeat them:
 - Every table follows [05-data-model.md](../05-data-model.md#conventions-for-every-table): `id`, `business_id`, `version`, `created_at`, `updated_at`, composite FKs and row-level security. Specs list only the *other* columns.

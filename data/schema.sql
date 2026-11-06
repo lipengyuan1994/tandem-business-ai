@@ -149,10 +149,23 @@ CREATE TABLE messages (
   direction TEXT NOT NULL CHECK (direction IN ('inbound','outbound','internal')),
   author_kind TEXT NOT NULL CHECK (author_kind IN ('visitor','customer','staff','assistant','system')), author_user_id TEXT REFERENCES users(id),
   body TEXT NOT NULL CHECK (length(body) <= 8000), created_at TEXT NOT NULL,
+  publication_state TEXT NOT NULL DEFAULT 'published' CHECK (publication_state IN ('withheld','published','stopped','cancelled')),
+  publish_at TEXT, published_at TEXT, answers_message_id TEXT, cancellation_reason TEXT,
   PRIMARY KEY (business_id, id), FOREIGN KEY (business_id, conversation_id) REFERENCES conversations(business_id, id)
 );
 
 -- Approvals (one staff-originated pending proposal; no decisions or executions are pre-seeded)
+CREATE TABLE autonomy_rules (
+  id TEXT NOT NULL, business_id TEXT NOT NULL, action_type TEXT NOT NULL,
+  level TEXT NOT NULL CHECK (level IN ('off','draft','ask','act_notify','act')),
+  shadow INTEGER NOT NULL DEFAULT 1 CHECK (shadow IN (0,1)),
+  daily_cap INTEGER NOT NULL DEFAULT 10 CHECK (daily_cap >= 0),
+  active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0,1)),
+  granted_by TEXT NOT NULL REFERENCES users(id),
+  PRIMARY KEY (business_id,id), UNIQUE (business_id,action_type),
+  FOREIGN KEY (business_id) REFERENCES businesses(id)
+);
+
 CREATE TABLE action_proposals (
   id TEXT NOT NULL, business_id TEXT NOT NULL, action_type TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('pending_review','approved','rejected','expired','cancelled','executing','succeeded','failed')),
@@ -188,4 +201,15 @@ CREATE TABLE suppressions (
   id TEXT NOT NULL, business_id TEXT NOT NULL REFERENCES businesses(id), channel TEXT NOT NULL CHECK (channel IN ('email','sms')),
   value_normalized TEXT NOT NULL, reason TEXT NOT NULL CHECK (reason IN ('unsubscribed','bounced','complaint','manual')),
   PRIMARY KEY (business_id, id), UNIQUE (business_id, channel, value_normalized)
+);
+
+
+-- P10-C1 owner-written knowledge. Runtime version rows are created through the seed service.
+CREATE TABLE kb_articles (
+  id TEXT NOT NULL, business_id TEXT NOT NULL REFERENCES businesses(id),
+  title TEXT NOT NULL, slug TEXT NOT NULL, visibility TEXT NOT NULL CHECK (visibility IN ('public','internal')),
+  status TEXT NOT NULL CHECK (status IN ('draft','published','archived')),
+  body_markdown TEXT NOT NULL CHECK (length(body_markdown) <= 20000),
+  tags_json TEXT NOT NULL CHECK (json_valid(tags_json)), is_mock INTEGER NOT NULL CHECK (is_mock=1),
+  PRIMARY KEY (business_id,id), UNIQUE (business_id,slug)
 );

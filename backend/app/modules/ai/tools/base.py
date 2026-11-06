@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.modules.approvals.public import Evidence
+from app.modules.conversations.public import GroundingResult
 from app.platform.context import Context
 
 ToolKind = Literal["read", "hold", "propose"]
@@ -27,6 +28,17 @@ class RunState:
     proposals: dict[str, uuid.UUID] = field(default_factory=dict)  # effect_key → proposal id
     evidence: list[Evidence] = field(default_factory=list)  # ≤ 10 tool results worth citing
     server_facts: dict[str, Any] = field(default_factory=dict)  # e.g. visitor contact fields; never shown to the model
+    knowledge_citations: dict[tuple[uuid.UUID, int], dict[str, Any]] = field(default_factory=dict)
+    knowledge_searched: bool = False
+    knowledge_empty: bool = False
+    knowledge_search_count: int = 0
+    knowledge_search_complete: bool = False
+    knowledge_last_query: str | None = None
+    knowledge_last_articles: list[dict[str, Any]] = field(default_factory=list)
+    knowledge_latest: dict[uuid.UUID, int] = field(default_factory=dict)
+    db_facts: dict[str, Any] = field(default_factory=dict)
+    reply_grounding: GroundingResult | None = None
+    checked_reply: str | None = None
 
 
 @dataclass(frozen=True)

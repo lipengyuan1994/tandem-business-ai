@@ -19,7 +19,8 @@
     "settings": "Settings",
     "system": "System",
     "sales": "Sales",
-    "purchasing": "Purchasing"
+    "purchasing": "Purchasing",
+    "knowledge": "Knowledge"
   },
   "status": {
     "pending_review": "Pending review",
@@ -605,7 +606,22 @@
     "linkCustomer": "Link to a {{customer}}",
     "linkTo": "Link to {{name}}",
     "back": "Back to conversations",
-    "pickHint": "Select a conversation from the list to read and reply."
+    "pickHint": "Select a conversation from the list to read and reply.",
+    "ai": {
+      "auto": "AI is answering",
+      "human": "A person is handling this",
+      "takeOver": "Take over",
+      "handBack": "Hand back to AI",
+      "handoff": "Hand-over requested",
+      "cancelled": "Cancelled: {{reason}}",
+      "stopTitle": "Stop this reply?",
+      "stopHelp": "The visitor will not see this withheld reply. A reply already published cannot be stopped.",
+      "confirmStop": "Stop reply",
+      "tooLate": "Too late to stop: this reply is already published or cancelled. Reload to check its state.",
+      "noStopPermission": "You don't have permission to stop this reply.",
+      "stopError": "Could not stop this reply. Reload to check its state.",
+      "stoppedNotice": "Reply stopped."
+    }
   },
   "marketing": {
     "ai": {
@@ -1270,7 +1286,8 @@
       "description": "Choose which AI proposals may run under a rule you grant. Manual proposals still need a person’s decision.",
       "noAccess": "You don't have access to autonomy settings.",
       "actions": {
-        "inventory_create_reorder_draft": "Create reorder drafts when stock is low"
+        "inventory_create_reorder_draft": "Create reorder drafts when stock is low",
+        "conversations_send_reply": "Front-desk replies"
       },
       "level": "Autonomy level",
       "levels": {
@@ -1309,7 +1326,9 @@
       "resume": "Resume AI actions",
       "pauseHelp": "Pause automatic approvals across this business and prevent queued rule-approved actions from running. Actions already completed remain completed. People can still review proposals.",
       "paused": "All AI actions are paused for this business. Automatic approvals and queued rule-approved actions are blocked.",
-      "cannotGrant": "You need permission to approve reorder proposals to grant or change this rule."
+      "cannotGrant": "You need permission to approve reorder proposals to grant or change this rule.",
+      "replyFallbacks": "When replies need staff review",
+      "cannotGrantReply": "You need permission to approve front-desk replies to grant or change this rule."
     },
     "activity": {
       "title": "Activity",
@@ -1334,7 +1353,17 @@
         "level_not_supported": "This action does not support the selected level.",
         "rule_changed": "The rule changed before execution.",
         "autonomy_revoked": "The rule’s permission to act was withdrawn.",
-        "rule_off": "The rule was off."
+        "rule_off": "The rule was off.",
+        "not_intake": "This reply was requested by staff, rather than the visitor intake workflow.",
+        "safety_unchecked": "The safety check has not cleared this reply.",
+        "ungrounded": "The reply is not grounded in its sources.",
+        "contradicted": "A claim contradicts the available sources.",
+        "grounding_unavailable": "The grounding check is unavailable.",
+        "human_mode": "A person is handling this conversation.",
+        "bundled_action": "The reply is combined with a booking or another action.",
+        "stale_reply": "A newer message or ownership change made this reply out of date.",
+        "conversation_closed": "The conversation is closed.",
+        "conversation_restricted": "This conversation is restricted or its customer record was erased."
       },
       "unknownReason": "A rule condition was not met. Open the proposal for details.",
       "failures": {
@@ -1412,7 +1441,9 @@
       "settingHelp": "Wait 0–15 minutes before sending AI e-mails. Default: 2 minutes. You can stop a queued e-mail before sending starts.",
       "invalidDelay": "Enter a delay from 0 to 15 minutes, in whole seconds.",
       "saveDelay": "Save e-mail delay",
-      "stoppedNotice": "E-mail stopped."
+      "stoppedNotice": "E-mail stopped.",
+      "withheld": "Withheld from visitor",
+      "published": "Published to visitor"
     },
     "queues": {
       "noAccess": "You don't have access to this AI queue.",
@@ -1427,7 +1458,8 @@
         "proposal": "Proposal awaiting approval",
         "outbound_mail": "Outbound e-mail",
         "supplier_quote": "Awaiting supplier reply",
-        "autonomy_fallback": "Autonomy fell back to review"
+        "autonomy_fallback": "Autonomy fell back to review",
+        "web_reply": "Front-desk reply"
       }
     },
     "workQueue": {
@@ -1442,6 +1474,78 @@
       "empty": "No exceptions to review.",
       "emptyHelp": "Execution and delivery problems will appear here.",
       "reviewAutonomy": "Review Autonomy"
+    },
+    "grounding": {
+      "title": "Reply grounding",
+      "overall": "Overall verdict:",
+      "citations": "Citations",
+      "articleVersion": "{{title}} · version {{version}}",
+      "restrictedSource": "Article version {{version}} (Knowledge access required)",
+      "sourceUnavailable": "Article title unavailable",
+      "noCitations": "No knowledge articles cited.",
+      "source": "Source:",
+      "noSource": "No supporting source",
+      "database": "Verified business database facts",
+      "noClaims": "No factual claims in this reply.",
+      "reviewForEvidence": "Open the proposal with approval-read permission to review citations and grounding.",
+      "verdicts": {
+        "supported": "Supported",
+        "unsupported": "Unsupported",
+        "contradicted": "Contradicted",
+        "unavailable": "Check unavailable"
+      }
     }
+  },
+  "knowledge": {
+    "description": "Manage the articles used for front-desk answers.",
+    "articles": "Articles",
+    "suggestions": "Suggestions",
+    "new": "New article",
+    "noAccess": "You do not have access to the knowledge base.",
+    "readOnly": "You can read articles, but cannot create or change them.",
+    "search": "Search articles",
+    "statusFilter": "Article status",
+    "visibilityFilter": "Article visibility",
+    "allStatuses": "All statuses",
+    "allVisibilities": "All visibility",
+    "statuses": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "visibilities": {
+      "public": "Public",
+      "internal": "Internal"
+    },
+    "empty": "No articles found.",
+    "listLimit": "Showing up to 100 articles. Use search and filters to narrow the list.",
+    "title": "Title",
+    "slug": "URL slug",
+    "body": "Markdown body",
+    "tags": "Tags (comma separated)",
+    "tagsInvalid": "Use up to 20 tags, each no longer than 50 characters.",
+    "visibility": "Visibility",
+    "preview": "Preview",
+    "previewHelp": "Preview supports headings, paragraphs, lists, bold, code and safe links. Raw HTML is displayed as text.",
+    "saveVersion": "Save as new version",
+    "saveDraft": "Save draft",
+    "publish": "Publish",
+    "archive": "Archive",
+    "publishTitle": "Publish article",
+    "archiveTitle": "Archive article",
+    "publishHelp": "Publish the saved version for answers. Public articles become available to the AI assistant; internal articles stay staff-only.",
+    "archiveHelp": "Remove this article from answer searches. Its version history is kept.",
+    "saveFirst": "Save your changes as a new version before publishing or archiving.",
+    "history": "Version history",
+    "earlierVersion": "Earlier version",
+    "laterVersion": "Later version",
+    "versionLabel": "Version {{version}}",
+    "publishedVersion": "Published version {{version}}",
+    "citedVersion": "This reply cites version {{version}}. Compare it with other saved versions below.",
+    "versionMissing": "This version is not available.",
+    "suggestionsHelp": "Questions the AI could not answer. Write an article for staff review, or dismiss the suggestion.",
+    "noSuggestions": "No open suggestions.",
+    "writeArticle": "Write article",
+    "dismiss": "Dismiss"
   }
 }

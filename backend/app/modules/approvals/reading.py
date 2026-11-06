@@ -208,14 +208,44 @@ def proposal_notification_state(db: Session, ctx: Context, proposal_id: uuid.UUI
 
 
 def delivery_state(db: Session, ctx: Context, proposal_id: uuid.UUID) -> DeliveryState:
-    reader = get_registry().proposal_delivery_reader
-    return reader(db, ctx, proposal_id) if reader else "none"
+    registry = get_registry()
+    reader = registry.proposal_delivery_reader
+    states = {r(db, ctx, proposal_id) for r in registry.proposal_delivery_readers}
+    states.add(reader(db, ctx, proposal_id) if reader else "none")
+    priority: tuple[DeliveryState, ...] = (
+        "unknown",
+        "failed",
+        "sending",
+        "withheld",
+        "scheduled",
+        "stopped",
+        "published",
+        "delivered",
+        "none",
+    )
+    return next(state for state in priority if state in states)
 
 
 def outbound_authority(db: Session, ctx: Context, proposal_id: uuid.UUID) -> dict[str, Any] | None:
     row = db.execute(
-        select(ActionProposal.action_type, ActionProposal.origin_kind).where(
-            ActionProposal.business_id == ctx.business_id, ActionProposal.id == proposal_id
+        select(
+            ActionProposal.action_type,
+            ActionProposal.origin_kind,
+            ActionProposal.origin_user_id,
+            ProposalRevision.evidence,
         )
+        .join(
+            ProposalRevision,
+            (ProposalRevision.id == ActionProposal.current_revision_id)
+            & (ProposalRevision.business_id == ActionProposal.business_id),
+        )
+        .where(ActionProposal.business_id == ctx.business_id, ActionProposal.id == proposal_id)
     ).first()
-    return dict(row._mapping) if row else None
+    if row is None:
+        return None
+    result = dict(row._mapping)
+    evidence = result.pop("evidence")
+    result["source_message_id"] = next(
+        (e.get("ref_id") for e in evidence if e.get("kind") == "message" and e.get("ref_type") == "message"), None
+    )
+    return result

@@ -12,7 +12,7 @@ from typing import Any, Literal
 import yaml  # type: ignore[import-untyped]  # PyYAML, locked through uvicorn[standard]
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-ModelClass = Literal["agent", "fast_extract", "writer", "safety", "embed", "stt", "tts"]
+ModelClass = Literal["agent", "fast_extract", "writer", "safety", "grounding", "embed", "stt", "tts"]
 
 
 class ProviderCfg(BaseModel):
@@ -57,6 +57,8 @@ class RoutesFile(BaseModel):
     def _known_providers(self) -> RoutesFile:
         for model_class, entries in self.routes.items():
             for i, entry in enumerate(entries):
+                if model_class == "grounding" and entry.json_schema:
+                    raise ValueError("routes.grounding requires json_object mode (json_schema must be false)")
                 if entry.provider not in self.providers:
                     raise ValueError(f"routes.{model_class}.{i}.provider: unknown provider {entry.provider!r}")
         return self
