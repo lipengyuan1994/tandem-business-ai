@@ -20,6 +20,7 @@ from app.platform.permissions import require
 from . import permissions as P
 from . import public, usage
 from .autonomy_api import router as autonomy_router
+from .customer_care.api import router as care_router
 from .models import AiRun
 from .schemas import AiStatus, RunOut, RunStatus, UsageOut, UseCaseId
 from .team_api import router as team_router
@@ -30,6 +31,8 @@ router = APIRouter()
 router.include_router(autonomy_router)
 router.include_router(work_queue_router)
 router.include_router(team_router)
+
+router.include_router(care_router)
 ERRORS = error_responses(401, 403)
 
 

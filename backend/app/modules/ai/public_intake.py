@@ -113,6 +113,11 @@ def admit_run(db: Session, ctx: Context, message_id: uuid.UUID) -> bool:
         for reason in (HOURLY_LIMIT_NOTE, QUEUE_LIMIT_NOTE)
     ):
         return False
+    return admit_classification(db, ctx, message_id)
+
+
+def admit_classification(db: Session, ctx: Context, message_id: uuid.UUID) -> bool:
+    """Shared hourly run ceiling, independent of Front Desk reply admission/ownership."""
     period = clock.now().astimezone(UTC).replace(minute=0, second=0, microsecond=0)
     db.execute(
         insert(PublicAllowance)

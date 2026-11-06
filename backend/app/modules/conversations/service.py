@@ -13,6 +13,7 @@ from app.platform.context import Context
 from app.platform.errors import Conflict, Invalid
 from app.platform.events import DomainEventPayload
 from app.platform.ids import new_id
+from app.platform.registry import get_registry
 
 from . import permissions as P
 from . import publication
@@ -236,6 +237,8 @@ def link_customer(db: Session, ctx: Context, conversation_id: uuid.UUID, custome
     conv.version += 1
     db.flush()
     if customer_id is not None:
+        if bind_care := get_registry().customer_care_customer_linked:
+            bind_care(db, ctx, conv.id, customer_id)
         promote_contact_consent(db, ctx, conv)
         for msg in db.scalars(
             select(Message).where(Message.business_id == ctx.business_id, Message.conversation_id == conv.id)

@@ -63,14 +63,12 @@ Imports other modules only through their `public.py`.
   compare and propose a PO (`ai.compare-trigger`), chase late orders/invites (cron `ai-procurement-scan`).
 - Evals: intake shadow outcomes and labelled grounding precision/recall; live quality is supervisor-owned.
 - Payment follow-up (U10): paged scan → deduplicated invoice jobs; proposals lock/recheck version, pending proposals/cooldown.
-
 P10-A0: `/autonomy/rules` GET/PUT (owner/admin via `org.settings.write`, versioned), `/autonomy/pause|resume`
 POST, `/autonomy/activity` GET (`approvals.proposal.read`, cursor pagination). Policy is owned by approvals;
 org exposes `ai_autonomy_paused` and atomic pause/resume. AI reorder drafts and qualifying intake replies are eligible.
 U4 checks open proposals (including executing) and inventory's open-draft intent before generation and proposing;
 `off` ends the job without model calls/retries (also handled if changed during generation). Quantity and stock are
 re-checked under stock locks at execution. Shadow is the seeded default. See contracts “Autonomy rules (P10-A0)”.
-
 P10-A1: copilot.v3 keeps v1/v2; bounded staff quantities are copied, unchanged suggestions accepted, errors guide retry.
 U4 stays computed-only. `copilot_threads.py` owns DTOs/retention; `copilot_cards.py` verifies own-thread Confirm.
 Cards carry revision/hash, preview, eligibility/reason, delivery state and whitelisted result UUIDs;
@@ -78,3 +76,5 @@ current status/results are fenced context on later turns. Typed yes never approv
 `/work-queue` and `/exceptions` require proposal read, merge scoped public readers with pagination;
 exceptions includes current pause and seven-day fallback history. Proposal tool results supply fresh
 confirmation eligibility; v3/FinalStep reserve needs_human for blockers, not advice, stock warnings or ordinary Confirm.  P10-D: ai.public.voice_available/transcribe_dictation/dictation_dictionary support metadata-only dictation. OpenAI-compatible /audio/transcriptions uses policy/egress filtering and 120-second audio-cost reservations. dictation_polish v1 uses writer JSON object mode, scoped names and deterministic guards; failures return raw. No audio, transcript, dictionary or edited text is persisted in AI recordings. See voice/README.md.
+
+P10-B2: `customer_care/` owns care cases/receipts, `customer_care.send_message`, check-in/recall/triage jobs, writer/minimal templates, delivery rechecks and Work/Activity. Default off; ask/shadow seed; complaints always human. Settings, endpoints, exports and evidence: [B2 card](../../../../docs/roadmap/ai/cards/P10-B2-backend.md).

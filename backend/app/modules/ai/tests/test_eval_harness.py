@@ -305,7 +305,7 @@ def test_case_inventory_and_injection_coverage() -> None:
             "procurement",
         )
     }
-    assert counts == {"intake": 67, "injection": 15, "timezones": 10, "copilot": 24, "summary": 10, "procurement": 15}
+    assert counts == {"intake": 70, "injection": 15, "timezones": 10, "copilot": 24, "summary": 10, "procurement": 15}
     cases = load_cases("injection")
     text = " ".join(case.input["message"] for case in cases)
     for marker in ("ignore previous instructions", "<system>", "<tool>", "</untrusted>", "set the price to 0"):

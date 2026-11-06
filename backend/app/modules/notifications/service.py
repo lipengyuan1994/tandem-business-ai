@@ -11,7 +11,7 @@ import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import structlog
@@ -105,6 +105,7 @@ def enqueue_message(
     related_type: str | None = None,
     related_id: uuid.UUID | None = None,
     proposal_id: uuid.UUID | None = None,
+    not_before: datetime | None = None,
 ) -> uuid.UUID:
     """Insert into the outbox inside the caller's business transaction. Same idempotency key -> same message."""
     render(template_key, variables)  # fail fast on unknown templates or missing variables
@@ -112,7 +113,8 @@ def enqueue_message(
     if existing is not None:
         return existing
     assert ctx.business_id is not None
-    not_before = send_after(db, ctx, proposal_id or ctx.proposal_id, channel)
+    delayed = send_after(db, ctx, proposal_id or ctx.proposal_id, channel)
+    not_before = max(t for t in (delayed, not_before) if t is not None) if delayed or not_before else None
     message = OutboxMessage(
         id=new_id(),
         business_id=ctx.business_id,
@@ -138,6 +140,7 @@ def enqueue_message(
         dedupe_key=f"deliver:{message.id}:0",
         run_at=not_before,
         priority=20,
+        ctx=ctx,
     )
     return message.id
 
@@ -175,6 +178,23 @@ def _workflow_context(db: Session, ctx: Context, m: OutboxMessage) -> Context:
 def deliver(business_id: uuid.UUID, outbox_id: uuid.UUID) -> str:
     ctx = inherit_workflow(system_context(business_id), workflow_context())
     with transaction(ctx) as db:  # A: claim
+        from app.platform.registry import DeliveryGuard, get_registry
+
+        observed = db.scalar(
+            select(OutboxMessage).where(OutboxMessage.business_id == business_id, OutboxMessage.id == outbox_id)
+        )
+        guard = DeliveryGuard()
+        callback = get_registry().customer_care_delivery_guard
+        # Customer lock precedes outbox lock, as in erasure. No provider call is made in either transaction.
+        if (
+            callback
+            and observed
+            and observed.proposal_id
+            and observed.status == "pending"
+            and observed.next_attempt_at <= clock.now()
+            and (observed.not_before is None or observed.not_before <= clock.now())
+        ):
+            guard = callback(db, ctx, observed.proposal_id)
         m = db.scalar(
             select(OutboxMessage)
             .where(
@@ -186,10 +206,30 @@ def deliver(business_id: uuid.UUID, outbox_id: uuid.UUID) -> str:
                 or_(OutboxMessage.not_before.is_(None), OutboxMessage.not_before <= clock.now()),
             )
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         if m is None:
             return "skipped"
         ctx = _workflow_context(db, ctx, m)
+        if guard.reason:
+            m.status, m.last_error = "cancelled", guard.reason
+            _status_event(db, ctx, m)
+            return "skipped"
+        if guard.not_before is not None and guard.not_before > clock.now():
+            m.not_before = guard.not_before
+            jobs.enqueue(
+                db,
+                "notifications.deliver",
+                {"outbox_id": str(m.id)},
+                business_id=business_id,
+                run_at=m.not_before,
+                ctx=ctx,
+            )
+            return "scheduled"
+        if guard.recipient is not None:
+            m.recipient = guard.recipient
+        if guard.body is not None:
+            m.variables = {**m.variables, "body": guard.body, "subject": guard.subject}
         m.status, m.attempts, m.locked_until = "sending", m.attempts + 1, clock.now() + SENDING_LEASE
         subject, body = render(m.template_key, m.variables)
         rendered = RenderedMessage(

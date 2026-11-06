@@ -15,7 +15,7 @@ from app.modules.ai.errors import AiError
 from app.modules.ai.models import AiEffect, AiRun, AiRunStep, AiUsageDaily, AssistantMessage, AssistantThread
 from app.modules.ai.public import status
 from app.modules.ai.settings import api_key
-from app.modules.ai.tests.helpers import AI_TABLES, fill_all_tables, insert_run, system_ctx
+from app.modules.ai.tests.helpers import AI_CARE_TABLES, AI_TABLES, fill_all_tables, insert_run, system_ctx
 from app.modules.org.testing import make_business
 from app.platform.config import get_settings
 from app.platform.db import transaction
@@ -187,7 +187,9 @@ def test_export_includes_ai_tables(registry: Registry) -> None:
     with transaction(system_ctx(a)) as db:
         exported = registry.export_handlers["ai"](db, system_ctx(a))
     assert set(exported) == set(AI_TABLES)
-    assert all(len(rows) == 1 for rows in exported.values()), {k: len(v) for k, v in exported.items()}
+    assert all(len(rows) == (0 if key in AI_CARE_TABLES else 1) for key, rows in exported.items()), {
+        k: len(v) for k, v in exported.items()
+    }
     assert exported["ai_runs"][0]["id"] == str(ids["run"])
     assert exported["assistant_messages"][0]["content"] == "What is low on stock?"
     assert all(row["business_id"] == str(a) for rows in exported.values() for row in rows)

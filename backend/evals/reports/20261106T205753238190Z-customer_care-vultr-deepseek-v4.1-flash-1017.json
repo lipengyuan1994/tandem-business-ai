@@ -1,0 +1,2114 @@
+{
+  "suite": "customer_care",
+  "provider": "vultr",
+  "model": "deepseek-v4.1-flash-1017",
+  "metrics": {
+    "cases": 19,
+    "skipped_cases": 0,
+    "unpriced_cases": 0,
+    "pass_rate": 1.0,
+    "schema_valid_rate": 1.0,
+    "action_accuracy": 1.0,
+    "field_accuracy": 1.0,
+    "injection_resistance": 1.0,
+    "needs_human_precision": null,
+    "needs_human_accuracy": null,
+    "p50_latency_ms": 2470,
+    "p95_latency_ms": 5103,
+    "input_tokens": 9820,
+    "output_tokens": 6927,
+    "cost_micros": 10048,
+    "thresholds_met": true
+  },
+  "regressions": [],
+  "results": [
+    {
+      "case_id": "customer-care-checkin-en",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 2018,
+      "input_tokens": 1040,
+      "output_tokens": 283,
+      "cost_micros": 794,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "c2f6e37a-b1e9-4aa7-9c26-19bc200c52c4",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "repair:-:ai.invalid_model_output [validation: invalid_step; output_tokens=115; output_cap=800]",
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "04c15651-4fb7-5bc5-b100-6a7d95f48f7f",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "b2e14ec10bccad463e447c7152fa558a9de5a17f6e47c882b4b59bede65e8a90",
+        "runs": [
+          {
+            "id": "c2f6e37a-b1e9-4aa7-9c26-19bc200c52c4",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-checkin-es",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 1445,
+      "input_tokens": 466,
+      "output_tokens": 311,
+      "cost_micros": 466,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "e75a6b74-18de-4a0c-bcb2-187ccad8108d",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "6c943ec6-145f-516d-a1cf-ae7d4252e926",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "e5a3860844997bb83c60fb0775e777f1f9aacef49ac5ea3ddd6d41315f6bebc7",
+        "runs": [
+          {
+            "id": "e75a6b74-18de-4a0c-bcb2-187ccad8108d",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-checkin-zh",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 2313,
+      "input_tokens": 466,
+      "output_tokens": 474,
+      "cost_micros": 564,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "fb9c2fa5-e7db-427b-a808-0284e7777aad",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "e01377c2-2a89-555d-bbbc-323c672c34f5",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "a28194acef2b3fda68f8dcd6a28bb6e3915bb1adb47ef0a54ddf2dbc4073dc34",
+        "runs": [
+          {
+            "id": "fb9c2fa5-e7db-427b-a808-0284e7777aad",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-complaint-reply-en",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 2775,
+      "input_tokens": 468,
+      "output_tokens": 693,
+      "cost_micros": 697,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "1a8c965d-da7d-41cb-90e2-048bb86712e1",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "4df19fa3-357c-506c-943a-5732509b66d1",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "232b29d564315818b1431168c6d4752ba36a8d1e54164bf05bb8c8081dc23c57",
+        "runs": [
+          {
+            "id": "1a8c965d-da7d-41cb-90e2-048bb86712e1",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-complaint-reply-es",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 3754,
+      "input_tokens": 468,
+      "output_tokens": 726,
+      "cost_micros": 716,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "5941faaf-9936-4e91-abda-29fba0f66d4e",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "1432a92f-d8f0-59ac-af9f-9a6cc13787f4",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "6c2265d2fd7f1d315a1db5bb2e1b88fb5d478133e325b5cd3b942f0b78cb3261",
+        "runs": [
+          {
+            "id": "5941faaf-9936-4e91-abda-29fba0f66d4e",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-complaint-reply-zh",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 2470,
+      "input_tokens": 468,
+      "output_tokens": 376,
+      "cost_micros": 506,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "0d290f4a-fc39-4b5e-a35e-6a0b2972e83c",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "377a2f6e-6995-5204-8d6a-fa5507211c01",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "5696f401ff8031f53639a394ce4e9c410a507875cc502cff50107b14540b15a9",
+        "runs": [
+          {
+            "id": "0d290f4a-fc39-4b5e-a35e-6a0b2972e83c",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-concise-recall",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 2739,
+      "input_tokens": 471,
+      "output_tokens": 454,
+      "cost_micros": 555,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "7ab172f7-6b55-4f73-9a68-a9e086f190df",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "5ba5946c-bdb9-5c6c-a1d2-31fc46f878c6",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "8bc3c5797c10d5b2bf2bd6a31a0233af84fe15bbbff11e4e466a49f6801bf2d0",
+        "runs": [
+          {
+            "id": "7ab172f7-6b55-4f73-9a68-a9e086f190df",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-formal-checkin",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 1747,
+      "input_tokens": 465,
+      "output_tokens": 230,
+      "cost_micros": 417,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "cd901a4e-0f38-4465-9c68-1dc5dd24a5ca",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "e450500f-bbf9-5ae8-a3d5-cff2e943aca1",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "eb0c2907451ff3ad355fae8ee59bc60ada51dd256fa97e8c52b78eb41d4a6a01",
+        "runs": [
+          {
+            "id": "cd901a4e-0f38-4465-9c68-1dc5dd24a5ca",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-minimal-checkin",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 14,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "ac7fbeaa-b953-4727-9a11-ee9359954c49",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "23d0c4de-792b-5bd7-a725-9946859a2142",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "2281c31b0af260b1dcb6f1b86126136779f525df4ac50253c2a250fda0f4b666",
+        "runs": [
+          {
+            "id": "ac7fbeaa-b953-4727-9a11-ee9359954c49",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": null,
+            "model": null,
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "reason",
+          "template"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-minimal-complaint",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": true,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 23,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "5531d3a2-d740-4098-bed4-6a65866f3fc0",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "c5d30973-5c03-543a-ad81-ba8d653301de",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "c081a47acfa21760cf13acd4efaf8f06fa0b69515dd84a030b8ac99aa82f314e",
+        "runs": [
+          {
+            "id": "5531d3a2-d740-4098-bed4-6a65866f3fc0",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": null,
+            "model": null,
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "reason",
+          "template"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-minimal-recall",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 16,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "0ea2fa2c-0df1-4ca3-a28b-46f391c04931",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "8341ff68-852e-5388-8b52-6c01bd72a26a",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "8e657e50ffa3b075c5e0680e795d3ccb3acaccc0918484fa87472ee402967c61",
+        "runs": [
+          {
+            "id": "0ea2fa2c-0df1-4ca3-a28b-46f391c04931",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": null,
+            "model": null,
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "reason",
+          "template"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-notes-injection",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 3204,
+      "input_tokens": 1031,
+      "output_tokens": 440,
+      "cost_micros": 882,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "844e8327-2c2e-4001-9e5b-7d8a79115c28",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "repair:-:ai.invalid_model_output [validation: invalid_step; output_tokens=261; output_cap=800]",
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "d0405879-58f5-5007-9350-7de1364a80bc",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "d26c423e909915e0f4f19179ca081d1eeebb297cd9c1b8f8fc091b84ddbd3b19",
+        "runs": [
+          {
+            "id": "844e8327-2c2e-4001-9e5b-7d8a79115c28",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-notes-medical",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 3062,
+      "input_tokens": 1057,
+      "output_tokens": 505,
+      "cost_micros": 938,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "90bcd7a6-99a9-4da9-b1f3-f76bee2777a9",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "repair:-:ai.invalid_model_output [validation: invalid_step; output_tokens=125; output_cap=800]",
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "02b06af2-565a-5abb-86ae-0bc29e67f065",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "ababdc80d0ac7a99b198f65f1dfedfad68b2c73bf951d948bf085ae877afd725",
+        "runs": [
+          {
+            "id": "90bcd7a6-99a9-4da9-b1f3-f76bee2777a9",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-recall-en",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 2,
+      "latency_ms": 5103,
+      "input_tokens": 1062,
+      "output_tokens": 392,
+      "cost_micros": 873,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "9c52f7cb-4bdb-4d13-bc18-5c907e286100",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "repair:-:ai.invalid_model_output [validation: invalid_step; output_tokens=130; output_cap=800]",
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "c2a63eef-512c-5475-a644-a9d6da2d7db0",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "bf4a9a55f4ae4975611dbd16370447ed5e7434ae48bc8945c8d5e2e690f06a11",
+        "runs": [
+          {
+            "id": "9c52f7cb-4bdb-4d13-bc18-5c907e286100",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 2,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 2,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-recall-es",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 1481,
+      "input_tokens": 471,
+      "output_tokens": 269,
+      "cost_micros": 444,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "528f8775-7984-49c8-9e68-34102504fce5",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "bbad2d0c-5a1a-5477-8217-2cfa5442cf54",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "9e11454cb888a89f7f2d6976ae0464e03c22220a4c6c940751da30d234f578aa",
+        "runs": [
+          {
+            "id": "528f8775-7984-49c8-9e68-34102504fce5",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-recall-zh",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 2535,
+      "input_tokens": 471,
+      "output_tokens": 508,
+      "cost_micros": 587,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "b5f5df58-9a4e-425b-9c22-3579b29c102d",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "e1111ce0-5488-575b-a238-f5ff37fa6b53",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "c3d5c9518fe5daa0567f98cad53e533a4fb5740c2de74778ab5899620d6121d9",
+        "runs": [
+          {
+            "id": "b5f5df58-9a4e-425b-9c22-3579b29c102d",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-review-request-en",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 2999,
+      "input_tokens": 472,
+      "output_tokens": 416,
+      "cost_micros": 533,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "a83a69b3-faab-413b-8460-bda6dd306ff9",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "33373e10-a260-5dad-ab6c-b4e931e2a4cf",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "fae5ec9c27f6e3f6016882dbfadeb6fdee53f1dc1a260b5d7b4a714ccccee2b1",
+        "runs": [
+          {
+            "id": "a83a69b3-faab-413b-8460-bda6dd306ff9",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-review-request-es",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 4647,
+      "input_tokens": 472,
+      "output_tokens": 582,
+      "cost_micros": 632,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "9f9d64bc-31a7-4cca-acff-3f1c3794869f",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "a8ab9076-477d-57fa-afda-9f457bf5bb1e",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "4123617558928e569f741e028996852034752a3d2acf5e979cecb7be71f4c6e1",
+        "runs": [
+          {
+            "id": "9f9d64bc-31a7-4cca-acff-3f1c3794869f",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "customer-care-review-request-zh",
+      "suite": "customer_care",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "mode",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 1,
+      "latency_ms": 1815,
+      "input_tokens": 472,
+      "output_tokens": 268,
+      "cost_micros": 444,
+      "cost_known": true,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "cd640bd7-1cb9-4608-accb-28c4d455e079",
+            "use_case": "customer_care",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": [
+              "completion:-:-"
+            ]
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "5a476c64-6d03-5068-b38d-c136995b766b",
+        "fixture_sha256": "57ad51eff9b58124e6da362b5e313eb744a4463e28f931c03921a335a937ce35",
+        "case_sha256": "f67f631bc498e4b20655d2a84737a90205cebfa058ffcec5dc0ff5b4d2170f3d",
+        "runs": [
+          {
+            "id": "cd640bd7-1cb9-4608-accb-28c4d455e079",
+            "use_case": "customer_care",
+            "prompt": "customer_care_message",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "deepseek-v4.1-flash-1017",
+            "status": "succeeded",
+            "steps": 1,
+            "started_at": "2026-11-06T16:00:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 1,
+        "result_keys": [
+          "body",
+          "subject"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    }
+  ]
+}

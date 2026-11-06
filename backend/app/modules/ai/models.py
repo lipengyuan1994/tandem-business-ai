@@ -17,9 +17,12 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.platform.models import BusinessScopedBase, scoped_table_args
 
+from .customer_care.models import CareCase as CareCase
+from .customer_care.models import CareDelivery as CareDelivery
+
 USE_CASES = (
     "intake", "copilot", "summary", "reorder_note", "briefing", "procurement", "campaign_draft", "payment_followup",
-    "safety", "grounding", "dictation",
+    "safety", "grounding", "dictation", "customer_care",
 )  # fmt: skip
 TRIGGER_TYPES = ("event", "job", "api", "cron")
 RUN_STATUSES = ("running", "succeeded", "failed", "step_limit", "budget_exceeded", "policy_blocked")

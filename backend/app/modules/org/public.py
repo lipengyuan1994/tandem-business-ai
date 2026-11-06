@@ -30,6 +30,14 @@ def get_public_email(db: Session, ctx: Context) -> str | None:
     return email if isinstance(email, str) and email else None
 
 
+def customer_care_profile(db: Session, ctx: Context) -> dict[str, object]:
+    """Existing public profile; links and minimal-message switch only."""
+    business = repository.get_business(db, ctx)
+    if business is None:
+        raise NotFound("org.business_not_found")
+    return {k: business.public_profile.get(k) for k in ("review_url", "booking_url", "avoid_medical_details")}
+
+
 def get_settings(db: Session, ctx: Context) -> BusinessSettings:
     return service.read_settings(db, ctx)
 

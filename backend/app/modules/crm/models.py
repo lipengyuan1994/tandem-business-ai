@@ -20,6 +20,7 @@ class Customer(BusinessScopedBase):
     given_name: Mapped[str | None] = mapped_column(String(100))
     family_name: Mapped[str | None] = mapped_column(String(100))
     organization_name: Mapped[str | None] = mapped_column(String(200))
+    preferred_contact_channel: Mapped[str] = mapped_column(String(10), default="email", server_default="email")
     preferred_language: Mapped[str | None] = mapped_column(String(20))
     timezone: Mapped[str | None] = mapped_column(String(64))
     source: Mapped[str] = mapped_column(String(16))
@@ -28,6 +29,7 @@ class Customer(BusinessScopedBase):
     last_interaction_at: Mapped[datetime | None]
     created_by: Mapped[uuid.UUID | None]
     __table_args__ = scoped_table_args(
+        CheckConstraint("preferred_contact_channel in ('email','web_chat','none')", name="contact_preference"),
         CheckConstraint("kind in ('person','organization')", name="kind"),
         CheckConstraint("status in ('active','archived','merged','erased','restricted')", name="status"),
         CheckConstraint("source in ('staff','public_chat','import','assistant')", name="source"),

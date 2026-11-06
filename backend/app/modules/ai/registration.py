@@ -9,6 +9,21 @@ from .gateway.router import check_routes_at_startup
 
 def register(reg: Registry) -> None:
     from . import chains, team_budget
+    from .customer_care import classification, delivery, executor, triage, workflows
+
+    reg.customer_care_delivery_guard = delivery.guard
+    reg.customer_care_customer_linked = triage.customer_linked
+    reg.add_executor(executor.SPEC)
+    reg.subscribe("conversations.message_received", "ai.customer-care-inbound", classification.trigger)
+    reg.add_job("ai.customer_care_classify", jobs.guarded(classification.run, "customer_care"), transactional=False)
+    reg.subscribe("scheduling.appointment_completed", "ai.customer-care-completed", workflows.completed_trigger)
+    reg.add_job("ai.customer_care_checkin", jobs.guarded(workflows.checkin_job, "customer_care"), transactional=False)
+    reg.add_job("ai.customer_care_recall", jobs.guarded(workflows.recall_scan, "customer_care"), transactional=False)
+    reg.add_job(
+        "ai.customer_care_recall_subject", jobs.guarded(workflows.recall_job, "customer_care"), transactional=False
+    )
+    reg.add_job("ai.customer_care_triage", jobs.guarded(triage.run, "customer_care"), transactional=False)
+    reg.add_cron("ai-customer-care-recall", "ai.customer_care_recall", every_seconds=86400, per_business=True)
 
     reg.ai_proposal_context = chains.proposal_context
     reg.ai_policy_enabled = chains.policy_enabled

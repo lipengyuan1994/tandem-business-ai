@@ -1553,6 +1553,37 @@
             "title": "Booking Lead Time Minutes",
             "type": "integer"
           },
+          "checkin_delay_days": {
+            "default": 2,
+            "maximum": 365.0,
+            "minimum": 0.0,
+            "title": "Checkin Delay Days",
+            "type": "integer"
+          },
+          "customer_care_quiet_end_hour": {
+            "default": 8,
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "Customer Care Quiet End Hour",
+            "type": "integer"
+          },
+          "customer_care_quiet_start_hour": {
+            "default": 20,
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "Customer Care Quiet Start Hour",
+            "type": "integer"
+          },
+          "customer_care_tone": {
+            "default": "warm",
+            "enum": [
+              "warm",
+              "formal",
+              "concise"
+            ],
+            "title": "Customer Care Tone",
+            "type": "string"
+          },
           "handoff_after_hours_text": {
             "default": "We're currently closed. A person will reply here when we're open.",
             "maxLength": 1000,
@@ -1688,6 +1719,37 @@
             "title": "Booking Lead Time Minutes",
             "type": "integer"
           },
+          "checkin_delay_days": {
+            "default": 2,
+            "maximum": 365.0,
+            "minimum": 0.0,
+            "title": "Checkin Delay Days",
+            "type": "integer"
+          },
+          "customer_care_quiet_end_hour": {
+            "default": 8,
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "Customer Care Quiet End Hour",
+            "type": "integer"
+          },
+          "customer_care_quiet_start_hour": {
+            "default": 20,
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "Customer Care Quiet Start Hour",
+            "type": "integer"
+          },
+          "customer_care_tone": {
+            "default": "warm",
+            "enum": [
+              "warm",
+              "formal",
+              "concise"
+            ],
+            "title": "Customer Care Tone",
+            "type": "string"
+          },
           "handoff_after_hours_text": {
             "default": "We're currently closed. A person will reply here when we're open.",
             "maxLength": 1000,
@@ -1822,6 +1884,7 @@
                 "type": "null"
               }
             ],
+            "description": "Public contact/profile settings; optional review_url and booking_url must be absolute HTTP(S) URLs; avoid_medical_details uses minimal care templates.",
             "title": "Public Profile"
           },
           "timezone": {
@@ -2287,6 +2350,117 @@
         "title": "CancelIn",
         "type": "object"
       },
+      "CaseOut": {
+        "properties": {
+          "appointment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Appointment Id"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "conversation_id": {
+            "format": "uuid",
+            "title": "Conversation Id",
+            "type": "string"
+          },
+          "customer_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "string"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal Id"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "source_message_id": {
+            "format": "uuid",
+            "title": "Source Message Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "customer_id",
+          "conversation_id",
+          "source_message_id",
+          "category",
+          "priority",
+          "status",
+          "appointment_id",
+          "invoice_id",
+          "proposal_id",
+          "version",
+          "resolved_at"
+        ],
+        "title": "CaseOut",
+        "type": "object"
+      },
       "CatalogItemCreate": {
         "additionalProperties": false,
         "properties": {
@@ -2357,6 +2531,19 @@
               }
             ],
             "title": "Price Minor"
+          },
+          "recall_interval_months": {
+            "anyOf": [
+              {
+                "maximum": 120.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recall Interval Months"
           },
           "resource_kind": {
             "anyOf": [
@@ -2473,6 +2660,17 @@
               }
             ],
             "title": "Price Minor"
+          },
+          "recall_interval_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recall Interval Months"
           },
           "resource_kind": {
             "anyOf": [
@@ -2613,6 +2811,19 @@
               }
             ],
             "title": "Price Minor"
+          },
+          "recall_interval_months": {
+            "anyOf": [
+              {
+                "maximum": 120.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recall Interval Months"
           },
           "sku": {
             "anyOf": [
@@ -3691,6 +3902,22 @@
             ],
             "title": "Organization Name"
           },
+          "preferred_contact_channel": {
+            "anyOf": [
+              {
+                "enum": [
+                  "email",
+                  "web_chat",
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Contact Channel"
+          },
           "preferred_language": {
             "anyOf": [
               {
@@ -3811,6 +4038,16 @@
               }
             ],
             "title": "Organization Name"
+          },
+          "preferred_contact_channel": {
+            "default": "email",
+            "enum": [
+              "email",
+              "web_chat",
+              "none"
+            ],
+            "title": "Preferred Contact Channel",
+            "type": "string"
           },
           "preferred_language": {
             "anyOf": [
@@ -3943,6 +4180,16 @@
               }
             ],
             "title": "Organization Name"
+          },
+          "preferred_contact_channel": {
+            "default": "email",
+            "enum": [
+              "email",
+              "web_chat",
+              "none"
+            ],
+            "title": "Preferred Contact Channel",
+            "type": "string"
           },
           "preferred_language": {
             "anyOf": [
@@ -4095,6 +4342,16 @@
             ],
             "title": "Organization Name"
           },
+          "preferred_contact_channel": {
+            "default": "email",
+            "enum": [
+              "email",
+              "web_chat",
+              "none"
+            ],
+            "title": "Preferred Contact Channel",
+            "type": "string"
+          },
           "preferred_language": {
             "anyOf": [
               {
@@ -4227,6 +4484,22 @@
               }
             ],
             "title": "Organization Name"
+          },
+          "preferred_contact_channel": {
+            "anyOf": [
+              {
+                "enum": [
+                  "email",
+                  "web_chat",
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Contact Channel"
           },
           "preferred_language": {
             "anyOf": [
@@ -9475,24 +9748,6 @@
         "title": "ReservationOut",
         "type": "object"
       },
-      "ResolveIn": {
-        "additionalProperties": false,
-        "properties": {
-          "resolution": {
-            "enum": [
-              "delivered",
-              "retry"
-            ],
-            "title": "Resolution",
-            "type": "string"
-          }
-        },
-        "required": [
-          "resolution"
-        ],
-        "title": "ResolveIn",
-        "type": "object"
-      },
       "ResourceDetail": {
         "properties": {
           "color": {
@@ -12242,6 +12497,18 @@
             ],
             "title": "Action Type"
           },
+          "appointment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Appointment Id"
+          },
           "approve_permission": {
             "anyOf": [
               {
@@ -12253,10 +12520,34 @@
             ],
             "title": "Approve Permission"
           },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "customer_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id"
           },
           "due_date": {
             "anyOf": [
@@ -12298,6 +12589,18 @@
             "title": "Id",
             "type": "string"
           },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
           "kind": {
             "enum": [
               "proposal",
@@ -12305,10 +12608,22 @@
               "supplier_quote",
               "autonomy_fallback",
               "web_reply",
-              "chain_blocked"
+              "chain_blocked",
+              "customer_care_case"
             ],
             "title": "Kind",
             "type": "string"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
           },
           "proposal_id": {
             "anyOf": [
@@ -12419,6 +12734,21 @@
         "title": "WorkPage",
         "type": "object"
       },
+      "app__modules__ai__customer_care__api__ResolveIn": {
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "ResolveIn",
+        "type": "object"
+      },
       "app__modules__catalog__api__VersionIn": {
         "properties": {
           "version": {
@@ -12458,6 +12788,24 @@
           "version"
         ],
         "title": "VersionIn",
+        "type": "object"
+      },
+      "app__modules__notifications__schemas__ResolveIn": {
+        "additionalProperties": false,
+        "properties": {
+          "resolution": {
+            "enum": [
+              "delivered",
+              "retry"
+            ],
+            "title": "Resolution",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resolution"
+        ],
+        "title": "ResolveIn",
         "type": "object"
       },
       "app__modules__purchasing__schemas__VersionIn": {
@@ -13814,6 +14162,144 @@
         ]
       }
     },
+    "/api/v1/ai/customer-care/cases/{case_id}": {
+      "get": {
+        "operationId": "detail_api_v1_ai_customer_care_cases__case_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detail",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/v1/ai/customer-care/cases/{case_id}/resolve": {
+      "post": {
+        "operationId": "resolve_api_v1_ai_customer_care_cases__case_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__ai__customer_care__api__ResolveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
     "/api/v1/ai/exceptions": {
       "get": {
         "operationId": "exceptions_api_v1_ai_exceptions_get",
@@ -14115,7 +14601,8 @@
                     "payment_followup",
                     "safety",
                     "grounding",
-                    "dictation"
+                    "dictation",
+                    "customer_care"
                   ],
                   "type": "string"
                 },
@@ -20332,7 +20819,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ResolveIn"
+                "$ref": "#/components/schemas/app__modules__notifications__schemas__ResolveIn"
               }
             }
           },

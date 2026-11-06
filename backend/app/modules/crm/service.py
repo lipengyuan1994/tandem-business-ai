@@ -35,7 +35,15 @@ from .schemas import (
     normalize,
 )
 
-FIELDS = ["display_name", "given_name", "family_name", "organization_name", "preferred_language", "timezone"]
+FIELDS = [
+    "display_name",
+    "given_name",
+    "family_name",
+    "organization_name",
+    "preferred_language",
+    "timezone",
+    "preferred_contact_channel",
+]
 REDACT = ["display_name", "given_name", "family_name"]
 
 
@@ -127,6 +135,9 @@ def record_consent(
     db: Session, ctx: Context, customer_id: uuid.UUID, c: ConsentIn, *, recorded_at: datetime | None = None
 ) -> ConsentRecord:
     """Append-only: a change is a new record; the latest one per (channel, purpose) is current."""
+    from .booking import lock_customers
+
+    lock_customers(db, ctx, {customer_id})
     assert ctx.business_id is not None
     row = ConsentRecord(
         id=new_id(),
@@ -168,7 +179,8 @@ def create_customer(db: Session, ctx: Context, data: CustomerCreate) -> Customer
         status="active",
         source=source,
         created_by=ctx.user_id or ctx.on_behalf_of_user_id,
-        **data.model_dump(exclude={"contact_points", "consents", "tags"}),
+        preferred_contact_channel=data.preferred_contact_channel or "email",
+        **data.model_dump(exclude={"contact_points", "consents", "tags", "preferred_contact_channel"}),
     )
     db.add(customer)
     db.flush()
@@ -194,6 +206,9 @@ def update_customer(
     db: Session, ctx: Context, customer_id: uuid.UUID, version: int, changes: CustomerFields
 ) -> Customer:
     ctx.require(P.CUSTOMER_WRITE)
+    from .booking import lock_customers
+
+    lock_customers(db, ctx, {customer_id})
     before = _customer(db, ctx, customer_id)
     snapshot = {f: getattr(before, f) for f in FIELDS}
     values = changes.model_dump(exclude_unset=True)
@@ -250,6 +265,9 @@ def add_contact_point(db: Session, ctx: Context, customer_id: uuid.UUID, cp: Con
 def remove_contact_point(db: Session, ctx: Context, contact_point_id: uuid.UUID) -> None:
     ctx.require(P.CUSTOMER_WRITE)
     cp = crud.require_scoped(db, ctx, ContactPoint, contact_point_id, "crm.contact_point_not_found")
+    from .booking import lock_customers
+
+    lock_customers(db, ctx, {cp.customer_id})
     cp.is_active, cp.is_primary = False, False
     audit.record(
         db,

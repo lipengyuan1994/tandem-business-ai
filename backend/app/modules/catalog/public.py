@@ -91,3 +91,24 @@ def get_default_currency(db: Session, ctx: Context) -> str:
     from app.modules.org.public import get_business_brief
 
     return get_business_brief(db, ctx).currency
+
+
+def recall_services(db: Session, ctx: Context) -> list[CatalogItemOut]:
+    from sqlalchemy import select
+
+    from .models import CatalogItem
+
+    ctx.require("catalog.item.read")
+    return [
+        CatalogItemOut.model_validate(r)
+        for r in db.scalars(
+            select(CatalogItem)
+            .where(
+                CatalogItem.business_id == ctx.business_id,
+                CatalogItem.kind == "service",
+                CatalogItem.status == "active",
+                CatalogItem.recall_interval_months.is_not(None),
+            )
+            .order_by(CatalogItem.id)
+        )
+    ]

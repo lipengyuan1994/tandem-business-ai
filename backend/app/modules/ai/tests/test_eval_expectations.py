@@ -8,6 +8,17 @@ from pathlib import Path
 from evals.runner import Case, Outcome, Proposal, load_cases, run_case, write_report
 
 
+def test_answer_any_requires_one_case_insensitive_term_from_every_group() -> None:
+    base = load_cases("customer_care")[0]
+    case = Case.model_validate(
+        {**base.model_dump(), "expect": {"answer_any": [["Bonjour", "Merci"], ["review", "avis"]]}}
+    )
+    for text, expected in (("MERCI pour votre AVIS", True), ("Bonjour", False), ("avis", False), ("", False)):
+        assert run_case(case, lambda _, text=text: Outcome(status="succeeded", text=text)).passed is expected
+    optional = Case.model_validate({**base.model_dump(), "expect": {}})
+    assert run_case(optional, lambda _: Outcome(status="succeeded")).passed
+
+
 def test_field_diagnostics_explain_citations_terms_and_autonomy_without_body(tmp_path: Path) -> None:
     case = next(c for c in load_cases("intake") if c.id == "intake-kb-warranty")
     outcome = Outcome(

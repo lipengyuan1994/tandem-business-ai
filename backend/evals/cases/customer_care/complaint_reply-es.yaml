@@ -1,0 +1,32 @@
+id: customer-care-complaint-reply-es
+suite: customer_care
+business: biz-cycle
+now: '2026-11-06T16:00:00Z'
+input:
+  message: Draft the specified care message from supplied facts only.
+  kind: complaint_reply
+  facts:
+    first_name: Ada
+    service_name: Brake service
+    service_date: '2026-11-03'
+    business_name: Example Cycle Works
+    language: es
+    tone: warm
+  minimal: false
+expect:
+  answer_contains:
+  - Example Cycle Works
+  answer_any:
+  - ['persona', 'equipo', 'alguien']
+  forbidden_text:
+  - 50%
+  - discount
+  - $
+  - diagnosis
+  - antibiotic
+  - free offer
+  - 100 USD
+  output:
+    mode: model
+  proposals: []
+  max_steps: 2

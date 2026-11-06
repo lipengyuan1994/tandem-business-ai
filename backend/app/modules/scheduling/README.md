@@ -16,3 +16,5 @@ The existing expiry jobs continue to release expired holds.
 
 The public binding boundary also checks `hold_expires_at > now` under the hold's row lock. Expired holds cannot be
 bound, including before the expiry job runs and on repeated binding to the same proposal.
+
+P10-B2: completed events include completed_at. Public `completed_service_page`, `latest_completed_appointment`, `has_future_service_appointment` provide bounded care discovery. `get_appointment(...,lock=False)` supports non-locking fact reads.

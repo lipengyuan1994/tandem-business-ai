@@ -109,8 +109,8 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P10-A1](P10-ai-workflows.md) | Confirm in chat, PO delivery to supplier, outbox stop, Work queue | EVENT | A | P10-A0 | DONE (2026-11-05): confirm in chat (own thread, revision/hash, $500/order and $1,000/day), PO delivered to the supplier (`purchasing.send_po`), stoppable AI-sent mail (send delay, Stop), delivery states, Work queue and Exceptions; copilot live eval 83 %; `make check` and e2e passed; not yet deployed |
 | [P10-C1](P10-ai-workflows.md) | Hand-over enforced, knowledge base v1, grounded front-desk answers | EVENT | A/B | P10-A0 | DONE (2026-11-05): knowledge base v1 (M19), hand-over enforced, cited answers, grounding check, front-desk reply rule in shadow mode, withheld web-chat replies; live intake 98.5 %, grounding 100 %; `make check` and e2e passed; not yet deployed |
 | [P10-E0](P10-ai-workflows.md) | Local-model benchmark (P5-02) and local-only `regulated` routing | EVENT + DEPLOY | A | ADR-020 | DONE — [routing](../ai/cards/P10-E0-routing.md) (Codex) and [benchmark](../../../backend/evals/reports/2026-11-06-local-models.md) (2026-11-06: local grounding and extraction pass; agent classes stay off under regulated) |
-| [P10-D](P10-ai-workflows.md) | Voice dictation (STT adapter, polish pass) | EVENT | B | — | IN PROGRESS — backend Codex 2026-11-06; UI separate |
-| [P10-B](P10-ai-workflows.md) | AI Team page, agent configs, chaining rules, Customer Care agent | EVENT | A/B | P10-A1 | PLANNED |
+| [P10-D](P10-ai-workflows.md) | Voice dictation (STT adapter, polish pass) | EVENT | B | — | DONE (2026-11-06): backend + screens; released in 0.1.7; live dictation eval 87.5 % |
+| [P10-B](P10-ai-workflows.md) | AI Team page, agent configs, chaining rules, Customer Care agent | EVENT | A/B | P10-A1 | IN PROGRESS — B1 backend, B3 screens (0.1.7) and B2 Customer Care backend done; Customer Care screens next |
 | [P10-E1](P10-ai-workflows.md) | Multi-resource booking, emergency rules, recall, Example Dental Clinic | EVENT | A/B | P10-C1, P10-E0 | PLANNED |
 | [P10-C2](P10-ai-workflows.md) | Embed snippet, customer self-service, embeddings and PDF upload | EVENT | B | P10-C1 | PLANNED |
 | [P7-01](P7-submission.md) | Publish the repository | GATE | Owner | P6 gate | PLANNED |
@@ -121,7 +121,9 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P7-06](P7-submission.md) | Freeze | PRE | B | — | PLANNED |
 
 | [P10-D backend](../ai/cards/P10-D-backend.md) | Voice dictation backend | EVENT | A | P10-E0 | DONE (2026-11-06): 2,083 backend tests; restricted make check; live eval/UI separate |
-| [P10-D screens](../ai/cards/P10-D-screens.md) | Staff voice dictation controls | EVENT | B | P10-D backend | BLOCKED — verification only (2026-11-06): implementation ready; frontend typecheck/lint/build and 424 tests pass; restricted make check blocked by Gitleaks finding in concurrent backend; Playwright launch denied by sandbox |
+| [P10-D screens](../ai/cards/P10-D-screens.md) | Staff voice dictation controls | EVENT | B | P10-D backend | DONE (2026-11-06): full make check and e2e by the reviewer; released in 0.1.7; headless macOS microphone test unverified (see card) |
 
 | [P10-B1 backend](../ai/cards/P10-B1-backend.md) | AI team registry, controls, causality and safe chaining | EVENT | A | P10-A1, P10-E0, P10-D backend | DONE (2026-11-06): 2,120 backend tests; scoped make check; final focused 40 passed; UI/types/live/release separate |
 | [P10-B3 screens](../ai/cards/P10-B3-screens.md) | AI Team, agent detail, chains, targeted assistant and filters | EVENT | B | P10-B1 backend | DONE — Codex 2026-11-06: 451 frontend tests, typecheck/lint/build, scoped offline check; +9,779 B gzip; API gaps and live/browser verification in card |
+
+| [P10-B2 backend](../ai/cards/P10-B2-backend.md) | Customer Care post-sales workflows | EVENT | A | P10-B1 backend | DONE (2026-11-06): seven review findings reproduced/fixed; 167 focused / 2,261 full backend tests, 96% coverage, scoped make check; live hosted `customer_care` eval 19/19 (reviewer, 2026-11-06); release separate |

@@ -17,7 +17,7 @@ from .gateway.routes import ModelClass
 Policy = Literal["hosted_vultr", "hosted_any", "strict_private", "regulated"]
 UseCaseId = Literal[
     "intake", "copilot", "summary", "reorder_note", "briefing", "procurement", "campaign_draft", "payment_followup",
-    "safety", "grounding", "dictation",
+    "safety", "grounding", "dictation", "customer_care",
 ]  # fmt: skip
 
 
@@ -59,6 +59,8 @@ class PaymentReminderDraft(BaseModel):
 
 
 class SafetyVerdict(BaseModel):
+    care_category: Literal["none", "complaint", "warranty", "dispute"] = "none"
+    care_priority: Literal["normal", "high", "urgent"] = "high"
     flagged: bool
     category: Literal["none", "abuse", "self_harm", "sexual", "violence", "other"]
 

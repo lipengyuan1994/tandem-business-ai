@@ -216,5 +216,9 @@ tools; documents published by the owner); regulated data (fail closed, local-onl
 - **D7** (decided: 120 s / 4 MB) Voice: Vultr Whisper for standard businesses; keep confirm-before-send; 60 s or 120 s limit.
 - **D8** Order of work in §8.
 - **D9** New libraries when their step starts (PDF text extraction in C2; none needed for A0–C1).
+  *Decided 2026-11-06 (standing approval, best judgment):* PDF text extraction uses **pypdf** (BSD-3, pure
+  Python) in a resource-limited subprocess; uploaded PDFs are not stored (text becomes draft articles the owner
+  publishes). No `pgvector` Python package: a small SQLAlchemy type for `vector(1024)`. Embeddings use Vultr
+  `qwen3-embedding-4b` with `dimensions: 1024` (verified live). Re-ranking stays out of scope.
 - **D10** Shadow-mode thresholds for switching a rule on (proposal: at least 50 shadow cases and ≤ 2 % wrong
   "would act" decisions, reviewed by the owner).

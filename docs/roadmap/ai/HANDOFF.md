@@ -11,7 +11,7 @@ append a diary): keep it under 80 lines and true *now*. History lives in `EVENT_
   fast_extract `mimo-v2.6-flash` (fallbacks `deepseek-v4.1-flash-1017` / `qwen3.8-flash-next`); writer
   `deepseek-v4.1-flash-1017`. Do not use `glm-5.3-flash` (reasoning model: empty output within 800 tokens) or
   `json_schema` mode (empty output for nested schemas on Vultr). Probe: `backend/evals/reports/2026-11-03-probe.md`.
-- **Latest live evals** (2026-11-04, all six suites meet their thresholds): intake 98.5 % (67 cases, prompt v5, 2026-11-05), grounding 100 % (10),
+- **Latest live evals** (2026-11-04, all six suites meet their thresholds): intake 98.6 % (70 cases, intake v6 + safety v2, 2026-11-06), customer_care 100 % (19, 2026-11-06), grounding 100 % (10),
   time zones 90 %, injection 100 % pass and 100 % resistance, copilot 83 % (2026-11-05, prompt v3, 24 cases), summary 100 %, procurement 80 %. Selection
   report `backend/evals/reports/2026-11-03-selection.md`; run with `AI_LIVE=1 make eval suite=<suite>`.
 - **Deployment:** Vultr VM `smb-demo` (45.63.85.83, `https://45-63-85-83.sslip.io`, vhp-2c-4gb-amd, sjc) runs **0.1.7** (P10-A0, A1, C1, E0, D, B1, B3; 2026-11-06)
@@ -111,3 +111,29 @@ correction. Ruff/format/mypy, fixtures, backend licenses and Gitleaks pass. Earl
 was resolved by formatting; no scanner allowlist was added. Tier-A second-agent review findings corrected.
 Frontend/types/browser/live-provider/deployment verification remains separate; no frontend edits or commits here.
 Contract, file inventory, decisions and exact evidence: [P10-B1 backend card](cards/P10-B1-backend.md).
+
+## P10-B2 backend — 2026-11-06 (Codex)
+
+Backend DONE, uncommitted and unreleased. Full scoped make check passed: 2,225 tests / 96% coverage,
+Ruff/format/mypy, fixtures, backend licences and Gitleaks. Final 19 offline evals passed again after explicit
+language/tone expectation tightening. Default disabled; demo rule ask/shadow.
+Check-ins, daily recalls, complaint/warranty human cases and one bounded-message executor use B1 lineage/budgets,
+A1 delayed mail/Stop and C1 delayed web publication/Stop. Prompt versions: customer_care_message v1, intake v6,
+safety v2. Migration: `20261106_1200_customer_care`, applied only to `smb_team`; OpenAPI regenerated.
+No frontend, installs, downloads, external calls, Docker, commits or deployment. File inventory, decisions,
+requirement matrix, test evidence and limits: [P10-B2 card](cards/P10-B2-backend.md).
+
+### B2 independent review follow-up — 2026-11-06
+
+Seven findings reproduced with 21 failing cases before fixes. Added request/proactive consent separation at
+execution and delivery, proposal-generation binding and Care ownership invalidation, independent bounded
+inbound Care classification/holds, atomic anonymous-case customer binding under the customer lock, current
+recall configuration/date checks at both send boundaries, non-space-separated review detection, scoped invoice
+evidence validation. Preserved owner eval changes; added `answer_any` unit coverage. The owner reports hosted
+eval 19/19; no hosted call was rerun. Existing uncommitted B2 migration edited for receipt due_month and
+ai_generation; `smb_team` downgraded/upgraded. Final focused: 167 passed, including 35 review regressions;
+final full scoped make check: **2,261 passed in 1,667.80 s**, 96% coverage, Ruff/format/mypy, fixtures,
+backend licences and Gitleaks. OpenAPI regenerated; DB head/receipt columns/forced RLS read back after tests.
+Email and web source-thread replies both check approved ownership at execution and delivery. No installs,
+downloads, external calls, Docker, frontend edits, commits or release. Per-finding tests and decisions:
+[Review fixes](cards/P10-B2-backend.md#review-fixes).

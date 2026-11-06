@@ -25,7 +25,15 @@ router = APIRouter()
 
 class WorkItem(BaseModel):
     id: uuid.UUID
-    kind: Literal["proposal", "outbound_mail", "supplier_quote", "autonomy_fallback", "web_reply", "chain_blocked"]
+    kind: Literal[
+        "proposal",
+        "outbound_mail",
+        "supplier_quote",
+        "autonomy_fallback",
+        "web_reply",
+        "chain_blocked",
+        "customer_care_case",
+    ]
     title: str
     created_at: datetime
     status: str
@@ -38,6 +46,11 @@ class WorkItem(BaseModel):
     due_date: date | None = None
     quote_request_id: uuid.UUID | None = None
     supplier_id: uuid.UUID | None = None
+    priority: str | None = None
+    customer_id: uuid.UUID | None = None
+    conversation_id: uuid.UUID | None = None
+    appointment_id: uuid.UUID | None = None
+    invoice_id: uuid.UUID | None = None
     failure_code: str | None = None
     reasons: list[str] = Field(default_factory=list)
 
@@ -72,7 +85,10 @@ def work_queue(
     ctx: Context = Depends(require("approvals.proposal.read")),
 ) -> WorkPage:
     with transaction(ctx) as db:
-        rows = approvals.proposal_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
+        from .customer_care.api import queue_items as care_items
+
+        rows = care_items(db, ctx, limit=limit + 1, cursor=cursor)
+        rows += approvals.proposal_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
         rows += notifications.outbound_queue_items(db, ctx, statuses=("pending",), limit=limit + 1, cursor=cursor)
         rows += purchasing.awaiting_supplier_items(db, ctx, limit=limit + 1, cursor=cursor)
         rows += conversations.publication_queue_items(db, ctx, limit=limit + 1, cursor=cursor)

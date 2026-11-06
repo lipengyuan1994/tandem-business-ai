@@ -363,6 +363,26 @@
         "daily_cap": 10,
         "active": true,
         "granted_by": "user-sam"
+      },
+      {
+        "id": "autonomy-biz-cycle-care",
+        "business_id": "biz-cycle",
+        "action_type": "customer_care.send_message",
+        "level": "ask",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-morgan"
+      },
+      {
+        "id": "autonomy-biz-garden-care",
+        "business_id": "biz-garden",
+        "action_type": "customer_care.send_message",
+        "level": "ask",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-sam"
       }
     ],
     "customers": [

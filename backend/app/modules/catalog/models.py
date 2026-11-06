@@ -31,6 +31,7 @@ class CatalogItem(BusinessScopedBase):
     currency: Mapped[str] = mapped_column(String(3))
     tax_code: Mapped[str | None] = mapped_column(String(32))
     duration_minutes: Mapped[int | None] = mapped_column(Integer)
+    recall_interval_months: Mapped[int | None] = mapped_column(Integer)
     buffer_minutes: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
     resource_kind: Mapped[str | None] = mapped_column(String(12))
     is_stock_tracked: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -44,6 +45,10 @@ class CatalogItem(BusinessScopedBase):
             " and resource_kind is not null and not is_stock_tracked)"
             " or (kind = 'product' and duration_minutes is null)",
             name="kind_fields",
+        ),
+        CheckConstraint(
+            "recall_interval_months is null or (kind = 'service' and recall_interval_months between 1 and 120)",
+            name="recall_interval",
         ),
         Index("uq_catalog_items_sku", "business_id", "sku", unique=True, postgresql_where=text("sku is not null")),
     )

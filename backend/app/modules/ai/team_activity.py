@@ -86,10 +86,14 @@ def timeline(
         stmt = stmt.where(DomainEvent.correlation_id == correlation_id)
     # Agent pages include delivery evidence; chain views include all emitted domain events.
     if not correlation_id:
-        stmt = stmt.where(DomainEvent.type == "notifications.delivery_status_changed")
+        stmt = stmt.where(DomainEvent.type.in_(("notifications.delivery_status_changed", "ai.customer_care_activity")))
     for event in db.scalars(_before(stmt, DomainEvent.occurred_at, DomainEvent.id, cursor, limit)):
         delivery = event.type == "notifications.delivery_status_changed"
-        status = str(event.payload.get("status", "occurred")) if delivery else "occurred"
+        status = (
+            str(event.payload.get("status", "occurred"))
+            if delivery or event.type == "ai.customer_care_activity"
+            else "occurred"
+        )
         mapped = {"pending": "scheduled", "cancelled": "stopped"}.get(status, status)
         outbox = event.payload.get("outbox_message_id") if delivery else None
         try:
@@ -108,6 +112,9 @@ def timeline(
                 causation_id=event.causation_id,
                 proposal_id=event.causation_id if delivery else None,
                 result_link=f"/api/v1/notifications/outbox?proposal_id={event.causation_id}" if outbox_id else None,
+                reasons=[str(event.payload["reason"])]
+                if event.type == "ai.customer_care_activity" and event.payload.get("reason")
+                else [],
                 delivery_state=mapped
                 if mapped in {"scheduled", "sending", "delivered", "failed", "unknown", "stopped"}
                 else "none",

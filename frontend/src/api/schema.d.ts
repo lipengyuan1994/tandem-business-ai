@@ -330,6 +330,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai/customer-care/cases/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_ai_customer_care_cases__case_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ai/customer-care/cases/{case_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve */
+        post: operations["resolve_api_v1_ai_customer_care_cases__case_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai/exceptions": {
         parameters: {
             query?: never;
@@ -3477,6 +3511,27 @@ export interface components {
              */
             booking_lead_time_minutes: number;
             /**
+             * Checkin Delay Days
+             * @default 2
+             */
+            checkin_delay_days: number;
+            /**
+             * Customer Care Quiet End Hour
+             * @default 8
+             */
+            customer_care_quiet_end_hour: number;
+            /**
+             * Customer Care Quiet Start Hour
+             * @default 20
+             */
+            customer_care_quiet_start_hour: number;
+            /**
+             * Customer Care Tone
+             * @default warm
+             * @enum {string}
+             */
+            customer_care_tone: "warm" | "formal" | "concise";
+            /**
              * Handoff After Hours Text
              * @default We're currently closed. A person will reply here when we're open.
              */
@@ -3553,6 +3608,27 @@ export interface components {
              */
             booking_lead_time_minutes: number;
             /**
+             * Checkin Delay Days
+             * @default 2
+             */
+            checkin_delay_days: number;
+            /**
+             * Customer Care Quiet End Hour
+             * @default 8
+             */
+            customer_care_quiet_end_hour: number;
+            /**
+             * Customer Care Quiet Start Hour
+             * @default 20
+             */
+            customer_care_quiet_start_hour: number;
+            /**
+             * Customer Care Tone
+             * @default warm
+             * @enum {string}
+             */
+            customer_care_tone: "warm" | "formal" | "concise";
+            /**
              * Handoff After Hours Text
              * @default We're currently closed. A person will reply here when we're open.
              */
@@ -3603,7 +3679,10 @@ export interface components {
             locale?: string | null;
             /** Name */
             name?: string | null;
-            /** Public Profile */
+            /**
+             * Public Profile
+             * @description Public contact/profile settings; optional review_url and booking_url must be absolute HTTP(S) URLs; avoid_medical_details uses minimal care templates.
+             */
             public_profile?: {
                 [key: string]: unknown;
             } | null;
@@ -3765,6 +3844,42 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** CaseOut */
+        CaseOut: {
+            /** Appointment Id */
+            appointment_id: string | null;
+            /** Category */
+            category: string;
+            /**
+             * Conversation Id
+             * Format: uuid
+             */
+            conversation_id: string;
+            /** Customer Id */
+            customer_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invoice Id */
+            invoice_id: string | null;
+            /** Priority */
+            priority: string;
+            /** Proposal Id */
+            proposal_id: string | null;
+            /** Resolved At */
+            resolved_at: string | null;
+            /**
+             * Source Message Id
+             * Format: uuid
+             */
+            source_message_id: string;
+            /** Status */
+            status: string;
+            /** Version */
+            version: number;
+        };
         /** CatalogItemCreate */
         CatalogItemCreate: {
             /**
@@ -3795,6 +3910,8 @@ export interface components {
             name: string;
             /** Price Minor */
             price_minor?: number | null;
+            /** Recall Interval Months */
+            recall_interval_months?: number | null;
             /** Resource Kind */
             resource_kind?: ("staff" | "room" | "equipment") | null;
             /** Sku */
@@ -3834,6 +3951,8 @@ export interface components {
             name: string;
             /** Price Minor */
             price_minor: number | null;
+            /** Recall Interval Months */
+            recall_interval_months?: number | null;
             /** Resource Kind */
             resource_kind: ("staff" | "room" | "equipment") | null;
             /** Sku */
@@ -3862,6 +3981,8 @@ export interface components {
             name?: string | null;
             /** Price Minor */
             price_minor?: number | null;
+            /** Recall Interval Months */
+            recall_interval_months?: number | null;
             /** Sku */
             sku?: string | null;
             /** Version */
@@ -4277,6 +4398,8 @@ export interface components {
             kind: "person" | "organization";
             /** Organization Name */
             organization_name?: string | null;
+            /** Preferred Contact Channel */
+            preferred_contact_channel?: ("email" | "web_chat" | "none") | null;
             /** Preferred Language */
             preferred_language?: string | null;
             /** Tags */
@@ -4315,6 +4438,12 @@ export interface components {
             last_interaction_at: string | null;
             /** Organization Name */
             organization_name: string | null;
+            /**
+             * Preferred Contact Channel
+             * @default email
+             * @enum {string}
+             */
+            preferred_contact_channel: "email" | "web_chat" | "none";
             /** Preferred Language */
             preferred_language: string | null;
             /** Source */
@@ -4355,6 +4484,12 @@ export interface components {
             last_interaction_at: string | null;
             /** Organization Name */
             organization_name: string | null;
+            /**
+             * Preferred Contact Channel
+             * @default email
+             * @enum {string}
+             */
+            preferred_contact_channel: "email" | "web_chat" | "none";
             /** Preferred Language */
             preferred_language: string | null;
             /** Primary Email */
@@ -4399,6 +4534,12 @@ export interface components {
             last_interaction_at: string | null;
             /** Organization Name */
             organization_name: string | null;
+            /**
+             * Preferred Contact Channel
+             * @default email
+             * @enum {string}
+             */
+            preferred_contact_channel: "email" | "web_chat" | "none";
             /** Preferred Language */
             preferred_language: string | null;
             /** Source */
@@ -4427,6 +4568,8 @@ export interface components {
             given_name?: string | null;
             /** Organization Name */
             organization_name?: string | null;
+            /** Preferred Contact Channel */
+            preferred_contact_channel?: ("email" | "web_chat" | "none") | null;
             /** Preferred Language */
             preferred_language?: string | null;
             /** Timezone */
@@ -6315,14 +6458,6 @@ export interface components {
             /** Status */
             status: string;
         };
-        /** ResolveIn */
-        ResolveIn: {
-            /**
-             * Resolution
-             * @enum {string}
-             */
-            resolution: "delivered" | "retry";
-        };
         /** ResourceDetail */
         ResourceDetail: {
             /** Color */
@@ -7368,13 +7503,19 @@ export interface components {
         WorkItem: {
             /** Action Type */
             action_type?: string | null;
+            /** Appointment Id */
+            appointment_id?: string | null;
             /** Approve Permission */
             approve_permission?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
+            /** Customer Id */
+            customer_id?: string | null;
             /** Due Date */
             due_date?: string | null;
             /** Expires At */
@@ -7386,11 +7527,15 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Invoice Id */
+            invoice_id?: string | null;
             /**
              * Kind
              * @enum {string}
              */
-            kind: "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback" | "web_reply" | "chain_blocked";
+            kind: "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback" | "web_reply" | "chain_blocked" | "customer_care_case";
+            /** Priority */
+            priority?: string | null;
             /** Proposal Id */
             proposal_id?: string | null;
             /** Quote Request Id */
@@ -7415,6 +7560,11 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** ResolveIn */
+        app__modules__ai__customer_care__api__ResolveIn: {
+            /** Version */
+            version: number;
+        };
         /** VersionIn */
         app__modules__catalog__api__VersionIn: {
             /** Version */
@@ -7429,6 +7579,14 @@ export interface components {
         app__modules__knowledge__schemas__VersionIn: {
             /** Version */
             version: number;
+        };
+        /** ResolveIn */
+        app__modules__notifications__schemas__ResolveIn: {
+            /**
+             * Resolution
+             * @enum {string}
+             */
+            resolution: "delivered" | "retry";
         };
         /** VersionIn */
         app__modules__purchasing__schemas__VersionIn: {
@@ -8796,6 +8954,135 @@ export interface operations {
             };
         };
     };
+    detail_api_v1_ai_customer_care_cases__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_api_v1_ai_customer_care_cases__case_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__ai__customer_care__api__ResolveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     exceptions_api_v1_ai_exceptions_get: {
         parameters: {
             query?: {
@@ -9054,7 +9341,7 @@ export interface operations {
         parameters: {
             query?: {
                 cursor?: string | null;
-                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding" | "dictation") | null;
+                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding" | "dictation" | "customer_care") | null;
                 status?: ("running" | "succeeded" | "failed" | "step_limit" | "budget_exceeded" | "policy_blocked") | null;
                 limit?: number;
             };
@@ -14752,7 +15039,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResolveIn"];
+                "application/json": components["schemas"]["app__modules__notifications__schemas__ResolveIn"];
             };
         };
         responses: {

@@ -58,3 +58,5 @@ then advance to the exact due time before retrying. Header/stable-ID and TLS cer
 
 C1 AI web-chat replies use conversations' withheld publication job and Stop endpoint; no simulated web outbox row
 is queued for them. Mail keeps this module's A1 path. Approvals combines the registered mail and web delivery readers.
+
+P10-B2: care mail uses the same delay/Stop outbox. A registry callback rechecks consent, preference/address, complaints and quiet hours before claim; blocked mail is cancelled with metadata evidence. No reverse AI import.

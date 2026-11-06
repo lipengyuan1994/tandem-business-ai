@@ -26,6 +26,8 @@ class FinalStep(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["final"]
+    care_category: Literal["none", "complaint", "warranty", "dispute"] = "none"
+    care_priority: Literal["normal", "high", "urgent"] = "high"
     message_to_staff: str = Field(max_length=1200)
     proposal_ids: list[uuid.UUID] = []
     needs_human: bool = Field(

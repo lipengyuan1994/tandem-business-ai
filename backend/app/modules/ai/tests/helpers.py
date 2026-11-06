@@ -20,7 +20,9 @@ from app.platform.context import Context, assistant_context
 from app.platform.db import transaction
 from app.platform.testing.auth import ctx_for
 
+AI_CARE_TABLES = ("customer_care_cases", "customer_care_deliveries")
 AI_TABLES = (
+    *AI_CARE_TABLES,
     "ai_runs",
     "ai_run_steps",
     "ai_effects",

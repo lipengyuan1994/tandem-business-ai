@@ -15,10 +15,13 @@ from app.platform.crud import rows_affected
 from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
+from .customer_care.models import CareCase, CareDelivery
 from .models import AiEffect, AiRun, AiRunStep, AiUsageDaily, AssistantMessage, AssistantThread
 from .team_models import AgentSettings, AgentUsageDaily, ChainBudget
 
 TABLES = [
+    CareCase,
+    CareDelivery,
     AiRun,
     AiRunStep,
     AiEffect,

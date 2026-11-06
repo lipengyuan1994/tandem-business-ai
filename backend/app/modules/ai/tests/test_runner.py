@@ -350,7 +350,7 @@ def test_budget_80_percent_notifies_once_per_day(
     add_member(owner, biz, ["owner"])
     with transaction(system_ctx(biz)) as db:
         db.add(AiUsageDaily(business_id=biz, day=clock.now().date(), input_tokens=80_000))
-    reply = step_final("x" * 110)
+    reply = step_final("x" * 50)  # Keep usage at 80–99 tokens after the optional care fields were added.
     assert 80 <= 2 * (len(reply) // 4) < 100
     run(biz, FakeGateway([reply]))
     run(biz, FakeGateway([step_final("ok")]))  # still ≥ 80 %, same day: no second notice

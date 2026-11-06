@@ -25,7 +25,13 @@ def validate_step(
     text: str, spec: RunSpec, proposals: list[uuid.UUID], state: RunState | None = None
 ) -> FinalStep | ToolCallStep:
     step = AGENT_STEP_ADAPTER.validate_json(text)
-    if isinstance(step, FinalStep) and spec.use_case == "intake" and spec.trigger_message_id and not proposals:
+    if (
+        isinstance(step, FinalStep)
+        and spec.use_case == "intake"
+        and spec.trigger_message_id
+        and not proposals
+        and step.care_category == "none"
+    ):
         raise ValueError(REPLY_REQUIRED)
     if isinstance(step, ToolCallStep) and spec.use_case == "intake" and step.tool == "search_knowledge" and state:
         query = step.arguments.get("query")

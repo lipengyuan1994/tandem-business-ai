@@ -129,7 +129,7 @@ def test_intake_happy_path_existing_customer_hold_then_booking_with_reply(demo: 
     assert {e["ref_type"] for e in row["evidence"]} >= {"find_slots", "check_stock", "get_service_parts"}
     assert len(notes(demo.business, conv)) == 1
     recorded = run_row(demo.business, result)
-    assert (recorded.prompt_name, recorded.prompt_version, recorded.steps) == ("intake", 5, 8)
+    assert (recorded.prompt_name, recorded.prompt_version, recorded.steps) == ("intake", 6, 8)
 
 
 def test_intake_new_customer_booking_without_hold_uses_server_facts(demo: Demo, owner_engine: Engine) -> None:

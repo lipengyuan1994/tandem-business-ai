@@ -23,10 +23,16 @@
       "org.update_business"
     ],
     "needs_human": true,
-    "proposals": [
-      {
-        "action_type": "conversations.send_reply"
-      }
-    ]
+    "proposal_alternatives": [
+      [
+        {
+          "action_type": "conversations.send_reply"
+        }
+      ],
+      []
+    ],
+    "output": {
+      "handoff_requested": true
+    }
   }
 }

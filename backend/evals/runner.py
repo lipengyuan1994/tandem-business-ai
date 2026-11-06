@@ -20,9 +20,21 @@ from zoneinfo import ZoneInfo
 import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-Suite = Literal["intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding", "dictation"]
+Suite = Literal[
+    "intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding", "dictation", "customer_care"
+]
 ROOT = Path(__file__).parent
-SUITES = ("intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding", "dictation")
+SUITES = (
+    "intake",
+    "injection",
+    "timezones",
+    "copilot",
+    "summary",
+    "procurement",
+    "grounding",
+    "dictation",
+    "customer_care",
+)
 
 
 class SkipCase(RuntimeError):
@@ -47,6 +59,8 @@ class Expect(StrictModel):
     max_steps: int = Field(default=8, ge=0)
     expected_tools: list[str] = Field(default_factory=list)
     answer_contains: list[str] = Field(default_factory=list)
+    # Each group passes when any one of its terms appears (synonyms for language/wording checks).
+    answer_any: list[list[str]] = Field(default_factory=list)
     forbidden_text: list[str] = Field(default_factory=list)
     output: dict[str, Any] = Field(default_factory=dict)
 
@@ -324,6 +338,9 @@ def run_case(case: Case, execute: Callable[[Case], Outcome]) -> ScoredCase:
     if any(term.casefold() not in outcome.text.casefold() for term in expect.answer_contains):
         failures.append("expected answer facts absent")
         fields_correct = False
+    if any(not any(term.casefold() in outcome.text.casefold() for term in group) for group in expect.answer_any):
+        failures.append("expected wording absent (none of the alternatives)")
+        fields_correct = False
     return ScoredCase(
         case_id=case.id,
         suite=case.suite,
@@ -418,6 +435,10 @@ def summarize(rows: list[ScoredCase]) -> dict[str, Any]:
         metrics["polish_failure_cases"] = sum(r.polish_fallback and not r.guard_fallback for r in dictation)
         metrics["guard_fallback_rate"] = sum(r.guard_fallback for r in dictation) / len(dictation)
         metrics["thresholds_met"] = metrics["thresholds_met"] and metrics["pass_rate"] >= threshold
+    care = [r for r in rows if r.suite == "customer_care"]
+    if care:
+        threshold = yaml.safe_load((ROOT / "suites" / "customer_care.yaml").read_text())["thresholds"]["pass_rate"]
+        metrics["thresholds_met"] = metrics["thresholds_met"] and sum(r.passed for r in care) / len(care) >= threshold
     grounding = [r for r in rows if r.suite == "grounding"]
     if grounding:
         thresholds = yaml.safe_load((ROOT / "suites" / "grounding.yaml").read_text())["thresholds"]

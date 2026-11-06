@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
@@ -79,6 +80,40 @@ def send_reply(
     db: Session, ctx: Context, conversation_id: uuid.UUID, body: str, *, proposal_id: uuid.UUID | None = None
 ) -> MessageOut:
     return MessageOut.model_validate(service.send_reply(db, ctx, conversation_id, body, proposal_id=proposal_id))
+
+
+def send_care_reply(
+    db: Session,
+    ctx: Context,
+    conversation_id: uuid.UUID,
+    body: str,
+    *,
+    source_message_id: uuid.UUID | None,
+    not_before: datetime,
+    proposal_id: uuid.UUID,
+    ai_generation: int | None,
+) -> MessageOut:
+    """Executor-only care response bound to the approved proposal's ownership generation."""
+    from app.platform.errors import Conflict
+
+    from . import replies
+
+    conv = lock_for_customer(db, ctx, conversation_id)
+    if ai_generation is None or conv.ai_generation != ai_generation:
+        raise Conflict("conversations.ai_paused")
+    return MessageOut.model_validate(
+        replies.send_reply(
+            db,
+            ctx,
+            conversation_id,
+            body,
+            proposal_id=proposal_id,
+            ai_reply=True,
+            answers_message_id=source_message_id,
+            ai_generation=ai_generation,
+            not_before=not_before,
+        )
+    )
 
 
 def start_conversation(

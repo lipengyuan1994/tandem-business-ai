@@ -17,7 +17,16 @@ from . import permissions as P
 from .models import CatalogItem, ServicePart
 from .schemas import CatalogItemCreate, CatalogItemUpdate, ServicePartIn, ServicePartOut, ServiceRequirements
 
-FIELDS = ["sku", "name", "description", "price_minor", "duration_minutes", "buffer_minutes", "is_bookable_online"]
+FIELDS = [
+    "sku",
+    "name",
+    "description",
+    "price_minor",
+    "duration_minutes",
+    "buffer_minutes",
+    "is_bookable_online",
+    "recall_interval_months",
+]
 
 
 def _item(db: Session, ctx: Context, item_id: uuid.UUID, *, for_update: bool = False) -> CatalogItem:
@@ -88,6 +97,8 @@ def create_item(db: Session, ctx: Context, data: CatalogItemCreate) -> CatalogIt
 def update_item(db: Session, ctx: Context, item_id: uuid.UUID, data: CatalogItemUpdate) -> CatalogItem:
     ctx.require(P.ITEM_WRITE)
     before = _item(db, ctx, item_id)
+    if before.kind == "product" and data.recall_interval_months is not None:
+        raise Invalid("catalog.product_has_no_recall")
     snapshot = {f: getattr(before, f) for f in FIELDS}
     changes = data.model_dump(exclude_unset=True, exclude={"version"})
     if "sku" in changes:

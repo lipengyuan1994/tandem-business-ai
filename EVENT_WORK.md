@@ -122,3 +122,43 @@ scanning; frontend/Docker/deployment checks excluded. Regenerated OpenAPI matche
 `smb_team`; no frontend edits, installs, downloads, external calls, Docker, commits or deployment. Details and
 final verification: [P10-B1 backend card](docs/roadmap/ai/cards/P10-B1-backend.md#review-fixes).
 | 2026-11-06 ~18:30–19:10 | **0.1.7 released to the VM** (E0 local-only routing, voice dictation, AI Team). `make check`: 2,131 backend and 451 frontend tests, licences, no leaks; `make e2e`: 30 passed (the offline dictation test was wrongly picked up by the main run and is now excluded). Images checked (two migrations, microphone header, new screens) and pushed; only `compose.yml` differed (comments only, copied); manual backup; `upgrade.sh 0.1.6 → 0.1.7` in 29 s, smoke passed, database at `20261106_1000_ai_team`; route file with the `stt` class uploaded after the upgrade, no route errors; `Permissions-Policy … microphone=(self)` live. In-container check: Vultr Whisper transcribed the synthetic clip in 2.4 s; the AI Team lists 7 agents (Customer Care off until B2). SSH closed, Terraform no changes | EVENT | `CHANGELOG.md` (0.1.7), VM `/opt/smb` |
+
+## 2026-11-06 — P10-B2 backend Customer Care (Codex)
+
+Implemented the owner-requested post-sales slice on committed B1/review fixes: disabled-by-default care agent,
+check-ins/recalls, complaint/warranty human triage, reviewed message executor, delayed and stoppable mail/web
+publication, live consent/preference/dispute/quiet-hour checks, minimal regulated templates, causality/budgets,
+export, migration, synthetic seed rules and 19 offline eval cases. Only `smb_team` migrated/tested. Existing native
+ARM runtime/extensions verified; no installs/downloads, external API/model calls, frontend changes, Docker,
+commits or release. Full scoped make check passed: 2,225 backend tests in 1,648.55 s, 96% coverage, Ruff/format, strict mypy,
+151 synthetic fixture rows, backend licences and Gitleaks. All 19 final offline evals passed again in 37.01 s.
+Database head and forced RLS independently read back. Live model/delivery, frontend/types, independent review
+and release remain separate. [B2 card](docs/roadmap/ai/cards/P10-B2-backend.md) owns files, decisions and evidence.
+
+## 2026-11-06 — P10-B2 independent review fixes (Codex)
+
+Reproduced all seven owner-supplied findings with failing tests before product edits (21 failures in 10.65 s).
+Fixed request-only versus proactive consent, approved ownership snapshots/invalidation, independent bounded
+triage despite paused/open-proposal Front Desk admission, anonymous-case binding under customer lock, current
+recall rechecks at execution/delivery, Chinese review text and invoice tenant/customer/appointment validation.
+Preserved the owner's eval runner/case edits and added answer_any unit coverage. Final focused verification:
+167 passed in 78.64 s, including 35 review regressions. An email ownership boundary reproduced two more
+failures before its shared execution/delivery guard; the earlier full run was interrupted after 592 passes.
+Final full scoped make check: **2,261 passed in 1,667.80 s**, 96% coverage; Ruff/format/mypy, fixtures, backend
+licences and Gitleaks passed. OpenAPI regenerated; existing B2 migration edited and only smb_team
+downgraded/upgraded; final DB head/receipt columns/forced RLS verified. No installs,
+downloads, external calls, Docker, frontend changes, commits or release. User-reported hosted eval 19/19 is
+preserved but not independently rerun. Details: [B2 Review fixes](docs/roadmap/ai/cards/P10-B2-backend.md#review-fixes).
+
+## 2026-11-06 — P10-B2 reviewer verification (Claude)
+
+Live hosted evals (Vultr): `customer_care` first 14/19; the five failures were single required language words
+(model used synonyms such as "turno"/"预约") and review-request cases demanding facts the prompt does not require.
+Added an `answer_any` synonym-group expectation to the runner; rerun **19/19** (p95 5.1 s, $0.010). Intake with the
+new safety v2 classifier dropped to 89.6 %: repair requests describing a symptom ("my brake squeaks, please book")
+were classified as complaints and handed over. Tightened safety v2 with an explicit service-request vs complaint
+boundary; refund case now accepts reply or direct hand-over (complaints go to a person per B2); added three
+complaint/warranty cases (en, zh). Intake **69/70 (98.6 %)**, injection **15/15**. Also made
+`preferred_contact_channel` optional on customer create/update (the generated TypeScript type made it mandatory,
+so the edit dialog would have had to send "email" and could overwrite an opt-out). Full `make check` passed
+(2,261 backend, 451 frontend); affected tests rerun after the prompt/case edits.

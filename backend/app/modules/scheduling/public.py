@@ -10,6 +10,9 @@ from sqlalchemy.orm import Session
 from app.platform.context import Context
 
 from . import service
+from .care import completed_page as completed_service_page
+from .care import has_future as has_future_service_appointment
+from .care import latest_completed as latest_completed_appointment
 from .schemas import AppointmentOut, BookingRequest, HoldDto, SlotOut, SlotQuery
 from .service import AppointmentCancelled, AppointmentCompleted, AppointmentConfirmed, AppointmentRescheduled
 
@@ -105,19 +108,22 @@ __all__ = [
     "agenda",
     "bind_hold",
     "book",
+    "completed_service_page",
     "customer_ids_with_service",
     "find_slots",
     "get_appointment",
+    "has_future_service_appointment",
+    "latest_completed_appointment",
     "list_appointments",
     "place_hold",
 ]
 
 
-def get_appointment(db: Session, ctx: Context, appointment_id: uuid.UUID) -> AppointmentOut:
+def get_appointment(db: Session, ctx: Context, appointment_id: uuid.UUID, *, lock: bool = True) -> AppointmentOut:
     """Read a scoped appointment, including customer, service and completion status (sales invoicing)."""
     from app.platform.crud import require_scoped
 
     from .models import Appointment
 
-    row = require_scoped(db, ctx, Appointment, appointment_id, "scheduling.appointment_not_found", for_update=True)
+    row = require_scoped(db, ctx, Appointment, appointment_id, "scheduling.appointment_not_found", for_update=lock)
     return AppointmentOut(**service.enrich(db, ctx, [row])[0])

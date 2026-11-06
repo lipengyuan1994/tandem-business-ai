@@ -29,7 +29,17 @@ def test_registry_consistent(registry):
     assert all(set(agent.handoffs) <= AGENTS.keys() for agent in AGENTS.values())
     assert "purchasing" in AGENTS["inventory"].handoffs
     assert "marketing" not in AGENTS["purchasing"].handoffs
-    assert not AGENTS["customer_care"].triggers
+    assert set(AGENTS["customer_care"].triggers) == {
+        "scheduling.appointment_completed",
+        "conversations.message_received",
+        "ai.customer_care_classify",
+        "ai.customer_care_checkin",
+        "ai.customer_care_recall",
+        "ai.customer_care_recall_subject",
+        "ai.customer_care_triage",
+    }
+    assert AGENTS["customer_care"].action_types == ("customer_care.send_message",)
+    assert not AGENTS["customer_care"].default_enabled
 
 
 def test_upgrade_defaults_and_rls(business, other_business):

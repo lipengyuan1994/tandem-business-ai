@@ -65,6 +65,17 @@ def agent_out(db: Session, ctx: Context, key: str) -> AgentOut:
         )
     )
     summary = approvals.team_summary(db, ctx, key, agent.action_types, since)
+    if key == "customer_care":
+        from .customer_care.models import CareCase
+
+        count, oldest = db.execute(
+            select(func.count(), func.min(CareCase.created_at)).where(
+                CareCase.business_id == ctx.business_id, CareCase.status == "open"
+            )
+        ).one()
+        # A complaint's human resolution and its reply approval are separate Work items.
+        summary["waiting"]["count"] += count
+        summary["waiting"]["oldest_at"] = min((t for t in (oldest, summary["waiting"]["oldest_at"]) if t), default=None)
     availability = ai_status(db, ctx)
     limit = config.daily_cost_limit_usd if config else None
     installation = get_settings()

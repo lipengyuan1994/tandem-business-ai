@@ -26,6 +26,7 @@ class CatalogItemOut(BaseModel):
     price_minor: int | None
     currency: str
     duration_minutes: int | None
+    recall_interval_months: int | None = None
     buffer_minutes: int
     resource_kind: ResourceKind | None
     is_stock_tracked: bool
@@ -42,6 +43,7 @@ class _ItemFields(BaseModel):
     unit: Literal["each", "hour", "kg", "l", "m"] = "each"
     price_minor: int | None = Field(default=None, ge=0)
     duration_minutes: int | None = Field(default=None, ge=5, le=1440)
+    recall_interval_months: int | None = Field(default=None, ge=1, le=120)
     buffer_minutes: int = Field(default=0, ge=0, le=240)
     resource_kind: ResourceKind | None = None
     is_stock_tracked: bool = False
@@ -58,6 +60,8 @@ class CatalogItemCreate(_ItemFields):
                 raise ValueError("catalog.service_requires_duration")
             if self.is_stock_tracked:
                 raise ValueError("services are not stock tracked")
+        elif self.recall_interval_months is not None:
+            raise ValueError("products have no recall interval")
         elif self.duration_minutes is not None:
             raise ValueError("products have no duration")
         return self
@@ -71,6 +75,7 @@ class CatalogItemUpdate(BaseModel):
     description: str | None = None
     price_minor: int | None = Field(default=None, ge=0)
     duration_minutes: int | None = Field(default=None, ge=5, le=1440)
+    recall_interval_months: int | None = Field(default=None, ge=1, le=120)
     buffer_minutes: int | None = Field(default=None, ge=0, le=240)
     is_bookable_online: bool | None = None
 
@@ -91,6 +96,7 @@ class ServiceRequirements(BaseModel):
     service_id: uuid.UUID
     name: str
     duration_minutes: int
+    recall_interval_months: int | None = None
     buffer_minutes: int
     resource_kind: ResourceKind
     price_minor: int | None

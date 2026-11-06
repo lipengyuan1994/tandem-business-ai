@@ -8,6 +8,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from psycopg.errors import DeadlockDetected, ExclusionViolation
+from pydantic import Field
 from sqlalchemy import and_, delete, or_, select, text, update
 from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import Session
@@ -53,6 +54,7 @@ class AppointmentRescheduled(AppointmentEvent):
 
 class AppointmentCompleted(AppointmentEvent):
     event_type = "scheduling.appointment_completed"
+    completed_at: datetime = Field(default_factory=clock.now)
 
 
 # --------------------------------------------------------------------------------------------------- resources

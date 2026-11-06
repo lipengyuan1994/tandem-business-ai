@@ -23,7 +23,7 @@ def invalidate_ai_replies(db: Session, ctx: Context, conversation_id: uuid.UUID,
             ProposalRevision.business_id == ctx.business_id,
             ActionProposal.conversation_id == conversation_id,
             ActionProposal.origin_kind == "assistant",
-            ActionProposal.action_type == "conversations.send_reply",
+            ActionProposal.action_type.in_(["conversations.send_reply", "customer_care.send_message"]),
             ActionProposal.status.in_(["pending_review", "approved", "executing"]),
             # Delayed events must never cancel new replies created after hand-back.
             (

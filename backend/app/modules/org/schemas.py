@@ -49,6 +49,10 @@ class BusinessSettings(BaseModel):
     allow_self_approval: bool = False
     ai_autonomy_paused: bool = False
     outbound_send_delay_seconds: int = Field(default=120, ge=0, le=900)
+    checkin_delay_days: int = Field(default=2, ge=0, le=365)
+    customer_care_quiet_start_hour: int = Field(default=20, ge=0, le=23)
+    customer_care_quiet_end_hour: int = Field(default=8, ge=0, le=23)
+    customer_care_tone: Literal["warm", "formal", "concise"] = "warm"
     always_review_action_types: list[str] = Field(default_factory=list)
     allow_backorders: bool = False
     ai_policy: Literal["hosted_vultr", "hosted_any", "strict_private"] = "hosted_vultr"
@@ -84,7 +88,32 @@ class BusinessUpdate(BaseModel):
     timezone: str | None = None
     locale: str | None = Field(default=None, max_length=16)
     country: str | None = Field(default=None, min_length=2, max_length=2)
-    public_profile: dict[str, Any] | None = None
+    public_profile: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Public contact/profile settings; optional review_url and booking_url must be absolute HTTP(S) URLs; "
+            "avoid_medical_details uses minimal care templates."
+        ),
+    )
+
+    @field_validator("public_profile", check_fields=False)
+    @classmethod
+    def _links(cls, value: dict[str, Any] | None) -> dict[str, Any] | None:
+        from urllib.parse import urlsplit
+
+        if value:
+            for key in ("review_url", "booking_url"):
+                link = value.get(key)
+                if link is not None and (
+                    not isinstance(link, str)
+                    or len(link) > 500
+                    or urlsplit(link).scheme not in {"http", "https"}
+                    or not urlsplit(link).hostname
+                    or urlsplit(link).username
+                    or any(c.isspace() or c in "<>" for c in link)
+                ):
+                    raise ValueError(f"{key} must be an absolute HTTP(S) URL without credentials")
+        return value
 
     @field_validator("timezone")
     @classmethod

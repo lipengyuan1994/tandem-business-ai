@@ -9,7 +9,7 @@ import { server } from "@/test/server"
 const CID = "00000000-0000-7000-8000-0000000000c1"
 const PERMS = ["crm.customer.read", "crm.customer.write", "crm.consent.read", "crm.consent.write"]
 const ADA: CustomerDetail = {
-  id: CID, kind: "person", display_name: "Ada Example", given_name: null, family_name: null, organization_name: null, preferred_language: null,
+  id: CID, kind: "person", display_name: "Ada Example", given_name: null, family_name: null, organization_name: null, preferred_contact_channel: "email", preferred_language: null,
   timezone: null, source: "staff", status: "active", tags: ["vip"], created_at: "2026-10-01T10:00:00Z", last_interaction_at: "2026-11-05T17:00:00Z", version: 3,
   contact_points: [{ id: "cp1", type: "email", value: "ada@example.com", is_primary: true, version: 1 }], current_consents: [],
 }

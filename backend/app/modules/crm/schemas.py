@@ -3,9 +3,17 @@ from __future__ import annotations
 import re
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 from app.platform.errors import Invalid
 
@@ -73,6 +81,8 @@ class CustomerCreate(BaseModel):
     given_name: str | None = Field(default=None, max_length=100)
     family_name: str | None = Field(default=None, max_length=100)
     organization_name: str | None = Field(default=None, max_length=200)
+    # Optional in the API: omitted or null = email.
+    preferred_contact_channel: Literal["email", "web_chat", "none"] | None = None
     preferred_language: str | None = Field(default=None, max_length=20)
     timezone: str | None = None
     contact_points: list[ContactPointIn] = Field(default_factory=list, max_length=10)
@@ -93,8 +103,24 @@ class CustomerFields(BaseModel):
     given_name: str | None = Field(default=None, max_length=100)
     family_name: str | None = Field(default=None, max_length=100)
     organization_name: str | None = Field(default=None, max_length=200)
+    # Omitted = unchanged; an explicit null is rejected (the column is not nullable).
+    preferred_contact_channel: Literal["email", "web_chat", "none"] | None = None
     preferred_language: str | None = Field(default=None, max_length=20)
     timezone: str | None = None
+
+    @field_validator("preferred_contact_channel", mode="before")
+    @classmethod
+    def _no_null_preference(cls, v: object) -> object:
+        if v is None:
+            raise ValueError("preferred_contact_channel cannot be null; omit it instead")
+        return v
+
+    @model_serializer(mode="wrap")
+    def preserve_contact_preference_omission(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data: dict[str, Any] = handler(self)
+        if self.preferred_contact_channel is None:
+            data.pop("preferred_contact_channel", None)
+        return data
 
 
 class CustomerUpdate(CustomerFields):
@@ -109,6 +135,7 @@ class CustomerOut(BaseModel):
     given_name: str | None
     family_name: str | None
     organization_name: str | None
+    preferred_contact_channel: Literal["email", "web_chat", "none"] = "email"
     preferred_language: str | None
     timezone: str | None
     source: str
@@ -148,6 +175,16 @@ class CustomerCandidate(BaseModel):
     display_name: str
     score: float
     reason: Literal["email", "phone", "name"]
+
+
+class CareContact(BaseModel):
+    """Internal delivery context. Raw address must never be passed to a model."""
+
+    status: str
+    first_name: str
+    preferred_language: str | None
+    preferred_contact_channel: Literal["email", "web_chat", "none"]
+    email: str | None
 
 
 class NoteIn(BaseModel):

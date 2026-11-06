@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -30,6 +31,7 @@ def send_reply(
     ai_reply: bool = False,
     answers_message_id: uuid.UUID | None = None,
     ai_generation: int | None = None,
+    not_before: datetime | None = None,
 ) -> Message:
     """Queue AI web replies for publication; manual replies and email retain their existing delivery path."""
     from .service import _add
@@ -64,6 +66,8 @@ def send_reply(
         ai_generation=ai_generation,
     )
     if msg.publication_state == "withheld":
+        if not_before is not None:
+            msg.publish_at = max(msg.publish_at or not_before, not_before)
         msg.delivery_status = "withheld"
         publication.schedule(db, ctx, msg)
         audit.record(

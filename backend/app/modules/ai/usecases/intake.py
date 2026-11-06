@@ -246,7 +246,22 @@ def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None
         elif verdict.flagged:
             with transaction(ctx) as db:
                 conversations.request_handoff(db, ctx, message.conversation_id, reason="Message needs a person")
-            result = _early_result(ctx_factory, state, {"reason": "safety"})
+            care = (
+                {"care_category": verdict.care_category, "care_priority": verdict.care_priority}
+                if verdict.care_category != "none"
+                else {}
+            )
+            result = _early_result(ctx_factory, state, {"reason": "safety", **care})
+        elif verdict.care_category != "none":
+            result = _early_result(
+                ctx_factory,
+                state,
+                {
+                    "reason": "customer_care",
+                    "care_category": verdict.care_category,
+                    "care_priority": verdict.care_priority,
+                },
+            )
         else:
             state.server_facts["safety_clean"] = verdict.category == "none"
     if result is None:
@@ -255,6 +270,18 @@ def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None
             state.extra.update({"reason": "ambiguous_customer", "candidates": list(match.candidates)})
         result = run_agent_step(ctx_factory, message, match, state)
         result = result.model_copy(update={"extra": {**result.extra, **state.extra}})
+    care_category = result.final.care_category if result.final else result.extra.get("care_category", "none")
+    if care_category != "none":
+        from ..customer_care.triage import enqueue
+
+        care_ctx = replace(ctx_factory(result.run_id), causation_id=result.run_id)
+        priority = result.final.care_priority if result.final else result.extra.get("care_priority", "high")
+        with transaction(care_ctx) as db:
+            # Agent settings precede customer/thread locks, including with a concurrent disable.
+            enqueue(db, care_ctx, message_id, care_category, priority)
+            conversations.request_handoff(
+                db, care_ctx, message.conversation_id, reason="Customer Care concern requires a person"
+            )
     if result.status == "budget_exceeded":
         handoff_ctx = replace(ctx_factory(result.run_id), causation_id=result.run_id)
         with transaction(handoff_ctx) as db:

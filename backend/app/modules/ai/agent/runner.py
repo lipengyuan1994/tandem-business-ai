@@ -232,6 +232,8 @@ def run_agent(
             result: dict[str, Any] = {"proposal_ids": [str(p) for p in proposal_ids]}
             if final is not None:
                 result.update(text=final.message_to_staff, needs_human=final.needs_human)
+                if final.care_category != "none":
+                    result.update(care_category=final.care_category, care_priority=final.care_priority)
             recording.close_run(ctx, run_id, status, error_code=error_code, needs_human=needs_human, result=result)
             if final is not None and status == "succeeded":
                 emit(StepEvent(kind="final", run_id=run_id, text=final.message_to_staff))

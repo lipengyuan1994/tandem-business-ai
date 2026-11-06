@@ -61,6 +61,7 @@ DEFAULT_CLASS: dict[str, ModelClass] = {
     "procurement": "fast_extract",
     "grounding": "grounding",
     "dictation": "writer",
+    "customer_care": "writer",
 }
 
 
@@ -124,6 +125,8 @@ def validate_cases(cases: list[Case], path: Path = seed_module.DEFAULT_FIXTURES)
         }
         if case.suite == "dictation":
             allowed |= {"dictionary", "expected_text"}
+        if case.suite == "customer_care":
+            allowed |= {"facts", "kind", "minimal", "customer_notes"}
         if case.suite == "grounding":
             allowed |= {"articles", "db_facts"}
         if set(case.input) - allowed or not isinstance(case.input.get("message"), str) or not case.input["message"]:
@@ -382,7 +385,28 @@ class LiveRuntime:
                 router_module.set_router_for_tests(previous_router)
 
     def _dispatch(self, case: Case, state: CaseState) -> None:
-        if case.suite == "dictation":
+        if case.suite == "customer_care":
+            from app.modules.ai.agent.contexts import background_ctx_factory
+            from app.modules.ai.customer_care import writer
+            from app.modules.ai.customer_care.schemas import MessageFacts
+            from app.modules.ai.team_schemas import AgentPatch
+            from app.modules.ai.team_settings import patch_settings
+
+            with transaction(state.ctx) as db:
+                patch_settings(db, state.ctx, "customer_care", AgentPatch(version=0, enabled=True))
+            state.run_id, draft = writer.write(
+                background_ctx_factory(state.business_id, use_case="customer_care"),
+                case.input["kind"],
+                MessageFacts.model_validate(case.input["facts"]),
+                f"eval:{case.id}",
+                minimal=case.input.get("minimal", False),
+                router=self.router,
+            )
+            with transaction(state.ctx) as db:
+                recorded = db.get(AiRun, state.run_id)
+                mode = "template" if recorded and recorded.result.get("template") else "model"
+            state.output = {**draft.model_dump(), "text": draft.body, "mode": mode}
+        elif case.suite == "dictation":
             from dataclasses import replace
 
             from app.modules.ai import recording
@@ -567,6 +591,11 @@ class LiveRuntime:
 
                     output = state.output
                     DictationPolish.model_validate({"text": output["text"]})
+                elif case.suite == "customer_care":
+                    from app.modules.ai.customer_care.schemas import Draft
+
+                    output = state.output
+                    Draft.model_validate({k: output[k] for k in ("subject", "body")})
                 elif case.suite == "summary":
                     ThreadSummary.model_validate(output)
                 elif case.suite == "grounding":

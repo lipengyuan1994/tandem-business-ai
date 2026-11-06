@@ -250,3 +250,11 @@ AI_LIVE=1 make eval suite=dictation (writer class, JSON object). No audio upload
 Pass threshold >=85%; guard_fallback_cases/rate are reported separately and raw fallback is not polish success.
 Offline coverage: app/modules/ai/tests/test_dictation_evals.py validates cases, prompt, guards and scoring
 with scripted expected responses. It does not measure live model accuracy.
+
+P10-B2 adds `customer_care` (writer class): 19 synthetic cases for facts, reviews/recalls/complaint acknowledgements,
+language/tone, minimal templates and hostile notes. Non-minimal cases require `mode=model`; a safe template fallback
+is not a successful model-writing evaluation. Minimal cases require `mode=template` and make no model call.
+Offline integration coverage lives in `tests/integration/test_customer_care_writer.py`; live provider quality remains
+an explicitly separate operator action. No live Customer Care eval was run by the backend task.
+The Customer Care cases also require language-specific words in non-English copy and exclude casual
+English wording in formal cases; live semantic language/tone quality still needs human/provider evaluation.

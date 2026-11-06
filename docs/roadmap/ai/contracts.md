@@ -8,12 +8,73 @@ Conventions: `db: Session` (SQLAlchemy), `ctx: Context` (`app.platform.context`)
 timezone-aware UTC `datetime`, money is integer minor units, Pydantic v2 models with `extra="forbid"` for inputs.
 Revision: 2 (2026-11-03, after cold reads and a consistency review).
 
+## P10-B2: Customer Care
+
+Owner-authorized Tier A / EVENT backend task, 2026-11-06. This section is added from the owner's B2 task;
+the referenced B2 section did not previously exist. Routine choices follow the standing roadmap authorization.
+
+`customer_care` remains disabled by default. When enabled it owns completed-appointment check-ins, daily recall
+discovery and complaint/warranty hand-offs. Use case `customer_care`, writer prompt `customer_care_message` v1.
+All messages use `customer_care.send_message` through proposal → decision → executor. Approval permission is
+`conversations.proposal.approve`. Rule eligibility excludes complaint replies at creation and execution;
+demo rule is `ask`, shadow true. No customer-facing silent rule is seeded.
+
+Payload includes customer, kind (`checkin|review_request|recall|complaint_reply`), subject/body, facts
+(appointment/service/date, optional invoice), aware `not_before`, optional source message and recall due month.
+Server-derived domain keys identify appointment/kind, customer/service/due month, or source message/kind.
+Generation and executor dedupe are independent; Stop does not authorize a replacement for the same subject.
+Execution and delayed delivery recheck active/non-erased customer, contact preference, consent and disputes.
+Email uses A1 outbox delay + Stop; source web-chat uses C1 delayed publication + Stop. Complaints always require
+a person, including while a thread is in human mode. Human-approved care replies may publish in that same
+ownership generation; later input/takeover still invalidates them. No consent is inferred for unsolicited mail.
+Care source-thread proposals capture `ai_generation` at proposal creation; execution must pass that exact
+generation to publication and reject missing/stale generations. Ownership invalidation includes Care proposals.
+The delivery receipt also retains that generation; source-thread email is checked under the conversation lock
+at execution and actual outbox claim, so delayed complaint mail cannot bypass human ownership either.
+
+CRM `preferred_contact_channel` defaults email; `none` opts out, `web_chat` requires a source web thread.
+Email service messages require explicit `service_updates`; a review link/request additionally requires marketing
+consent. Existing web-thread contact consent authorizes a response there, never unsolicited reminders elsewhere.
+For proactive Care, form-based service-update grants are conservatively request-scoped and insufficient;
+ongoing service consent requires a current explicit staff/import grant. Existing CRM reply-consent semantics
+stay intact. Both execution and delivery apply this distinction, including proactive messages with a web source.
+Check-ins: `checkin_delay_days=2`, zero off. Recall: nullable service interval 1–120 months, calendar-month date
+arithmetic with end-of-month clamping; eligible from due date minus 14 days, latest completion only, no future
+confirmed/held booking for that service. Due month is the original due date's business-local YYYY-MM.
+The receipt retains due month. Execution and delivery both recheck active service, current interval and current
+due-date eligibility. Supplied invoice evidence must be tenant-scoped and match customer and appointment when given.
+Quiet hours default 20:00–08:00 business-local, configurable start/end hours, equal disables quiet hours;
+the effective publication time accounts for both `not_before` and AI send delay.
+
+Complaint cases hold identifiers, classification/priority and human resolution state, without copying notes.
+They appear in Work with relevant latest past appointment/invoice and a reply proposal when customer identity
+is known. Open cases suppress check-ins/reviews/recalls. A versioned human resolution endpoint clears the hold.
+Intake/safety classification fields default none for old outputs; prompt versions are bumped. Classification
+alone cannot authorize sending, warranty eligibility, refunds, offers, prices or medical advice.
+Care independently subscribes to inbound customer messages, even with Front Desk disabled, human ownership,
+or open reply proposals. Strong complaint/warranty/dispute keywords create an immediate conservative hold;
+other messages get a deduplicated `ai.customer_care_classify` job using safety v2. Classification uses the shared
+public hourly run ceiling, normal structured call/repair limits and B1 agent/chain/provider budgets; jobs do not
+retry. Ordinary unavailable classification requests human assessment and does not pretend to classify an unknown
+message; disabled/stopped/exhausted agent controls remain terminal and cannot be bypassed by fallback.
+No Care classification can auto-send a reply. Linking an anonymous conversation binds its open unbound cases
+in the linking transaction, under customer then conversation locks, even if Care was subsequently disabled.
+
+Writer input contains only first name, service/date, business, allowed links, language and tone.
+Fallback templates cover en/es/fr/zh; unavailable fallback languages skip with a fixed reason for human writing,
+never silently change the customer language. Unrelated CRM proposal revisions preserve omitted contact preferences. Customer notes
+never enter the writer. Invalid/unavailable/over-budget/policy-blocked output uses a deterministic template.
+Regulated or `avoid_medical_details` always bypasses AI and uses minimal copy without service names or notes,
+including when the profile changes after generation. Exhausted/stopped chains and disabled agents cannot use
+fallback to evade B1 controls. Export includes care records; erasure retains dedupe identifiers and scrubs text
+through existing proposal/run/outbox lifecycle paths. Activity exposes fixed skip/reschedule reasons only.
+
 ## P10-B1: AI team
 
 Agents are immutable code configurations over existing use cases, events, jobs and proposals. There is no
 second task queue. Keys: `front_desk`, `customer_care`, `marketing`, `inventory`, `purchasing`, `finance`,
 `operations_manager`. Each declares its job, use cases/triggers, action types, model classes, tools and hand-offs.
-All current capabilities default enabled; Customer Care is reserved for B2, disabled and has no triggers.
+All current capabilities default enabled; Customer Care defaults disabled, with post-sales triggers supplied by B2.
 Summary belongs to Front Desk; safety/grounding inherit their calling agent; dictation remains a utility outside
 the team. Action ownership is unique; the Manager can route to every agent without taking its action ownership.
 Targeted copilot uses the agent model class as well as the agent's background classes. Untargeted copilot keeps

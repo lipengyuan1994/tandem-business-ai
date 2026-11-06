@@ -1,0 +1,3 @@
+thresholds:
+  pass_rate: 0.90
+# Non-minimal cases require mode=model. Template fallback never verifies model quality.

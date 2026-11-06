@@ -13,6 +13,7 @@ from app.platform.errors import Invalid
 _ENV = ImmutableSandboxedEnvironment(undefined=StrictUndefined, autoescape=False)
 
 TEMPLATES: dict[str, tuple[str | None, str]] = {
+    "customer_care": ("{{ subject }}", "{{ body }}"),
     "purchase_order": (
         "Purchase order {{ number }} from {{ business_name }}",
         "{{ business_name }}\nPurchase order: {{ number }}\nDate: {{ date }}\n\n{{ lines }}\n\n"

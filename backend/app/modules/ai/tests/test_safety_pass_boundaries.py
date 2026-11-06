@@ -62,6 +62,8 @@ def endpoints() -> list[tuple[str, str, dict | None]]:
         ("PATCH", "/agents/inventory", {"version": 0, "enabled": False}),
         ("GET", "/agents/inventory/activity", None),
         ("GET", f"/chains/{ident}", None),
+        ("GET", f"/customer-care/cases/{ident}", None),
+        ("POST", f"/customer-care/cases/{ident}/resolve", {"version": 1}),
         ("GET", "/work-queue", None),
         ("GET", "/exceptions", None),
         (
@@ -103,7 +105,7 @@ def test_every_ai_endpoint_requires_its_permission(registry: Registry) -> None:
     for path in ("/runs", "/usage", "/agents", "/agents/inventory/activity", f"/chains/{uuid.uuid4()}"):
         assert assistant.get(BASE + path).status_code == 403
     for method, path, body in cases:
-        if path.startswith(("/conversations/", "/procurement/", "/campaigns/", "/autonomy/")):
+        if path.startswith(("/conversations/", "/procurement/", "/campaigns/", "/autonomy/", "/customer-care/")):
             assert assistant.request(method, BASE + path, json=body).status_code == 403
 
 

@@ -42,3 +42,8 @@ Executor callback `autonomy_reasons` requires intake provenance, clean safety, s
 `GroundingResult` is a public DTO in the immutable reply payload. Manual proposals stay human-decided.
 Public `retention_eligible_conversations(ctx) -> Select[UUID]` supplies a scoped ID subquery for derived-data
 cleanup; it excludes persistent restricted_at holds even after the data profile changes.
+
+P10-B2: `send_care_reply` requires the generation captured in the approved payload and an explicit due time;
+it rejects missing/stale generations. Care proposals participate in ownership invalidation. Publication's Care
+guard allows a human-approved complaint reply in human mode while freshness, restrictions, closure and Stop apply.
+Customer linking calls the registered Care hook under customer→conversation locks to bind open anonymous cases.

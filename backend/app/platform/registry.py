@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
 from uuid import UUID
 
@@ -32,6 +33,16 @@ class ExecutionMeta:
     proposal_id: UUID
     revision_id: UUID
     idempotency_key: str
+
+
+@dataclass(frozen=True)
+class DeliveryGuard:
+    reason: str | None = None
+    not_before: datetime | None = None
+    subject: str | None = None
+    body: str | None = None
+    allow_human: bool = False
+    recipient: str | None = None
 
 
 @dataclass(frozen=True)
@@ -153,6 +164,8 @@ class Registry:
     ai_execution_context: Callable[[Session, Context, str], Context] | None = None
     ai_chain_stop: Callable[[Session, Context, str], None] | None = None
     ai_reserve_action: Callable[[Session, Context], None] | None = None
+    customer_care_delivery_guard: Callable[[Session, Context, UUID], DeliveryGuard] | None = None
+    customer_care_customer_linked: Callable[[Session, Context, UUID, UUID], None] | None = None
     public_routes: set[str] = field(default_factory=set)
     _frozen: bool = False
 

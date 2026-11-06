@@ -23,3 +23,5 @@ API, audit and settings-changed event. Applies only to executor mail from assist
 
 P10-C1: BusinessSettings.handoff_after_hours_text (1–1,000 chars) customizes the deterministic closed-hours
 hand-over message. PublicProfileOut.ai_greeting discloses the business's AI assistant; no model generates it.
+
+P10-B2: `checkin_delay_days=2` (zero off), quiet start/end hours (20/8), and care tone. Public profile supports validated optional review_url/booking_url; `customer_care_profile` exposes only these links and avoid_medical_details.

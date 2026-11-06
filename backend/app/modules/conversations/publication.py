@@ -87,7 +87,22 @@ def publish(db: Session, ctx: Context, payload: dict[str, Any]) -> None:
         # An early direct/recovered attempt must leave a durable due-time job, even if this attempt completes.
         jobs.enqueue(db, "conversations.publish_reply", payload, business_id=ctx.business_id, run_at=row.publish_at)
         return
+    callback = get_registry().customer_care_delivery_guard
+    guard = callback(db, ctx, row.proposal_id) if callback and row.proposal_id else None
+    if guard and guard.not_before and guard.not_before > clock.now() and not guard.reason:
+        row.publish_at = guard.not_before
+        jobs.enqueue(
+            db, "conversations.publish_reply", payload, business_id=ctx.business_id, run_at=row.publish_at, ctx=ctx
+        )
+        return
     reasons = reply_blockers(db, ctx, row.conversation_id, row.ai_generation, row.answers_message_id)
+    if guard:
+        if guard.allow_human:
+            reasons = [reason for reason in reasons if reason != "human_mode"]
+        if guard.reason:
+            reasons.insert(0, guard.reason)
+        if guard.body is not None:
+            row.body = guard.body
     if reasons:
         row.publication_state, row.delivery_status, row.cancellation_reason = "cancelled", "failed", reasons[0]
     else:

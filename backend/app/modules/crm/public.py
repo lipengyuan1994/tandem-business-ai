@@ -8,6 +8,7 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
+from app.platform.errors import NotFound
 from app.platform.registry import ErasureTarget
 
 from . import booking, lifecycle, service
@@ -15,6 +16,7 @@ from .booking import lock_customers
 from .request_consent import record_request_contact_consent
 from .schemas import (
     AudienceCandidate,
+    CareContact,
     ConsentIn,
     ConsentStatus,
     ContactPointIn,
@@ -28,6 +30,27 @@ from .schemas import (
     normalize,
 )
 from .service import ConsentChanged, CustomerCreated
+
+
+def customer_care_contact(db: Session, ctx: Context, customer_id: uuid.UUID) -> CareContact | None:
+    """Server-only delivery eligibility, serialized with erasure, contact/preference and consent changes."""
+    from sqlalchemy import select
+
+    from .models import Customer
+
+    try:
+        lock_customers(db, ctx, {customer_id})
+    except NotFound:
+        return None
+    row = db.scalar(select(Customer).where(Customer.business_id == ctx.business_id, Customer.id == customer_id))
+    assert row is not None
+    return CareContact(
+        status=row.status,
+        first_name=row.given_name or "",
+        preferred_language=row.preferred_language,
+        preferred_contact_channel=row.preferred_contact_channel,
+        email=get_customer_contact(db, ctx, customer_id, "email") if row.status == "active" else None,
+    )
 
 
 def normalize_contact(kind: str, value: str) -> str:
@@ -116,6 +139,21 @@ def current_consent(db: Session, ctx: Context, customer_id: uuid.UUID, channel: 
     return service.consent_status(db, ctx, customer_id, channel, purpose)
 
 
+def proactive_service_consent(db: Session, ctx: Context, customer_id: uuid.UUID) -> bool:
+    """Form service-update evidence covers a request only; ongoing contact needs staff/import evidence.
+
+    Keep current_consent unchanged for replies. In particular a later request checkbox cannot undo an
+    earlier withdrawal for proactive mail. Ambiguous form grants are conservatively insufficient here.
+    """
+    return any(
+        row.channel == "email"
+        and row.purpose == "service_updates"
+        and row.status == "granted"
+        and row.source in {"staff", "import"}
+        for row in service.current_consents(db, ctx, customer_id)
+    )
+
+
 def list_marketing_eligible(
     db: Session, ctx: Context, channel: str, customer_ids: list[uuid.UUID] | None = None
 ) -> list[EligibleContact]:
@@ -154,6 +192,7 @@ def customer_names(db: Session, ctx: Context, customer_ids: set[uuid.UUID]) -> d
 
 __all__ = [
     "AudienceCandidate",
+    "CareContact",
     "ConsentChanged",
     "ConsentIn",
     "ConsentStatus",
@@ -170,6 +209,7 @@ __all__ = [
     "audience_candidates",
     "create_customer",
     "current_consent",
+    "customer_care_contact",
     "customer_ids_where",
     "customer_names",
     "find_customer_candidates",

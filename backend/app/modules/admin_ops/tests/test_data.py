@@ -71,6 +71,7 @@ def test_export_contains_every_module_of_one_business_and_nothing_of_another(dem
     assert set(manifest["modules"]["ai"]) == {
         "ai_runs", "ai_run_steps", "ai_effects", "ai_usage_daily", "assistant_threads", "assistant_messages",
         "ai_agent_settings", "ai_agent_usage_daily", "ai_chain_budgets",
+        "customer_care_cases", "customer_care_deliveries",
     }  # fmt: skip
     assert manifest["modules"]["voice"] == {"voice_sessions": 0}
     # Nothing is sent while the demo data is loaded; it holds no assistant runs or voice sessions.
