@@ -46,3 +46,37 @@ export function parseLocation(pathname: string): { slug: string; page: "chat" | 
 export function parseQuoteLocation(pathname: string): string | null {
   return /^\/q\/([A-Za-z0-9_.-]{1,600})\/?$/.exec(pathname)?.[1] ?? null
 }
+
+
+const embedMemory = new Map<string, string>()
+function readEmbedToken(slug: string) {
+  try { return sessionStorage.getItem(`smb_embed_${slug}`) ?? embedMemory.get(slug) }
+  catch { return embedMemory.get(slug) }
+}
+client.use({
+  async onRequest({ request }) {
+    const url = new URL(request.url)
+    const embed = /^\/embed\/([a-z0-9-]+)\/chat\/?$/.exec(location.pathname)
+    if (url.origin !== location.origin) return request
+    if (request.method !== "GET" && request.method !== "HEAD") request.headers.set("Origin", location.origin)
+    if (embed && url.pathname.startsWith(`/api/v1/public/${embed[1]}/chat`)) {
+      const slug = embed[1]!
+      url.pathname = url.pathname.replace(`/${slug}/chat`, `/${slug}/embed/chat`)
+      const headers = new Headers(request.headers)
+      const token = readEmbedToken(slug)
+      if (token) headers.set("X-Embed-Token", token)
+      return new Request(url, { method: request.method, headers, credentials: "omit", signal: request.signal,
+        body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.clone().arrayBuffer() })
+    }
+    return request
+  },
+  onResponse({ request, response }) {
+    const slug = /\/public\/([a-z0-9-]+)\/embed\/chat$/.exec(new URL(request.url).pathname)?.[1]
+    const token = response.headers.get("X-Embed-Token")
+    if (slug && token && new URL(request.url).origin === location.origin) {
+      embedMemory.set(slug, token)
+      try { sessionStorage.setItem(`smb_embed_${slug}`, token) } catch { /* memory fallback */ }
+    }
+    return response
+  },
+})

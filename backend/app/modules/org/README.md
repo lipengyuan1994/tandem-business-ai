@@ -25,3 +25,7 @@ P10-C1: BusinessSettings.handoff_after_hours_text (1–1,000 chars) customizes t
 hand-over message. PublicProfileOut.ai_greeting discloses the business's AI assistant; no model generates it.
 
 P10-B2: `checkin_delay_days=2` (zero off), quiet start/end hours (20/8), and care tone. Public profile supports validated optional review_url/booking_url; `customer_care_profile` exposes only these links and avoid_medical_details.
+
+P10-C2b: exact normalized `embed_allowed_origins` (≤10; dev HTTP localhost origins), button label,
+self-service default-off, notice hours=24 and optional fee text. `embed.py` supplies a fail-closed CSP to Caddy
+forward_auth and an allowlisted public button config. `get_location` exposes a scoped location DTO to scheduling.

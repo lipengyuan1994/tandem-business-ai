@@ -1152,3 +1152,74 @@ also schedules bounded voice cleanup after 90 days. Audio/text live only in requ
 Caddy permits microphone=(self); camera/geolocation stay disabled. Text-only synthetic dictation eval:
 >=20 cases, >=85% pass, guard fallback reported separately. Implementation runs offline tests only;
 live model/audio quality and browser confirmation are supervisor/UI checks.
+
+## P10-C2b: website embed and customer self-service
+
+Owner-authorized EVENT / Tier A security and backend, Tier B screens (2026-11-06).
+No inference, new dependency, service or container. Customer changes are `act_notify`,
+performed as visitor actions, outside AI autonomy/proposals.
+
+**Embed.** Org settings add `embed_allowed_origins` (0–10 exact normalized HTTPS
+origins; HTTP localhost origins only in development), `embed_button_label`,
+`self_service_enabled=false`, `cancellation_notice_hours=24`, and optional
+`cancellation_fee_text`. Production rejects wildcards, paths, credentials, query,
+fragments and non-HTTPS origins. `/embed.js` is a small versioned/revalidated vanilla
+loader with cross-origin CORP. It owns only its button/iframe, uses strict
+origin + source + message-shape checks, supports keyboard/Escape/focus return and
+reduced motion. `/embed/<slug>/chat` reuses the public widget entry. Caddy
+`forward_auth` calls an org policy endpoint and copies a complete CSP, built from
+that business's allowlist; unknown/disabled/empty origins give `frame-ancestors
+'none'`. This avoids serving or discovering fingerprinted frontend assets in the
+API. The embed route uses COEP unsafe-none and COOP unsafe-none, leaving ordinary
+pages' isolation unchanged. The dev proxy alone permits Vite's inline React-refresh
+preamble; production script-src remains self-only. Live proxy headers require reviewer verification.
+
+Embed API routes live at `/api/v1/public/<slug>/embed/chat`. A separately issued
+32-byte visitor capability is kept in iframe sessionStorage (memory fallback) and
+sent only as `X-Embed-Token`; no embed cookie is issued and the first-party
+`smb_visitor` Lax cookie stays unchanged. This works with Safari cookie blocking,
+but a reload loses the session when storage is unavailable. Same-origin scripts
+can access this capability; CSP limits scripts to our origin. Mutations require
+an exact configured application Origin; no cross-origin API access/CORS is added.
+Only open/close/resize messages cross the frame boundary; no visitor data does.
+
+**Self-service.** `/p/<slug>/bookings` requests an e-mail through POST
+`/api/v1/public/<slug>/self-service/request`. All valid addresses receive the same
+202 neutral response after the same minimum timing floor, including unknown,
+erased, restricted, inactive, opted-out, disabled and no-booking cases. Shared
+public rate limits apply to hashed IP/address keys. Only an active eligible
+customer with a recent (30 days) or upcoming booking receives transactional mail;
+marketing consent is irrelevant, complete e-mail opt-out blocks delivery.
+32 random bytes form a single-use capability; only SHA-256 is stored in the token
+table, bound to tenant/customer, expires in 20 minutes. Delivery necessarily holds
+the fragment link in the private transactional outbox; never in public responses.
+POST exchange atomically consumes it and issues an opaque, hash-only, HttpOnly,
+Secure, SameSite=Strict cookie scoped to that slug's self-service API, renewed on
+use with 60-minute idle expiry. The page reads `#t=…`, immediately removes it with
+replaceState, then POSTs it once (also under React StrictMode and fragment-only navigation).
+Exchanging a new link revokes the browser's previous session; stale browser responses cannot
+restore access to a previous customer. The UI also ignores data from the previous exchange. Tokens never enter
+query strings or Referer. Every authenticated read/change rechecks active customer
+state under the same customer lock as lifecycle changes. Lifecycle invalidation
+revokes outstanding capabilities, including on deactivation; RLS + explicit tenant
+and customer ownership predicates protect every lookup.
+
+The page returns minimal upcoming booking DTOs (no customer identity, notes,
+internal resource names, prices or internal metadata). Staff names are omitted
+unless explicitly public. Cancellation/reschedule requires current version and a
+future confirmed booking owned by the session. Inside the notice window, a
+configured fee text must be explicitly acknowledged; the acknowledged text must still match the current policy; the exact text, boolean and
+time are recorded in a scoped change receipt, audit and customer timeline.
+Reschedule retains service/location and reuses scheduling.find_slots, place_hold
+and the existing reschedule mutation, preserving booking id/stock reservations;
+the temporary hold is consumed within the same transaction. No duplicate slot
+algorithm. A concurrent staff edit returns 409; the UI reloads bookings and asks
+the customer to review again. Customer confirmations use the outbox; staff with
+scheduling read permission get an in-app notification. No AI budget or approval.
+
+**Demo and data lifecycle.** An owner/admin + customer-read protected, read-only simulated e-mail
+endpoint/view shows only this business's simulated messages from the last 24 h.
+It never exposes actual email-channel messages or sends mail. Export includes new
+tables with capability hashes omitted. Lifecycle changes revoke access; erasure clears receipt fee text. Demo seed enables self-service for its
+synthetic businesses. Security/API, MSW and static Caddy/loader tests are required;
+real browser framing, live Caddy headers and SMTP delivery remain reviewer checks.

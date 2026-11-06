@@ -47,3 +47,7 @@ P10-B2: `send_care_reply` requires the generation captured in the approved paylo
 it rejects missing/stale generations. Care proposals participate in ownership invalidation. Publication's Care
 guard allows a human-approved complaint reply in human mode while freshness, restrictions, closure and Stop apply.
 Customer linking calls the registered Care hook under customer→conversation locks to bind open anonymous cases.
+
+P10-C2b: `embed.py` adds `/public/{slug}/embed/chat{,/messages,/handoff}` using the same services, disclosure,
+projection and quotas. Capability in `X-Embed-Token` (iframe sessionStorage/memory), never an embed cookie;
+mutations require our exact application Origin. Existing first-party Secure/HttpOnly/Lax cookie is unchanged.

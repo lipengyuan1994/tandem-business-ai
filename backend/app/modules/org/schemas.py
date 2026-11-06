@@ -58,6 +58,28 @@ class BusinessSettings(BaseModel):
     ai_policy: Literal["hosted_vultr", "hosted_any", "strict_private"] = "hosted_vultr"
     ai_daily_token_budget: int | None = Field(default=None, ge=0)
     retention_days_conversations: int = Field(default=730, ge=30)
+    embed_allowed_origins: list[str] = Field(default_factory=list, max_length=10)
+    embed_button_label: str = Field(default="Chat with us", min_length=1, max_length=80)
+    self_service_enabled: bool = False
+    cancellation_notice_hours: int = Field(default=24, ge=0, le=8760)
+    cancellation_fee_text: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("embed_allowed_origins")
+    @classmethod
+    def _origins(cls, values: list[str]) -> list[str]:
+        from app.platform.config import get_settings
+
+        from .embed import normalize_origin
+
+        return list(dict.fromkeys(normalize_origin(v, development=get_settings().app_env == "dev") for v in values))
+
+    @field_validator("embed_button_label")
+    @classmethod
+    def _embed_label(cls, value: str) -> str:
+        if not value.strip() or any(unicodedata.category(c).startswith("C") for c in value):
+            raise ValueError("plain button label required")
+        return value.strip()
+
     public_chat_enabled: bool = True
     handoff_after_hours_text: str = Field(
         default="We're currently closed. A person will reply here when we're open.", min_length=1, max_length=1000
@@ -191,6 +213,7 @@ class SettingsUpdate(BaseModel):
 
 
 class PublicProfileOut(BaseModel):
+    embed_button_label: str = "Chat with us"
     ai_greeting: str
     avoid_medical_details: bool
     name: str

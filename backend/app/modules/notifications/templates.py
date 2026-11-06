@@ -13,6 +13,15 @@ from app.platform.errors import Invalid
 _ENV = ImmutableSandboxedEnvironment(undefined=StrictUndefined, autoescape=False)
 
 TEMPLATES: dict[str, tuple[str | None, str]] = {
+    "self_service_link": (
+        "Your bookings at {{ business_name }}",
+        "View or change your bookings: {{ link }}\nThis single-use link expires in 20 minutes. "
+        "If you did not request it, ignore this email.",
+    ),
+    "self_service_confirmation": (
+        "Booking update at {{ business_name }}",
+        "Your booking change ({{ action }}) at {{ business_name }} is confirmed. Booking time: {{ local_time }}.",
+    ),
     "customer_care": ("{{ subject }}", "{{ body }}"),
     "purchase_order": (
         "Purchase order {{ number }} from {{ business_name }}",

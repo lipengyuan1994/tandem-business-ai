@@ -10,6 +10,8 @@
 	log {
 		format filter {
 			wrap json
+			request>headers>X-Embed-Token delete
+			resp_headers>X-Embed-Token delete
 			request>uri regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
 			request>headers>Referer regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
 		}
@@ -23,6 +25,32 @@ localhost {
 	# No `Server: Caddy` on the responses of the routes below, as in production. A 502 that Caddy builds itself while the
 	# api reloads keeps it (the Caddyfile explains why `handle_errors` is not used).
 	header -Server
+
+	# P10-C2b: the API owns the tenant-specific frame policy; route preserves auth -> header -> rewrite order.
+	handle /embed/* {
+		route {
+			header Content-Security-Policy "frame-ancestors 'none'"
+			forward_auth api:8000 {
+				uri /api/v1/public/embed-policy?path={http.request.uri.path}
+				copy_headers X-Embed-CSP
+			}
+			header Content-Security-Policy "{http.request.header.X-Embed-CSP}"
+			# Vite's development React-refresh preamble is inline; production retains script-src self.
+			header Content-Security-Policy "script-src 'self';" "script-src 'self' 'unsafe-inline';"
+			header Cross-Origin-Opener-Policy "unsafe-none"
+			header Cross-Origin-Embedder-Policy "unsafe-none"
+			header Cross-Origin-Resource-Policy "cross-origin"
+			header Cache-Control "no-store"
+			header Referrer-Policy "no-referrer"
+			rewrite * /widget.html
+			reverse_proxy web:5173
+		}
+	}
+	handle /embed.js {
+		header Cross-Origin-Resource-Policy "cross-origin"
+		header Cache-Control "public, max-age=3600, must-revalidate"
+		reverse_proxy web:5173
+	}
 
 	handle /api/* {
 		reverse_proxy /api/v1/ai/copilot/* api:8000 {

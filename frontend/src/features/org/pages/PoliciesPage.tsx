@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toastError } from "@/lib/errors"
+import { WebsiteSettings } from "../WebsiteSettings"
+import { SimulatedEmails } from "@/features/notifications/SimulatedEmails"
 import { useSettings, useUpdateSettings } from "../hooks"
 
 type NumberKey = "hold_minutes" | "booking_lead_time_minutes" | "retention_days_conversations"
@@ -30,8 +32,11 @@ function PoliciesForm({ initial, version, onReload }: { initial: BusinessSetting
   const { permissions } = useSession()
   const update = useUpdateSettings()
   const [draft, setDraft] = useState<BusinessSettings>(initial)
+  const [validWebsite, setValidWebsite] = useState(true)
   const [conflict, setConflict] = useState(false)
   const [taxPercent, setTaxPercent] = useState(String(Math.round(Number(initial.sales_tax_rate ?? 0) * 10000) / 100))
+  const noticeHours = draft.cancellation_notice_hours ?? 24
+  const validNotice = Number.isInteger(noticeHours) && noticeHours >= 0 && noticeHours <= 8760
   const validTax = /^\d+(\.\d{1,2})?$/.test(taxPercent) && Number(taxPercent) <= 100
   const canEdit = permissions.has("org.settings.write")
   const canAi = permissions.has("ai.settings.write")
@@ -89,8 +94,10 @@ function PoliciesForm({ initial, version, onReload }: { initial: BusinessSetting
         </select>
         <p className="text-xs text-muted-foreground">{t(`settings.policies.aiPolicyHelp.${draft.ai_policy}`)}</p>
       </section>
+      <WebsiteSettings draft={draft} onChange={setDraft} disabled={!canEdit} onValidity={setValidWebsite} />
+      {permissions.has("crm.customer.read") && permissions.has("org.settings.write") ? <SimulatedEmails /> : null}
       {canEdit ? (
-        <Button disabled={update.isPending || !validTax} onClick={() => update.mutate({ version, settings: { ...draft, sales_tax_rate: (Number(taxPercent) / 100).toFixed(4) } },
+        <Button disabled={update.isPending || !validTax || !validWebsite || !validNotice || !(draft.embed_button_label ?? "Chat with us").trim()} onClick={() => update.mutate({ version, settings: { ...draft, sales_tax_rate: (Number(taxPercent) / 100).toFixed(4) } },
           { onSuccess: () => toast.success(t("common.saved")), onError: (e) => toastError(e, () => setConflict(true)) })}>
           {t("common.save")}
         </Button>

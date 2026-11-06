@@ -60,3 +60,8 @@ C1 AI web-chat replies use conversations' withheld publication job and Stop endp
 is queued for them. Mail keeps this module's A1 path. Approvals combines the registered mail and web delivery readers.
 
 P10-B2: care mail uses the same delay/Stop outbox. A registry callback rechecks consent, preference/address, complaints and quiet hours before claim; blocked mail is cancelled with metadata evidence. No reverse AI import.
+
+P10-C2b: transactional magic-link/change templates, `notify_permission` public staff fan-out and owner/admin + customer-read
+`GET /notifications/simulated-emails` (scoped, simulated-only, last 24 h, read-only + audited view). Private mail
+bodies include demo links; public APIs never do. Capability `link` variables are excluded from export. Erased,
+restricted and real email-channel messages are not shown in this list. No SMTP adapter or service was added.

@@ -414,6 +414,10 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
         org.create_business(
             db, ctx, name=b["name"], slug=b["slug"], timezone=b["timezone"], currency=b["currency"], locale=b["locale"]
         )
+        settings, settings_version = org_service.get_settings(db, ctx)
+        org_service.update_settings(
+            db, ctx, settings.model_copy(update={"self_service_enabled": True}), settings_version
+        )
         default = org.get_default_location(db, ctx)
         for loc in _rows(tables, "locations", key):
             if loc["is_default"]:

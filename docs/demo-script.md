@@ -61,3 +61,34 @@ Only if step 5 ended by 3:50.
 
 ## If something goes wrong during the demo
 Do not fix live. Say what the screen shows, reset with the command above after the demo, and write the issue into `PRE_EVENT_WORK.md`.
+
+### P10-C2b — website embed and My bookings (no SMTP required)
+
+1. In **Settings → Policies → Website chat and customer self-service**, enter the shop website's exact HTTPS
+   origin (scheme, host and optional port; no slash/path or wildcard). Save. Copy the one-line snippet into that
+   site's HTML. Open the floating chat, send a synthetic message and use **Talk to a person**. The compact chat
+   keeps the AI disclosure and privacy notice. An origin absent from the allowlist must be blocked by the browser.
+2. Self-service is enabled by the demo seed for Example Cycle Works and Example Garden Store. For an existing VM
+   seeded before this feature, explicitly enable it in that same settings section. Set notice hours and optional fee
+   text. This change does not imply that the VM has been reseeded or deployed by the P10-C2b implementation task.
+3. Ensure a synthetic active customer has an active e-mail contact (for example `ben@example.com`), prefers e-mail,
+   and has an upcoming booking. Visit `/p/<business-slug>/bookings` and enter that address. Everyone receives the
+   same neutral answer, including unknown/ineligible addresses. No public response contains the sign-in link.
+4. As an owner/admin, go back to **Settings → Policies → Simulated e-mails** and refresh. The API requires customer-read and owner/admin settings-write permissions; the list
+   contains only this business's simulated outgoing mail from the last 24 hours. Open the customer's sign-in link in
+   a new tab, or copy it into a separate browser profile. Nothing was actually delivered to example.com. Real
+   email-channel messages never appear in this list.
+5. The fragment disappears as the page exchanges the single-use 20-minute link. It lists only that customer's
+   upcoming bookings. Cancel, or choose **Reschedule → Find available times** for the same service/location.
+   Inside the notice window, read and check the fee acknowledgment before confirming. A staff edit made meanwhile
+   causes a clear reload/review message. Verify the staff notification and customer timeline attribution
+   “by customer via self-service”; the confirmation appears in simulated e-mails.
+6. Reusing a link gives an expired/used/unavailable message. A session expires after 60 minutes of inactivity.
+   Deactivating, restricting or erasing the customer invalidates access. Request another link to continue when
+   eligible; changing marketing consent alone does not prevent these requested transactional messages.
+
+Reviewer checks after installation: run native `caddy validate`, verify the live `/embed.js` CORP/cache headers,
+check `/embed/<slug>/chat` CSP for allowed/empty/unknown businesses, and exercise allowed/denied embedding and
+keyboard focus in a real browser (including Safari with third-party cookies blocked). The embed uses an iframe
+sessionStorage/header capability and never depends on a third-party cookie. Verify real delivery separately when
+SMTP is configured. No deployment or real SMTP/browser verification was performed by the implementation task.

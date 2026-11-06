@@ -125,3 +125,11 @@ def set_autonomy_paused(db: Session, ctx: Context, paused: bool) -> None:
         changes={"ai_autonomy_paused": {"from": not paused, "to": paused}},
     )
     events.publish(db, ctx, SettingsChanged(changed_keys=["ai_autonomy_paused"]))
+
+
+def get_location(db: Session, ctx: Context, location_id: uuid.UUID) -> LocationOut:
+    from app.platform.crud import require_scoped
+
+    from .models import Location
+
+    return LocationOut.model_validate(require_scoped(db, ctx, Location, location_id, "org.location_not_found"))

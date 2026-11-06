@@ -20,7 +20,7 @@ function ContactConsent({ checked, onChange }: { checked: boolean; onChange: (ch
   </>
 }
 
-export function Widget({ slug, page }: { slug: string; page: "chat" | "request" }) {
+export function Widget({ slug, page, compact = false }: { slug: string; page: "chat" | "request"; compact?: boolean }) {
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
   const [profileError, setProfileError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -31,7 +31,7 @@ export function Widget({ slug, page }: { slug: string; page: "chat" | "request" 
   if (profile === undefined) return <p className="p-6 text-sm">{S.loading}</p>
   if (profile === null) return <main className="space-y-3 p-6"><h1 className="text-xl font-semibold">{S.contactTitle}</h1><p role="alert">{profileError}</p><button className={button} onClick={() => setAttempt(attempt + 1)}>{S.retry}</button></main>
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-4 sm:p-6">
+    <main className={compact ? "space-y-3 p-3" : "mx-auto max-w-lg space-y-6 p-4 sm:p-6"}>
       <h1 className="text-xl font-semibold">{page === "chat" ? S.chatTitle(profile.name) : S.requestTitle(profile.name)}</h1>
       {page === "chat" && profile.avoid_medical_details ? <p role="note" className="rounded-md border p-3 text-sm">Please do not send medical details here. We will contact you to discuss them.</p> : null}
       {page === "chat" ? <Chat key={slug} slug={slug} businessName={profile.name} greeting={profile.ai_greeting} /> : <Request slug={slug} />}

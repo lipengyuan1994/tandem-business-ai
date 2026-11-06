@@ -27,3 +27,17 @@ Measured locally for this change with Node gzipSync per transitive JS file: 77,5
 within both the 80 KB total JS budget and the requested ~15 KB growth limit. JS plus shared CSS: 88,410 → 88,592 bytes.
 The baseline used `pnpm exec vite build` because pre-existing generated-type compatibility errors blocked `tsc -b`;
 the final `pnpm build` includes typechecking and passes. This is a build measurement, not a browser/a11y test.
+
+P10-C2b: `/embed/:slug/chat` reuses Widget in compact form; the API client remaps chat to header-token routes
+and stores the capability only in iframe sessionStorage with a memory fallback. Parent messaging checks origin,
+source and shape; Escape returns focus through the loader. `public/embed.js` is the versioned, cacheable vanilla
+loader (≤5 KB gzip), using only its own shadow tree/button/iframe. Caddy fetches tenant frame policy before serving
+widget.html; ordinary public/staff pages retain their separate policy. Loader capability headers are log-redacted.
+`/p/:slug/bookings` lazily loads Bookings; it removes #t before one POST exchange (StrictMode-safe), then uses the
+HttpOnly Strict cookie. Fees bind acknowledgment to the exact text; 409 reloads and requires review. Copy comes
+from en.json's bookings subtree through a build-time projection. Real-browser/Caddy/SMTP acceptance is separate.
+
+P10-C2b production measurement (Node gzipSync, each static transitive JS file separately): initial chat/iframe
+76,792 bytes; embed.js 1,680 bytes. Bookings and supplier quotes load on their routes;
+bookings plus its static dependencies total less than 80 KB (see task card for the exact measurement). Dev Caddy permits Vite's inline React-refresh
+preamble only on the embed route; production script-src remains self-only. Live headers remain a reviewer check.

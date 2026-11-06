@@ -137,3 +137,13 @@ backend licences and Gitleaks. OpenAPI regenerated; DB head/receipt columns/forc
 Email and web source-thread replies both check approved ownership at execution and delivery. No installs,
 downloads, external calls, Docker, frontend edits, commits or release. Per-finding tests and decisions:
 [Review fixes](cards/P10-B2-backend.md#review-fixes).
+
+## P10-C2b — 2026-11-06 (Codex)
+
+Implementation complete, uncommitted/unreleased; full check BLOCKED by PostgreSQL DiskFull. Final focused backend
+46 passed, frontend 482 passed; lint/format/mypy/typecheck/build/API regen pass. Full run: 1,976 passed, 74 failed,
+684 errors; first error is DiskFull in an existing knowledge test teardown. At 23:50 UTC `smb_c2b` was left at
+20261028_1200_regulated_hardening after migration restore failures. Restore shared PostgreSQL storage, then upgrade
+only smb_c2b to head and rerun full make check. No Docker/repair attempted. Caddy live headers/browser/SMTP remain
+reviewer checks. Independent offline deploy checks (108, 19 skipped), licences and Gitleaks pass.
+Contract, files, decisions, exact evidence: [P10-C2b](cards/P10-C2b.md).
