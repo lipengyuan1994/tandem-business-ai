@@ -162,3 +162,18 @@ complaint/warranty cases (en, zh). Intake **69/70 (98.6 %)**, injection **15/15*
 `preferred_contact_channel` optional on customer create/update (the generated TypeScript type made it mandatory,
 so the edit dialog would have had to send "email" and could overwrite an opt-out). Full `make check` passed
 (2,261 backend, 451 frontend); affected tests rerun after the prompt/case edits.
+
+### 2026-11-06 — P10-C2a (Codex, isolated worktree)
+
+Contract first; embedding gateway/budgets, public published chunk jobs, filtered RRF retrieval and FTS fallback,
+PDF draft-import backend/UI, provenance, export/erasure handling and eight offline paraphrase eval cases.
+Owner-set D4/D9 preserved: pypdf only, custom vector(1024), Vultr dimensions 1024, no stored uploads or re-ranking.
+Migration applied and cycled only on `smb_c2a`; reviewer rechains at merge. Native ARM runtime/tools verified;
+existing developer tools reused read-only, no installs/downloads/API calls/Docker/commits/release.
+Owner/reviewer follow-up: Linux PDF AS limit mandatory; native darwin development skips AS only with one structured
+warning, retains all other caps, and adds no watchdog. Reviewer reports freeing shared tmpfs; independently checked
+`smb_c2a` at migration head, no repair needed. Final focused **66 passed in 16.01 s**, including real subprocess
+PDF cases, platform policy, retrieval races, AI lane and admin export. Scoped Ruff/format and mypy passed.
+Prior frontend 454 passed. Earlier full check interrupted by DiskFull/recovery (760 passed, 26 failed, 43 errors);
+per owner, no full backend/make check rerun. Full merge gates, Linux-image limits and live evals remain reviewer work.
+See `docs/roadmap/ai/cards/P10-C2a.md`.

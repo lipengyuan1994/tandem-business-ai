@@ -1,0 +1,23 @@
+{
+  "id": "retrieval-accessibility",
+  "suite": "retrieval",
+  "business": "biz-cycle",
+  "now": "2026-11-06T17:30:00Z",
+  "input": {
+    "message": "Could a wheelchair get inside?",
+    "article": {
+      "title": "Accessibility",
+      "slug": "eval-accessibility",
+      "body_markdown": "Accessibility includes a level entrance."
+    }
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "cited_slug": "eval-accessibility",
+      "cited_version": 2,
+      "fts_missed": true,
+      "citation_correct": true
+    }
+  }
+}

@@ -160,6 +160,51 @@ other policies distinguish configuration from policy exclusion. No frontend chan
 The local example routes every class to an OpenAI-compatible private server without keys or prices.
 Local model benchmarks, deployment and clinical-network verification remain separate work.
 
+## P10-C2a: hybrid knowledge retrieval and PDF imports
+
+Owner-authorized EVENT / Tier A (2026-11-06). D4 advances public knowledge retrieval; D9 is settled:
+`pypdf` (BSD-3, already locked), no other dependency, no pgvector Python package, no object storage.
+Vultr `qwen3-embedding-4b` requires `dimensions: 1024` (owner's live verification); re-ranking is deferred.
+No installs, downloads, external calls, Docker actions, live evals or commits in this worktree.
+
+- Gateway adds `EmbedRequest` / `EmbedResult`, `/v1/embeddings`, batches of at most 32 with finite 1024-dimensional
+  vectors, input-token pricing and the existing per-attempt egress, policy, reservation and team/chain admission.
+  Indexing opens metadata-only `knowledge_index` runs; retrieval uses the calling run when present.
+  Regulated routing requires non-hosted `vendor: local` with verified private resolution. No compliant route or
+  query failure means full-text retrieval only; `/ai/status.model_classes.embed` exposes route availability.
+- `kb_chunks` holds business/article/published version/chunk index, exact body character offsets, text, token
+  estimate, vector(1024), provider/model identity and timestamps. Forced RLS, composite tenant foreign keys,
+  unique version/chunk/model identity and HNSW cosine index. Only published public snapshots can be indexed.
+  Publish removes old chunks and durably schedules indexing; narrowing/archive/unpublish/delete remove them.
+  Draft edits preserve the last published snapshot. Jobs use short transactions, bounded article-sized work,
+  idempotent replacement, publication/model rechecks after inference and visible pending/unavailable/failed states.
+  `POST /knowledge/reindex` (knowledge write permission) schedules bounded business sweeps; a periodic sweep
+  detects embedding route/model changes. Export includes chunk metadata, excludes vectors; erasure invalidates
+  derived chunks (article history retains the established C1 business-data policy).
+- Public search filters tenant, publication, visibility and embedding identity before ranking. FTS and cosine
+  candidates fuse by reciprocal rank (k=60), deduplicated by article/version. Existing citation fields and
+  passage limits remain; spans identify exact published body offsets. Staff internal retrieval remains FTS.
+  Embedding input/output never authorizes tools. Existing grounding and operational-fact rules are unchanged.
+- `POST /api/v1/knowledge/imports`: one multipart `file`, application/pdf and `%PDF-`, <=10 MiB, <=100 pages,
+  <=300,000 extracted characters. Encrypted, corrupt, empty/scanned PDFs receive explicit domain errors.
+  A separate Python subprocess sets CPU (20 s), file-size/core and address-space limits before parsing; the parent
+  kills/reaps it after the wall deadline. Owner/reviewer decision 2026-11-06: Linux must set `RLIMIT_AS` or refuse
+  the import. Native macOS development (`sys.platform == 'darwin'`) skips only `RLIMIT_AS`, with one structured
+  parent warning per extraction; CPU/wall/file/core/character limits remain. No memory watchdog. Linux-image AS
+  enforcement is verified separately by the reviewer. No uploaded bytes are stored or logged. NUL/control characters are
+  removed, whitespace normalized while keeping paragraph/headings. Page groups (split further at the existing
+  20,000-character article limit) become draft articles only, with `source: pdf_import`, sanitized filename and
+  inclusive page ranges. Knowledge write permission authorizes import; publication still requires explicit publish.
+- Knowledge UI offers PDF picker, limits, pending/error feedback and links to imported drafts. List responses
+  expose search-index state; all copy is translated and MSW-tested. OpenAPI/TypeScript contracts are regenerated.
+
+Planned files: knowledge module models/vector/chunking/indexing/retrieval/import modules, API/schema/service/lifecycle/
+registration/card and tests; AI gateway/types/accounting/public embedding facade and tests; one migration from
+`20261106_1200_customer_care`; four route configs; knowledge frontend/import component/locales/MSW tests; retrieval
+eval suite and harness integration; generated API schema; C2a-only roadmap/status/handoff/event/card entries.
+Verification uses isolated `smb_c2a`, full backend suite, ruff/format/mypy, frontend typecheck/lint/vitest and
+`make check` with Docker prerequisites overridden to use the already-running isolated database.
+
 ## P10-C1: knowledge base and hand-over
 
 Owner-authorized Tier A / EVENT, part 1 (2026-11-05). This section extends the earlier frozen contracts;

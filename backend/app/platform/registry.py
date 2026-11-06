@@ -122,6 +122,17 @@ class SessionResolver(Protocol):
     def __call__(self, token: str) -> SessionInfo | None: ...
 
 
+@dataclass(frozen=True)
+class EmbeddingBatch:
+    vectors: list[list[float]]
+    model_id: str
+
+
+class EmbeddingProvider(Protocol):
+    def model(self, ctx: Context) -> str | None: ...
+    def embed(self, ctx: Context, texts: list[str], *, query: bool = False) -> EmbeddingBatch: ...
+
+
 class PublicBusinessResolver(Protocol):
     def __call__(self, slug: str) -> UUID | None: ...
 
@@ -140,6 +151,7 @@ class CronSpec:
 
 @dataclass
 class Registry:
+    knowledge_embeddings: EmbeddingProvider | None = None
     routers: list[tuple[APIRouter, str, list[str]]] = field(default_factory=list)
     permissions: set[str] = field(default_factory=set)
     executors: dict[str, ExecutorSpec] = field(default_factory=dict)

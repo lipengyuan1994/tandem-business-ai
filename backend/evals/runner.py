@@ -21,7 +21,16 @@ import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Suite = Literal[
-    "intake", "injection", "timezones", "copilot", "summary", "procurement", "grounding", "dictation", "customer_care"
+    "intake",
+    "injection",
+    "timezones",
+    "copilot",
+    "summary",
+    "procurement",
+    "grounding",
+    "dictation",
+    "customer_care",
+    "retrieval",
 ]
 ROOT = Path(__file__).parent
 SUITES = (
@@ -34,6 +43,7 @@ SUITES = (
     "grounding",
     "dictation",
     "customer_care",
+    "retrieval",
 )
 
 
@@ -439,6 +449,11 @@ def summarize(rows: list[ScoredCase]) -> dict[str, Any]:
     if care:
         threshold = yaml.safe_load((ROOT / "suites" / "customer_care.yaml").read_text())["thresholds"]["pass_rate"]
         metrics["thresholds_met"] = metrics["thresholds_met"] and sum(r.passed for r in care) / len(care) >= threshold
+    retrieval = [r for r in rows if r.suite == "retrieval"]
+    if retrieval:
+        threshold = yaml.safe_load((ROOT / "suites" / "retrieval.yaml").read_text())["thresholds"]["pass_rate"]
+        metrics["citation_accuracy"] = sum(r.passed for r in retrieval) / len(retrieval)
+        metrics["thresholds_met"] = metrics["thresholds_met"] and metrics["citation_accuracy"] >= threshold
     grounding = [r for r in rows if r.suite == "grounding"]
     if grounding:
         thresholds = yaml.safe_load((ROOT / "suites" / "grounding.yaml").read_text())["thresholds"]

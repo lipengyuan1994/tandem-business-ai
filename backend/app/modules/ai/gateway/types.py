@@ -48,12 +48,25 @@ class Usage(BaseModel):
     audio_seconds: float | None = Field(default=None, ge=0, allow_inf_nan=False)
 
 
+class EmbedRequest(BaseModel):
+    model: str = ""
+    inputs: list[str] = Field(min_length=1, max_length=256, repr=False)
+    dimensions: Literal[1024] = 1024
+    timeout_s: float = 30.0
+    use_case: str = "knowledge_index"
+
+
 class ChatResult(BaseModel):
     text: str  # raw text; JSON parsing and validation are the caller's job
     usage: Usage
     provider: str
     model: str
     latency_ms: int
+
+
+class EmbedResult(ChatResult):
+    text: str = ""
+    embeddings: list[list[float]] = Field(repr=False)
 
 
 ProviderErrorKind = Literal["timeout", "rate_limited", "server_error", "auth", "bad_request", "unavailable"]

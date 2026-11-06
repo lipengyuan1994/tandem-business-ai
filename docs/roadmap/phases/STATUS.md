@@ -113,6 +113,7 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P10-B](P10-ai-workflows.md) | AI Team page, agent configs, chaining rules, Customer Care agent | EVENT | A/B | P10-A1 | IN PROGRESS — B1 backend, B3 screens (0.1.7) and B2 Customer Care backend done; Customer Care screens next |
 | [P10-E1](P10-ai-workflows.md) | Multi-resource booking, emergency rules, recall, Example Dental Clinic | EVENT | A/B | P10-C1, P10-E0 | PLANNED |
 | [P10-C2](P10-ai-workflows.md) | Embed snippet, customer self-service, embeddings and PDF upload | EVENT | B | P10-C1 | PLANNED |
+| [P10-C2a](../ai/cards/P10-C2a.md) | Hybrid knowledge retrieval and PDF draft import | EVENT | A/B | P10-C1, P10-E0 | DONE — Codex 2026-11-06: 66 focused tests + Ruff/format/mypy; owner-approved macOS AS exception; full merge suites/Linux-image limits reviewer-owned; see card |
 | [P7-01](P7-submission.md) | Publish the repository | GATE | Owner | P6 gate | PLANNED |
 | [P7-02](P7-submission.md) | Judge-facing README | DOC | B | P6-04 | PARTIAL (2026-11-03): draft `docs/submission/README-judges.draft.md`, cold-read by a second model; updated 2026-11-03 for sales, purchasing and procurement; AI facts after kickoff |
 | [P7-03](P7-submission.md) | Demo video | GATE | Owner | P6-04 | PLANNED |

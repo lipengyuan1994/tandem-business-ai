@@ -1,0 +1,23 @@
+{
+  "id": "retrieval-compost",
+  "suite": "retrieval",
+  "business": "biz-cycle",
+  "now": "2026-11-06T17:30:00Z",
+  "input": {
+    "message": "Can you recycle organic scraps?",
+    "article": {
+      "title": "Compost service",
+      "slug": "eval-compost",
+      "body_markdown": "Compost collection accepts plant material."
+    }
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "cited_slug": "eval-compost",
+      "cited_version": 2,
+      "fts_missed": true,
+      "citation_correct": true
+    }
+  }
+}

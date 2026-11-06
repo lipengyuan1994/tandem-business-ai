@@ -16,3 +16,9 @@ opening/cancelling the editor does not change the backend. Dismiss uses the sugg
 
 `knowledge.test.tsx` uses MSW for list/search/filter, create/edit, explicit publish/archive, version comparison,
 suggestions, permissions, conflicts/unsaved publication protection and safe Markdown preview.
+
+P10-C2a: `PdfImport.tsx` offers a permission-gated PDF picker, limits, pending/error feedback and links to drafts
+with page ranges. Uploads use generated multipart types and the shared CSRF client; nothing auto-publishes.
+Published public article badges show indexed/pending/unavailable/failed status, with full-text fallback copy.
+`pdf-import.test.tsx` covers real multipart/CSRF through MSW, progress, draft review, encrypted/oversize errors,
+permissions and index badges. All new copy is in `locales/en.json`.

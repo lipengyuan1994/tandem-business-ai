@@ -11,7 +11,7 @@ from contextvars import ContextVar
 from app.platform.context import Context
 
 from .gateway.routes import RouteEntry
-from .gateway.types import Adapter, ChatRequest, ChatResult, TranscriptionRequest
+from .gateway.types import Adapter, ChatRequest, ChatResult, EmbedRequest, TranscriptionRequest
 from .reservations import ReservedAdapter
 from .schemas import Policy
 
@@ -56,7 +56,7 @@ def budget_scope(ctx: Context) -> Iterator[None]:
 def complete_attempt(
     adapter: Adapter,
     entry: RouteEntry,
-    request: ChatRequest | TranscriptionRequest,
+    request: ChatRequest | TranscriptionRequest | EmbedRequest,
     *,
     check_policy: Callable[[], None] | None = None,
 ) -> ChatResult:
@@ -84,20 +84,21 @@ class _GuardedAdapter:
     def __init__(self, inner: Adapter, check: Callable[[], None]) -> None:
         self.name, self.inner, self.check = inner.name, inner, check
 
-    def chat(self, request: ChatRequest | TranscriptionRequest) -> ChatResult:
+    def chat(self, request: ChatRequest | TranscriptionRequest | EmbedRequest) -> ChatResult:
         self.check()
         return invoke(self.inner, request)
 
     transcribe = chat
+    embed = chat
 
 
-def invoke(adapter: Adapter, request: ChatRequest | TranscriptionRequest) -> ChatResult:
-    if isinstance(request, TranscriptionRequest):
-        method = getattr(adapter, "transcribe", None)
+def invoke(adapter: Adapter, request: ChatRequest | TranscriptionRequest | EmbedRequest) -> ChatResult:
+    if isinstance(request, (TranscriptionRequest, EmbedRequest)):
+        method = getattr(adapter, "embed" if isinstance(request, EmbedRequest) else "transcribe", None)
         if method is None:
             from .gateway.types import ProviderError
 
-            raise ProviderError("bad_request", "provider does not support transcription")
+            raise ProviderError("bad_request", "provider does not support this capability")
         result: ChatResult = method(request)
         return result
     return adapter.chat(request)

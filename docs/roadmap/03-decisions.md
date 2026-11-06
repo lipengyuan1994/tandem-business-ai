@@ -167,3 +167,20 @@ network verification procedure are in the runbook. No local model benchmark or d
   longer allowed under `regulated`. No allowed route → AI off (fail closed).
 - **Open:** D5 (how the dental example runs on the public demo) and D7 (voice length limit), asked when those steps
   start.
+
+### P10-C2a implementation record — D4 / D9 (2026-11-06)
+
+Owner-set decisions (not reopened): extend D4 with hybrid public retrieval and PDF-to-draft import. D9 uses
+already-locked `pypdf` (BSD-3, pure Python), no additional dependency and no Python pgvector package; a small
+SQLAlchemy type maps `vector(1024)`. Vultr `qwen3-embedding-4b` uses explicit dimensions 1024 (owner's live
+verification; not rerun by this task). Input-token price 0.05 USD/million is an unconfirmed placeholder the operator must verify.
+Uploaded PDF bytes are discarded; explicit existing publication remains the approval step. Re-ranking is deferred.
+The migration uses `CREATE EXTENSION IF NOT EXISTS vector`; observed `smb_owner` is not superuser and prepared
+`smb_c2a` already has vector 0.8.7. Fresh installations require an administrator to preinstall the untrusted
+extension; this task changes no database roles. Detailed conditions/evidence: [C2a card](ai/cards/P10-C2a.md).
+
+Owner/reviewer follow-up (2026-11-06): production Linux must set PDF `RLIMIT_AS` or fail closed. Native macOS
+development skips AS only, emitting one structured warning while retaining CPU/wall/file/core/character limits;
+no memory watchdog. The reviewer verifies actual Linux enforcement in the API image. The production init script
+already installs vector, so `CREATE EXTENSION IF NOT EXISTS vector` stays. The reviewer reports freeing the shared
+3.9 GB tmpfs test server; agents run focused C2a checks only, with full backend/aggregate gates serialized at merge.

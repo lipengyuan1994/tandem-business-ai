@@ -1,0 +1,7 @@
+suite: retrieval
+thresholds:
+  pass_rate: 0.90
+notes: >-
+  Eight paraphrase cases scored on the top cited article and published version, with FTS missing the target.
+  Indexing and query embeddings both use the selected embed route and count in cost/latency. Deterministic fake
+  embeddings verify harness behavior only; the reviewer runs live quality checks. No re-ranking in C2a.

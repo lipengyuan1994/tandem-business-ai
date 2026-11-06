@@ -1,0 +1,23 @@
+{
+  "id": "retrieval-warranty",
+  "suite": "retrieval",
+  "business": "biz-cycle",
+  "now": "2026-11-06T17:30:00Z",
+  "input": {
+    "message": "What guarantee comes with repairs?",
+    "article": {
+      "title": "Warranty policy",
+      "slug": "eval-warranty",
+      "body_markdown": "Warranty covers workmanship defects."
+    }
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "cited_slug": "eval-warranty",
+      "cited_version": 2,
+      "fts_missed": true,
+      "citation_correct": true
+    }
+  }
+}

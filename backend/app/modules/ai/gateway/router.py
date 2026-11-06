@@ -23,7 +23,16 @@ from .fake import ScriptFileAdapter
 from .local_address import Resolver, resolve_host, verify_local_url
 from .openai_compat import OpenAICompatAdapter
 from .routes import Limits, ModelClass, ProviderCfg, RouteEntry, RoutesFile, load_routes_file
-from .types import Adapter, ChatRequest, ChatResult, JsonMode, ProviderError, TranscriptionRequest
+from .types import (
+    Adapter,
+    ChatRequest,
+    ChatResult,
+    EmbedRequest,
+    EmbedResult,
+    JsonMode,
+    ProviderError,
+    TranscriptionRequest,
+)
 
 log = structlog.get_logger(__name__)
 _monotonic = time.monotonic
@@ -111,6 +120,7 @@ class Router:
             for entry in self.routes.routes.get(model_class, [])
             if self._allows(entry, policy)
             and (model_class != "stt" or hasattr(self.adapters[entry.provider], "transcribe"))
+            and (model_class != "embed" or hasattr(self.adapters[entry.provider], "embed"))
         ]
 
     def complete(self, model_class: ModelClass, policy: Policy, req: ChatRequest) -> tuple[ChatResult, RouteEntry]:
@@ -119,8 +129,36 @@ class Router:
     def transcribe(self, policy: Policy, req: TranscriptionRequest) -> tuple[ChatResult, RouteEntry]:
         return self._complete("stt", policy, req)
 
+    def embed(self, policy: Policy, req: EmbedRequest) -> tuple[EmbedResult, RouteEntry]:
+        deadline = _monotonic() + req.timeout_s
+        results: list[EmbedResult] = []
+        chosen: RouteEntry | None = None
+        for start in range(0, len(req.inputs), 32):
+            remaining = deadline - _monotonic()
+            if remaining <= 0:
+                raise ProviderError("timeout", "embedding deadline exceeded")
+            batch = req.model_copy(update={"inputs": req.inputs[start : start + 32], "timeout_s": remaining})
+            result, entry = self._complete("embed", policy, batch)
+            if not isinstance(result, EmbedResult):
+                raise ProviderError("server_error", "malformed embedding result")
+            if chosen is not None and (chosen.provider, chosen.model) != (entry.provider, entry.model):
+                raise ProviderError("unavailable", "embedding model changed between batches")
+            chosen = entry
+            results.append(result)
+        assert chosen is not None
+        combined = results[0].model_copy(
+            update={
+                "embeddings": [v for r in results for v in r.embeddings],
+                "usage": results[0].usage.model_copy(
+                    update={"input_tokens": sum(r.usage.input_tokens for r in results)}
+                ),
+                "latency_ms": sum(r.latency_ms for r in results),
+            }
+        )
+        return combined, chosen
+
     def _complete(
-        self, model_class: ModelClass, policy: Policy, req: ChatRequest | TranscriptionRequest
+        self, model_class: ModelClass, policy: Policy, req: ChatRequest | TranscriptionRequest | EmbedRequest
     ) -> tuple[ChatResult, RouteEntry]:
         """Fill model and json_mode per entry; try allowed entries in order; on a transient ProviderError try the next;
         non-transient → raise it. No allowed entry → PolicyBlocked. All failed → ProviderError("unavailable")."""

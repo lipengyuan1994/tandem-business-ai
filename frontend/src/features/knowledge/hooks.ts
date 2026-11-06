@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, unwrap } from "@/api/client"
 import type { Schemas } from "@/api/types"
+import type { operations } from "@/api/schema"
 
 export type Article = Schemas["ArticleDetail"]
 export type Suggestion = Schemas["SuggestionOut"]
@@ -34,4 +35,12 @@ export function useArticleStatus(id: string) {
 export function useDismissSuggestion() {
   const qc = useQueryClient()
   return useMutation({ mutationFn: async (suggestion: Suggestion) => unwrap(await api.POST("/api/v1/knowledge/suggestions/{suggestion_id}/dismiss", { params: { path: { suggestion_id: suggestion.id } }, body: { version: suggestion.version } })), onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeKeys.all }) })
+}
+
+export function usePdfImport() {
+  const qc = useQueryClient()
+  return useMutation({ mutationFn: async (file: File) => unwrap(await api.POST("/api/v1/knowledge/imports", {
+    body: { file: "" } as operations["import_pdf_api_v1_knowledge_imports_post"]["requestBody"]["content"]["multipart/form-data"],
+    bodySerializer: () => { const form = new FormData(); form.append("file", file); return form },
+  })), onSuccess: () => qc.invalidateQueries({ queryKey: knowledgeKeys.all }) })
 }

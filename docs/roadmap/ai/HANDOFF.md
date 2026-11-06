@@ -137,3 +137,21 @@ backend licences and Gitleaks. OpenAPI regenerated; DB head/receipt columns/forc
 Email and web source-thread replies both check approved ownership at execution and delivery. No installs,
 downloads, external calls, Docker, frontend edits, commits or release. Per-finding tests and decisions:
 [Review fixes](cards/P10-B2-backend.md#review-fixes).
+
+## P10-C2a — 2026-11-06
+
+Hybrid public knowledge retrieval, durable embedding indexing and PDF-to-draft import in isolated `smb_c2a`.
+Contract “P10-C2a” written first; D4/D9 implementation record appended without reopening owner-set choices.
+Migration `20261106_1300_knowledge_embeddings` follows `20261106_1200_customer_care`; reviewer must rechain at merge.
+No new dependency beyond owner-prepared pypdf; no installs, downloads, external calls, Docker, commits or release.
+DONE under owner-scoped verification: **66 focused tests passed in 16.01 s**, including the final AI worker lane,
+post-embedding visibility race, admin export assertion, eight fake citation evals and real subprocess PDF cases.
+Linux must apply RLIMIT_AS or refuse import. Owner-approved native darwin development skips only AS, with one
+structured parent warning; CPU/wall/file/core/character caps remain, and no watchdog was added. Unit tests cover
+Linux AS failure and darwin's exception; real native valid/encrypted/page/text-limit PDFs pass. Reviewer verifies
+actual Linux enforcement in the API image and runs serialized full suites at merge; live quality remains untested.
+Reviewer reports freeing shared 3.9 GB tmpfs after the earlier interrupted full check (760 passed, 26 failed,
+43 errors). Independently rechecked `alembic current`: `20261106_1300_knowledge_embeddings (head)`, no repair needed.
+No full backend or make check rerun, as instructed. Final scoped Ruff/format and mypy passed. Prior frontend full
+suite 454 passed; prior offline deployment checks (106, 19 skipped), licenses and secret scan passed. Extension
+creation stays idempotent; production init already installs vector (owner report). See [C2a card](cards/P10-C2a.md).

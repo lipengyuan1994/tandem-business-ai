@@ -1431,6 +1431,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/knowledge/articles/{article_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unpublish */
+        post: operations["unpublish_api_v1_knowledge_articles__article_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import Pdf */
+        post: operations["import_pdf_api_v1_knowledge_imports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/reindex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reindex */
+        post: operations["reindex_api_v1_knowledge_reindex_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/knowledge/suggestions": {
         parameters: {
             query?: never;
@@ -3169,8 +3220,28 @@ export interface components {
             id: string;
             /** Published Version */
             published_version: number | null;
+            /** Search Index Error */
+            search_index_error?: string | null;
+            /** Search Index Model */
+            search_index_model?: string | null;
+            /**
+             * Search Index State
+             * @default not_applicable
+             */
+            search_index_state: string;
             /** Slug */
             slug: string;
+            /**
+             * Source
+             * @default manual
+             */
+            source: string;
+            /** Source Filename */
+            source_filename?: string | null;
+            /** Source Page End */
+            source_page_end?: number | null;
+            /** Source Page Start */
+            source_page_start?: number | null;
             /** Status */
             status: string;
             /** Title */
@@ -3218,8 +3289,28 @@ export interface components {
             id: string;
             /** Published Version */
             published_version: number | null;
+            /** Search Index Error */
+            search_index_error?: string | null;
+            /** Search Index Model */
+            search_index_model?: string | null;
+            /**
+             * Search Index State
+             * @default not_applicable
+             */
+            search_index_state: string;
             /** Slug */
             slug: string;
+            /**
+             * Source
+             * @default manual
+             */
+            source: string;
+            /** Source Filename */
+            source_filename?: string | null;
+            /** Source Page End */
+            source_page_end?: number | null;
+            /** Source Page Start */
+            source_page_start?: number | null;
             /** Status */
             status: string;
             /** Title */
@@ -4970,6 +5061,11 @@ export interface components {
              */
             starts_at: string;
         };
+        /** ImportOut */
+        ImportOut: {
+            /** Drafts */
+            drafts: components["schemas"]["ArticleDetail"][];
+        };
         /** IneligibleQuote */
         IneligibleQuote: {
             /**
@@ -6283,6 +6379,14 @@ export interface components {
             supplier_id: string;
             /** Valid Until */
             valid_until?: string | null;
+        };
+        /** ReindexOut */
+        ReindexOut: {
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
         };
         /** ReminderProposalOut */
         ReminderProposalOut: {
@@ -9341,7 +9445,7 @@ export interface operations {
         parameters: {
             query?: {
                 cursor?: string | null;
-                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding" | "dictation" | "customer_care") | null;
+                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding" | "dictation" | "customer_care" | "knowledge_index" | "knowledge_query") | null;
                 status?: ("running" | "succeeded" | "failed" | "step_limit" | "budget_exceeded" | "policy_blocked") | null;
                 limit?: number;
             };
@@ -13821,6 +13925,203 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArticleDetail"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    unpublish_api_v1_knowledge_articles__article_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__knowledge__schemas__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleDetail"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    import_pdf_api_v1_knowledge_imports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description PDF exceeds 10 MiB */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    reindex_api_v1_knowledge_reindex_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReindexOut"];
                 };
             };
             /** @description Authentication required */

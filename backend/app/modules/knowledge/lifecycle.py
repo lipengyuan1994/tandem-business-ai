@@ -14,14 +14,30 @@ from app.platform.crud import rows_affected
 from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
-from .models import Article, ArticleVersion, Suggestion
+from .models import Article, ArticleVersion, Chunk, Suggestion
 
 
 def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
-    return export_tables(stream_models(db, ctx, [Article, ArticleVersion, Suggestion]), streaming=streaming)
+    return export_tables(
+        stream_models(db, ctx, [Article, ArticleVersion, Suggestion, Chunk], exclude=["embedding", "text"]),
+        streaming=streaming,
+    )
 
 
 def erase(db: Session, ctx: Context, target: ErasureTarget) -> dict[str, int]:
+    # Derived data is disposable. Generation prevents an already-running index job restoring it after erasure.
+    db.execute(delete(Chunk).where(Chunk.business_id == ctx.business_id))
+    db.execute(
+        update(Article)
+        .where(Article.business_id == ctx.business_id)
+        .values(
+            index_generation=Article.index_generation + 1,
+            search_index_model=None,
+            search_index_state=case(
+                ((Article.status == "published") & (Article.visibility == "public"), "pending"), else_="not_applicable"
+            ),
+        )
+    )
     value = case(
         (Suggestion.conversation_id.in_(target.all_ids), "[erased]"),
         else_=func.redact_text(Suggestion.question_text, target.needles),

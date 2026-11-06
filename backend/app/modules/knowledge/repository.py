@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import uuid
 
 from sqlalchemy import select, text
@@ -9,7 +10,7 @@ from app.platform.context import Context
 from app.platform.errors import NotFound
 
 from .models import Article, ArticleVersion, Suggestion
-from .schemas import SearchHit
+from .schemas import SearchHit, SearchSpan
 
 
 def get(db: Session, ctx: Context, article_id: uuid.UUID, *, lock: bool = False) -> Article:
@@ -59,9 +60,7 @@ def search(db: Session, ctx: Context, query: str, limit: int, *, internal: bool 
         return []
     rows = db.execute(
         text("""
-        select a.id, v.version_no, v.title,
-               ts_headline('simple', v.body_markdown, q.query,
-                   'StartSel=, StopSel=, MaxWords=55, MinWords=12, MaxFragments=2, FragmentDelimiter= … ') passage
+        select a.id, v.version_no, v.title, v.body_markdown
         from kb_articles a join kb_article_versions v
           on v.business_id=a.business_id and v.article_id=a.id and v.version_no=a.published_version
         cross join plainto_tsquery('simple', :query) q(query)
@@ -73,7 +72,22 @@ def search(db: Session, ctx: Context, query: str, limit: int, *, internal: bool 
     """),
         {"business": ctx.business_id, "query": query[:500], "internal": internal, "limit": max(1, min(limit, 10))},
     )
-    return [SearchHit(article_id=r.id, version=r.version_no, title=r.title, passages=[r.passage[:700]]) for r in rows]
+    hits = []
+    terms = re.findall(r"\w+", query[:500])
+    for row in rows:
+        match = re.search("|".join(re.escape(t) for t in terms), row.body_markdown, re.I) if terms else None
+        start = max(0, match.start() - 100) if match else 0
+        passage = row.body_markdown[start : start + 700]
+        hits.append(
+            SearchHit(
+                article_id=row.id,
+                version=row.version_no,
+                title=row.title,
+                passages=[passage],
+                spans=[SearchSpan(start=start, end=start + len(passage))],
+            )
+        )
+    return hits
 
 
 def suggestions(db: Session, ctx: Context, status: str, limit: int) -> list[Suggestion]:

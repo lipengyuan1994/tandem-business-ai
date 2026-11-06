@@ -11,7 +11,8 @@ import yaml  # type: ignore[import-untyped]  # PyYAML, locked through uvicorn[st
 
 from app.platform.config import get_settings
 
-from .types import ChatRequest, ChatResult, ProviderError, TranscriptionRequest, Usage
+from .fake_embeddings import embed
+from .types import ChatRequest, ChatResult, EmbedRequest, EmbedResult, ProviderError, TranscriptionRequest, Usage
 
 if TYPE_CHECKING:
     from .router import Router
@@ -35,6 +36,9 @@ class FakeGateway:
     a ProviderError is raised), or calls the function with the request. `calls` records every request."""
 
     name = "fake"
+
+    def embed(self, req: EmbedRequest) -> EmbedResult:
+        return embed(self.name, req)
 
     def __init__(self, script: list[ScriptItem] | Callable[[ChatRequest], str]) -> None:
         self._script: list[ScriptItem] | None = None if callable(script) else list(script)
@@ -99,6 +103,9 @@ class ScriptFileAdapter:
             i = self._next.get(use_case, 0)
             self._next[use_case] = (i + 1) % len(replies)
         return _result(replies[i], self.name, req.model)
+
+    def embed(self, req: EmbedRequest) -> EmbedResult:
+        return embed(self.name, req)
 
     def transcribe(self, req: TranscriptionRequest) -> ChatResult:
         result = self.chat(ChatRequest(model=req.model, messages=[], use_case="dictation_stt"))

@@ -62,6 +62,7 @@ DEFAULT_CLASS: dict[str, ModelClass] = {
     "grounding": "grounding",
     "dictation": "writer",
     "customer_care": "writer",
+    "retrieval": "embed",
 }
 
 
@@ -129,6 +130,11 @@ def validate_cases(cases: list[Case], path: Path = seed_module.DEFAULT_FIXTURES)
             allowed |= {"facts", "kind", "minimal", "customer_notes"}
         if case.suite == "grounding":
             allowed |= {"articles", "db_facts"}
+        if case.suite == "retrieval":
+            allowed |= {"article"}
+            from app.modules.knowledge.schemas import ArticleCreate
+
+            ArticleCreate.model_validate(case.input.get("article"))
         if set(case.input) - allowed or not isinstance(case.input.get("message"), str) or not case.input["message"]:
             raise ValueError(f"{case.id}: invalid input payload")
         if (attack := case.input.get("knowledge_injection")) is not None:
@@ -233,7 +239,7 @@ def build_eval_router(
             raise ValueError("live eval requires a real provider; FakeGateway is injected only by unit tests")
         if not any(e.provider in adapters for e in selected):
             raise ValueError("no selected provider has an environment key or usable local adapter")
-    priced = chosen.price_in_per_m > 0 and chosen.price_out_per_m > 0
+    priced = chosen.price_in_per_m > 0 and (target == "embed" or chosen.price_out_per_m > 0)
     return Router(routes, adapters.copy()), priced
 
 
@@ -385,7 +391,11 @@ class LiveRuntime:
                 router_module.set_router_for_tests(previous_router)
 
     def _dispatch(self, case: Case, state: CaseState) -> None:
-        if case.suite == "customer_care":
+        if case.suite == "retrieval":
+            from evals.retrieval import evaluate
+
+            state.output = evaluate(state.ctx, case.input)
+        elif case.suite == "customer_care":
             from app.modules.ai.agent.contexts import background_ctx_factory
             from app.modules.ai.customer_care import writer
             from app.modules.ai.customer_care.schemas import MessageFacts
@@ -591,6 +601,8 @@ class LiveRuntime:
 
                     output = state.output
                     DictationPolish.model_validate({"text": output["text"]})
+                elif case.suite == "retrieval":
+                    output = state.output
                 elif case.suite == "customer_care":
                     from app.modules.ai.customer_care.schemas import Draft
 
