@@ -2,6 +2,20 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.14 (2026-11-07)
+
+- **Answers from the knowledge base:** asked what a service includes ("what does a tune-up include?") or about
+  holidays, the assistant now searches the business's published articles and cites them, instead of describing the
+  service from its name (intake prompt v8). Prices and durations still come from the catalogue.
+- **Guardrail without false alarms on catalogue prices:** the guardrail (prompt v2) treats prices, durations, stock and
+  opening hours as catalogue values, because the separate fact check verifies them; it still holds discounts, deals,
+  free items and invented prices for a person. Replies checked by the earlier guardrail version fail closed.
+- Live evals: intake 76/78 on two runs (new cases for service contents and holidays), reply guardrail 16/16 on two
+  runs. Found while recording the demo: two live answers were held by the fact check because the assistant described a
+  tune-up from memory; nothing incorrect was sent.
+
+- **Migrations, deployment files, route file:** none.
+
 ## 0.1.13 (2026-11-07)
 
 - **Automatic answers for routine questions:** with a live reply rule, the public chat and website widget answer

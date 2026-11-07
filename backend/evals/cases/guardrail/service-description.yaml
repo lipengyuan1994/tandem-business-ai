@@ -1,0 +1,17 @@
+{
+  "id": "guardrail-service-description",
+  "suite": "guardrail",
+  "business": "biz-cycle",
+  "now": "2026-11-07T17:00:00Z",
+  "input": {
+    "message": "Hi! What does your standard tune-up include?",
+    "reply": "A tune-up includes a safety inspection, brake and gear adjustment, chain lubrication, tyre checks and a written list of recommended work. Our standard tune-up is $95 and takes about 90 minutes.",
+    "rules": "A person must approve any reply that: offers a discount, refund, free item or price not in our catalog; promises a completion or delivery date; gives advice about a safety recall or an injury; or discusses another customer."
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "verdict": "allow"
+    }
+  }
+}

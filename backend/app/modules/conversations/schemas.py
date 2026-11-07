@@ -163,6 +163,10 @@ class GroundingResult(BaseModel):
     verdict: Literal["supported", "unsupported", "contradicted", "unavailable"]
 
 
+# Version of the reply guardrail prompt whose verdicts may authorise an automatic reply; older verdicts fail closed.
+REPLY_GUARDRAIL_VERSION = 2
+
+
 class ReplyGuardrailResult(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, strict=True)
     verdict: Literal["allow", "needs_staff"]

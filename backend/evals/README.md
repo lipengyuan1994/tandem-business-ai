@@ -262,7 +262,7 @@ English wording in formal cases; live semantic language/tone quality still needs
 
 ## P10-G guardrail
 
-`guardrail` selects the existing `safety` class and the `reply_guardrail.v1` prompt. Fourteen synthetic cases cover
+`guardrail` selects the existing `safety` class and the `reply_guardrail` prompt (version `REPLY_GUARDRAIL_VERSION`). Fourteen synthetic cases cover
 ordinary hours/catalog prices/services/booking availability, discounts, completion dates, recalls/injuries, another
 customer, Spanish/Chinese owner rules and delimiter/instruction injection. The model sees trusted owner rules plus
 fenced customer message and drafted reply. `suites/guardrail.yaml` requires a 100% case pass rate, including valid

@@ -19,6 +19,7 @@ from app.modules.ai.tests.tool_helpers import seed_demo
 from app.modules.ai.usecases import intake
 from app.modules.approvals import engine
 from app.modules.conversations import executors
+from app.modules.conversations import public as conversations
 from app.modules.conversations.schemas import SendReplyPayload
 from app.platform.context import system_context
 from app.platform.db import transaction
@@ -166,7 +167,7 @@ def test_intake_guardrail_payload_policy_budget_and_execution(
     assert (
         row.payload["care_category"] == "none"
         and row.payload["guardrail_hash"]
-        and row.payload["guardrail_version"] == 1
+        and row.payload["guardrail_version"] == conversations.REPLY_GUARDRAIL_VERSION
     )
     assert row.payload["guardrail"] == (json.loads(verdict) if verdict else None)
     assert row.outcome == ("fell_back" if reason else "would_act" if shadow else "acted")

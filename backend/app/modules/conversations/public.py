@@ -16,6 +16,7 @@ from .ownership import ensure_ai_active as ensure_ai_active
 from .ownership import hand_back as hand_back
 from .ownership import take_over as take_over
 from .publication import queue_items as publication_queue_items
+from .schemas import REPLY_GUARDRAIL_VERSION as REPLY_GUARDRAIL_VERSION
 from .schemas import Citation as Citation
 from .schemas import GroundingResult as GroundingResult
 from .schemas import MessageContext, MessageOut, ThreadDto

@@ -35,7 +35,7 @@ def check(
         _, value = complete(
             factory,
             use_case="reply_guardrail",
-            prompt=load_prompt("reply_guardrail", 1),
+            prompt=load_prompt("reply_guardrail", conversations.REPLY_GUARDRAIL_VERSION),
             facts=[
                 ContextBlock(label="owner_rules", text=rules, untrusted=False),
                 ContextBlock(label="customer_message", text=message, untrusted=True),

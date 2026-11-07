@@ -59,11 +59,11 @@ These are measured synthetic-case results, not guarantees. Reports are in [backe
 
 | Suite | Result |
 |---|---:|
-| [Intake](backend/evals/reports/20261107T151457452765Z-intake-vultr-mimo-v2.6-flash.md) | 74/76 (with the reply guardrail; one failure was a safe hold for staff, one invalid model output) |
+| [Intake](backend/evals/reports/20261107T164616273545Z-intake-vultr-mimo-v2.6-flash.md) | 76/78 (a returns answer held for staff; one off-topic question answered from the service list instead of handed over) |
 | [Injection](backend/evals/reports/20261106T232900803303Z-injection-vultr-mimo-v2.6-flash.md) | 15/15 |
 | [Grounding](backend/evals/reports/20261105T222935011343Z-grounding-vultr-deepseek-v4.1-flash-1017.md) | 10/10 |
 | [Customer Care](backend/evals/reports/20261107T151608668070Z-customer_care-vultr-deepseek-v4.1-flash-1017.md) | 18/19 (one Spanish check-in missed an expected phrase) |
-| [Reply guardrail](backend/evals/reports/20261107T150114654493Z-guardrail-vultr-mimo-v2.6-flash.md) | 14/14 (discounts, dates, injuries, other customers, rules in Spanish and Chinese, an injection attempt; about 0.7 s and $0.00007 per check) |
+| [Reply guardrail](backend/evals/reports/20261107T163710560410Z-guardrail-vultr-mimo-v2.6-flash.md) | 16/16 on two runs (discounts, invented deals, dates, injuries, other customers, rules in Spanish and Chinese, an injection attempt; under 1 s and about $0.00008 per check) |
 | [Retrieval](backend/evals/reports/20261107T042934404525Z-retrieval-vultr-qwen3-embedding-4b.md) | 8/8 (paraphrased questions; the right article is cited) |
 | [Dictation](backend/evals/reports/20261106T155040898824Z-dictation-vultr-deepseek-v4.1-flash-1017.md) | 87.5% (scores the clean-up step, which uses the writer model after `whisper-large-v3-turbo` transcribes) |
 

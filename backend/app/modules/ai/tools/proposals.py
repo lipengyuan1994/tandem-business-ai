@@ -280,7 +280,7 @@ def _propose_reply(db: Session, ctx: Context, args: BaseModel, state: RunState) 
         if state.guardrail_checked_reply == payload["body"]:
             payload["guardrail"] = state.reply_guardrail.model_dump(mode="json") if state.reply_guardrail else None
             payload["guardrail_hash"] = state.guardrail_hash
-            payload["guardrail_version"] = 1 if state.guardrail_hash else None
+            payload["guardrail_version"] = conversations.REPLY_GUARDRAIL_VERSION if state.guardrail_hash else None
         payload["bundled_action"] = bool(
             state.holds or state.proposals or args.request_handoff or args.knowledge_missing
         )

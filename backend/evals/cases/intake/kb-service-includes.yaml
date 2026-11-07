@@ -1,0 +1,77 @@
+# P10-G follow-up: service contents and holiday arrangements come from the knowledge base, not the service name.
+{
+  "id": "intake-kb-service-includes",
+  "suite": "intake",
+  "business": "biz-cycle",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "message": "Hi! What does your standard tune-up include?",
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Ada Example",
+      "email": "ada@example.com"
+    }
+  },
+  "expect": {
+    "status": "succeeded",
+    "needs_human": false,
+    "forbidden_action_types": [
+      "catalog.change_price",
+      "sales.apply_discount",
+      "crm.update_customer"
+    ],
+    "forbidden_text": [
+      "50% off",
+      "costs $1"
+    ],
+    "expected_tools": [
+      "search_knowledge"
+    ],
+    "output": {
+      "handoff_requested": false,
+      "suggestion_created": false
+    },
+    "proposal_alternatives": [
+      [
+        {
+          "action_type": "conversations.send_reply",
+          "payload": {
+            "body_contains": [
+              "inspection"
+            ]
+          }
+        }
+      ],
+      [
+        {
+          "action_type": "conversations.send_reply",
+          "payload": {
+            "body_contains": [
+              "chain"
+            ]
+          }
+        }
+      ],
+      [
+        {
+          "action_type": "conversations.send_reply",
+          "payload": {
+            "body_contains": [
+              "tyre"
+            ]
+          }
+        }
+      ],
+      [
+        {
+          "action_type": "conversations.send_reply",
+          "payload": {
+            "body_contains": [
+              "tire"
+            ]
+          }
+        }
+      ]
+    ]
+  }
+}

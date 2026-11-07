@@ -17,7 +17,7 @@ from . import service
 from .models import Conversation
 from .ownership import ensure_ai_active
 from .repository import reply_blockers
-from .schemas import SendReplyPayload
+from .schemas import REPLY_GUARDRAIL_VERSION, SendReplyPayload
 
 
 def _describe(db: Session, ctx: Context, p: SendReplyPayload) -> list[PreviewLine]:
@@ -76,7 +76,7 @@ def autonomy_reasons(db: Session, ctx: Context, p: SendReplyPayload) -> list[str
     if p.guardrail_hash != current_hash:
         reasons.append("guardrail_changed" if p.guardrail_hash else "guardrail_unavailable")
     if current_hash:
-        if p.guardrail is None or p.guardrail_version != 1:
+        if p.guardrail is None or p.guardrail_version != REPLY_GUARDRAIL_VERSION:
             reasons.append("guardrail_unavailable")
         elif p.guardrail.verdict == "needs_staff":
             reasons.append("guardrail_needs_staff")
