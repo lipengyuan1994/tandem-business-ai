@@ -2,6 +2,39 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.9 (2026-11-07)
+
+**Example Dental Clinic** (P10-E1): a third synthetic demo business showing the same product configured for a clinic.
+Treatments can require a provider **and** a chair; the database makes it impossible to double-book either, including
+holds. Emergency handling (off by default, on for the clinic): messages about pain, swelling, bleeding, trauma or
+anything urgent go straight to a person with the clinic's own instructions and "call your local emergency number"; the
+AI never answers or books them. Six-month recall reminders through Customer Care, without treatment names. The clinic's
+screens and public chat show the required statement that real patient data needs AI models hosted under the clinic's
+control; a `regulated` installation refuses such synthetic demo businesses.
+
+**Customer Care screens** (P10-B2): settings (check-in delay, quiet hours, tone), review and booking links in the
+public profile, complaint cases in the Work queue with Resolve, each customer's preferred contact channel.
+
+**Smarter knowledge search and PDF import** (P10-C2a): the front desk finds the right article when visitors word things
+differently (Vultr `qwen3-embedding-4b` embeddings combined with full-text search; full-text only when embeddings are
+unavailable or not allowed). Owners can turn a PDF into draft articles to review and publish; the PDF itself is not
+kept.
+
+**Website chat widget and "My bookings"** (P10-C2b): paste one line into your website to show the chat there (only
+on the website addresses you list in Settings). Customers can see, cancel or reschedule their bookings from an e-mail
+link, without an account (Settings → self-service; the cancellation notice and fee text are yours to set).
+
+- **Migrations:** `20261106_1300_knowledge_embeddings`, `20261106_1400_dental`, `20261106_1500_self_service`
+  (applied by the upgrade; the `vector` extension is already installed by the database init script).
+- **Route file (after):** new `embed` route in `deploy/config/ai-routes.yaml`. Upload it **after** `upgrade.sh 0.1.9`
+  (keep `config/ai-routes.yaml.previous`), then `docker compose restart api worker`. The embedding price is a
+  placeholder ($0.05 per million input tokens): confirm Vultr's billing.
+- **Web image:** Caddy serves `/embed.js` and `/embed/<business>/chat` with a per-business frame policy.
+- Existing businesses keep self-service off until enabled in Settings; articles are indexed for search by the hourly
+  job (or Knowledge → reindex).
+- Checks: 2,385 backend and 537 frontend tests, 30 end-to-end tests; live evals intake 75/76, injection 15/15,
+  grounding 10/10, customer care 19/19, retrieval 8/8.
+
 ## 0.1.8 (2026-11-06)
 
 **Customer Care** (P10-B2, backend): a new agent that keeps in touch after the work is done — a "How did it go?"
