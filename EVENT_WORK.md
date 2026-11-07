@@ -557,3 +557,22 @@ and gitleaks. Backend tests ran separately as above; the full backend, frontend 
 this follow-up. No Docker or network beyond the existing local `smb_j1` test database was used. Live VM/Keycloak
 verification and the previously recorded lockout/CSP unknowns remain untested. No claim that the earlier broad test
 run verifies this follow-up's changes; the new 121-test run is its backend evidence.
+
+## 2026-11-07 ~17:30–20:50 — Staff-side demo video, 0.1.15 and 0.1.16 released (Claude + Codex)
+
+Recorded the staff scenes in a visible Chromium window the owner signed in to (Morgan, then Riley); the session never
+left that browser. Recording surfaced two bugs, fixed and released as 0.1.15 after a full `make check`: the staff
+assistant was not given the business-local date (searched August for "next week"; new eval case, live assistant eval
+23/25), and long approve labels/evidence pushed the Approvals page sideways. Final video `tandem-demo.mp4` (5:35,
+1080p, Kokoro voice via the owner's local-neural-narration skill, offline): customer chat, fleet request, held draft
+with guardrail reason and claim-level fact check, assistant stock and slot answers, AI reading a supplier email (every
+number verified in the text), Riley approving and the code-ranked comparison, purchase order proposal, AI Team,
+dental emergency, Vultr closing card. Kept out of git (`frontend/output/video/`).
+
+Owner asked for a judge login with prefilled credentials and no one-time code. Codex built P10-J; Claude had the
+setup changed so it never resets the demo, ran the full `make check` (2,467 backend at 96 %, 584 frontend) and
+released 0.1.16. On the VM the judge (`judge@example.com`, Demo reviewer in all three businesses) was provisioned
+without a reset, the realm uses the `tandem-demo` theme, and Keycloak shows no roles, groups or required actions and a
+password as the only credential. The public sign-in page shows both fields prefilled (checked without submitting).
+Not verified live: an actual judge sign-in and the Keycloak self-service paths (account console, password/OTP links),
+which need someone to sign in; Claude does not sign in with passwords on the public host.
