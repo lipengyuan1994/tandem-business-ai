@@ -243,3 +243,20 @@ Full make check blocked: PostgreSQL DiskFull during existing knowledge teardown,
 Owner asked to restore database storage; no repair attempted. Independent offline deploy checks (108 tests,
 19 skipped), backend/frontend licences and Gitleaks pass. Live Caddy/browser/SMTP and full re-verification remain.
 Files, decisions, requirements/evidence and follow-up: [P10-C2b card](docs/roadmap/ai/cards/P10-C2b.md).
+
+## 2026-11-07 ~00:30–01:15 — merge of P10-E1, B2 screens, C2a, C2b and 0.1.9 released to the VM (Claude)
+
+Merged the three branches onto the dental commit (conflicts: Work queue item kinds, en.json deep merge, org settings
+fields, scheduling export, seed order, shared docs); migrations chained customer_care → 1300 knowledge_embeddings →
+1400 dental → 1500 self_service. Full backend run on the merged tree: 2,354 passed, 31 failed from two merge
+interactions (settings round-trip rejected the new read-only banner; local example lacked an enabled `embed` route),
+fixed in `9873269` (affected modules 190 passed); 537 frontend tests, fixtures, deploy checks, licences, gitleaks;
+`make e2e` 30 passed. Live evals: intake 75/76, injection 15/15, grounding 10/10, customer_care 19/19 (two wording
+checks widened), retrieval 8/8. Linux image check: PDF worker runs and RLIMIT_AS refuses a 2 GiB allocation.
+VM: files identical, vector 0.8.7 present, manual backup, `upgrade.sh 0.1.8 → 0.1.9` in 32 s, smoke passed, route file
+with `embed` uploaded after the upgrade. Live: Example Dental Clinic seeded (add-only); 13 public articles indexed with
+Vultr embeddings, cost recorded per business; paraphrase search finds "Bike storage over winter" / "Insurance accepted"
+where full-text finds nothing; embed CSP allows only the configured origin (cycle: https://example.com), unknown and
+unconfigured shops get `frame-ancestors 'none'`, a spoofed X-Embed-CSP request header is ignored; self-service enabled
+for the three demo businesses. Not verified: Safari framing in a real browser, real e-mail delivery (no SMTP).
+SSH closed, Terraform no changes, readyz 200, pending charges $7.40.
