@@ -1,0 +1,1179 @@
+{
+  "suite": "retrieval",
+  "provider": "vultr",
+  "model": "qwen3-embedding-4b",
+  "metrics": {
+    "cases": 8,
+    "skipped_cases": 0,
+    "unpriced_cases": 8,
+    "pass_rate": 1.0,
+    "schema_valid_rate": 1.0,
+    "action_accuracy": 1.0,
+    "field_accuracy": 1.0,
+    "injection_resistance": 1.0,
+    "needs_human_precision": null,
+    "needs_human_accuracy": null,
+    "p50_latency_ms": 965.0,
+    "p95_latency_ms": 1243,
+    "input_tokens": 146,
+    "output_tokens": 0,
+    "cost_micros": null,
+    "thresholds_met": true,
+    "citation_accuracy": 1.0
+  },
+  "regressions": [],
+  "results": [
+    {
+      "case_id": "retrieval-accessibility",
+      "suite": "retrieval",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "cited_slug",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "cited_version",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "fts_missed",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "citation_correct",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 1243,
+      "input_tokens": 16,
+      "output_tokens": 0,
+      "cost_micros": 0,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "29320ee2-d417-4708-9127-cc75bdcd48ee",
+            "use_case": "knowledge_query",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          },
+          {
+            "id": "57cdf74a-a6b2-439f-b824-dfdcbe266866",
+            "use_case": "knowledge_index",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "81116280-f12a-5bab-a211-88e0740282b4",
+        "fixture_sha256": "e32d8fc1ce36816aec1f9563eb4f4ee12fbb7bb3775c2b20301f2050f202ecab",
+        "case_sha256": "4d3acb9b9c519899fd5db462da06d389b8eb0f8c3cb059bafc7250c6e62e9467",
+        "runs": [
+          {
+            "id": "29320ee2-d417-4708-9127-cc75bdcd48ee",
+            "use_case": "knowledge_query",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "57cdf74a-a6b2-439f-b824-dfdcbe266866",
+            "use_case": "knowledge_index",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "inputs"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "retrieval-compost",
+      "suite": "retrieval",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "cited_slug",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "cited_version",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "fts_missed",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "citation_correct",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 965,
+      "input_tokens": 19,
+      "output_tokens": 0,
+      "cost_micros": 1,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "ac572097-f5ae-4067-ac8e-dbbd61d35366",
+            "use_case": "knowledge_index",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          },
+          {
+            "id": "fe90d5d9-cb22-4539-b050-71da4856d67b",
+            "use_case": "knowledge_query",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "fd16dcf4-666c-5263-ad78-9cfd034d65c1",
+        "fixture_sha256": "e32d8fc1ce36816aec1f9563eb4f4ee12fbb7bb3775c2b20301f2050f202ecab",
+        "case_sha256": "4756202caf5faaefb0be8be9e3dc5faf24e99486f71f8d397cb3a5624f5d431d",
+        "runs": [
+          {
+            "id": "ac572097-f5ae-4067-ac8e-dbbd61d35366",
+            "use_case": "knowledge_index",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "fe90d5d9-cb22-4539-b050-71da4856d67b",
+            "use_case": "knowledge_query",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "inputs"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "retrieval-parking",
+      "suite": "retrieval",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "cited_slug",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "cited_version",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "fts_missed",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "citation_correct",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 905,
+      "input_tokens": 18,
+      "output_tokens": 0,
+      "cost_micros": 1,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "5ce94c24-4cce-4a62-901c-a24fca1b002e",
+            "use_case": "knowledge_query",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          },
+          {
+            "id": "e39343cd-f021-490d-a9c4-afa44a5ce7bc",
+            "use_case": "knowledge_index",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "d054a0aa-d13c-5504-9249-8c6452e9d082",
+        "fixture_sha256": "e32d8fc1ce36816aec1f9563eb4f4ee12fbb7bb3775c2b20301f2050f202ecab",
+        "case_sha256": "e1e9d7039aeeef50e8830e9ccb2e2879a6203779fe9d058509f9f58212385064",
+        "runs": [
+          {
+            "id": "5ce94c24-4cce-4a62-901c-a24fca1b002e",
+            "use_case": "knowledge_query",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "e39343cd-f021-490d-a9c4-afa44a5ce7bc",
+            "use_case": "knowledge_index",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "inputs"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "retrieval-pets",
+      "suite": "retrieval",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "cited_slug",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "cited_version",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "fts_missed",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "citation_correct",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 952,
+      "input_tokens": 17,
+      "output_tokens": 0,
+      "cost_micros": 1,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "3ea69593-c8ab-4b59-936c-56888b05ef28",
+            "use_case": "knowledge_index",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          },
+          {
+            "id": "a0d60995-5243-4fdf-96ee-303d8cb826c9",
+            "use_case": "knowledge_query",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "ef4ac1e2-d666-5b2a-9113-983931a8331e",
+        "fixture_sha256": "e32d8fc1ce36816aec1f9563eb4f4ee12fbb7bb3775c2b20301f2050f202ecab",
+        "case_sha256": "5c56f459361b75e8bf4e85332b1fe5fcdd6126a6340f9a2239c0f7cb81235cf9",
+        "runs": [
+          {
+            "id": "3ea69593-c8ab-4b59-936c-56888b05ef28",
+            "use_case": "knowledge_index",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "a0d60995-5243-4fdf-96ee-303d8cb826c9",
+            "use_case": "knowledge_query",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "inputs"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "retrieval-refund",
+      "suite": "retrieval",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "cited_slug",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "cited_version",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "fts_missed",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "citation_correct",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 1016,
+      "input_tokens": 19,
+      "output_tokens": 0,
+      "cost_micros": 1,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "223bbb2e-566e-4e1c-ab3a-60ce36f062fa",
+            "use_case": "knowledge_query",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          },
+          {
+            "id": "e50dad41-55f1-4338-95d3-60ea42ad7cca",
+            "use_case": "knowledge_index",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "fbe99d68-773e-52f8-b56b-831eb66b4783",
+        "fixture_sha256": "e32d8fc1ce36816aec1f9563eb4f4ee12fbb7bb3775c2b20301f2050f202ecab",
+        "case_sha256": "1826a451f1c2a532cb4ec1a0b43835a98641bf33ed46583da725d08aef83897e",
+        "runs": [
+          {
+            "id": "223bbb2e-566e-4e1c-ab3a-60ce36f062fa",
+            "use_case": "knowledge_query",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "e50dad41-55f1-4338-95d3-60ea42ad7cca",
+            "use_case": "knowledge_index",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "inputs"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "retrieval-storage",
+      "suite": "retrieval",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "cited_slug",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "cited_version",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "fts_missed",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "citation_correct",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 1010,
+      "input_tokens": 18,
+      "output_tokens": 0,
+      "cost_micros": 1,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "81384395-2cb9-48dd-a1f2-e22aee09f4a4",
+            "use_case": "knowledge_query",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          },
+          {
+            "id": "8c411273-5762-4dba-8c85-9fa7ef232d7a",
+            "use_case": "knowledge_index",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "73f29bb6-6e2b-536c-a74c-6b4d80312ace",
+        "fixture_sha256": "e32d8fc1ce36816aec1f9563eb4f4ee12fbb7bb3775c2b20301f2050f202ecab",
+        "case_sha256": "1a677b4582a9ed9e39cf7722774ad082016976daa22be64a2138a2a97516e9ee",
+        "runs": [
+          {
+            "id": "81384395-2cb9-48dd-a1f2-e22aee09f4a4",
+            "use_case": "knowledge_query",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "8c411273-5762-4dba-8c85-9fa7ef232d7a",
+            "use_case": "knowledge_index",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "inputs"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "retrieval-toilet",
+      "suite": "retrieval",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "cited_slug",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "cited_version",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "fts_missed",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "citation_correct",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 859,
+      "input_tokens": 20,
+      "output_tokens": 0,
+      "cost_micros": 1,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "5eecee46-6d51-4a07-ab55-becbbe1d55f5",
+            "use_case": "knowledge_query",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          },
+          {
+            "id": "91f88553-85da-42a8-9200-a926b48cdc27",
+            "use_case": "knowledge_index",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "49db5c68-807d-58e6-9b0f-84731d903ae7",
+        "fixture_sha256": "e32d8fc1ce36816aec1f9563eb4f4ee12fbb7bb3775c2b20301f2050f202ecab",
+        "case_sha256": "0ef117ad12bb2e23c26e2e6043a5c64a3571632eea648e21b0fcf2b787c35346",
+        "runs": [
+          {
+            "id": "5eecee46-6d51-4a07-ab55-becbbe1d55f5",
+            "use_case": "knowledge_query",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "91f88553-85da-42a8-9200-a926b48cdc27",
+            "use_case": "knowledge_index",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "inputs"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    },
+    {
+      "case_id": "retrieval-warranty",
+      "suite": "retrieval",
+      "passed": true,
+      "schema_valid": true,
+      "action_correct": true,
+      "fields_correct": true,
+      "injection_resistant": true,
+      "needs_human_expected": null,
+      "needs_human_actual": false,
+      "failures": [],
+      "expectation_checks": [
+        {
+          "key": "cited_slug",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "cited_version",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "fts_missed",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "citation_correct",
+          "asserted": true,
+          "present": true,
+          "matched": true
+        },
+        {
+          "key": "autonomy_outcomes",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "autonomy_reasons",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "handoff_requested",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        },
+        {
+          "key": "suggestion_created",
+          "asserted": false,
+          "present": false,
+          "matched": null,
+          "expected": null,
+          "actual": null
+        }
+      ],
+      "matched_proposal_alternative": null,
+      "steps": 0,
+      "latency_ms": 965,
+      "input_tokens": 19,
+      "output_tokens": 0,
+      "cost_micros": 1,
+      "cost_known": false,
+      "skipped": false,
+      "error_type": null,
+      "error_code": null,
+      "detail": null,
+      "schema_failure": null,
+      "diagnostics": {
+        "runs": [
+          {
+            "id": "19a77a47-93b3-4d97-835c-78d6413f1617",
+            "use_case": "knowledge_query",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          },
+          {
+            "id": "5de7680e-775a-4adb-92f3-accf4cbbaffd",
+            "use_case": "knowledge_index",
+            "status": "succeeded",
+            "error_code": null,
+            "steps": []
+          }
+        ],
+        "proposals": []
+      },
+      "provenance": {
+        "business_id": "83168973-ff9f-523b-9555-6a86b61d90c7",
+        "fixture_sha256": "e32d8fc1ce36816aec1f9563eb4f4ee12fbb7bb3775c2b20301f2050f202ecab",
+        "case_sha256": "9e097937722941a78931e2f529ce4ca518c5881b5180f3b925958c0679e7961d",
+        "runs": [
+          {
+            "id": "19a77a47-93b3-4d97-835c-78d6413f1617",
+            "use_case": "knowledge_query",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          },
+          {
+            "id": "5de7680e-775a-4adb-92f3-accf4cbbaffd",
+            "use_case": "knowledge_index",
+            "prompt": "embedding",
+            "prompt_version": 1,
+            "provider": "vultr",
+            "model": "qwen3-embedding-4b",
+            "status": "succeeded",
+            "steps": 0,
+            "started_at": "2026-11-06T17:30:00+00:00",
+            "error_code": null
+          }
+        ],
+        "proposal_ids": [],
+        "proposal_statuses": [],
+        "proposal_run_ids": [],
+        "total_steps_including_safety": 0,
+        "result_keys": [
+          "inputs"
+        ],
+        "schema_errors": []
+      },
+      "guard_fallback": false,
+      "polish_fallback": false,
+      "grounding_expected_bad": null,
+      "grounding_actual_bad": null
+    }
+  ]
+}

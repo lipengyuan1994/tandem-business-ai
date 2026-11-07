@@ -52,6 +52,8 @@ evals/                    (repo root) cases/*.yaml, runner, reports/
 | `embed` | Knowledge-base search (stretch) | Embedding vectors |
 | `stt` / `tts` | Voice (stretch) | Speech-to-text / text-to-speech |
 
+**Prices in use (2026-11-07).** `deploy/config/ai-routes.yaml` now carries Vultr's own catalog prices from `GET /v1/models` (`pricing`): input and output separately (mimo-v2.6-flash $0.10/$0.25, deepseek-v4.1-flash-1017 $0.15/$0.60, qwen3.8-flash-next $0.10/$0.20 per million tokens; qwen3-embedding-4b $0.05 per million; whisper-large-v3-turbo $0.00001111 per second = $0.000667 per audio minute). Earlier route files charged input at the output price and audio at a $0.006/min placeholder, so costs recorded before 0.1.11 are overstated.
+
 **Candidates.** These come from Vultr's public model list fetched 2026-11-03 ([15](14-sources.md)); external models come from the owner's shortlist. Prices change, so the P5-01 probe re-reads them.
 
 | Provider | Model ID | Classes it may fill | Listed price (Vultr catalog `completion` entry, USD per million tokens, 2026-11-03) | Notes |

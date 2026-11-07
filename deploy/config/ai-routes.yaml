@@ -2,26 +2,25 @@
 # first live evals: glm-5.3-flash is a reasoning model that spends the 800-token output cap thinking and returns empty
 # output, and json_schema mode returns empty output for nested schemas on Vultr, so every class uses json_object mode
 # (the schema goes into the system message) and non-reasoning models. No secrets: the key comes from
-# VULTR_INFERENCE_API_KEY in .env. Prices (USD per million tokens) are the catalog listing in docs/roadmap/08-ai-layer.md.
+# VULTR_INFERENCE_API_KEY in .env. Prices are Vultr's own catalog (GET /v1/models `pricing`, read 2026-11-07):
+# USD per million input/output tokens, and per audio minute for stt (catalog: $0.00001111 per second).
 providers:
   vultr: {kind: openai_compat, base_url: "https://api.vultrinference.com/v1", api_key_env: VULTR_INFERENCE_API_KEY, hosted: true, vendor: vultr}
 routes:
-  # Input-token placeholder ($/million); operator must confirm current embedding billing.
   embed: [{provider: vultr, model: qwen3-embedding-4b, price_in_per_m: 0.05, price_out_per_m: 0}]
-  # Unconfirmed conservative placeholder: operator MUST confirm Vultr audio billing.
-  stt: [{provider: vultr, model: whisper-large-v3-turbo, price_per_audio_minute: 0.006}]
+  stt: [{provider: vultr, model: whisper-large-v3-turbo, price_per_audio_minute: 0.000667}]
   agent:
-    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
-    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}
+    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.10, price_out_per_m: 0.25}
+    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.15, price_out_per_m: 0.60}
   fast_extract:
-    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
-    - {provider: vultr, model: qwen3.8-flash-next, price_in_per_m: 0.20, price_out_per_m: 0.20}
+    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.10, price_out_per_m: 0.25}
+    - {provider: vultr, model: qwen3.8-flash-next, price_in_per_m: 0.10, price_out_per_m: 0.20}
   writer:
-    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}
-    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
+    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.15, price_out_per_m: 0.60}
+    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.10, price_out_per_m: 0.25}
   grounding:
-    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.60, price_out_per_m: 0.60}
-    - {provider: vultr, model: qwen3.8-flash-next, price_in_per_m: 0.20, price_out_per_m: 0.20}
+    - {provider: vultr, model: deepseek-v4.1-flash-1017, price_in_per_m: 0.15, price_out_per_m: 0.60}
+    - {provider: vultr, model: qwen3.8-flash-next, price_in_per_m: 0.10, price_out_per_m: 0.20}
   safety:
-    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.25, price_out_per_m: 0.25}
+    - {provider: vultr, model: mimo-v2.6-flash, price_in_per_m: 0.10, price_out_per_m: 0.25}
 limits: {max_steps: 8, max_input_tokens_per_step: 12000, max_output_tokens_per_step: 800, run_timeout_s: 90, step_timeout_s: 30}

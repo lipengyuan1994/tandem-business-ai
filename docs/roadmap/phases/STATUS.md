@@ -93,7 +93,7 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P6-01](P6-event-hardening.md) | Marketing backend | PRE-type work (non-AI); may start before kickoff if P3 finished early | B | P3-02, P2-07 | DONE (2026-11-03; all M12 tests pass) |
 | [P6-02](P6-event-hardening.md) | Marketing frontend and AI draft | EVENT (AI draft) | B | P6-01, P5-08 | DONE (2026-11-04): non-AI UI (2026-11-03) plus the "Draft with AI" button on the campaign page (Codex GPT-6.1 Sol, reviewed here; 18 new component tests) |
 | [P6-03](P6-event-hardening.md) | Voice (stretch; first item on the cut list) | EVENT | A | P5-06 | DONE (2026-11-06): delivered as P10-D voice dictation (0.1.7) |
-| [P6-04](P6-event-hardening.md) | Demo data and demo script | DOC + PRE | B | P5-06 | PARTIAL (2026-11-03): `reset-demo` command and `docs/demo-script.md` (steps that need AI marked). 2026-11-03: procurement and payment-reminder demo data and script segment; the two rehearsals on the demo URL are not done |
+| [P6-04](P6-event-hardening.md) | Demo data and demo script | DOC + PRE | B | P5-06 | PARTIAL (2026-11-07): demo script refreshed for 0.1.10; two full rehearsals on the demo URL remain. |
 | [P6-05](P6-event-hardening.md) | Deploy and verify on Vultr | DEPLOY | A | P5 gate | PARTIAL (2026-11-04; deployed and verified on Vultr: smoke passes, live AI intake verified, watchdog 0 issues; signed-in capacity test passed (P6-07); customer domain and alert destination open) |
 | [P6-06](P6-event-hardening.md) | Security pass | PRE/EVENT | A | P6-05 | DONE (2026-11-04): public-URL pass `docs/security/2026-11-event-review.md`: no high findings (ZAP 0 fail; ports 80/443 only on IPv4 and IPv6; TLS grade A; pip-audit and pnpm audit clean; app-level egress refused); medium CSP finding accepted; raw container egress open (P8-09); local half 2026-11-03 |
 | [P6-07](P6-event-hardening.md) | Performance sanity | PRE | B | P6-05 | DONE (2026-11-04): demo VM run passes (20 staff, 5 min: p95 204 ms incl. the network, 0 errors of 5,251 requests); local run p95 26 ms; `docs/performance-local.md` |
@@ -117,9 +117,9 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P10-C2](P10-ai-workflows.md) | Embed snippet, customer self-service, embeddings and PDF upload | EVENT | B | P10-C1 | DONE (2026-11-07): C2a + C2b released in 0.1.9 |
 | [P10-C2a](../ai/cards/P10-C2a.md) | Hybrid knowledge retrieval and PDF draft import | EVENT | A/B | P10-C1, P10-E0 | DONE — Codex 2026-11-06: 66 focused tests + Ruff/format/mypy; owner-approved macOS AS exception; full merge suites/Linux-image limits reviewer-owned; see card |
 | [P7-01](P7-submission.md) | Publish the repository | GATE | Owner | P6 gate | PLANNED |
-| [P7-02](P7-submission.md) | Judge-facing README | DOC | B | P6-04 | PARTIAL (2026-11-03): draft `docs/submission/README-judges.draft.md`, cold-read by a second model; updated 2026-11-03 for sales, purchasing and procurement; AI facts after kickoff |
+| [P7-02](P7-submission.md) | Judge-facing README | DOC | B | P6-04 | PARTIAL (2026-11-07): judge README refreshed for 0.1.10; independent cold read by GPT-6.1 Sol from the README alone explained the architecture, Vultr use and the pre-event/AI split correctly (its clarity notes fixed); remaining: demo video link (owner, P7-03) |
 | [P7-03](P7-submission.md) | Demo video | GATE | Owner | P6-04 | PLANNED |
-| [P7-04](P7-submission.md) | Slides | DOC | B draft, owner final | — | PARTIAL (2026-11-03): outline `docs/submission/slides-outline.draft.md`; procurement added 2026-11-03 |
+| [P7-04](P7-submission.md) | Slides | DOC | B draft, owner final | — | DONE (2026-11-07): eight-slide draft refreshed for 0.1.10; owner finalises slides and confirms business prices. |
 | [P7-05](P7-submission.md) | Submit on lablab.ai | GATE | Owner | P7-01 … P7-04 | PLANNED |
 | [P7-06](P7-submission.md) | Freeze | PRE | B | — | PLANNED |
 

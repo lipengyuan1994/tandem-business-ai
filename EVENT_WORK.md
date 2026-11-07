@@ -320,3 +320,15 @@ disallowed host, CSP refuses a direct frame. Two findings: Safari's default Tab 
 launcher with Option+Tab in WebKit (what Safari keyboard users press); the public 429 text promised "wait a minute"
 while the conversation-start limit is 5 per IP per hour, now "Please try again later". Dev-only: cleared the local
 dev stack's conversation-start counters after repeated test runs from one IP.
+
+## 2026-11-07 — submission documents and real Vultr prices (Claude, Codex Terra)
+
+Codex Terra rewrote `docs/submission/README-judges.draft.md`, `slides-outline.draft.md` and `docs/demo-script.md`
+for 0.1.10 (the README described the assistant as planned). Reviewer restored the demo script's failure moments,
+recovery rule and detailed dental / widget walkthroughs that the rewrite had dropped. Independent cold read (GPT-6.1
+Sol, README text only, no repository access requested): architecture, Vultr use and the pre-event/AI split explained
+correctly; its clarity notes (missing retrieval report, price wording, dictation model role) fixed. Re-ran live
+retrieval 8/8 and grounding 10/10 for committed reports (the merge-time reports were lost with the merge worktree).
+Route file now carries Vultr's own catalog prices from `GET /v1/models`: input and output priced separately (earlier
+files charged input at the output price) and Whisper at $0.00001111/s = $0.000667/min instead of the $0.006/min
+placeholder; costs recorded before 0.1.11 are overstated. Route, transcription and deploy tests: 276 passed.

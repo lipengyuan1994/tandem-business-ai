@@ -1,37 +1,12 @@
-<!-- DRAFT for P7-04 (owner finalises). 8 slides, about 4 minutes. [AFTER KICKOFF] marks facts that need measurement. Updated 2026-11-03: sales, purchasing and procurement added (slides 1 to 6 and 8). The assistant does not exist before kickoff (3 Nov 2026 15:00 UTC): every assistant step below is planned, and the deck is final only when each one is checked against the working demo. -->
+# Slides outline: 8 slides, about 4 minutes
 
-# Slides outline
+Owner finalises the slides. Timings are speaking budgets, not measured rehearsal times.
 
-1. **Problem.** A 5-person shop answers messages, books jobs, orders parts, chases suppliers and chases customers for payment by hand, across 4 tools. Enterprise ERPs are too heavy, and SaaS means handing customer data to a vendor.
-2. **Product.** One app for customers, schedule, stock, inbox, marketing, sales, purchasing and approvals. It installs on the shop's own Vultr account. Screenshot: Today (replies, approvals, low stock, a late purchase order).
-3. **Live flows** (the demo; five minutes at most, script in `docs/demo-script.md`):
-   - Flow 1, a message becomes a booking:
-     - A customer's message comes in.
-     - The assistant finds a real slot and the part, and drafts a reply (planned).
-     - A person approves.
-     - The timeline and stock update.
-   - Flow 2, procurement (a focus area of the challenge):
-     - Today shows a late purchase order.
-     - Three suppliers were asked for a quote. Two have answered; the third answers on a phone.
-     - The comparison ranks them with a score computed in code. The cheapest supplier does not win: it is slow and unreliable.
-     - The assistant reads a pasted free-text reply, checks every number against the supplier's text and explains the ranking (planned).
-     - "Create purchase order" makes a proposal, and a different person approves it.
-   - [AFTER KICKOFF: timing] [UPDATE after kickoff: which assistant steps shipped]
-4. **Architecture on Vultr.**
-   - One Compute VM runs Compose.
-   - Serverless Inference behind a provider-agnostic gateway (planned).
-   - Object Storage for backups, Container Registry for images, Terraform for installs.
-   - Nothing runs on Vultr yet. [AFTER KICKOFF: replace with what runs on the demo URL]
-5. **Safety by construction.**
-   - The agent only proposes (planned).
-   - Approvals with separation of duties and an audit trail.
-   - Row-level security per business.
-   - Consent is never inferred.
-   - Injection attempts are treated as data, in customer messages and in supplier replies (planned). Show the failure moments from the demo.
-   - Numbers come from code. Prices, totals and the quote ranking are computed, not generated. A number read from a supplier's reply must appear in the supplier's own text (planned).
-6. **Evals and cost.** The thresholds, the models compared, the chosen route and the cost per intake run. A procurement suite too: reading replies, explanations, injection inside supplier text. [AFTER KICKOFF]
-7. **Business model.** Each customer owns the install: a one-time setup plus a support subscription. The shop pays Vultr directly, from about $24 a month for the VM plus inference by usage. [owner to confirm prices]
-8. **Roadmap and honesty.**
-   - Built before kickoff, disclosed and logged with UTC times: the ERP, including sales, purchasing and the procurement quote flow, with no AI code, plus the written design of the AI layer (documents only). Built at the event: the assistant, the evals and the first Vultr deployment.
-   - Not built yet: automatic retention clean-up, point-in-time recovery, file attachments, inbound e-mail, direct accounting integrations.
-   - Next: those items, a real e-mail provider in use, and a pilot with real shops in January 2027.
+1. **Problem (0:00–0:25).** A small shop must answer messages, book work, track parts and follow up with suppliers. Switching between tools adds work and can hide a missed task.
+2. **Product (0:25–0:50).** One customer-owned app for customers, schedule, stock, inbox, sales, purchasing and approvals. Show Today for Example Cycle Works. The other synthetic businesses are Example Garden Store and Example Dental Clinic.
+3. **Live flows (0:50–1:35).** A customer asks for a brake service; the assistant checks availability and stock and proposes a booking for staff review. In procurement, show a supplier quote, the code-ranked comparison and a proposed draft purchase order. Briefly show AI Team and the dental emergency hand-over: a person takes the urgent case, while the clinic schedule uses both a provider and a chair. See [demo script](../demo-script.md). The AI steps need live inference; allow for variable latency.
+4. **Architecture on Vultr (1:35–2:00).** React and FastAPI on one Compute VM, PostgreSQL, worker, Keycloak and Caddy. Serverless Inference provides the routed models; Object Storage holds backups; Container Registry holds images; Terraform provisions infrastructure. [Architecture](../roadmap/02-architecture.md).
+5. **Safety and approvals (2:00–2:30).** AI proposes changes for review; explicit autonomy rules start in shadow mode on the demo. Show evidence, citations and hand-over. Untrusted messages cannot set the rules. Availability and quote scores come from code. Regulated routing permits only local models; the tested local agent did not pass its benchmark.
+6. **Evals and cost (2:30–3:00).** Synthetic cases: intake 75/76, injection 15/15, grounding 10/10, Customer Care 19/19, retrieval 8/8 and dictation 87.5%. The 0.1.10 release records 2,398 backend, 554 frontend and 35 end-to-end tests. Ledger: $7.52 pending against $200 credit at 7 Nov 03:15 UTC. Embedding and audio prices still need billing confirmation.
+7. **Business model (3:00–3:20).** Customer-owned install, with a proposed setup fee and support subscription. The customer pays infrastructure and inference costs. **Owner to confirm prices and commercial terms.**
+8. **Roadmap and disclosure (3:20–4:00).** The non-AI ERP was built before 3 Nov 2026 15:00 UTC, with no AI code. All AI was built after kickoff. [Work logs](../../PRE_EVENT_WORK.md) and [event log](../../EVENT_WORK.md). The demo uses synthetic data and simulated email. No payment processing or general ledger. Next: egress proxy, billing confirmation, stronger local model evaluation and demo rehearsal.
