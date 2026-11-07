@@ -173,10 +173,10 @@ describe("AI Team", () => {
     expect(screen.queryByText("Other draft")).not.toBeInTheDocument()
   })
 
-  it("keeps reserved Customer Care off while Coming soon", async () => {
+  it("does not disable Customer Care based on legacy explanatory text", async () => {
     setup([{ ...TEAM_AGENT, key: "customer_care", name: "Customer Care", status: "off", enabled: false, reason: "No triggers yet; coming soon" }])
     renderApp("/ai/team")
-    expect(await screen.findByRole("switch", { name: "Enable Customer Care" })).toBeDisabled()
+    expect(await screen.findByRole("switch", { name: "Enable Customer Care" })).toBeEnabled()
   })
 
   it("permits the Customer Care switch when backend reservation has cleared", async () => {

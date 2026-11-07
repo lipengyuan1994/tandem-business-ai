@@ -29,6 +29,8 @@ export function CustomerDialog({ open, onOpenChange, customer, onSaved, onReload
   const create = useCreateCustomer()
   const update = useUpdateCustomer(customer?.id ?? "")
   const [draft, setDraft] = useState<Draft>({ display_name: customer?.display_name ?? "", email: "", phone: "" })
+  const [initialPreferred] = useState(customer?.preferred_contact_channel ?? "email")
+  const [preferred, setPreferred] = useState(initialPreferred)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [conflict, setConflict] = useState(false)
   const pending = create.isPending || update.isPending
@@ -41,7 +43,7 @@ export function CustomerDialog({ open, onOpenChange, customer, onSaved, onReload
   const submit = () => {
     if (!draft.display_name.trim()) return setFieldErrors({ display_name: "required" })
     if (customer) {
-      update.mutate({ version: customer.version, display_name: draft.display_name.trim() }, {
+      update.mutate({ version: customer.version, display_name: draft.display_name.trim(), ...(preferred !== initialPreferred ? { preferred_contact_channel: preferred } : {}) }, {
         onSuccess: (c) => { onOpenChange(false); onSaved?.(c.id) },
         onError,
       })
@@ -51,7 +53,7 @@ export function CustomerDialog({ open, onOpenChange, customer, onSaved, onReload
       ...(draft.email ? [{ type: "email" as const, value: draft.email, is_primary: true }] : []),
       ...(draft.phone ? [{ type: "phone" as const, value: draft.phone, is_primary: !draft.email }] : []),
     ]
-    create.mutate({ kind: "person", display_name: draft.display_name.trim(), contact_points, tags: [], consents: [] }, {
+    create.mutate({ kind: "person", display_name: draft.display_name.trim(), preferred_contact_channel: preferred, contact_points, tags: [], consents: [] }, {
       onSuccess: (c) => { onOpenChange(false); onSaved?.(c.id) },
       onError,
     })
@@ -71,6 +73,12 @@ export function CustomerDialog({ open, onOpenChange, customer, onSaved, onReload
               <Input id="c-name" value={draft.display_name} aria-invalid={!!fieldErrors.display_name} aria-describedby={fieldErrors.display_name ? "c-name-err" : undefined}
                 onChange={(e) => setDraft({ ...draft, display_name: e.target.value })} />
               {fieldErrors.display_name ? <p id="c-name-err" className="text-sm text-destructive">{t("crm.nameRequired")}</p> : null}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="c-preferred">{t("crm.preferredContact")}</Label>
+              <select id="c-preferred" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={preferred} onChange={(e) => setPreferred(e.target.value as typeof preferred)}>
+                {(["email", "web_chat", "none"] as const).map((value) => <option key={value} value={value}>{t(`crm.contactChannels.${value}`)}</option>)}
+              </select>
             </div>
             {customer ? null : (
               <>

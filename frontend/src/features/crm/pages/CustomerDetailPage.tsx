@@ -46,6 +46,7 @@ export function CustomerDetailPage() {
           </div>
         }
       />
+      <p className="mb-4 text-sm">{t("crm.preferredContact")}: {t(`crm.contactChannels.${c.preferred_contact_channel ?? "email"}`)}</p>
       {c.tags.length ? <p className="mb-4 flex gap-1">{c.tags.map((tag) => <Badge key={tag} variant="outline">{tag}</Badge>)}</p> : null}
       <Tabs defaultValue="timeline">
         <TabsList>

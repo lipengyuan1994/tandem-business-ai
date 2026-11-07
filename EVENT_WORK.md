@@ -198,3 +198,21 @@ Updated intended boolean context, v7 with retained v1–v6, empty legacy resourc
 DTO expectations. Nine reported cases plus regulated startup regression: 10 passed in 8.71 s.
 Ruff/format (686 files) and mypy (360 source files) passed. Full backend suite and make check were
 not run in this follow-up; next full verification is reviewer-run. No commits or external calls.
+
+## 2026-11-06 — P10-B2 screens: Customer Care (Codex)
+
+Separate `p10-b2-screens` worktree, baseline `d0516f5`. Normal Team switch and readable Care reasons;
+versioned Care settings (backend delay limit 365, quiet hours, tone); https public links in Business settings;
+Work case detail/priority/known-or-unknown customer/related links and confirmed versioned Resolve; CRM contact
+preference omission and consent scope; Care proposal previews and preserved-facts subject/body revisions.
+[Full card](docs/roadmap/ai/cards/P10-B2-screens.md) lists files and requirement evidence.
+
+Final native ARM verification: **494 frontend tests / 45 files**, typecheck/lint/build, scoped offline
+`make check` (frontend + fixtures/licenses/secrets; backend/database/deployment excluded). Gzip bundle grows
+**5,336 bytes vs main**, below ~12 KB. Existing chronological Work cursor API permits priority sorting only
+within loaded pages; documented/UI-labelled. Browser/live API, e2e and delivery untested. No backend,
+generated schema, service editor, manifests or lockfile edits; no commits or release.
+
+First pnpm check unexpectedly attempted its automatic install/registry requests (DNS failures); stopped it.
+Final commands disable dependency verification, force offline mode, and reuse existing native dependencies
+with local writable caches. No successful installation/network response is claimed. See card for details.

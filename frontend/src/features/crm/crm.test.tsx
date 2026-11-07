@@ -164,3 +164,39 @@ it("shows regulated restriction prerequisites and keeps the dialog open with sha
   expect(screen.getByText(/1 upcoming appointment/)).toBeInTheDocument()
   expect(screen.getByRole("dialog")).toBeInTheDocument()
 })
+
+it.each([false, true])("preserves an opted-out customer's preference unless changed (changed=%s)", async (change) => {
+  mockMe(meWith(...PERMS))
+  mockProfile()
+  const customer = { ...ADA, preferred_contact_channel: "none" }
+  server.use(http.get(`*/api/v1/crm/customers/${CID}`, () => HttpResponse.json(customer)))
+  let sent: Record<string, unknown> | undefined
+  server.use(http.patch(`*/api/v1/crm/customers/${CID}`, async ({ request }) => { sent = await request.json() as Record<string, unknown>; return HttpResponse.json(customer) }))
+  renderApp(`/customers/${CID}`)
+  expect(await screen.findByText("Preferred contact: Don't contact")).toBeVisible()
+  await userEvent.click(screen.getByRole("button", { name: "Edit customer" }))
+  expect(screen.getByLabelText("Preferred contact")).toHaveValue("none")
+  if (change) await userEvent.selectOptions(screen.getByLabelText("Preferred contact"), "web_chat")
+  await userEvent.click(screen.getByRole("button", { name: "Save" }))
+  await waitFor(() => expect(sent).toBeDefined())
+  if (change) expect(sent).toMatchObject({ version: 3, preferred_contact_channel: "web_chat" })
+  else expect(sent).not.toHaveProperty("preferred_contact_channel")
+})
+
+it.each(["staff", "import", "form"] as const)("explains proactive service consent from %s", async (source) => {
+  mockMe(meWith(...PERMS))
+  mockProfile()
+  server.use(http.get(`*/api/v1/crm/customers/${CID}/consents`, () => HttpResponse.json([{ ...CONSENTS[0], id: "service1", channel: "email", purpose: "service_updates", status: "granted", source, evidence: "Synthetic consent evidence" }])))
+  renderApp(`/customers/${CID}`)
+  await userEvent.click(await screen.findByRole("tab", { name: "Consent" }))
+  expect(await screen.findByText(source === "form" ? "This request only" : "Allows proactive service messages")).toBeVisible()
+})
+
+it("keeps form marketing consent distinct from request-scoped service consent", async () => {
+  mockMe(meWith(...PERMS))
+  mockProfile()
+  renderApp(`/customers/${CID}`)
+  await userEvent.click(await screen.findByRole("tab", { name: "Consent" }))
+  await screen.findByText(/Ticked box on web form/)
+  expect(screen.queryByText("This request only")).not.toBeInTheDocument()
+})

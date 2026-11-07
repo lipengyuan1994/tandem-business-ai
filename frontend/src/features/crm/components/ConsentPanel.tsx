@@ -27,6 +27,7 @@ export function ConsentPanel({ customerId }: { customerId: string }) {
   if (consents.isPending) return <p role="status">{t("common.loading")}</p>
   return (
     <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">{t("crm.consent.proactiveHelp")}</p>
       <dl className="grid gap-2 sm:grid-cols-2">
         {KEYS.map(([channel, purpose]) => {
           const c = latest(channel, purpose)
@@ -34,6 +35,7 @@ export function ConsentPanel({ customerId }: { customerId: string }) {
             <div key={`${channel}-${purpose}`} className="rounded-md border p-3">
               <dt className="text-sm text-muted-foreground">{t(`crm.consent.channels.${channel}`)} · {t(`crm.consent.purposes.${purpose}`)}</dt>
               <dd className="font-medium">{c ? t(`crm.consent.statuses.${c.status}`) : t("crm.consent.none")}</dd>
+              {c && purpose === "service_updates" ? <dd className="text-sm">{t(c.source === "form" ? "crm.consent.requestOnly" : c.status === "granted" && ["staff", "import"].includes(c.source) && channel === "email" ? "crm.consent.proactiveAllowed" : "crm.consent.proactiveNotAllowed")}</dd> : null}
             </div>
           )
         })}
@@ -46,7 +48,7 @@ export function ConsentPanel({ customerId }: { customerId: string }) {
               <li key={c.id} className="border-l-2 pl-3">
                 <LocalTime iso={c.recorded_at} timeZone={businessTimeZone} pattern="d MMM yyyy HH:mm" /> ·{" "}
                 {t(`crm.consent.channels.${c.channel}`)} {t(`crm.consent.purposes.${c.purpose}`)}: <strong>{t(`crm.consent.statuses.${c.status}`)}</strong>{" "}
-                <span className="text-muted-foreground">({t(`crm.consent.sources.${c.source}`, { defaultValue: c.source })}) “{c.evidence}”</span>
+                <span className="text-muted-foreground">({t(`crm.consent.sources.${c.source}`, { defaultValue: c.source })}){c.source === "form" && c.purpose === "service_updates" ? ` · ${t("crm.consent.requestOnly")}` : ""} “{c.evidence}”</span>
               </li>
             ))}
           </ol>

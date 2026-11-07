@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useSession } from "@/app/session-context"
 import { DeliveryBadge, ScheduledMail } from "@/features/ai/DeliveryStatus"
+import { CustomerCareProposal } from "@/features/ai/CustomerCareProposal"
 import { ReplyGrounding } from "@/features/ai/ReplyGrounding"
 import { AiBadge } from "@/features/ai/AiBadge"
 import { ConfirmDialog } from "@/components/common/ConfirmDialog"
@@ -79,7 +80,7 @@ export function ProposalDetailPage() {
                 onSubmit={submitRevision}
               />
             ) : (
-              <PreviewDiff lines={rev.preview} />
+              p.action_type === "customer_care.send_message" ? <CustomerCareProposal payload={rev.payload} /> : <PreviewDiff lines={rev.preview} />
             )}
           </section>
 

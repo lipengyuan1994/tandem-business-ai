@@ -14,11 +14,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toastError } from "@/lib/errors"
 import { useBusiness, useUpdateBusiness } from "../hooks"
 
+const profileUrl = z.string().trim().max(500).refine((value) => {
+  if (!value) return true
+  try { const url = new URL(value); return /^https:\/\//i.test(value) && url.protocol === "https:" && !!url.hostname && !url.username && !url.password } catch { return false }
+})
 const schema = z.object({
   name: z.string().trim().min(1).max(200),
   legal_name: z.string().max(200),
   timezone: z.string().min(1),
   locale: z.string().min(2).max(16),
+  review_url: profileUrl,
+  booking_url: profileUrl,
 })
 type Values = z.infer<typeof schema>
 
@@ -34,7 +40,7 @@ export function BusinessSettingsPage() {
   useEffect(() => {
     if (business.data) {
       const b = business.data
-      form.reset({ name: b.name, legal_name: b.legal_name ?? "", timezone: b.timezone, locale: b.locale })
+      form.reset({ name: b.name, legal_name: b.legal_name ?? "", timezone: b.timezone, locale: b.locale, review_url: typeof b.public_profile?.review_url === "string" ? b.public_profile.review_url : "", booking_url: typeof b.public_profile?.booking_url === "string" ? b.public_profile.booking_url : "" })
     }
   }, [business.data, form])
 
@@ -45,10 +51,11 @@ export function BusinessSettingsPage() {
 
   return (
     <form
+      noValidate
       className="max-w-xl space-y-4"
       onSubmit={form.handleSubmit((v) =>
         update.mutate(
-          { version: business.data.version, name: v.name, legal_name: v.legal_name || null, timezone: v.timezone, locale: v.locale },
+          { version: business.data.version, name: v.name, legal_name: v.legal_name || null, timezone: v.timezone, locale: v.locale, public_profile: { ...business.data.public_profile, review_url: v.review_url || null, booking_url: v.booking_url || null } },
           { onSuccess: () => toast.success(t("common.saved")), onError: (e) => toastError(e, () => setConflict(true)) },
         ),
       )}
@@ -72,6 +79,14 @@ export function BusinessSettingsPage() {
         <Label htmlFor="b-locale">{t("settings.business.locale")}</Label>
         <Input id="b-locale" disabled={!canEdit} {...form.register("locale")} />
       </div>
+      <fieldset className="space-y-3"><legend className="font-medium">{t("settings.business.publicProfile")}</legend>
+        {(["review_url", "booking_url"] as const).map((key) => <div key={key} className="space-y-1">
+          <Label htmlFor={key}>{t(`settings.business.${key}`)}</Label>
+          <Input id={key} type="url" maxLength={500} disabled={!canEdit || update.isPending} aria-invalid={!!form.formState.errors[key]} aria-describedby={`${key}-help`} {...form.register(key)} />
+          <p id={`${key}-help`} className="text-xs text-muted-foreground">{t("settings.business.urlHelp")}</p>
+          {form.formState.errors[key] ? <p role="alert" className="text-sm text-destructive">{t("settings.business.urlInvalid")}</p> : null}
+        </div>)}
+      </fieldset>
       <p className="text-sm text-muted-foreground">{t("settings.business.currency", { currency: business.data.currency, slug: business.data.slug })}</p>
       {canEdit ? <Button type="submit" disabled={update.isPending}>{t("common.save")}</Button> : null}
       <ConflictDialog open={conflict} onOpenChange={setConflict} onReload={() => { setConflict(false); void business.refetch() }} />
