@@ -354,8 +354,19 @@ are unchanged so the demo VM is not rebuilt.
 
 Demo moved to **https://tandemai.open-dl.com** (owner's Cloudflare zone `open-dl.com`; the owner wrote `opendl.com`,
 which is a different, non-resolving domain). A record → 45.63.85.83, DNS only (saved by the owner's approval in the
-browser pane). On the VM: manual backup, `.env` copy, Keycloak `smb-app` redirect URIs/web origins/post-logout URIs
+browser pane). On the VM: `.env` copy (the script's extra manual backup called `./backup.sh`, which does not exist in
+`/opt/smb`, so it did nothing; the latest backup before the switch was the scheduled one at 12:00 UTC), Keycloak `smb-app` redirect URIs/web origins/post-logout URIs
 updated with kcadm, `DOMAIN`/`PUBLIC_URL` changed, `docker compose up -d`; Let's Encrypt certificate issued, smoke
 passed (issuer `https://tandemai.open-dl.com/auth/realms/smb`), login page accepts the new redirect URI, old sslip
 address no longer served. Database had only three already-sent simulated messages mentioning the old address. SSH
 closed (only 80/443 in the Vultr firewall), `terraform plan` no changes. Procedure added to the install runbook.
+
+## 2026-11-07 ~13:40–14:20 — Sign-in name, dental logins, 0.1.12 released (Claude)
+
+Live Keycloak realm `smb` display name and client names set to Tandem Business AI with kcadm (the realm file is
+imported only once). Logins created with `demo-logins --business example-dental-clinic` for Ellery, Devon and Rowan
+(passwords only in the private local `install-smb-demo/demo-logins.txt`; the VM copy deleted). 0.1.12 (rename) images
+built from `8b7c8b6` after `make check` passed on the rename (2,398 backend at 96 %, 554 frontend, deploy checks,
+licences, gitleaks); realm and example AI config files uploaded; `upgrade.sh 0.1.11 → 0.1.12` in 31 s with its own
+pre-upgrade backup, smoke passed; live page title "Tandem Business AI" and sign-in title "Sign in to Tandem Business
+AI". SSH closed, Terraform no changes, pending charges $8.21.

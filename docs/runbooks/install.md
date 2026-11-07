@@ -144,8 +144,8 @@ Used on 2026-11-07 to move the demo from `45-63-85-83.sslip.io` to `tandemai.ope
 1. Create `A <domain> → <ip>` at your DNS provider and wait until `dig +short A <domain>` prints the VM's IPv4. With
    Cloudflare choose **DNS only**: through the proxy every visitor would share Cloudflare's addresses, and the public
    chat's per-address limits would block real users.
-2. Open SSH (`deploy/scripts/access.sh open --name <name>`), then on the VM: `./backup.sh --kind manual` and keep a copy
-   of `.env`.
+2. Open SSH (`deploy/scripts/access.sh open --name <name>`), then on the VM: `docker compose exec backup backup.sh --kind
+   manual` (check the result with `docker compose exec backup backup.sh --status`) and keep a copy of `.env`.
 3. Keycloak imports the realm only once, so update the web client yourself (inside the keycloak container, signed in
    with `kcadm.sh config credentials` as in [access.md](access.md)): for client `smb-app` set `redirectUris` to
    `https://<domain>/api/v1/auth/callback`, `webOrigins` to `https://<domain>` and the attribute
