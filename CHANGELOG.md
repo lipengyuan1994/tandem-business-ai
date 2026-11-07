@@ -2,6 +2,23 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.10 (2026-11-07)
+
+Finishing touches to the AI workflows:
+
+- **Work queue in priority order:** emergency hand-overs first, then complaint/warranty/dispute cases (urgent, high,
+  normal), then everything else newest first, across all pages. Complaint rows show the category and the customer.
+- **AI Team:** each agent shows what starts its work (for example "Appointment completed", "Daily recall check"); the
+  chain view shows how deep a chain of work went ("Depth 2 of 6").
+- **Assistant:** people who may use the assistant but not see AI approvals can now address agents with `@` and see
+  when the Operations Manager is off.
+- **Website chat widget:** shows nothing at all on a website the business has not allowed; the open panel no longer
+  covers the top of the chat.
+
+- **Migrations, deployment files, route file:** none.
+- Checks: 2,398 backend tests (96 % coverage), 554 frontend tests, 35 end-to-end tests including new ones for
+  "My bookings", the widget across sites and a dental emergency hand-over.
+
 ## 0.1.9 (2026-11-07)
 
 **Example Dental Clinic** (P10-E1): a third synthetic demo business showing the same product configured for a clinic.
