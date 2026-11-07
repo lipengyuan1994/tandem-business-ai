@@ -2,6 +2,19 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.11 (2026-11-07)
+
+- **Real AI prices:** the route file now uses Vultr's own catalog prices (`GET /v1/models`, read 2026-11-07): input and
+  output tokens priced separately, Whisper at $0.000667 per audio minute. Earlier versions charged input tokens at the
+  output price and audio at a $0.006/min placeholder, so costs recorded before this release are overstated. Daily
+  limits now go further for the same budget.
+- **Public chat:** when a visitor hits the hourly limit for new conversations, the message no longer promises "a minute"
+  ("Too many messages right now. Please try again later.").
+- The website widget is verified in Safari's engine (WebKit) as well as Chromium.
+
+- **Migrations, deployment files:** none. **Route file (after):** upload the new `deploy/config/ai-routes.yaml` after
+  `upgrade.sh 0.1.11` (keep `config/ai-routes.yaml.previous`), then `docker compose restart api worker`.
+
 ## 0.1.10 (2026-11-07)
 
 Finishing touches to the AI workflows:
