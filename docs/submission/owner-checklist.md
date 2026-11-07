@@ -1,7 +1,7 @@
 # Owner checklist: from 0.1.11 to submission
 
 Everything below needs the owner (accounts, publishing, recording). The product side is done: version 0.1.11 runs on
-`https://45-63-85-83.sslip.io`, all P10 work is released, and the submission documents are current (2026-11-07).
+`https://tandemai.open-dl.com`, all P10 work is released, and the submission documents are current (2026-11-07).
 
 ## 1. Rehearse twice on the demo URL (P6-04)
 
@@ -22,11 +22,10 @@ Everything below needs the owner (accounts, publishing, recording). The product 
 
 - Checked 2026-11-07: gitleaks finds no secrets in any of the commits; no private files are tracked
   (`install-smb-demo/`, `.env`, `.demo-logins/`, `frontend/e2e/.auth/` are ignored); MIT `LICENSE` present.
-- Decide on the commit author e-mail: all commits are authored as `Pengyuan Li <pli396@gatech.edu>`, which becomes
-  public with the repository. Changing it means rewriting history, which the project rules forbid without your
-  explicit decision.
+- Done 2026-11-07 on your instruction: before the first push, all commits were rewritten to the author e-mail
+  `lpy@tuta.io` (contents and dates unchanged; backup bundle in `.git/`).
 - Done 2026-11-07: the judges' README is now the root `README.md`. Add the video link to its **Demo** line once recorded.
-- Create the GitHub repository and push (Claude needs your explicit go-ahead in chat for remotes and pushing).
+- Create the GitHub repository `tandem-business-ai` and push (Claude needs your explicit go-ahead in chat for remotes and pushing).
 
 ## 4. Slides and submission (P7-04, P7-05)
 

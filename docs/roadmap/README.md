@@ -1,6 +1,6 @@
 # Implementation roadmap — master index
 
-**This folder is the single source of truth for building the SMB Operations Suite.** If code and this roadmap disagree, stop and resolve the disagreement in the roadmap first, then change the code.
+**This folder is the single source of truth for building Tandem Business AI (formerly SMB Operations Suite).** If code and this roadmap disagree, stop and resolve the disagreement in the roadmap first, then change the code.
 
 - Version: 1.0 (2026-11-03 UTC)
 - Owner: Patrick (product owner); every change to decisions goes through [03-decisions.md](03-decisions.md)

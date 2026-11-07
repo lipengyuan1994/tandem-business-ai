@@ -3,7 +3,7 @@
 Tier B / EVENT, Codex, 2026-11-06. Frontend implementation and offline verification complete;
 **global priority across unloaded Work pages needs backend support** (see API limits).
 Owner reports backend released in 0.1.8; no hosted state was independently checked in this task.
-Worktree `p10-b2-screens`, starting HEAD and comparison `main`: `d0516f5`.
+Worktree `p10-b2-screens`, starting HEAD and comparison `main`: `e8bfd00`.
 
 ## Behavior and decisions
 
@@ -88,7 +88,7 @@ Final native/offline frontend verification (2026-11-06):
 - `pnpm exec vitest run`: **494 passed, 45 files, 22.12 s**. All 43 added cases pass.
   jsdom logs its existing unimplemented `scrollTo` warning; no test was skipped or weakened.
 - `pnpm build`: passed (`tsc -b && vite build`, final Vite phase 610 ms).
-- Bundle versus a separate `git archive main` build at `d0516f5`, using the same existing dependencies:
+- Bundle versus a separate `git archive main` build at `e8bfd00`, using the same existing dependencies:
   **413,536 → 418,872 bytes gzip**, **+5,336 B** (5.21 KiB), below ~12 KB. Sum of individually gzipped
   `.js`, `.css`, `.html` assets, fixed gzip timestamp; 98 assets in each build, source maps excluded.
 - `git diff --check`: passed. Backend/generated-schema/catalog diff: empty.

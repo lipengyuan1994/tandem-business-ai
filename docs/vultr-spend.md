@@ -42,6 +42,7 @@ Check the balance at any time: `GET https://api.vultr.com/v2/account` (`balance`
 | 2026-11-07 01:10 | Upgraded | VM to 0.1.9 (images pushed; SSH opened about 12 minutes for the upgrade, route-file swap (new `embed` route), dental demo seed, knowledge indexing and live checks, then closed; `terraform plan` no changes) | — | pending charges $7.40 of $200.00 |
 | 2026-11-07 03:15 | Upgraded | VM to 0.1.10 (images pushed; SSH opened about 6 minutes for the upgrade, then closed; deployment and route files unchanged; `terraform plan` no changes) | — | pending charges $7.52 of $200.00 |
 | 2026-11-07 05:15 | Upgraded | VM to 0.1.11 (images pushed; SSH opened about 6 minutes for the upgrade, route-file swap with Vultr catalog prices and a live cost check, then closed; `terraform plan` no changes) | — | pending charges $7.64 of $200.00 |
+| 2026-11-07 12:55 | Changed | Demo domain `45-63-85-83.sslip.io` → `tandemai.open-dl.com` (Cloudflare A record, DNS only, owner's zone; SSH opened about 10 minutes, manual backup, Keycloak client and `.env` updated, Let's Encrypt certificate, smoke passed, SSH closed; `terraform plan` no changes) | — | pending charges $7.64 of $200.00 (no new resources) |
 
 ## Running resources (2026-11-04 12:15 UTC)
 

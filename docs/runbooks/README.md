@@ -1,6 +1,6 @@
 # Runbooks
 
-Operating instructions for an SMB Operations installation. Each one can be followed by a person or a coding agent that has only that page and shell access.
+Operating instructions for a Tandem Business AI installation. Each one can be followed by a person or a coding agent that has only that page and shell access.
 
 | Runbook | When |
 |---|---|

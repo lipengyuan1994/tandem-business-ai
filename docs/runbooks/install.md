@@ -137,6 +137,25 @@ vm$ docker compose up -d api worker
 
 In **both** `.env` copies, set `VULTR_INFERENCE_API_KEY` to the same inference key (use a single-quoted value to keep dollar signs literal). Add `api.vultrinference.com` to the comma-separated `EGRESS_ALLOWLIST`; keep any existing hosts. Do not paste keys into shell commands or logs. The route file, key and allowed host are all needed; restarting with `up -d` recreates api/worker when their environment changes. A configured route still needs the selected model to be available and the business's AI policy to allow it. Verify a real AI action in the application separately; local YAML validation and smoke do not prove inference connectivity.
 
+### Move a running installation to your own domain
+
+Used on 2026-11-07 to move the demo from `45-63-85-83.sslip.io` to `tandemai.open-dl.com`. Downtime is about a minute.
+
+1. Create `A <domain> → <ip>` at your DNS provider and wait until `dig +short A <domain>` prints the VM's IPv4. With
+   Cloudflare choose **DNS only**: through the proxy every visitor would share Cloudflare's addresses, and the public
+   chat's per-address limits would block real users.
+2. Open SSH (`deploy/scripts/access.sh open --name <name>`), then on the VM: `./backup.sh --kind manual` and keep a copy
+   of `.env`.
+3. Keycloak imports the realm only once, so update the web client yourself (inside the keycloak container, signed in
+   with `kcadm.sh config credentials` as in [access.md](access.md)): for client `smb-app` set `redirectUris` to
+   `https://<domain>/api/v1/auth/callback`, `webOrigins` to `https://<domain>` and the attribute
+   `post.logout.redirect.uris` to `https://<domain>/*`.
+4. In `/opt/smb/.env` set `DOMAIN=<domain>` and `PUBLIC_URL=https://<domain>`, run `docker compose up -d` (Caddy gets a
+   Let's Encrypt certificate on the first request), then `./smoke.sh https://<domain> --compose-dir /opt/smb`.
+5. Close SSH, update `install-<name>/.env` and `install-<name>/resolved-domain` on your computer, and run
+   `terraform plan` (the domain is not a Terraform input, so it must report no changes). The old address stops working;
+   links already sent by e-mail point to it.
+
 ## 5. First login (the owner)
 
 1. Open `https://<domain>` and sign in. Username: the owner's email. Password: the temporary one printed by the installer.

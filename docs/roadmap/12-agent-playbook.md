@@ -42,7 +42,7 @@ Write the question in your report and in [13-risks-and-open-questions.md](13-ris
 ## Handing a task to a model (prompt template)
 
 ```text
-You are implementing task {TASK_ID} of the SMB Operations Suite.
+You are implementing task {TASK_ID} of Tandem Business AI.
 Rules: follow /AGENTS.md and docs/roadmap/12-agent-playbook.md exactly.
 1. Read: docs/roadmap/phases/{PHASE_FILE} (task {TASK_ID} only), then every file in its "Read first" line,
    then app/modules/<dep>/public.py for each dependency module.

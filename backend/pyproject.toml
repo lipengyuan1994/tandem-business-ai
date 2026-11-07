@@ -1,7 +1,7 @@
 [project]
 name = "smb-ops-backend"
 version = "0.1.0"
-description = "SMB Operations Suite backend (modular monolith)"
+description = "Tandem Business AI backend (modular monolith)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.13,<3.14"

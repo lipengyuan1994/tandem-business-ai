@@ -11,7 +11,7 @@ Keep this current and under 80 lines. History and detailed evidence live in EVEN
 - Contracts: [contracts.md](contracts.md); task tracking: [STATUS](../phases/STATUS.md).
 - Latest recorded release checks and live evals are in EVENT_WORK.md; those observations are not rerun here.
   Clinic data is synthetic; production regulated routing requires local models under clinic control.
-- Demo deployment record: Vultr smb-demo, https://45-63-85-83.sslip.io, version 0.1.9.
+- Demo deployment record: Vultr smb-demo, https://tandemai.open-dl.com (until 2026-11-07 https://45-63-85-83.sslip.io), version 0.1.11.
   Resource accounting: [vultr-spend.md](../../vultr-spend.md). No cloud resources changed in P10-gaps.
 
 ## P10-gaps (Codex, 2026-11-07 UTC)

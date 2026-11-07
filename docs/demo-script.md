@@ -1,6 +1,6 @@
 # Demo script (P6-04): about 5 minutes
 
-Demo: https://45-63-85-83.sslip.io. Use synthetic data only. The main flow below has a 5-minute budget; its timing has not been measured. Two full rehearsals on the public URL are still required. **[Live AI]** marks a step that makes a model call. Other steps do not require a new call, though they may display an earlier AI result.
+Demo: https://tandemai.open-dl.com. Use synthetic data only. The main flow below has a 5-minute budget; its timing has not been measured. Two full rehearsals on the public URL are still required. **[Live AI]** marks a step that makes a model call. Other steps do not require a new call, though they may display an earlier AI result.
 
 Before each rehearsal, reset the demo with the operator’s `reset-demo --yes` procedure (or `make seed reset=1` locally), and check the dates and stock. Sign in to Example Cycle Works as Morgan and use a second browser profile signed in as Riley to approve proposals. Set up the logins and second factors beforehand using the [install runbook](runbooks/install.md#demo-installs-only-logins-for-the-demo-staff-morgan-riley-and-the-others). Email is simulated on the demo; nothing is delivered to example.com. Keep login details and private link addresses out of the recording.
 

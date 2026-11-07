@@ -184,3 +184,9 @@ development skips AS only, emitting one structured warning while retaining CPU/w
 no memory watchdog. The reviewer verifies actual Linux enforcement in the API image. The production init script
 already installs vector, so `CREATE EXTENSION IF NOT EXISTS vector` stays. The reviewer reports freeing the shared
 3.9 GB tmpfs test server; agents run focused C2a checks only, with full backend/aggregate gates serialized at merge.
+
+### Product name and publication identity (owner, 2026-11-07)
+
+Public name: **Tandem Business AI by OpenDL**; GitHub repository `tandem-business-ai`. Commits are authored as
+`Pengyuan Li <lpy@tuta.io>`; the history was rewritten once for this before the first push (the owner's explicit
+exception to the no-rewrite rule; see `EVENT_WORK.md`). Internal identifiers keep the `smb` prefix.

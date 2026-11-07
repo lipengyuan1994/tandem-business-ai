@@ -1,6 +1,6 @@
 {
   "realm": "smb",
-  "displayName": "SMB Operations (development)",
+  "displayName": "Tandem Business AI (development)",
   "enabled": true,
   "registrationAllowed": false,
   "registrationEmailAsUsername": true,
@@ -40,7 +40,7 @@
   "clients": [
     {
       "clientId": "smb-app",
-      "name": "SMB Operations web app",
+      "name": "Tandem Business AI web app",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
@@ -63,7 +63,7 @@
     },
     {
       "clientId": "smb-admin",
-      "name": "SMB Operations user management (service account)",
+      "name": "Tandem Business AI user management (service account)",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,

@@ -72,7 +72,7 @@ def create_app(registry: Registry | None = None) -> FastAPI:
 
     app = FastAPI(
         lifespan=lifespan,
-        title="SMB Operations Suite API",
+        title="Tandem Business AI API",
         version="0.1.0",
         openapi_url=API_PREFIX + "/openapi.json" if developer_docs else None,
         docs_url=API_PREFIX + "/docs" if developer_docs else None,

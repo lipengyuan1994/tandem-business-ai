@@ -165,7 +165,7 @@ so the edit dialog would have had to send "email" and could overwrite an opt-out
 
 ## 2026-11-06 ~22:30–22:45 — 0.1.8 released to the VM (Claude)
 
-Customer Care backend (P10-B2). Images built from a clean worktree at `adcac3c` (the dental task was editing the main
+Customer Care backend (P10-B2). Images built from a clean worktree at `08e9b54` (the dental task was editing the main
 checkout), checked (migration `20261106_1200_customer_care`, safety v2 boundary) and pushed. `make check` passed at
 the commit (2,261 backend, 451 frontend); `make e2e` **not run** for this release (the dev stack serves the main
 checkout with the dental work in progress; no screens changed). Deployment and route files identical on the VM; manual
@@ -201,7 +201,7 @@ not run in this follow-up; next full verification is reviewer-run. No commits or
 
 ## 2026-11-06 — P10-B2 screens: Customer Care (Codex)
 
-Separate `p10-b2-screens` worktree, baseline `d0516f5`. Normal Team switch and readable Care reasons;
+Separate `p10-b2-screens` worktree, baseline `e8bfd00`. Normal Team switch and readable Care reasons;
 versioned Care settings (backend delay limit 365, quiet hours, tone); https public links in Business settings;
 Work case detail/priority/known-or-unknown customer/related links and confirmed versioned Resolve; CRM contact
 preference omission and consent scope; Care proposal previews and preserved-facts subject/body revisions.
@@ -250,7 +250,7 @@ Merged the three branches onto the dental commit (conflicts: Work queue item kin
 fields, scheduling export, seed order, shared docs); migrations chained customer_care → 1300 knowledge_embeddings →
 1400 dental → 1500 self_service. Full backend run on the merged tree: 2,354 passed, 31 failed from two merge
 interactions (settings round-trip rejected the new read-only banner; local example lacked an enabled `embed` route),
-fixed in `9873269` (affected modules 190 passed); 537 frontend tests, fixtures, deploy checks, licences, gitleaks;
+fixed in `6e3ec8f` (affected modules 190 passed); 537 frontend tests, fixtures, deploy checks, licences, gitleaks;
 `make e2e` 30 passed. Live evals: intake 75/76, injection 15/15, grounding 10/10, customer_care 19/19 (two wording
 checks widened), retrieval 8/8. Linux image check: PDF worker runs and RLIMIT_AS refuses a 2 GiB allocation.
 VM: files identical, vector 0.8.7 present, manual backup, `upgrade.sh 0.1.8 → 0.1.9` in 32 s, smoke passed, route file
@@ -335,8 +335,27 @@ placeholder; costs recorded before 0.1.11 are overstated. Route, transcription a
 
 ## 2026-11-07 ~04:40–05:20 — 0.1.11 released (Claude)
 
-`make check`: 2,398 backend, 554 frontend, deploy checks, licences, gitleaks. Images built from `9d08c9b`, pushed; files
+`make check`: 2,398 backend, 554 frontend, deploy checks, licences, gitleaks. Images built from `e369347`, pushed; files
 identical; manual backup; `upgrade.sh 0.1.10 → 0.1.11` in 29 s, smoke passed; route file with Vultr catalog prices
 uploaded after the upgrade, api/worker restarted healthy. Live: a safety call on mimo-v2.6-flash (635 in / 32 out tokens)
 was recorded at 72 micro-dollars, matching the catalog ($0.10 / $0.25 per million). SSH closed, Terraform no changes,
 pending charges $7.64.
+
+## 2026-11-07 ~08:20–09:00 — Name, author e-mail and publication prep (Claude, owner decisions in chat)
+
+The owner named the project **Tandem Business AI by OpenDL** (repository `tandem-business-ai`) and asked for the
+author e-mail `lpy@tuta.io` instead of the university address. Before anything was pushed, all 37 commits were
+rewritten with `git filter-branch` (author and committer e-mail only; file trees identical, dates kept); the old
+history is kept in `.git/backup-before-email-rewrite-20261107.bundle`. Four commit hashes quoted in this log and the
+P10-B2 screens card now use the rewritten hashes (for example 0.1.11 images: `9d08c9b` → `e369347`). The judges'
+README is the root `README.md`. Product name changed in the README, app title and sidebar, sign-in realm display
+names, API title and runbook/roadmap headings; internal identifiers (`smb-*` images, realm id, Terraform, cloud-init)
+are unchanged so the demo VM is not rebuilt.
+
+Demo moved to **https://tandemai.open-dl.com** (owner's Cloudflare zone `open-dl.com`; the owner wrote `opendl.com`,
+which is a different, non-resolving domain). A record → 45.63.85.83, DNS only (saved by the owner's approval in the
+browser pane). On the VM: manual backup, `.env` copy, Keycloak `smb-app` redirect URIs/web origins/post-logout URIs
+updated with kcadm, `DOMAIN`/`PUBLIC_URL` changed, `docker compose up -d`; Let's Encrypt certificate issued, smoke
+passed (issuer `https://tandemai.open-dl.com/auth/realms/smb`), login page accepts the new redirect URI, old sslip
+address no longer served. Database had only three already-sent simulated messages mentioning the old address. SSH
+closed (only 80/443 in the Vultr firewall), `terraform plan` no changes. Procedure added to the install runbook.
