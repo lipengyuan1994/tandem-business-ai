@@ -300,3 +300,14 @@ Pre-fix unit tests reproduced 12 failures; final focused widget 60 passed / 5 fi
 Frontend-scoped make check passes fixtures/lint/types/full Vitest/secrets; backend, deploy and licences excluded.
 No Playwright run, backend tests, installs, downloads, external calls, Docker, commits, publishing or deployment.
 Post-fix painted layout and cross-site browser acceptance remain reviewer checks. Evidence: P10-gaps card.
+
+## 2026-11-07 ~02:30–03:20 — P10 gaps closed and 0.1.10 released (Claude)
+
+Codex closed the screen-card API gaps (server-side Work queue priority bands, measured chain depth, agent triggers and
+switchable flag, assistant-only `GET /ai/agents/addressable`) and wrote three e2e specs. Reviewer cross-site Chromium
+check of the widget (host pages on localhost:5555 allowed / :5556 not): chat works in the iframe, survives a host
+reload, CSP refuses the disallowed host; it found two UX defects (launcher shown on disallowed hosts; header covering
+the chat), fixed by Codex. `make check`: 2,398 backend (96 %), 554 frontend, deploy checks, licences, gitleaks;
+`make e2e`: 35 passed (new self-service, widget, dental specs). 0.1.10 upgrade 28 s, smoke passed; live: embed config
+CORS answers only the configured origin, addressable endpoint requires sign-in. Not verified: Safari/WebKit (browser
+not installed; download needs owner approval). SSH closed, Terraform no changes, pending charges $7.52.
