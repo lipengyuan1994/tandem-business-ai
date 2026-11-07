@@ -311,3 +311,12 @@ the chat), fixed by Codex. `make check`: 2,398 backend (96 %), 554 frontend, dep
 `make e2e`: 35 passed (new self-service, widget, dental specs). 0.1.10 upgrade 28 s, smoke passed; live: embed config
 CORS answers only the configured origin, addressable endpoint requires sign-in. Not verified: Safari/WebKit (browser
 not installed; download needs owner approval). SSH closed, Terraform no changes, pending charges $7.52.
+
+## 2026-11-07 — widget verified in WebKit (Claude)
+
+With the owner's approval, downloaded Playwright WebKit 27.2 (78.9 MB). The widget spec passes in WebKit at 1280 and
+375 px: iframe chat, conversation resumes after a host reload (sessionStorage in a cross-site frame), no launcher on a
+disallowed host, CSP refuses a direct frame. Two findings: Safari's default Tab key skips buttons, so the spec opens the
+launcher with Option+Tab in WebKit (what Safari keyboard users press); the public 429 text promised "wait a minute"
+while the conversation-start limit is 5 per IP per hour, now "Please try again later". Dev-only: cleared the local
+dev stack's conversation-start counters after repeated test runs from one IP.

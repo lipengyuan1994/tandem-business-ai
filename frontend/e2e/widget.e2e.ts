@@ -20,7 +20,8 @@ async function close(server: Server) {
 async function openWidget(page: Page) {
   // The public loader deliberately has a closed shadow root. Use its keyboard interface, then the Frame API.
   await expect.poll(() => page.frames().length).toBe(2)
-  await page.keyboard.press("Tab")
+  // Safari's default keyboard setting moves Tab between form fields only; Option+Tab reaches buttons.
+  await page.keyboard.press(page.context().browser()?.browserType().name() === "webkit" ? "Alt+Tab" : "Tab")
   await page.keyboard.press("Enter")
 }
 async function chatFrame(page: Page) {

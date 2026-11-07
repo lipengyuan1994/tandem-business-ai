@@ -30,7 +30,7 @@ export const S = {
   submitRequest: "Send request",
   contactRequired: "Please give an email or a phone number so we can reply.",
   errorGeneric: "Something went wrong. Please try again.",
-  rateLimited: "Too many messages. Please wait a minute and try again.",
+  rateLimited: "Too many messages right now. Please try again later.",
   chatDisabled: "Online chat is turned off right now. Please call us instead.",
   privacyTitle: "Privacy",
   privacy: {

@@ -1120,7 +1120,7 @@
     "thanks": "Thank you. Your response has been received.",
     "expired": "This quote link has expired or is invalid. Please ask the business for a new invitation.",
     "closed": "This quote request is closed. Please contact the business.",
-    "rateLimited": "Too many requests. Please wait a minute and try again.",
+    "rateLimited": "Too many requests right now. Please try again later.",
     "validation": "Check the prices, quantities and dates, then try again.",
     "error": "Something went wrong. Please try again."
   },
