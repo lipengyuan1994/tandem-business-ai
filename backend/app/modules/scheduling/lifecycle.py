@@ -14,11 +14,15 @@ from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
 from .models import Appointment, AppointmentResource, AvailabilityException, AvailabilityRule, Resource, ResourceService
+from .self_service_models import SelfServiceChange, SelfServiceSession, SelfServiceToken
 
 
 def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
     tables = stream_models(
         db, ctx, [Resource, ResourceService, AvailabilityRule, AvailabilityException, Appointment, AppointmentResource]
+    )
+    tables.update(
+        stream_models(db, ctx, [SelfServiceChange, SelfServiceSession, SelfServiceToken], exclude={"token_hash"})
     )
     return export_tables(tables, streaming=streaming)
 
@@ -49,6 +53,14 @@ def check(db: Session, ctx: Context, target: ErasureTarget) -> list[str]:
 
 def erase(db: Session, ctx: Context, target: ErasureTarget) -> dict[str, int]:
     """Appointments stay (times, services, resources); notes and cancellation reasons about the person are removed."""
+    from .self_service import revoke
+
+    revoke(db, ctx, target.customer_id)
+    db.execute(
+        update(SelfServiceChange)
+        .where(SelfServiceChange.business_id == ctx.business_id, SelfServiceChange.customer_id == target.customer_id)
+        .values(fee_text=None)
+    )
     result = db.execute(
         update(Appointment)
         .where(

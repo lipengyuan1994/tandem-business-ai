@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from migrations.helpers import scoped_columns, scoped_table, composite_fk
 
 revision = "20261106_1400_dental"
-down_revision = "20261106_1200_customer_care"
+down_revision = "20261106_1300_knowledge_embeddings"
 branch_labels = None
 depends_on = None
 

@@ -19,7 +19,7 @@ from app.platform.registry import ErasureTarget
 from .models import DeliveryAttempt, InAppNotification, OutboxMessage
 
 # Capability links are credentials and are left out of the export.
-SECRET_VARIABLES = frozenset({"unsubscribe_url", "unsubscribe_token", "quote_url"})
+SECRET_VARIABLES = frozenset({"unsubscribe_url", "unsubscribe_token", "quote_url", "link"})
 
 
 def _procurement_message() -> ColumnElement[bool]:

@@ -155,3 +155,13 @@ Reviewer reports freeing shared 3.9 GB tmpfs after the earlier interrupted full 
 No full backend or make check rerun, as instructed. Final scoped Ruff/format and mypy passed. Prior frontend full
 suite 454 passed; prior offline deployment checks (106, 19 skipped), licenses and secret scan passed. Extension
 creation stays idempotent; production init already installs vector (owner report). See [C2a card](cards/P10-C2a.md).
+
+## P10-C2b — 2026-11-06 (Codex)
+
+Implementation complete, uncommitted/unreleased; full check BLOCKED by PostgreSQL DiskFull. Final focused backend
+46 passed, frontend 482 passed; lint/format/mypy/typecheck/build/API regen pass. Full run: 1,976 passed, 74 failed,
+684 errors; first error is DiskFull in an existing knowledge test teardown. At 23:50 UTC `smb_c2b` was left at
+20261028_1200_regulated_hardening after migration restore failures. Restore shared PostgreSQL storage, then upgrade
+only smb_c2b to head and rerun full make check. No Docker/repair attempted. Caddy live headers/browser/SMTP remain
+reviewer checks. Independent offline deploy checks (108, 19 skipped), licences and Gitleaks pass.
+Contract, files, decisions, exact evidence: [P10-C2b](cards/P10-C2b.md).

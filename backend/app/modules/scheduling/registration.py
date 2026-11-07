@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from app.platform.registry import Registry
 
-from . import api, executors, lifecycle, service
+from . import api, executors, lifecycle, self_service_api, service
 from . import permissions as P
 
 
 def register(reg: Registry) -> None:
     reg.add_permissions(P.ALL)
     reg.add_router(api.router, "/scheduling", ["scheduling"])
+    reg.add_router(self_service_api.router, "/public", ["public"])
     reg.add_router(api.public_router, "/public", ["public"])
     reg.add_export_handler("scheduling", lifecycle.export)
     reg.add_erasure_handler("scheduling", lifecycle.erase)

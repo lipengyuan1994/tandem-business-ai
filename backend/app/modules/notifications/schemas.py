@@ -48,3 +48,12 @@ class NotificationOut(BaseModel):
 class NotificationList(BaseModel):
     items: list[NotificationOut]
     unread: int
+
+
+class SimulatedEmail(BaseModel):
+    id: uuid.UUID
+    recipient: str | None
+    subject: str | None
+    body: str
+    created_at: datetime
+    status: str

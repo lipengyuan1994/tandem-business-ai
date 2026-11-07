@@ -27,3 +27,7 @@ hand-over message. PublicProfileOut.ai_greeting discloses the business's AI assi
 P10-B2: `checkin_delay_days=2` (zero off), quiet start/end hours (20/8), and care tone. Public profile supports validated optional review_url/booking_url; `customer_care_profile` exposes only these links and avoid_medical_details.
 
 P10-E1: emergency_handling defaults off; emergency_instructions is public visitor text. Seed-only business synthetic_demo supplies synthetic_demo_banner in business/settings/public-profile responses; normal write DTOs reject the marker. Regulated seed refuses before reset; API lifespan checks a boolean-only security-definer function across RLS. `get_location` is a scoped public reader. avoid_medical_details also respects the business profile in standard installs.
+
+P10-C2b: exact normalized `embed_allowed_origins` (≤10; dev HTTP localhost origins), button label,
+self-service default-off, notice hours=24 and optional fee text. `embed.py` supplies a fail-closed CSP to Caddy
+forward_auth and an allowlisted public button config. `get_location` exposes a scoped location DTO to scheduling.

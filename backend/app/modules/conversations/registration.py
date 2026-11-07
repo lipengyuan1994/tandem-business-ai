@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from app.platform.registry import Registry
 
-from . import api, executors, lifecycle, publication, service
+from . import api, embed, executors, lifecycle, publication, service
 from . import permissions as P
 
 
 def register(reg: Registry) -> None:
     reg.add_permissions(P.ALL)
     reg.add_router(api.router, "/conversations", ["conversations"])
+    reg.add_router(embed.router, "/public", ["public"])
     reg.add_router(api.public_router, "/public", ["public"])
     reg.add_executor(executors.SEND_REPLY)
     reg.add_job("conversations.publish_reply", publication.publish)

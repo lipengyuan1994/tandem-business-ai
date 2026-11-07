@@ -20,7 +20,7 @@ function ContactConsent({ checked, onChange }: { checked: boolean; onChange: (ch
   </>
 }
 
-export function Widget({ slug, page }: { slug: string; page: "chat" | "request" }) {
+export function Widget({ slug, page, compact = false }: { slug: string; page: "chat" | "request"; compact?: boolean }) {
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
   const [profileError, setProfileError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -31,7 +31,7 @@ export function Widget({ slug, page }: { slug: string; page: "chat" | "request" 
   if (profile === undefined) return <p className="p-6 text-sm">{S.loading}</p>
   if (profile === null) return <main className="space-y-3 p-6"><h1 className="text-xl font-semibold">{S.contactTitle}</h1><p role="alert">{profileError}</p><button className={button} onClick={() => setAttempt(attempt + 1)}>{S.retry}</button></main>
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-4 sm:p-6">
+    <main className={compact ? "space-y-3 p-3" : "mx-auto max-w-lg space-y-6 p-4 sm:p-6"}>
       <h1 className="text-xl font-semibold">{page === "chat" ? S.chatTitle(profile.name) : S.requestTitle(profile.name)}</h1>
       {profile.synthetic_demo_banner ? <aside role="note" className="rounded-md border border-amber-500/60 p-3 text-sm">{profile.synthetic_demo_banner}</aside> : null}
       {profile.emergency_handling ? <p role="note" className="rounded-md border p-3 text-sm">{profile.emergency_instructions}</p> : null}

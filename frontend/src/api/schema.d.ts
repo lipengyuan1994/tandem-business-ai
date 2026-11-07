@@ -1761,6 +1761,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications/simulated-emails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Simulated e-mails from the last 24 hours */
+        get: operations["simulated_emails_api_v1_notifications_simulated_emails_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications/{notification_id}/read": {
         parameters: {
             query?: never;
@@ -1954,6 +1971,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/{business_slug}/embed-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Config */
+        get: operations["config_api_v1_public__business_slug__embed_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/embed/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["read_api_v1_public__business_slug__embed_chat_get"];
+        put?: never;
+        /** Start */
+        post: operations["start_api_v1_public__business_slug__embed_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/embed/chat/handoff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Handoff */
+        post: operations["handoff_api_v1_public__business_slug__embed_chat_handoff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/embed/chat/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Message */
+        post: operations["message_api_v1_public__business_slug__embed_chat_messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/{business_slug}/profile": {
         parameters: {
             query?: never;
@@ -1965,6 +2051,108 @@ export interface paths {
         get: operations["public_profile_api_v1_public__business_slug__profile_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/self-service/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bookings */
+        get: operations["bookings_api_v1_public__business_slug__self_service_bookings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/self-service/bookings/{appointment_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_api_v1_public__business_slug__self_service_bookings__appointment_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/self-service/bookings/{appointment_id}/reschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reschedule */
+        post: operations["reschedule_api_v1_public__business_slug__self_service_bookings__appointment_id__reschedule_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/self-service/bookings/{appointment_id}/slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Slots */
+        get: operations["slots_api_v1_public__business_slug__self_service_bookings__appointment_id__slots_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/self-service/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange */
+        post: operations["exchange_api_v1_public__business_slug__self_service_exchange_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/{business_slug}/self-service/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Link */
+        post: operations["request_link_api_v1_public__business_slug__self_service_request_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3622,6 +3810,13 @@ export interface components {
              * @default 60
              */
             booking_lead_time_minutes: number;
+            /** Cancellation Fee Text */
+            cancellation_fee_text?: string | null;
+            /**
+             * Cancellation Notice Hours
+             * @default 24
+             */
+            cancellation_notice_hours: number;
             /**
              * Checkin Delay Days
              * @default 2
@@ -3643,6 +3838,13 @@ export interface components {
              * @enum {string}
              */
             customer_care_tone: "warm" | "formal" | "concise";
+            /** Embed Allowed Origins */
+            embed_allowed_origins?: string[];
+            /**
+             * Embed Button Label
+             * @default Chat with us
+             */
+            embed_button_label: string;
             /**
              * Emergency Handling
              * @default false
@@ -3683,6 +3885,11 @@ export interface components {
              * @default 0
              */
             sales_tax_rate: number | string;
+            /**
+             * Self Service Enabled
+             * @default false
+             */
+            self_service_enabled: boolean;
             /**
              * Slot Granularity Minutes
              * @default 15
@@ -3729,6 +3936,13 @@ export interface components {
              * @default 60
              */
             booking_lead_time_minutes: number;
+            /** Cancellation Fee Text */
+            cancellation_fee_text?: string | null;
+            /**
+             * Cancellation Notice Hours
+             * @default 24
+             */
+            cancellation_notice_hours: number;
             /**
              * Checkin Delay Days
              * @default 2
@@ -3750,6 +3964,13 @@ export interface components {
              * @enum {string}
              */
             customer_care_tone: "warm" | "formal" | "concise";
+            /** Embed Allowed Origins */
+            embed_allowed_origins?: string[];
+            /**
+             * Embed Button Label
+             * @default Chat with us
+             */
+            embed_button_label: string;
             /**
              * Emergency Handling
              * @default false
@@ -3790,6 +4011,11 @@ export interface components {
              * @default 0
              */
             sales_tax_rate: string;
+            /**
+             * Self Service Enabled
+             * @default false
+             */
+            self_service_enabled: boolean;
             /**
              * Slot Granularity Minutes
              * @default 15
@@ -4504,6 +4730,47 @@ export interface components {
             /** Quote Version */
             quote_version: number;
         };
+        /** CustomerBooking */
+        CustomerBooking: {
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Fee Required */
+            fee_required: boolean;
+            /** Fee Text */
+            fee_text: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Local Time */
+            local_time: string;
+            /** Location */
+            location: string;
+            /** Service Name */
+            service_name: string;
+            /** Staff Name */
+            staff_name?: string | null;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Status */
+            status: string;
+            /** Timezone */
+            timezone: string;
+            /** Version */
+            version: number;
+        };
+        /** CustomerBookings */
+        CustomerBookings: {
+            /** Items */
+            items: components["schemas"]["CustomerBooking"][];
+        };
         /** CustomerCandidate */
         CustomerCandidate: {
             /**
@@ -4520,6 +4787,18 @@ export interface components {
             reason: "email" | "phone" | "name";
             /** Score */
             score: number;
+        };
+        /** CustomerChange */
+        CustomerChange: {
+            /** Acknowledged Fee Text */
+            acknowledged_fee_text?: string | null;
+            /**
+             * Fee Acknowledged
+             * @default false
+             */
+            fee_acknowledged: boolean;
+            /** Version */
+            version: number;
         };
         /** CustomerCreate */
         CustomerCreate: {
@@ -4700,6 +4979,48 @@ export interface components {
             items: components["schemas"]["CustomerListItem"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** CustomerReschedule */
+        CustomerReschedule: {
+            /** Acknowledged Fee Text */
+            acknowledged_fee_text?: string | null;
+            /**
+             * Fee Acknowledged
+             * @default false
+             */
+            fee_acknowledged: boolean;
+            /**
+             * Resource Id
+             * Format: uuid
+             */
+            resource_id: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Version */
+            version: number;
+        };
+        /** CustomerSlot */
+        CustomerSlot: {
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Local Label */
+            local_label: string;
+            /**
+             * Resource Id
+             * Format: uuid
+             */
+            resource_id: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
         };
         /** CustomerUpdate */
         CustomerUpdate: {
@@ -4945,6 +5266,13 @@ export interface components {
             configured: boolean;
             /** Host */
             host: string | null;
+        };
+        /** EmbedConfig */
+        EmbedConfig: {
+            /** Allowed Origins */
+            allowed_origins: string[];
+            /** Label */
+            label: string;
         };
         /**
          * ErasureIn
@@ -5277,6 +5605,19 @@ export interface components {
             tax_rate: string;
             /** Unit Price Minor */
             unit_price_minor: number;
+        };
+        /** LinkExchange */
+        LinkExchange: {
+            /** Token */
+            token: string;
+        };
+        /** LinkRequest */
+        LinkRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
         };
         /** LocationCreate */
         LocationCreate: {
@@ -6063,6 +6404,11 @@ export interface components {
             ai_policy: "hosted_vultr" | "hosted_any" | "strict_private";
             /** Avoid Medical Details */
             avoid_medical_details: boolean;
+            /**
+             * Embed Button Label
+             * @default Chat with us
+             */
+            embed_button_label: string;
             /**
              * Emergency Handling
              * @default false
@@ -6987,6 +7333,27 @@ export interface components {
              * @default 0
              */
             would_act: number;
+        };
+        /** SimulatedEmail */
+        SimulatedEmail: {
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Recipient */
+            recipient: string | null;
+            /** Status */
+            status: string;
+            /** Subject */
+            subject: string | null;
         };
         /** SlotOut */
         SlotOut: {
@@ -15617,6 +15984,26 @@ export interface operations {
             };
         };
     };
+    simulated_emails_api_v1_notifications_simulated_emails_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulatedEmail"][];
+                };
+            };
+        };
+    };
     read_one_api_v1_notifications__notification_id__read_post: {
         parameters: {
             query?: never;
@@ -16740,6 +17127,179 @@ export interface operations {
             };
         };
     };
+    config_api_v1_public__business_slug__embed_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmbedConfig"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_api_v1_public__business_slug__embed_chat_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+            };
+            header?: {
+                "x-embed-token"?: string | null;
+            };
+            path: {
+                business_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicThreadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_api_v1_public__business_slug__embed_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicChatStart"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicThreadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    handoff_api_v1_public__business_slug__embed_chat_handoff_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-embed-token"?: string | null;
+            };
+            path: {
+                business_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicThreadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    message_api_v1_public__business_slug__embed_chat_messages_post: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+            };
+            header?: {
+                "x-embed-token"?: string | null;
+            };
+            path: {
+                business_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicMessageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicThreadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     public_profile_api_v1_public__business_slug__profile_get: {
         parameters: {
             query?: never;
@@ -16758,6 +17318,218 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bookings_api_v1_public__business_slug__self_service_bookings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerBookings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_public__business_slug__self_service_bookings__appointment_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_slug: string;
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerBooking"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reschedule_api_v1_public__business_slug__self_service_bookings__appointment_id__reschedule_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_slug: string;
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerReschedule"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerBooking"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    slots_api_v1_public__business_slug__self_service_bookings__appointment_id__slots_get: {
+        parameters: {
+            query: {
+                earliest: string;
+                latest: string;
+            };
+            header?: never;
+            path: {
+                business_slug: string;
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerSlot"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exchange_api_v1_public__business_slug__self_service_exchange_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkExchange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_link_api_v1_public__business_slug__self_service_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                business_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
             /** @description Validation Error */

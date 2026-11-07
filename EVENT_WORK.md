@@ -231,3 +231,15 @@ PDF cases, platform policy, retrieval races, AI lane and admin export. Scoped Ru
 Prior frontend 454 passed. Earlier full check interrupted by DiskFull/recovery (760 passed, 26 failed, 43 errors);
 per owner, no full backend/make check rerun. Full merge gates, Linux-image limits and live evals remain reviewer work.
 See `docs/roadmap/ai/cards/P10-C2a.md`.
+
+## 2026-11-06 — P10-C2b embed and customer self-service (Codex)
+
+Implemented tenant CSP embed routing, vanilla loader (1,680 bytes gzip), iframe header-token chat, magic-link
+self-service/Strict idle sessions, fee acknowledgment, canonical rescheduling, notifications, simulated-mail owner/admin
+view, RLS migration/exports/erasure and frontend/settings/MSW coverage. No installs/downloads, external calls, Docker,
+commits or deployment. Focused backend 46 pass; frontend 482 pass; lint/format/mypy/typecheck/build/API regen pass.
+Full make check blocked: PostgreSQL DiskFull during existing knowledge teardown, then schema-restoration errors;
+1,976 passed, 74 failed, 684 errors. Readback at 23:50 UTC: smb_c2b at 20261028_1200_regulated_hardening (38 MB).
+Owner asked to restore database storage; no repair attempted. Independent offline deploy checks (108 tests,
+19 skipped), backend/frontend licences and Gitleaks pass. Live Caddy/browser/SMTP and full re-verification remain.
+Files, decisions, requirements/evidence and follow-up: [P10-C2b card](docs/roadmap/ai/cards/P10-C2b.md).

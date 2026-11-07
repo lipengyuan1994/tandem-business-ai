@@ -49,3 +49,7 @@ guard allows a human-approved complaint reply in human mode while freshness, res
 Customer linking calls the registered Care hook under customer→conversation locks to bind open anonymous cases.
 
 P10-E1: locale emergency keywords run synchronously on inbound visitor/customer messages when enabled. Emergency hand-over upgrades existing hand-overs, pauses AI, emits deterministic clinic instructions, notifies staff, and exposes urgent Work items through the public facade. Retries are episode-idempotent. Staff hand-back clears the emergency marker; the next inbound message is screened again.
+
+P10-C2b: `embed.py` adds `/public/{slug}/embed/chat{,/messages,/handoff}` using the same services, disclosure,
+projection and quotas. Capability in `X-Embed-Token` (iframe sessionStorage/memory), never an embed cookie;
+mutations require our exact application Origin. Existing first-party Secure/HttpOnly/Lax cookie is unchanged.

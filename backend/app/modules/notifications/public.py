@@ -40,3 +40,20 @@ def current_delivery_status(db: Session, ctx: Context, outbox_id: uuid.UUID) -> 
         )
         .with_for_update(read=True)
     )
+
+
+def notify_permission(
+    db: Session, ctx: Context, permission: str, *, kind: str, title: str, body: str, link: str
+) -> None:
+    """Notify active staff with a current permission without exposing identity internals to callers."""
+    from app.modules.identity import public as identity
+
+    notify_users(
+        db,
+        ctx,
+        [u.id for u in identity.list_users_with_permission(db, ctx, permission)],
+        kind=kind,
+        title=title,
+        body=body,
+        link=link,
+    )

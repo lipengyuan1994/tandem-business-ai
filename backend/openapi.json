@@ -1730,6 +1730,25 @@
             "title": "Booking Lead Time Minutes",
             "type": "integer"
           },
+          "cancellation_fee_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Fee Text"
+          },
+          "cancellation_notice_hours": {
+            "default": 24,
+            "maximum": 8760.0,
+            "minimum": 0.0,
+            "title": "Cancellation Notice Hours",
+            "type": "integer"
+          },
           "checkin_delay_days": {
             "default": 2,
             "maximum": 365.0,
@@ -1759,6 +1778,21 @@
               "concise"
             ],
             "title": "Customer Care Tone",
+            "type": "string"
+          },
+          "embed_allowed_origins": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Embed Allowed Origins",
+            "type": "array"
+          },
+          "embed_button_label": {
+            "default": "Chat with us",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Embed Button Label",
             "type": "string"
           },
           "emergency_handling": {
@@ -1818,6 +1852,11 @@
             ],
             "default": "0",
             "title": "Sales Tax Rate"
+          },
+          "self_service_enabled": {
+            "default": false,
+            "title": "Self Service Enabled",
+            "type": "boolean"
           },
           "slot_granularity_minutes": {
             "default": 15,
@@ -1908,6 +1947,25 @@
             "title": "Booking Lead Time Minutes",
             "type": "integer"
           },
+          "cancellation_fee_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancellation Fee Text"
+          },
+          "cancellation_notice_hours": {
+            "default": 24,
+            "maximum": 8760.0,
+            "minimum": 0.0,
+            "title": "Cancellation Notice Hours",
+            "type": "integer"
+          },
           "checkin_delay_days": {
             "default": 2,
             "maximum": 365.0,
@@ -1937,6 +1995,21 @@
               "concise"
             ],
             "title": "Customer Care Tone",
+            "type": "string"
+          },
+          "embed_allowed_origins": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Embed Allowed Origins",
+            "type": "array"
+          },
+          "embed_button_label": {
+            "default": "Chat with us",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Embed Button Label",
             "type": "string"
           },
           "emergency_handling": {
@@ -1987,6 +2060,11 @@
             "default": "0",
             "title": "Sales Tax Rate",
             "type": "string"
+          },
+          "self_service_enabled": {
+            "default": false,
+            "title": "Self Service Enabled",
+            "type": "boolean"
           },
           "slot_granularity_minutes": {
             "default": 15,
@@ -4028,6 +4106,106 @@
         "title": "CreatePOFromQuote",
         "type": "object"
       },
+      "CustomerBooking": {
+        "properties": {
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "fee_required": {
+            "title": "Fee Required",
+            "type": "boolean"
+          },
+          "fee_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fee Text"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "local_time": {
+            "title": "Local Time",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "service_name": {
+            "title": "Service Name",
+            "type": "string"
+          },
+          "staff_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Name"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "service_name",
+          "starts_at",
+          "ends_at",
+          "timezone",
+          "local_time",
+          "location",
+          "status",
+          "version",
+          "fee_required",
+          "fee_text"
+        ],
+        "title": "CustomerBooking",
+        "type": "object"
+      },
+      "CustomerBookings": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CustomerBooking"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CustomerBookings",
+        "type": "object"
+      },
       "CustomerCandidate": {
         "properties": {
           "customer_id": {
@@ -4060,6 +4238,38 @@
           "reason"
         ],
         "title": "CustomerCandidate",
+        "type": "object"
+      },
+      "CustomerChange": {
+        "additionalProperties": false,
+        "properties": {
+          "acknowledged_fee_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acknowledged Fee Text"
+          },
+          "fee_acknowledged": {
+            "default": false,
+            "title": "Fee Acknowledged",
+            "type": "boolean"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "CustomerChange",
         "type": "object"
       },
       "CustomerCreate": {
@@ -4661,6 +4871,81 @@
           "next_cursor"
         ],
         "title": "CustomerPage",
+        "type": "object"
+      },
+      "CustomerReschedule": {
+        "additionalProperties": false,
+        "properties": {
+          "acknowledged_fee_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acknowledged Fee Text"
+          },
+          "fee_acknowledged": {
+            "default": false,
+            "title": "Fee Acknowledged",
+            "type": "boolean"
+          },
+          "resource_id": {
+            "format": "uuid",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "starts_at",
+          "resource_id"
+        ],
+        "title": "CustomerReschedule",
+        "type": "object"
+      },
+      "CustomerSlot": {
+        "properties": {
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "local_label": {
+            "title": "Local Label",
+            "type": "string"
+          },
+          "resource_id": {
+            "format": "uuid",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "starts_at",
+          "ends_at",
+          "resource_id",
+          "local_label"
+        ],
+        "title": "CustomerSlot",
         "type": "object"
       },
       "CustomerUpdate": {
@@ -5460,6 +5745,27 @@
           "host"
         ],
         "title": "EmailStatus",
+        "type": "object"
+      },
+      "EmbedConfig": {
+        "properties": {
+          "allowed_origins": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allowed Origins",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "allowed_origins"
+        ],
+        "title": "EmbedConfig",
         "type": "object"
       },
       "ErasureIn": {
@@ -6336,6 +6642,39 @@
           "id"
         ],
         "title": "LineOut",
+        "type": "object"
+      },
+      "LinkExchange": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "maxLength": 43,
+            "minLength": 43,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "LinkExchange",
+        "type": "object"
+      },
+      "LinkRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "maxLength": 320,
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "LinkRequest",
         "type": "object"
       },
       "LocationCreate": {
@@ -8596,6 +8935,11 @@
           "avoid_medical_details": {
             "title": "Avoid Medical Details",
             "type": "boolean"
+          },
+          "embed_button_label": {
+            "default": "Chat with us",
+            "title": "Embed Button Label",
+            "type": "string"
           },
           "emergency_handling": {
             "default": false,
@@ -10958,6 +11302,60 @@
           }
         },
         "title": "ShadowSummary",
+        "type": "object"
+      },
+      "SimulatedEmail": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          }
+        },
+        "required": [
+          "id",
+          "recipient",
+          "subject",
+          "body",
+          "created_at",
+          "status"
+        ],
+        "title": "SimulatedEmail",
         "type": "object"
       },
       "SlotOut": {
@@ -21508,6 +21906,31 @@
         ]
       }
     },
+    "/api/v1/notifications/simulated-emails": {
+      "get": {
+        "operationId": "simulated_emails_api_v1_notifications_simulated_emails_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SimulatedEmail"
+                  },
+                  "title": "Response Simulated Emails Api V1 Notifications Simulated Emails Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Simulated e-mails from the last 24 hours",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
     "/api/v1/notifications/{notification_id}/read": {
       "post": {
         "operationId": "read_one_api_v1_notifications__notification_id__read_post",
@@ -22650,6 +23073,314 @@
         ]
       }
     },
+    "/api/v1/public/{business_slug}/embed-config": {
+      "get": {
+        "operationId": "config_api_v1_public__business_slug__embed_config_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbedConfig"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Config",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/embed/chat": {
+      "get": {
+        "operationId": "read_api_v1_public__business_slug__embed_chat_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-embed-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Embed-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicThreadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read",
+        "tags": [
+          "public"
+        ]
+      },
+      "post": {
+        "operationId": "start_api_v1_public__business_slug__embed_chat_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicChatStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicThreadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/embed/chat/handoff": {
+      "post": {
+        "operationId": "handoff_api_v1_public__business_slug__embed_chat_handoff_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-embed-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Embed-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicThreadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Handoff",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/embed/chat/messages": {
+      "post": {
+        "operationId": "message_api_v1_public__business_slug__embed_chat_messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-embed-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Embed-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicMessageIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicThreadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Message",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/api/v1/public/{business_slug}/profile": {
       "get": {
         "operationId": "public_profile_api_v1_public__business_slug__profile_get",
@@ -22687,6 +23418,360 @@
           }
         },
         "summary": "Public business profile",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/self-service/bookings": {
+      "get": {
+        "operationId": "bookings_api_v1_public__business_slug__self_service_bookings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerBookings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bookings",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/self-service/bookings/{appointment_id}/cancel": {
+      "post": {
+        "operationId": "cancel_api_v1_public__business_slug__self_service_bookings__appointment_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerBooking"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/self-service/bookings/{appointment_id}/reschedule": {
+      "post": {
+        "operationId": "reschedule_api_v1_public__business_slug__self_service_bookings__appointment_id__reschedule_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerReschedule"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerBooking"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reschedule",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/self-service/bookings/{appointment_id}/slots": {
+      "get": {
+        "operationId": "slots_api_v1_public__business_slug__self_service_bookings__appointment_id__slots_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "earliest",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Earliest",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "latest",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Latest",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerSlot"
+                  },
+                  "title": "Response Slots Api V1 Public  Business Slug  Self Service Bookings  Appointment Id  Slots Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Slots",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/self-service/exchange": {
+      "post": {
+        "operationId": "exchange_api_v1_public__business_slug__self_service_exchange_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkExchange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Exchange Api V1 Public  Business Slug  Self Service Exchange Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Exchange",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/{business_slug}/self-service/request": {
+      "post": {
+        "operationId": "request_link_api_v1_public__business_slug__self_service_request_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "business_slug",
+            "required": true,
+            "schema": {
+              "title": "Business Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Request Link Api V1 Public  Business Slug  Self Service Request Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Link",
         "tags": [
           "public"
         ]

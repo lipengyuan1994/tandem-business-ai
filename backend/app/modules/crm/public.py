@@ -227,3 +227,43 @@ __all__ = [
     "record_request_contact_consent",
     "update_customer",
 ]
+
+
+def self_service_customer(db: Session, ctx: Context, customer_id: uuid.UUID) -> str | None:
+    """Active, unrestricted customer, locked against lifecycle changes. No consent to marketing required."""
+    from sqlalchemy import select
+
+    from .models import Customer
+
+    try:
+        lock_customers(db, ctx, {customer_id})
+    except NotFound:
+        return None
+    row = db.scalar(select(Customer).where(Customer.business_id == ctx.business_id, Customer.id == customer_id))
+    if row is None or row.status != "active":
+        return None
+    return row.preferred_contact_channel
+
+
+def self_service_email_customer(db: Session, ctx: Context, email: str) -> uuid.UUID | None:
+    """Exact active contact match, never fuzzy candidate search; rechecks after taking the customer lock."""
+    from sqlalchemy import select
+
+    from .models import ContactPoint
+
+    normalized = normalize_contact("email", email)
+
+    def match() -> uuid.UUID | None:
+        return db.scalar(
+            select(ContactPoint.customer_id).where(
+                ContactPoint.business_id == ctx.business_id,
+                ContactPoint.type == "email",
+                ContactPoint.value_normalized == normalized,
+                ContactPoint.is_active.is_(True),
+            )
+        )
+
+    cid = match()
+    if cid is None or self_service_customer(db, ctx, cid) != "email" or match() != cid:
+        return None
+    return cid

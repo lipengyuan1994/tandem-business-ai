@@ -9,7 +9,7 @@ from sqlalchemy import text
 from app.platform.db import get_engine
 from app.platform.registry import Registry
 
-from . import api, lifecycle
+from . import api, embed, lifecycle
 from . import permissions as P
 
 
@@ -21,6 +21,8 @@ def resolve_public_business(slug: str) -> UUID | None:
 
 
 def register(reg: Registry) -> None:
+    reg.add_public_route("/api/v1/public/embed-policy")
+    reg.add_router(embed.router, "/public", ["public"])
     reg.add_permissions(P.ALL)
     reg.add_router(api.router, "/org", ["org"])
     reg.add_router(api.public_router, "/public", ["public"])
