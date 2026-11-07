@@ -26,6 +26,7 @@ FIELDS = [
     "buffer_minutes",
     "is_bookable_online",
     "recall_interval_months",
+    "required_resources",
 ]
 
 
@@ -97,6 +98,15 @@ def create_item(db: Session, ctx: Context, data: CatalogItemCreate) -> CatalogIt
 def update_item(db: Session, ctx: Context, item_id: uuid.UUID, data: CatalogItemUpdate) -> CatalogItem:
     ctx.require(P.ITEM_WRITE)
     before = _item(db, ctx, item_id)
+    from .schemas import validate_requirements
+
+    if "required_resources" in data.model_fields_set:
+        try:
+            validate_requirements(data.required_resources, before.resource_kind)
+        except ValueError as exc:
+            raise Invalid("catalog.invalid_requirements", detail=str(exc)) from exc
+        if before.kind != "service" and data.required_resources:
+            raise Invalid("catalog.invalid_requirements")
     if before.kind == "product" and data.recall_interval_months is not None:
         raise Invalid("catalog.product_has_no_recall")
     snapshot = {f: getattr(before, f) for f in FIELDS}
@@ -199,6 +209,8 @@ def requirements(db: Session, ctx: Context, service_id: uuid.UUID) -> ServiceReq
         service_id=s.id,
         name=s.name,
         duration_minutes=s.duration_minutes,
+        recall_interval_months=s.recall_interval_months,
+        required_resources=s.required_resources,
         buffer_minutes=s.buffer_minutes,
         resource_kind=s.resource_kind,
         price_minor=s.price_minor,

@@ -109,7 +109,7 @@ def test_creates_logins_for_exactly_the_demo_staff(
 ) -> None:
     out = tmp_path / "logins.txt"
     run(out)
-    assert sorted(keycloak.created_emails) == sorted(ALL_DEMO_STAFF) and len(keycloak.created_emails) == 8
+    assert sorted(keycloak.created_emails) == sorted(ALL_DEMO_STAFF) and len(keycloak.created_emails) == 11
     # Morgan is on two businesses and has one login
     assert keycloak.created_emails.count("morgan@example.com") == 1
     created = {c["email"]: c for c in keycloak.created}
@@ -120,7 +120,7 @@ def test_creates_logins_for_exactly_the_demo_staff(
 
     shown = capsys.readouterr().out
     assert str(out) in shown and all(email in shown for email in ALL_DEMO_STAFF)
-    assert "8 created" in shown
+    assert "11 created" in shown
 
 
 def test_people_outside_the_fixtures_and_other_businesses_get_nothing(
@@ -265,7 +265,7 @@ def test_passwords_go_to_a_mode_600_file_and_nowhere_else(
     run(out)
     run(out, "--reset-passwords")  # the second way a password is issued
     passwords = [c["password"] for c in keycloak.created] + [r["password"] for r in keycloak.resets]
-    assert len(passwords) == 16 and all(len(p) >= 16 for p in passwords)
+    assert len(passwords) == 22 and all(len(p) >= 16 for p in passwords)
 
     assert stat.S_IMODE(out.stat().st_mode) == 0o600
     stored = read_file(out)
@@ -353,7 +353,7 @@ def test_a_second_run_changes_nothing(
     shown = capsys.readouterr().out
     assert len(keycloak.created) == first_calls and keycloak.resets == []
     assert out.read_bytes() == first_file
-    assert "0 created, 0 password reset, 8 already existed" in shown and "unchanged" in shown
+    assert "0 created, 0 password reset, 11 already existed" in shown and "unchanged" in shown
     assert "--reset-passwords" in shown
 
 
@@ -404,7 +404,7 @@ def test_a_failure_part_way_keeps_the_passwords_already_issued(
     with pytest.raises(SystemExit, match=r"stopped: identity.keycloak_unavailable \(create user: HTTP 500\)"):
         run(out)
     done = keycloak.created_emails
-    assert done and "quinn@example.com" not in done and len(done) < 8
+    assert done and "quinn@example.com" not in done and len(done) < 11
     assert set(read_file(out)) == set(done)  # every account that exists has its password on file
     assert all(read_file(out)[e] == keycloak.passwords[e] for e in done)
     shown = capsys.readouterr().out
@@ -412,7 +412,7 @@ def test_a_failure_part_way_keeps_the_passwords_already_issued(
     # run again once Keycloak is back: only the missing accounts are created, the file keeps the earlier lines
     keycloak.fail_for.clear()
     run(out)
-    assert set(read_file(out)) == ALL_DEMO_STAFF and len(keycloak.created) == 8
+    assert set(read_file(out)) == ALL_DEMO_STAFF and len(keycloak.created) == 11
 
 
 def test_a_person_who_cannot_sign_in_is_reported_and_the_status_is_not_success(
@@ -426,7 +426,7 @@ def test_a_person_who_cannot_sign_in_is_reported_and_the_status_is_not_success(
     assert stop.value.code == 1
     shown = capsys.readouterr().out
     assert "not usable: morgan@example.com: signed in before, but its Keycloak account no longer exists" in shown
-    assert "morgan@example.com" not in keycloak.created_emails and len(keycloak.created_emails) == 7
+    assert "morgan@example.com" not in keycloak.created_emails and len(keycloak.created_emails) == 10
 
 
 def test_a_disabled_user_and_a_removed_member_are_skipped_with_a_reason(

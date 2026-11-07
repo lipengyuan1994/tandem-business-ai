@@ -79,7 +79,7 @@ export function SlotFinder({ localDate, timeZone, onPick, pending, error, initia
                   <li key={`${s.resource_id}-${s.starts_at}`}>
                     <Button type="button" variant="outline" size="sm" disabled={!customerId || pending}
                       onClick={() => onPick({ service_id: serviceId, customer_id: customerId, slot: s })}>
-                      {s.local_label} · {s.resource_name}
+                      {s.local_label} · {s.resources?.length ? s.resources.map((r) => r.resource_name).join(" + ") : s.resource_name}
                     </Button>
                   </li>
                 ))}

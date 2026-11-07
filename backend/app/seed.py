@@ -63,9 +63,9 @@ from app.modules.sales import service as sales
 from app.modules.sales import service_creation as sales_creation
 from app.modules.sales.schemas import DocumentCreate, LineIn
 from app.modules.scheduling import service as scheduling
-from app.modules.scheduling.schemas import BookingRequest, ResourceIn, RuleIn
+from app.modules.scheduling.schemas import ResourceIn, RuleIn
 from app.platform import clock
-from app.platform.config import get_settings
+from app.platform.config import get_settings, is_regulated
 from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.ids import fixture_id
@@ -405,6 +405,8 @@ def _seed_quote_request(
 
 
 def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) -> dict[str, int]:
+    if is_regulated() and b.get("synthetic_demo"):
+        raise SystemExit("DATA_PROFILE=regulated refuses synthetic demo businesses")
     key = b["id"]
     business_id = fixture_id(key)
     ctx = _ctx(business_id)
@@ -414,6 +416,9 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
         org.create_business(
             db, ctx, name=b["name"], slug=b["slug"], timezone=b["timezone"], currency=b["currency"], locale=b["locale"]
         )
+        from app import seed_dental
+
+        seed_dental.configure(db, ctx, b)
         default = org.get_default_location(db, ctx)
         for loc in _rows(tables, "locations", key):
             if loc["is_default"]:
@@ -483,6 +488,8 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
                     "is_bookable_online",
                 )
             }
+            data["required_resources"] = json.loads(item.get("required_resources_json", "[]"))
+            data["recall_interval_months"] = item.get("recall_interval_months")
             k.ids[item["id"]] = catalog.create_item(db, ctx, CatalogItemCreate(**data)).id
         parts: dict[str, list[ServicePartIn]] = {}
         for p in _rows(tables, "service_parts", key):
@@ -590,20 +597,20 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
                 if x["resource_id"] == r["id"]
             ]
             scheduling.replace_rules(db, ctx, res.id, rules)
+        for resource in _rows(tables, "resources", key):
+            links = [
+                k[r["service_id"]]
+                for r in _rows(tables, "resource_services", key)
+                if r["resource_id"] == resource["id"]
+            ]
+            if links:
+                scheduling.replace_services(db, ctx, k[resource["id"]], links)
         for a in _rows(tables, "appointments", key):
-            # Parts are reserved by the booking itself (fixture reservations describe the same state).
-            appt = scheduling.book(
-                db,
-                ctx,
-                BookingRequest(
-                    customer_id=k[a["customer_id"]],
-                    service_id=k[a["service_id"]],
-                    resource_id=k[a["resource_id"]],
-                    starts_at=datetime.fromisoformat(a["starts_at"]),
-                    override_hours=True,
-                ),
-            )
+            appt = seed_dental.appointment(db, ctx, a, k, ZoneInfo(b["timezone"]))
             k.ids[a["id"]] = appt.id
+        if b["slug"] == "example-dental-clinic":
+            seed_dental.supplier(db, ctx, k, _rows(tables, "suppliers", key), _rows(tables, "supplier_items", key))
+            counts["suppliers"] = 1
         counts["appointments"] = len(_rows(tables, "appointments", key))
 
         messages = {m["conversation_id"]: m for m in _rows(tables, "messages", key)}
@@ -690,12 +697,21 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
     return counts
 
 
-def seed(path: Path = DEFAULT_FIXTURES, *, do_reset: bool = False) -> dict[str, dict[str, int]]:
+def seed(
+    path: Path = DEFAULT_FIXTURES, *, do_reset: bool = False, business_keys: set[str] | None = None
+) -> dict[str, dict[str, int]]:
     registry = build_registry()
     doc = json.loads(path.read_text(encoding="utf-8"))
     if doc.get("synthetic") is not True:
         raise SystemExit("refusing to seed: fixtures are not marked synthetic")
     tables = doc["tables"]
+    if business_keys is not None:
+        known = {b["id"] for b in tables["businesses"]}
+        if not business_keys or not business_keys <= known:
+            raise SystemExit("refusing to seed unknown or empty business selection")
+        tables["businesses"] = [b for b in tables["businesses"] if b["id"] in business_keys]
+    if is_regulated() and any(b.get("synthetic_demo") for b in tables["businesses"]):
+        raise SystemExit("DATA_PROFILE=regulated refuses synthetic demo businesses; no data was changed")
     business_ids = [fixture_id(b["id"]) for b in tables["businesses"]]
     if do_reset:
         reset(business_ids, [b["slug"] for b in tables["businesses"]])

@@ -127,7 +127,10 @@ def main(argv: list[str] | None = None) -> None:
         "--out", required=True, help="file for the passwords (mode 600); a mounted folder in a container"
     )
     logins.add_argument(
-        "--business", action="append", metavar="SLUG", help="a demo business slug (repeatable); default: both"
+        "--business",
+        action="append",
+        metavar="SLUG",
+        help="a demo business slug (repeatable); default: all demo businesses",
     )
     logins.add_argument("--email", action="append", metavar="ADDRESS", help="only this demo staff member (repeatable)")
     logins.add_argument(

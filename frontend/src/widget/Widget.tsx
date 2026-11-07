@@ -33,6 +33,8 @@ export function Widget({ slug, page }: { slug: string; page: "chat" | "request" 
   return (
     <main className="mx-auto max-w-lg space-y-6 p-4 sm:p-6">
       <h1 className="text-xl font-semibold">{page === "chat" ? S.chatTitle(profile.name) : S.requestTitle(profile.name)}</h1>
+      {profile.synthetic_demo_banner ? <aside role="note" className="rounded-md border border-amber-500/60 p-3 text-sm">{profile.synthetic_demo_banner}</aside> : null}
+      {profile.emergency_handling ? <p role="note" className="rounded-md border p-3 text-sm">{profile.emergency_instructions}</p> : null}
       {page === "chat" && profile.avoid_medical_details ? <p role="note" className="rounded-md border p-3 text-sm">Please do not send medical details here. We will contact you to discuss them.</p> : null}
       {page === "chat" ? <Chat key={slug} slug={slug} businessName={profile.name} greeting={profile.ai_greeting} /> : <Request slug={slug} />}
       <aside aria-labelledby="privacy-h" className="rounded-md border p-3 text-sm text-muted-foreground">

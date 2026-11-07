@@ -47,11 +47,11 @@ _CONVERSATIONS = (
 
 
 def seed_demo(owner_engine: Engine, at: datetime = SEED_NOW) -> Demo:
-    """Load data/fixtures.json with the clock at the scenario's reference time (the clock stays frozen there)."""
+    """Load the original two-business scenario and keep its reference clock frozen."""
     from app.seed import seed
 
     clock.set_clock(lambda: at)
-    seed()
+    seed(business_keys={"biz-cycle", "biz-garden"})
     business, other = fixture_id("biz-cycle"), fixture_id("biz-garden")
     customers = "select display_name, id from customers where business_id = :b"
     items = "select name, id from catalog_items where business_id = :b"

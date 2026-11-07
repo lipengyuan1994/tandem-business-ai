@@ -129,7 +129,7 @@ def test_intake_happy_path_existing_customer_hold_then_booking_with_reply(demo: 
     assert {e["ref_type"] for e in row["evidence"]} >= {"find_slots", "check_stock", "get_service_parts"}
     assert len(notes(demo.business, conv)) == 1
     recorded = run_row(demo.business, result)
-    assert (recorded.prompt_name, recorded.prompt_version, recorded.steps) == ("intake", 6, 8)
+    assert (recorded.prompt_name, recorded.prompt_version, recorded.steps) == ("intake", 7, 8)
 
 
 def test_intake_new_customer_booking_without_hold_uses_server_facts(demo: Demo, owner_engine: Engine) -> None:
@@ -246,8 +246,9 @@ def test_task_contains_business_local_time_and_no_contact_values(
         msg = conversations.get_message_context(db, ctx, message)
         brief = org.get_business_brief(db, ctx)
     facts = {"visitor_name": msg.visitor_name, "visitor_email": msg.visitor_email, "visitor_phone": msg.visitor_phone}
+    server_facts = {**facts, "emergency_handling": existing}
     router = fake_router_by_class()
-    state = intake.IntakeState(message, f"intake:{message}", brief, router, facts)
+    state = intake.IntakeState(message, f"intake:{message}", brief, router, server_facts)
     match = intake.CustomerMatch("matched", demo.customers["Ada Example"]) if existing else intake.CustomerMatch("new")
     captured: list[RunSpec] = []
     from app.modules.ai.agent.runner import run_agent as real_run_agent
@@ -264,7 +265,7 @@ def test_task_contains_business_local_time_and_no_contact_values(
     spec = captured[0]
     assert spec.tools == TOOLS and spec.prompt == load_prompt("intake")
     assert spec.use_case == "intake" and spec.trigger_type == "job" and spec.trigger_key == f"intake:{message}"
-    assert spec.trigger_message_id == message and spec.server_facts == facts
+    assert spec.trigger_message_id == message and spec.server_facts == server_facts
     assert expected in spec.task and "America/Denver" in spec.task and str(conv) in spec.task
     if existing:
         assert f"matched customer {match.customer_id}" in spec.task
@@ -274,8 +275,10 @@ def test_task_contains_business_local_time_and_no_contact_values(
         assert value is not None
         assert value not in spec.task
     assert {b.label for b in spec.context_blocks if not b.untrusted} == {
-        "business_brief", "opening_hours", "matched_customer", "active_services",
+        "business_brief", "emergency_handling", "opening_hours", "matched_customer", "active_services",
     }  # fmt: skip
+    # Only the trusted switch reaches this block, never clinic instructions or visitor contacts.
+    assert next(b.text for b in spec.context_blocks if b.label == "emergency_handling") == str(existing)
     assert "09:00" in next(b.text for b in spec.context_blocks if b.label == "opening_hours")
     blocks = [b for b in spec.context_blocks if b.untrusted]
     assert len(blocks) == 1 and blocks[0].source_id == message

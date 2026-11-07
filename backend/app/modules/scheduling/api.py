@@ -142,6 +142,7 @@ def slots(
     earliest: datetime,
     latest: datetime,
     resource_id: uuid.UUID | None = None,
+    location_id: uuid.UUID | None = None,
     limit: int = Query(default=10, ge=1, le=100),
     ctx: Context = Depends(require(P.APPOINTMENT_READ)),
 ) -> list[SlotOut]:
@@ -149,7 +150,14 @@ def slots(
         return service.find_slots(
             db,
             ctx,
-            SlotQuery(service_id=service_id, earliest=earliest, latest=latest, resource_id=resource_id, limit=limit),
+            SlotQuery(
+                service_id=service_id,
+                earliest=earliest,
+                latest=latest,
+                resource_id=resource_id,
+                location_id=location_id,
+                limit=limit,
+            ),
         )
 
 

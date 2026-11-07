@@ -190,3 +190,43 @@ __all__ = [
     "start_conversation",
     "take_over",
 ]
+
+
+def request_emergency_handoff(db: Session, ctx: Context, conversation_id: uuid.UUID) -> None:
+    """Trusted classifier escalation; instructions are always server-owned."""
+    from .ownership import request_handoff
+
+    request_handoff(db, ctx, conversation_id, "Emergency signal: immediate staff attention required", emergency=True)
+
+
+def emergency_queue_items(
+    db: Session, ctx: Context, *, limit: int, cursor: str | None = None
+) -> list[dict[str, object]]:
+    from sqlalchemy import tuple_
+
+    from app.platform.pagination import decode_cursor
+
+    from .models import Conversation
+
+    if not ctx.has("conversations.thread.read"):
+        return []
+    query = select(Conversation).where(
+        Conversation.business_id == ctx.business_id, Conversation.emergency.is_(True), Conversation.status != "closed"
+    )
+    if cursor:
+        at, rid = decode_cursor(cursor)
+        query = query.where(tuple_(Conversation.created_at, Conversation.id) < tuple_(at, rid))
+    rows = db.scalars(query.order_by(Conversation.created_at.desc(), Conversation.id.desc()).limit(limit))
+    return [
+        {
+            "id": c.id,
+            "kind": "emergency_handoff",
+            "title": "Emergency: immediate staff attention",
+            "created_at": c.created_at,
+            "status": c.status,
+            "priority": "urgent",
+            "conversation_id": c.id,
+            "customer_id": c.customer_id,
+        }
+        for c in rows
+    ]

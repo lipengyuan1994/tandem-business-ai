@@ -426,6 +426,30 @@
         "title": "AiStatus",
         "type": "object"
       },
+      "AllocatedResource": {
+        "properties": {
+          "resource_id": {
+            "format": "uuid",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_name": {
+            "title": "Resource Name",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "resource_id",
+          "resource_name"
+        ],
+        "title": "AllocatedResource",
+        "type": "object"
+      },
       "AppointmentOut": {
         "properties": {
           "blocked_until": {
@@ -513,6 +537,13 @@
             "default": "",
             "title": "Resource Name",
             "type": "string"
+          },
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/AllocatedResource"
+            },
+            "title": "Resources",
+            "type": "array"
           },
           "service_id": {
             "format": "uuid",
@@ -1473,6 +1504,22 @@
             "title": "Status",
             "type": "string"
           },
+          "synthetic_demo": {
+            "default": false,
+            "title": "Synthetic Demo",
+            "type": "boolean"
+          },
+          "synthetic_demo_banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Demo Banner"
+          },
           "timezone": {
             "title": "Timezone",
             "type": "string"
@@ -1582,6 +1629,18 @@
               "concise"
             ],
             "title": "Customer Care Tone",
+            "type": "string"
+          },
+          "emergency_handling": {
+            "default": false,
+            "title": "Emergency Handling",
+            "type": "boolean"
+          },
+          "emergency_instructions": {
+            "default": "Please contact the clinic immediately by phone.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Emergency Instructions",
             "type": "string"
           },
           "handoff_after_hours_text": {
@@ -1748,6 +1807,18 @@
               "concise"
             ],
             "title": "Customer Care Tone",
+            "type": "string"
+          },
+          "emergency_handling": {
+            "default": false,
+            "title": "Emergency Handling",
+            "type": "boolean"
+          },
+          "emergency_instructions": {
+            "default": "Please contact the clinic immediately by phone.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Emergency Instructions",
             "type": "string"
           },
           "handoff_after_hours_text": {
@@ -2545,6 +2616,14 @@
             ],
             "title": "Recall Interval Months"
           },
+          "required_resources": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceRequirement"
+            },
+            "maxItems": 3,
+            "title": "Required Resources",
+            "type": "array"
+          },
           "resource_kind": {
             "anyOf": [
               {
@@ -2671,6 +2750,14 @@
               }
             ],
             "title": "Recall Interval Months"
+          },
+          "required_resources": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceRequirement"
+            },
+            "maxItems": 3,
+            "title": "Required Resources",
+            "type": "array"
           },
           "resource_kind": {
             "anyOf": [
@@ -2824,6 +2911,14 @@
               }
             ],
             "title": "Recall Interval Months"
+          },
+          "required_resources": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceRequirement"
+            },
+            "maxItems": 3,
+            "title": "Required Resources",
+            "type": "array"
           },
           "sku": {
             "anyOf": [
@@ -3421,6 +3516,11 @@
               }
             ],
             "title": "Customer Name"
+          },
+          "emergency": {
+            "default": false,
+            "title": "Emergency",
+            "type": "boolean"
           },
           "handoff_requested_at": {
             "anyOf": [
@@ -8351,6 +8451,16 @@
             "title": "Avoid Medical Details",
             "type": "boolean"
           },
+          "emergency_handling": {
+            "default": false,
+            "title": "Emergency Handling",
+            "type": "boolean"
+          },
+          "emergency_instructions": {
+            "default": "",
+            "title": "Emergency Instructions",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -8366,6 +8476,17 @@
             "additionalProperties": true,
             "title": "Public Profile",
             "type": "object"
+          },
+          "synthetic_demo_banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Demo Banner"
           },
           "timezone": {
             "title": "Timezone",
@@ -9892,6 +10013,31 @@
         "title": "ResourceIn",
         "type": "object"
       },
+      "ResourceRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "staff",
+              "room",
+              "equipment"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "role": {
+            "pattern": "^[a-z][a-z0-9_]{0,39}$",
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "kind"
+        ],
+        "title": "ResourceRequirement",
+        "type": "object"
+      },
       "ResourceUpdate": {
         "additionalProperties": false,
         "properties": {
@@ -10592,6 +10738,17 @@
           "settings": {
             "$ref": "#/components/schemas/BusinessSettings-Output"
           },
+          "synthetic_demo_banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Demo Banner"
+          },
           "version": {
             "title": "Version",
             "type": "integer"
@@ -10662,6 +10819,13 @@
           "resource_name": {
             "title": "Resource Name",
             "type": "string"
+          },
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/AllocatedResource"
+            },
+            "title": "Resources",
+            "type": "array"
           },
           "starts_at": {
             "format": "date-time",
@@ -11965,6 +12129,11 @@
             ],
             "title": "Customer Name"
           },
+          "emergency": {
+            "default": false,
+            "title": "Emergency",
+            "type": "boolean"
+          },
           "handoff_requested_at": {
             "anyOf": [
               {
@@ -12603,6 +12772,7 @@
           },
           "kind": {
             "enum": [
+              "emergency_handoff",
               "proposal",
               "outbound_mail",
               "supplier_quote",
@@ -27436,6 +27606,23 @@
                 }
               ],
               "title": "Resource Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "location_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Location Id"
             }
           },
           {

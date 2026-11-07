@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router"
 import { Sparkles } from "lucide-react"
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
+import { SyntheticDemoBanner } from "@/components/common/SyntheticDemoBanner"
 import { QueryError } from "@/components/common/QueryError"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -90,6 +91,7 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
           <SheetDescription>{t("ai.assistant.description")}</SheetDescription>
         </SheetHeader>
         <div className="space-y-3 px-4 pb-2">
+          <SyntheticDemoBanner />
           <AiDisabledBanner />
           <nav aria-label={t("ai.assistant.threads")} className="space-y-1">
             <div className="flex items-center justify-between gap-2">

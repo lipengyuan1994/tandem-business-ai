@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from types import ModuleType
 
 from fastapi import FastAPI
@@ -60,7 +62,16 @@ def create_app(registry: Registry | None = None) -> FastAPI:
     # not serve it or the docs page (security re-scan F5). `app.openapi()` does not depend on the URL, so
     # `python -m app.cli openapi` (make gen-api) and the contract test work in every environment.
     developer_docs = not settings.is_prod
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        from app.modules.org.demo import assert_no_synthetic_demos
+
+        assert_no_synthetic_demos()
+        yield
+
     app = FastAPI(
+        lifespan=lifespan,
         title="SMB Operations Suite API",
         version="0.1.0",
         openapi_url=API_PREFIX + "/openapi.json" if developer_docs else None,

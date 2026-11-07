@@ -218,3 +218,15 @@ it("keeps polling after an empty page and receives a delayed published reply wit
     await waitFor(() => expect(cursors).toEqual([null, "visitor-cursor", "visitor-cursor", "publication-cursor"]))
   } finally { spy.mockRestore() }
 })
+
+it("shows the backend clinic banner and emergency instructions above chat", async () => {
+  const banner = "Synthetic demo data. Clinic-controlled local models are required for production."
+  server.use(
+    http.get(`${BASE}/profile`, () => HttpResponse.json({ ...profile("hosted_vultr"), synthetic_demo_banner: banner, emergency_handling: true, emergency_instructions: "Call the clinic immediately.", avoid_medical_details: true })),
+    http.get(`${BASE}/chat`, () => HttpResponse.json({ code: "conversations.visitor_token_invalid" }, { status: 403 })),
+  )
+  render(<Widget slug="example-cycle-works" page="chat" />)
+  expect(await screen.findByText(banner)).toBeInTheDocument()
+  expect(screen.getByText("Call the clinic immediately.")).toBeInTheDocument()
+  expect(await screen.findByLabelText("Your name")).toBeInTheDocument()
+})

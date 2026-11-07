@@ -8,7 +8,10 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE businesses (
   id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, timezone TEXT NOT NULL,
   currency TEXT NOT NULL CHECK (length(currency) = 3), locale TEXT NOT NULL,
-  is_mock INTEGER NOT NULL CHECK (is_mock = 1)
+  is_mock INTEGER NOT NULL CHECK (is_mock = 1),
+  synthetic INTEGER NOT NULL DEFAULT 0 CHECK (synthetic IN (0,1)),
+  synthetic_demo INTEGER NOT NULL DEFAULT 0 CHECK (synthetic_demo IN (0,1)),
+  settings_json TEXT NOT NULL DEFAULT '{}', public_profile_json TEXT NOT NULL DEFAULT '{}'
 );
 CREATE TABLE locations (
   id TEXT NOT NULL, business_id TEXT NOT NULL REFERENCES businesses(id), name TEXT NOT NULL,
@@ -64,6 +67,7 @@ CREATE TABLE customer_tags (
 
 -- Catalog
 CREATE TABLE catalog_items (
+  required_resources_json TEXT NOT NULL DEFAULT '[]', recall_interval_months INTEGER CHECK (recall_interval_months BETWEEN 1 AND 120),
   id TEXT NOT NULL, business_id TEXT NOT NULL REFERENCES businesses(id),
   kind TEXT NOT NULL CHECK (kind IN ('service','product')), sku TEXT, name TEXT NOT NULL, unit TEXT NOT NULL,
   price_minor INTEGER, currency TEXT NOT NULL, duration_minutes INTEGER, buffer_minutes INTEGER NOT NULL DEFAULT 0,
@@ -93,6 +97,7 @@ CREATE TABLE availability_rules (
   PRIMARY KEY (business_id, id), FOREIGN KEY (business_id, resource_id) REFERENCES resources(business_id, id)
 );
 CREATE TABLE appointments (
+  days_ago INTEGER,
   id TEXT NOT NULL, business_id TEXT NOT NULL, customer_id TEXT NOT NULL, service_id TEXT NOT NULL, resource_id TEXT NOT NULL, location_id TEXT NOT NULL,
   starts_at TEXT NOT NULL, ends_at TEXT NOT NULL, blocked_until TEXT NOT NULL, timezone TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('held','confirmed','cancelled','completed','no_show')),
@@ -212,4 +217,23 @@ CREATE TABLE kb_articles (
   body_markdown TEXT NOT NULL CHECK (length(body_markdown) <= 20000),
   tags_json TEXT NOT NULL CHECK (json_valid(tags_json)), is_mock INTEGER NOT NULL CHECK (is_mock=1),
   PRIMARY KEY (business_id,id), UNIQUE (business_id,slug)
+);
+
+CREATE TABLE resource_services (
+  id TEXT NOT NULL, business_id TEXT NOT NULL, resource_id TEXT NOT NULL, service_id TEXT NOT NULL,
+  PRIMARY KEY (business_id,id), UNIQUE(business_id,resource_id,service_id),
+  FOREIGN KEY (business_id,resource_id) REFERENCES resources(business_id,id),
+  FOREIGN KEY (business_id,service_id) REFERENCES catalog_items(business_id,id)
+);
+
+CREATE TABLE suppliers (
+  id TEXT NOT NULL, business_id TEXT NOT NULL REFERENCES businesses(id), name TEXT NOT NULL, email TEXT NOT NULL,
+  PRIMARY KEY(business_id,id)
+);
+CREATE TABLE supplier_items (
+  id TEXT NOT NULL, business_id TEXT NOT NULL, supplier_id TEXT NOT NULL, catalog_item_id TEXT NOT NULL,
+  supplier_sku TEXT NOT NULL, last_price_minor INTEGER NOT NULL, lead_time_days INTEGER NOT NULL,
+  PRIMARY KEY(business_id,id),
+  FOREIGN KEY(business_id,supplier_id) REFERENCES suppliers(business_id,id),
+  FOREIGN KEY(business_id,catalog_item_id) REFERENCES catalog_items(business_id,id)
 );

@@ -41,3 +41,16 @@ make help          # all commands
 Synthetic data check (no dependencies): `python3 -I data/validate_fixtures.py`.
 
 Status: phases P1–P4 (platform kernel, core services, business modules without AI, packaging and deployment files), plus marketing, the System page and data export/erasure, are built locally; nothing is deployed to Vultr; see [docs/roadmap/phases/STATUS.md](docs/roadmap/phases/STATUS.md). Nothing is committed yet.
+
+## AI: synthetic dental example (P10-E1)
+
+Example Dental Clinic uses the standard hosted Vultr routes with invented patients only (D5=a).
+Provider-plus-chair booking, human emergency hand-over and six-month recall are configuration over the
+same scheduling, Inbox and Customer Care workflows. No clinical charts, notes, imaging, treatment plans
+or insurance claims are provided. The clinic's AI screens and public widget display this statement:
+
+> Synthetic demo data. In production, patients' protected health information (PHI) and other personal data must be processed only by AI models hosted locally under the clinic's control — no external AI API. Compliance also needs the clinic's HIPAA policies, agreements and a legal review.
+
+`synthetic_demo` is seeded, cannot be set through the normal API, and is refused by regulated seed
+and API startup. A production clinic needs the local-only regulated profile and independent operational
+and legal verification; the banner does not attest compliance.

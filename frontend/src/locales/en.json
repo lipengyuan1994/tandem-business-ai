@@ -76,7 +76,8 @@
     "add": "Add",
     "actions": "Actions",
     "tableScroll": "More columns: scroll sideways →",
-    "tableRegion": "Scrollable table"
+    "tableRegion": "Scrollable table",
+    "edit": "Edit"
   },
   "conflict": {
     "title": "This record changed since you opened it",
@@ -266,7 +267,9 @@
       "salesTaxHelp": "Used for new document lines. Existing lines keep their saved tax rate.",
       "salesTaxInvalid": "Enter a percentage from 0 to 100 with up to two decimal places.",
       "terminology": "Terminology",
-      "terminologyHelp": "Choose the words used for navigation, titles and main actions. Leave blank for the default."
+      "terminologyHelp": "Choose the words used for navigation, titles and main actions. Leave blank for the default.",
+      "emergency_handling": "Always hand possible emergencies to a person",
+      "emergency_handlingHelp": "Publish the clinic instructions immediately and alert staff. AI never gives medical advice."
     }
   },
   "approvals": {
@@ -1459,7 +1462,8 @@
         "outbound_mail": "Outbound e-mail",
         "supplier_quote": "Awaiting supplier reply",
         "autonomy_fallback": "Autonomy fell back to review",
-        "web_reply": "Front-desk reply"
+        "web_reply": "Front-desk reply",
+        "emergency_handoff": "Emergency hand-over"
       }
     },
     "workQueue": {
@@ -1680,5 +1684,17 @@
     "noSuggestions": "No open suggestions.",
     "writeArticle": "Write article",
     "dismiss": "Dismiss"
+  },
+  "dental": {
+    "demoNotice": "Synthetic clinic demo notice",
+    "emergencySettings": "Emergency hand-over",
+    "emergencyInstructions": "Instructions shown to visitors",
+    "requiredResources": "Required resources",
+    "recallInterval": "Recall interval (months, blank to disable)",
+    "resourceKinds": {
+      "staff": "Provider (staff)",
+      "room": "Chair (room)",
+      "equipment": "Equipment"
+    }
   }
 }

@@ -184,7 +184,7 @@ def test_find_slots_returns_utc_and_local_label(demo: Demo) -> None:
     # data/fixtures.json expected: the earliest Tuesday-morning brake slot is 11:45 Denver with Jordan.
     assert first == {"starts_at": "2026-11-10T18:45:00Z", "ends_at": "2026-11-10T19:45:00Z",
                      "resource_id": str(demo.resources["Jordan (technician)"]), "resource_name": "Jordan (technician)",
-                     "local_label": "Tue 10 Nov 11:45 MST"}  # fmt: skip
+                     "local_label": "Tue 10 Nov 11:45 MST", "resources": []}  # fmt: skip
     assert len(data["slots"]) <= 10 and "window_capped" not in data
 
 

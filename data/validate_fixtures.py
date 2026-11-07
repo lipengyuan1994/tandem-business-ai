@@ -51,9 +51,34 @@ def check_synthetic(doc: dict, t: dict[str, list[dict]]) -> None:
             fail(f"contact email not example.com: {cp['id']}")
         if cp["type"] == "phone" and not FICTIONAL_PHONE.match(cp["value"]):
             fail(f"phone not in a fictional range: {cp['id']}")
+    for supplier in t.get("suppliers", []):
+        if not supplier["email"].endswith("@example.com"):
+            fail("supplier email must be example.com")
     for c in t["conversations"]:
         if c.get("visitor_email") and not c["visitor_email"].endswith("@example.com"):
             fail(f"visitor email not example.com: {c['id']}")
+
+
+def check_dental(t: dict[str, list[dict]]) -> None:
+    clinic = next((b for b in t["businesses"] if b["slug"] == "example-dental-clinic"), None)
+    if not clinic or not clinic.get("synthetic") or not clinic.get("synthetic_demo"):
+        fail("dental business must be explicitly synthetic and synthetic_demo")
+    settings = json.loads(clinic["settings_json"])
+    if not settings.get("emergency_handling") or not settings.get("emergency_instructions"):
+        fail("dental emergency handling and instructions required")
+    if not json.loads(clinic["public_profile_json"]).get("avoid_medical_details"):
+        fail("dental templates must avoid medical details")
+    services = [i for i in t["catalog_items"] if i["business_id"] == clinic["id"] and i["kind"] == "service"]
+    if len(services) != 4:
+        fail("four dental services required")
+    for service in services:
+        if json.loads(service["required_resources_json"]) != [{"role": "provider", "kind": "staff"}, {"role": "chair", "kind": "room"}]:
+            fail("dental services require provider and chair")
+    if next(i for i in services if i["name"] == "Exam and cleaning")["recall_interval_months"] != 6:
+        fail("cleaning recall must be six months")
+    resources = [r for r in t["resources"] if r["business_id"] == clinic["id"]]
+    if sum(r["kind"] == "staff" for r in resources) != 2 or sum(r["kind"] == "room" for r in resources) != 3:
+        fail("clinic requires two providers and three chairs")
 
 
 def check_businesses(t: dict[str, list[dict]]) -> None:
@@ -182,6 +207,7 @@ def main() -> None:
     if problems:
         fail(f"foreign key problems: {problems}")
     check_synthetic(doc, t)
+    check_dental(t)
     check_businesses(t)
     check_appointments(t)
     slot = earliest_slot(t, "biz-cycle", "svc-brake", datetime(2026, 11, 10, tzinfo=ZoneInfo("America/Denver")), "12:00")

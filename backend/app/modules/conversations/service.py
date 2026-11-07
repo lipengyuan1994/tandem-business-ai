@@ -133,6 +133,15 @@ def _add(
                 is_first_message=first,
             ),
         )
+    if direction == "inbound" and author_kind in {"visitor", "customer"}:
+        from app.modules.org import public as org
+
+        from .emergency import signals_emergency
+        from .ownership import request_handoff
+
+        settings = org.get_settings(db, ctx)
+        if settings.emergency_handling and signals_emergency(body, org.get_business_brief(db, ctx).locale):
+            request_handoff(db, ctx, conv.id, "Emergency signal: immediate staff attention required", emergency=True)
     return msg
 
 

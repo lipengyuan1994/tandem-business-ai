@@ -1,3 +1,4 @@
+import { SyntheticDemoBanner } from "@/components/common/SyntheticDemoBanner"
 import { lazy, Suspense, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Link, Outlet } from "@tanstack/react-router"
@@ -67,6 +68,7 @@ export function AppLayout() {
           <UserMenu />
         </header>
         <main id="main" className="flex-1 p-4 md:p-8">
+          <SyntheticDemoBanner />
           <Outlet />
         </main>
       </div>

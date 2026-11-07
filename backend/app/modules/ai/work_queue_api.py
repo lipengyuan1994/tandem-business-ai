@@ -26,6 +26,7 @@ router = APIRouter()
 class WorkItem(BaseModel):
     id: uuid.UUID
     kind: Literal[
+        "emergency_handoff",
         "proposal",
         "outbound_mail",
         "supplier_quote",
@@ -87,12 +88,29 @@ def work_queue(
     with transaction(ctx) as db:
         from .customer_care.api import queue_items as care_items
 
+        if cursor is None or cursor.startswith("emergency:"):
+            emergency_cursor = cursor.removeprefix("emergency:") if cursor else None
+            urgent = conversations.emergency_queue_items(db, ctx, limit=limit + 1, cursor=emergency_cursor)
+            if len(urgent) >= limit:
+                selected = [WorkItem.model_validate(row) for row in urgent[:limit]]
+                return WorkPage(
+                    items=selected, next_cursor="emergency:" + encode_cursor(selected[-1].created_at, selected[-1].id)
+                )
+            # Once emergency pages are exhausted, start the ordinary queue from its newest row.
+            cursor = None
+        else:
+            urgent = []
+            cursor = cursor.removeprefix("ordinary:")
         rows = care_items(db, ctx, limit=limit + 1, cursor=cursor)
         rows += approvals.proposal_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
         rows += notifications.outbound_queue_items(db, ctx, statuses=("pending",), limit=limit + 1, cursor=cursor)
         rows += purchasing.awaiting_supplier_items(db, ctx, limit=limit + 1, cursor=cursor)
         rows += conversations.publication_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
-        return page(rows, limit)
+        ordinary = page(rows, limit - len(urgent))
+        return WorkPage(
+            items=[WorkItem.model_validate(row) for row in urgent] + ordinary.items,
+            next_cursor="ordinary:" + ordinary.next_cursor if ordinary.next_cursor else None,
+        )
 
 
 @router.get(

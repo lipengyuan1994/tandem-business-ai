@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, unwrap } from "@/api/client"
-import type { CatalogItemCreate } from "@/api/types"
+import type { CatalogItemCreate, Schemas } from "@/api/types"
 
 export const catalogKeys = {
   all: ["catalog"] as const,
@@ -18,6 +18,14 @@ export function useCreateItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (body: CatalogItemCreate) => unwrap(await api.POST("/api/v1/catalog/items", { body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: catalogKeys.all }),
+  })
+}
+
+export function useUpdateItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, body }: { id: string; body: Schemas["CatalogItemUpdate"] }) => unwrap(await api.PATCH("/api/v1/catalog/items/{item_id}", { params: { path: { item_id: id } }, body })),
     onSuccess: () => qc.invalidateQueries({ queryKey: catalogKeys.all }),
   })
 }

@@ -53,6 +53,7 @@ class ConversationOut(BaseModel):
     visitor_email: str | None
     contact_consent_at: datetime | None
     contact_consent_text: str | None
+    emergency: bool = False
     handoff_requested_at: datetime | None
     ai_mode: Literal["auto", "human"]
     ai_generation: int
@@ -204,3 +205,4 @@ class MessageContext(BaseModel):
     ai_mode: Literal["auto", "human"] = "auto"
     ai_generation: int = 0
     message_ai_generation: int = 0
+    emergency: bool = False

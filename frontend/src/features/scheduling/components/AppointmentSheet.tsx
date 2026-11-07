@@ -35,7 +35,7 @@ export function AppointmentSheet({ appointment, timeZone, onClose }: { appointme
           </SheetHeader>
           {a ? (
             <div className="space-y-4 px-4 text-sm">
-              <p className="flex items-center gap-2"><StatusBadge status={a.status} /> {a.resource_name}</p>
+              <p className="flex items-center gap-2"><StatusBadge status={a.status} /> {a.resources?.length ? a.resources.map((r) => r.resource_name).join(" + ") : a.resource_name}</p>
               {a.notes ? <p className="whitespace-pre-wrap">{a.notes}</p> : null}
               {a.proposal_id ? <p><a className="underline" href={`/approvals/${a.proposal_id}`}>{t("schedule.viaProposal")}</a></p> : null}
               {a.status === "completed" ? <PermissionGate permission="sales.document.write">

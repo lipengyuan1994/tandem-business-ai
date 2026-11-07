@@ -47,3 +47,5 @@ P10-B2: `send_care_reply` requires the generation captured in the approved paylo
 it rejects missing/stale generations. Care proposals participate in ownership invalidation. Publication's Care
 guard allows a human-approved complaint reply in human mode while freshness, restrictions, closure and Stop apply.
 Customer linking calls the registered Care hook under customer→conversation locks to bind open anonymous cases.
+
+P10-E1: locale emergency keywords run synchronously on inbound visitor/customer messages when enabled. Emergency hand-over upgrades existing hand-overs, pauses AI, emits deterministic clinic instructions, notifies staff, and exposes urgent Work items through the public facade. Retries are episode-idempotent. Staff hand-back clears the emergency marker; the next inbound message is screened again.

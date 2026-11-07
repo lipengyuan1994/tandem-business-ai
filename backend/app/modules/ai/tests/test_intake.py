@@ -384,7 +384,9 @@ def test_concurrent_retries_write_one_outcome_note(business: uuid.UUID, monkeypa
     assert len(notes(business, conv)) == 1
 
 
-def test_visitor_contacts_not_in_any_model_request(business: uuid.UUID, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_visitor_contacts_not_in_any_model_request(
+    registry: Registry, business: uuid.UUID, monkeypatch: pytest.MonkeyPatch
+) -> None:
     _, message = inbound(business)
     gw = FakeGateway(['{"flagged":false,"category":"none"}'])
     original = intake.run_agent_step
@@ -402,6 +404,7 @@ def test_visitor_contacts_not_in_any_model_request(business: uuid.UUID, monkeypa
             "visitor_email": "ada@example.com",
             "visitor_phone": "+12025550123",
             "ai_generation": 0,
+            "emergency_handling": False,
             "safety_clean": True,
         }
     ]

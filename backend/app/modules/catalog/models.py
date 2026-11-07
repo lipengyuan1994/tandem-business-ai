@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -15,6 +16,7 @@ from sqlalchemy import (
     Text,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.platform.models import BusinessScopedBase, scoped_table_args
@@ -33,6 +35,9 @@ class CatalogItem(BusinessScopedBase):
     duration_minutes: Mapped[int | None] = mapped_column(Integer)
     recall_interval_months: Mapped[int | None] = mapped_column(Integer)
     buffer_minutes: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    required_resources: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, default=list, server_default=text("'[]'::jsonb")
+    )
     resource_kind: Mapped[str | None] = mapped_column(String(12))
     is_stock_tracked: Mapped[bool] = mapped_column(Boolean, default=False)
     is_bookable_online: Mapped[bool] = mapped_column(Boolean, default=False)

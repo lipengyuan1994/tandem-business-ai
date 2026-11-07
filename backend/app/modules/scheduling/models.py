@@ -4,6 +4,7 @@ import uuid
 from datetime import date, datetime, time
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Date,
     ForeignKey,
@@ -109,4 +110,24 @@ class Appointment(BusinessScopedBase):
         CheckConstraint("ends_at > starts_at and blocked_until >= ends_at", name="times"),
         CheckConstraint("status <> 'held' or hold_expires_at is not null", name="hold_expiry"),
         Index("ix_appointments_resource_time", "business_id", "resource_id", "starts_at"),
+    )
+
+
+class AppointmentResource(BusinessScopedBase):
+    """All occupied resources, primary mirrors included; synchronized by database triggers."""
+
+    __tablename__ = "appointment_resources"
+    appointment_id: Mapped[uuid.UUID]
+    resource_id: Mapped[uuid.UUID]
+    role: Mapped[str] = mapped_column(String(40))
+    starts_at: Mapped[datetime]
+    blocked_until: Mapped[datetime]
+    active: Mapped[bool] = mapped_column(Boolean)
+    __table_args__ = scoped_table_args(
+        ForeignKeyConstraint(
+            ["business_id", "appointment_id"], ["appointments.business_id", "appointments.id"], ondelete="CASCADE"
+        ),
+        _fk("resource_id", "resources"),
+        Index("uq_appointment_resources_resource", "appointment_id", "resource_id", unique=True),
+        CheckConstraint("blocked_until > starts_at", name="times"),
     )

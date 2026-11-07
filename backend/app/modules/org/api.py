@@ -14,6 +14,7 @@ from app.platform.permissions import public_context, require
 
 from . import permissions as P
 from . import public, repository, service
+from .demo import banner
 from .schemas import (
     BusinessOut,
     BusinessUpdate,
@@ -35,13 +36,19 @@ ERRORS = error_responses(401, 403, 404, 409, 422)
 @router.get("/business", response_model=BusinessOut, summary="Get the active business", responses=ERRORS)
 def get_business(ctx: Context = Depends(require(P.BUSINESS_READ))) -> BusinessOut:
     with transaction(ctx) as db:
-        return BusinessOut.model_validate(service.get_business(db, ctx))
+        business = service.get_business(db, ctx)
+        return BusinessOut.model_validate(business).model_copy(
+            update={"synthetic_demo_banner": banner(business.synthetic_demo)}
+        )
 
 
 @router.patch("/business", response_model=BusinessOut, summary="Update the business profile", responses=ERRORS)
 def update_business(body: BusinessUpdate, ctx: Context = Depends(require(P.BUSINESS_WRITE))) -> BusinessOut:
     with transaction(ctx) as db:
-        return BusinessOut.model_validate(service.update_business(db, ctx, body))
+        business = service.update_business(db, ctx, body)
+        return BusinessOut.model_validate(business).model_copy(
+            update={"synthetic_demo_banner": banner(business.synthetic_demo)}
+        )
 
 
 @router.get("/locations", response_model=list[LocationOut], summary="List locations", responses=ERRORS)
@@ -95,7 +102,9 @@ def replace_opening_hours(
 def get_settings(ctx: Context = Depends(require(P.SETTINGS_READ))) -> SettingsOut:
     with transaction(ctx) as db:
         settings, version = service.get_settings(db, ctx)
-        return SettingsOut(settings=settings, version=version)
+        return SettingsOut(
+            settings=settings, version=version, synthetic_demo_banner=banner(service._business(db, ctx).synthetic_demo)
+        )
 
 
 @router.patch(
@@ -107,7 +116,9 @@ def get_settings(ctx: Context = Depends(require(P.SETTINGS_READ))) -> SettingsOu
 def update_settings(body: SettingsUpdate, ctx: Context = Depends(require(P.SETTINGS_WRITE))) -> SettingsOut:
     with transaction(ctx) as db:
         settings, version = service.update_settings(db, ctx, body.settings, body.version)
-        return SettingsOut(settings=settings, version=version)
+        return SettingsOut(
+            settings=settings, version=version, synthetic_demo_banner=banner(service._business(db, ctx).synthetic_demo)
+        )
 
 
 @public_router.get("/{business_slug}/profile", response_model=PublicProfileOut, summary="Public business profile")
@@ -117,7 +128,10 @@ def public_profile(ctx: Context = Depends(public_context)) -> PublicProfileOut:
         assert business is not None
         return PublicProfileOut(
             ai_greeting=f"You're chatting with {business.name}'s AI assistant.",
-            avoid_medical_details=is_regulated(),
+            avoid_medical_details=is_regulated() or business.public_profile.get("avoid_medical_details") is True,
+            synthetic_demo_banner=banner(business.synthetic_demo),
+            emergency_handling=public.get_settings(db, ctx).emergency_handling,
+            emergency_instructions=public.get_settings(db, ctx).emergency_instructions,
             name=business.name,
             timezone=business.timezone,
             public_profile=business.public_profile,

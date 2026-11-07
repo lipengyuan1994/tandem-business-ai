@@ -1152,3 +1152,35 @@ also schedules bounded voice cleanup after 90 days. Audio/text live only in requ
 Caddy permits microphone=(self); camera/geolocation stay disabled. Text-only synthetic dictation eval:
 >=20 cases, >=85% pass, guard fallback reported separately. Implementation runs offline tests only;
 live model/audio quality and browser confirmation are supervisor/UI checks.
+## P10-E1: synthetic dental configuration
+
+Services optionally declare `required_resources: [{role, kind}]` (unique roles and kinds,
+first kind equals `resource_kind`). `resource_services` qualifies providers per service;
+for required services, explicit links of a kind are a strict allowlist for that kind.
+Slots and appointments expose `resources: [{role, resource_id, resource_name}]`.
+Existing booking inputs keep their primary resource; the shared slot/hold/book path
+deterministically allocates the other kinds at that location for duration plus buffer.
+Holds reserve the full allocation; confirmation revalidates current requirements. Rescheduling reallocates through the same finder.
+
+`appointment_resources` is the database occupancy ledger, including a primary mirror
+for new/updated appointments so primary/secondary collisions share one exclusion
+constraint. Migration creates no backfill rows. Triggers synchronize all allocations
+on parent time/status/primary changes and also check pre-migration primary bookings.
+Cancellation, completion and hold expiry release every resource atomically.
+
+`emergency_handling` defaults false; `emergency_instructions` is visitor-visible text.
+When enabled, locale keywords run synchronously on inbound visitor/customer messages;
+safety classification has an explicit emergency signal and runs before booking tools.
+Signals hand over through C1, invalidate drafts, notify staff, create an urgent Work
+item and publish deterministic clinic instructions plus the local-emergency-number
+sentence. No medical advice. Pain, swelling, bleeding, injury and uncertain urgency
+escalate conservatively (including negated keyword mentions); a rough filling with no
+pain, swelling, injury or urgency may request an ordinary appointment. Classifier
+unavailability fails closed to a person for an emergency-enabled business.
+
+`synthetic_demo` is a business column omitted from normal write DTOs. Read DTOs supply
+the exact roadmap banner through `synthetic_demo_banner`. Regulated seed rejects
+marked fixtures before reset/writes; API startup rejects existing marked businesses.
+Dental uses hosted Vultr on synthetic data only (D5=a). Recall reuses B2 unchanged:
+six months, consent/future-booking checks, shadow rules, minimal messages without
+treatment names when `avoid_medical_details` is true. No clinical features.

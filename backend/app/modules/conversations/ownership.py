@@ -62,17 +62,27 @@ def _acknowledgement(db: Session, ctx: Context) -> str:
     return org.get_settings(db, ctx).handoff_after_hours_text
 
 
-def request_handoff(db: Session, ctx: Context, conversation_id: uuid.UUID, reason: str) -> None:
+def request_handoff(
+    db: Session, ctx: Context, conversation_id: uuid.UUID, reason: str, *, emergency: bool = False
+) -> None:
     from app.modules.notifications import public as notifications
 
     from .service import _add
 
     conv = lock_for_customer(db, ctx, conversation_id)
-    if conv.handoff_requested_at is not None:
+    if conv.handoff_requested_at is not None and (not emergency or conv.emergency):
         return
+    conv.emergency = conv.emergency or emergency
     pause(db, ctx, conv)
     conv.handoff_requested_at = clock.now()
-    _add(db, ctx, conv, direction="outbound", author_kind="system", body=_acknowledgement(db, ctx))
+    body = _acknowledgement(db, ctx)
+    if emergency:
+        body = (
+            "A person must handle this message. "
+            + org.get_settings(db, ctx).emergency_instructions
+            + " If this is life-threatening call your local emergency number."
+        )
+    _add(db, ctx, conv, direction="outbound", author_kind="system", body=body)
     conv.status = "waiting_on_staff"
     staff = (
         [conv.assigned_to]
@@ -84,7 +94,7 @@ def request_handoff(db: Session, ctx: Context, conversation_id: uuid.UUID, reaso
         ctx,
         staff,
         kind="handoff",
-        title="A conversation needs a person",
+        title="Emergency: a conversation needs a person" if emergency else "A conversation needs a person",
         body=reason[:300],
         link=f"/inbox/{conv.id}",
     )
@@ -108,6 +118,7 @@ def hand_back(db: Session, ctx: Context, conversation_id: uuid.UUID) -> Conversa
     conv = lock_for_customer(db, ctx, conversation_id)
     if conv.ai_mode == "auto":
         return conv
+    conv.emergency = False
     conv.ai_mode, conv.ai_paused_at, conv.handoff_requested_at = "auto", None, None
     conv.ai_generation += 1
     conv.version += 1

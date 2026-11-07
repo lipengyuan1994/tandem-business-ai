@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, ForeignKeyConstraint, Index, String, Text, text
+from sqlalchemy import Boolean, CheckConstraint, ForeignKeyConstraint, Index, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.platform.models import BusinessScopedBase, scoped_table_args
@@ -24,6 +24,7 @@ class Conversation(BusinessScopedBase):
     contact_consent_text: Mapped[str | None] = mapped_column(Text)
     restricted_at: Mapped[datetime | None]
     erased_at: Mapped[datetime | None]
+    emergency: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
     handoff_requested_at: Mapped[datetime | None]
     ai_mode: Mapped[str] = mapped_column(String(10), default="auto", server_default="auto")
     ai_generation: Mapped[int] = mapped_column(default=0, server_default="0")

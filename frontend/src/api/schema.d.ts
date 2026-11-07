@@ -3050,6 +3050,18 @@ export interface components {
             /** Reason */
             reason: string | null;
         };
+        /** AllocatedResource */
+        AllocatedResource: {
+            /**
+             * Resource Id
+             * Format: uuid
+             */
+            resource_id: string;
+            /** Resource Name */
+            resource_name: string;
+            /** Role */
+            role: string;
+        };
         /** AppointmentOut */
         AppointmentOut: {
             /**
@@ -3100,6 +3112,8 @@ export interface components {
              * @default
              */
             resource_name: string;
+            /** Resources */
+            resources?: components["schemas"]["AllocatedResource"][];
             /**
              * Service Id
              * Format: uuid
@@ -3470,6 +3484,13 @@ export interface components {
             slug: string;
             /** Status */
             status: string;
+            /**
+             * Synthetic Demo
+             * @default false
+             */
+            synthetic_demo: boolean;
+            /** Synthetic Demo Banner */
+            synthetic_demo_banner?: string | null;
             /** Timezone */
             timezone: string;
             /** Version */
@@ -3531,6 +3552,16 @@ export interface components {
              * @enum {string}
              */
             customer_care_tone: "warm" | "formal" | "concise";
+            /**
+             * Emergency Handling
+             * @default false
+             */
+            emergency_handling: boolean;
+            /**
+             * Emergency Instructions
+             * @default Please contact the clinic immediately by phone.
+             */
+            emergency_instructions: string;
             /**
              * Handoff After Hours Text
              * @default We're currently closed. A person will reply here when we're open.
@@ -3628,6 +3659,16 @@ export interface components {
              * @enum {string}
              */
             customer_care_tone: "warm" | "formal" | "concise";
+            /**
+             * Emergency Handling
+             * @default false
+             */
+            emergency_handling: boolean;
+            /**
+             * Emergency Instructions
+             * @default Please contact the clinic immediately by phone.
+             */
+            emergency_instructions: string;
             /**
              * Handoff After Hours Text
              * @default We're currently closed. A person will reply here when we're open.
@@ -3912,6 +3953,8 @@ export interface components {
             price_minor?: number | null;
             /** Recall Interval Months */
             recall_interval_months?: number | null;
+            /** Required Resources */
+            required_resources?: components["schemas"]["ResourceRequirement"][];
             /** Resource Kind */
             resource_kind?: ("staff" | "room" | "equipment") | null;
             /** Sku */
@@ -3953,6 +3996,8 @@ export interface components {
             price_minor: number | null;
             /** Recall Interval Months */
             recall_interval_months?: number | null;
+            /** Required Resources */
+            required_resources?: components["schemas"]["ResourceRequirement"][];
             /** Resource Kind */
             resource_kind: ("staff" | "room" | "equipment") | null;
             /** Sku */
@@ -3983,6 +4028,8 @@ export interface components {
             price_minor?: number | null;
             /** Recall Interval Months */
             recall_interval_months?: number | null;
+            /** Required Resources */
+            required_resources?: components["schemas"]["ResourceRequirement"][];
             /** Sku */
             sku?: string | null;
             /** Version */
@@ -4229,6 +4276,11 @@ export interface components {
             customer_id: string | null;
             /** Customer Name */
             customer_name?: string | null;
+            /**
+             * Emergency
+             * @default false
+             */
+            emergency: boolean;
             /** Handoff Requested At */
             handoff_requested_at: string | null;
             /**
@@ -5915,6 +5967,16 @@ export interface components {
             ai_policy: "hosted_vultr" | "hosted_any" | "strict_private";
             /** Avoid Medical Details */
             avoid_medical_details: boolean;
+            /**
+             * Emergency Handling
+             * @default false
+             */
+            emergency_handling: boolean;
+            /**
+             * Emergency Instructions
+             * @default
+             */
+            emergency_instructions: string;
             /** Name */
             name: string;
             /** Opening Hours */
@@ -5923,6 +5985,8 @@ export interface components {
             public_profile: {
                 [key: string]: unknown;
             };
+            /** Synthetic Demo Banner */
+            synthetic_demo_banner?: string | null;
             /** Timezone */
             timezone: string;
         };
@@ -6504,6 +6568,16 @@ export interface components {
             /** User Id */
             user_id?: string | null;
         };
+        /** ResourceRequirement */
+        ResourceRequirement: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "staff" | "room" | "equipment";
+            /** Role */
+            role: string;
+        };
         /** ResourceUpdate */
         ResourceUpdate: {
             /** Color */
@@ -6781,6 +6855,8 @@ export interface components {
         /** SettingsOut */
         SettingsOut: {
             settings: components["schemas"]["BusinessSettings-Output"];
+            /** Synthetic Demo Banner */
+            synthetic_demo_banner?: string | null;
             /** Version */
             version: number;
         };
@@ -6824,6 +6900,8 @@ export interface components {
             resource_id: string;
             /** Resource Name */
             resource_name: string;
+            /** Resources */
+            resources?: components["schemas"]["AllocatedResource"][];
             /**
              * Starts At
              * Format: date-time
@@ -7296,6 +7374,11 @@ export interface components {
             customer_id: string | null;
             /** Customer Name */
             customer_name?: string | null;
+            /**
+             * Emergency
+             * @default false
+             */
+            emergency: boolean;
             /** Handoff Requested At */
             handoff_requested_at: string | null;
             /**
@@ -7533,7 +7616,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback" | "web_reply" | "chain_blocked" | "customer_care_case";
+            kind: "emergency_handoff" | "proposal" | "outbound_mail" | "supplier_quote" | "autonomy_fallback" | "web_reply" | "chain_blocked" | "customer_care_case";
             /** Priority */
             priority?: string | null;
             /** Proposal Id */
@@ -21150,6 +21233,7 @@ export interface operations {
                 earliest: string;
                 latest: string;
                 resource_id?: string | null;
+                location_id?: string | null;
                 limit?: number;
             };
             header?: never;

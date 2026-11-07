@@ -14,10 +14,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useBusiness } from "@/features/org/hooks"
-import { parseMoneyInput } from "@/lib/money"
+import { minorToDecimal, parseMoneyInput } from "@/lib/money"
 import { toastError } from "@/lib/errors"
 import { ApiProblem } from "@/lib/problem"
-import { useCatalogItems, useCreateItem } from "./hooks"
+import { useCatalogItems, useCreateItem, useUpdateItem } from "./hooks"
 
 type Kind = "service" | "product"
 
@@ -25,6 +25,7 @@ export function CatalogPage() {
   const { t } = useTranslation()
   const [kind, setKind] = useState<Kind>("service")
   const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState<CatalogItem | undefined>()
   const items = useCatalogItems(kind)
 
   const columns = useMemo<ColumnDef<CatalogItem, unknown>[]>(() => [
@@ -35,6 +36,7 @@ export function CatalogPage() {
       ? { header: t("catalog.fields.duration"), cell: ({ row }) => t("catalog.minutes", { n: row.original.duration_minutes }) }
       : { header: t("catalog.fields.tracked"), cell: ({ row }) => (row.original.is_stock_tracked ? t("catalog.yes") : t("catalog.no")) },
     { header: t("catalog.fields.status"), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+    { header: t("common.edit"), cell: ({ row }) => <PermissionGate permission="catalog.item.write"><Button variant="outline" size="sm" onClick={() => setEditing(row.original)}>{t("common.edit")}</Button></PermissionGate> },
     { header: t("catalog.fields.sku"), cell: ({ row }) => row.original.sku ?? "—" },
   ], [t, kind])
 
@@ -51,18 +53,22 @@ export function CatalogPage() {
           <DataTable columns={columns} data={items.data?.items} isLoading={items.isPending} error={items.error} onRetry={() => items.refetch()} caption={t("nav.catalog")} />
         </TabsContent>
       </Tabs>
+      {editing ? <ItemDialog key={editing.id} kind={editing.kind} item={editing} onOpenChange={() => setEditing(undefined)} /> : null}
       {creating ? <ItemDialog kind={kind} onOpenChange={setCreating} /> : null}
     </>
   )
 }
 
-function ItemDialog({ kind, onOpenChange }: { kind: Kind; onOpenChange: (open: boolean) => void }) {
+function ItemDialog({ kind, item, onOpenChange }: { kind: Kind; item?: CatalogItem; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation()
   const create = useCreateItem()
+  const update = useUpdateItem()
   const business = useBusiness()
-  const [name, setName] = useState("")
-  const [price, setPrice] = useState("")
-  const [duration, setDuration] = useState("60")
+  const [name, setName] = useState(item?.name ?? "")
+  const [price, setPrice] = useState(item?.price_minor != null ? minorToDecimal(item.price_minor, item.currency) : "")
+  const [duration, setDuration] = useState(String(item?.duration_minutes ?? 60))
+  const [recall, setRecall] = useState(String(item?.recall_interval_months ?? ""))
+  const [requiredKinds, setRequiredKinds] = useState<string[]>(item?.required_resources?.map((r) => r.kind) ?? [])
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const submit = () => {
@@ -79,17 +85,21 @@ function ItemDialog({ kind, onOpenChange }: { kind: Kind; onOpenChange: (open: b
       duration_minutes: kind === "service" ? Number(duration) : null, buffer_minutes: 0,
       resource_kind: kind === "service" ? "staff" : null, is_stock_tracked: kind === "product", is_bookable_online: kind === "service",
     }
-    create.mutate(body, {
+    const required_resources = requiredKinds.map((kind) => ({ kind: kind as "staff" | "room" | "equipment", role: kind === "staff" ? "provider" : kind === "room" ? "chair" : "equipment" }))
+    const callbacks = {
       onSuccess: () => onOpenChange(false),
-      onError: (e) => { if (e instanceof ApiProblem) setErrors(e.fieldErrors()); toastError(e) },
-    })
+      onError: (e: unknown) => { if (e instanceof ApiProblem) setErrors(e.fieldErrors()); toastError(e) },
+    }
+    if (item) update.mutate({ id: item.id, body: { version: item.version, name: body.name, price_minor: body.price_minor,
+      ...(kind === "service" ? { duration_minutes: Number(duration), required_resources, recall_interval_months: recall ? Number(recall) : null } : {}) } }, callbacks)
+    else create.mutate({ ...body, ...(kind === "service" ? { required_resources, recall_interval_months: recall ? Number(recall) : null } : {}) }, callbacks)
   }
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t(`catalog.new.${kind}`)}</DialogTitle>
+          <DialogTitle>{item ? t("common.edit") : t(`catalog.new.${kind}`)}</DialogTitle>
           <DialogDescription>{t("catalog.dialogHint")}</DialogDescription>
         </DialogHeader>
         {business.error ? <QueryError error={business.error} onRetry={() => business.refetch()} /> : null}
@@ -104,6 +114,15 @@ function ItemDialog({ kind, onOpenChange }: { kind: Kind; onOpenChange: (open: b
             <Input id="i-price" inputMode="decimal" value={price} aria-invalid={!!errors.price_minor} aria-describedby={errors.price_minor ? "i-price-error" : undefined} onChange={(e) => setPrice(e.target.value)} />
             {errors.price_minor ? <p id="i-price-error" role="alert" className="text-sm text-destructive">{errors.price_minor}</p> : null}
           </div>
+          {kind === "service" ? <fieldset className="space-y-2">
+            <legend>{t("dental.requiredResources")}</legend>
+            {(["staff", "room", "equipment"] as const).map((kind) => <label key={kind} className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={requiredKinds.includes(kind)} onChange={(e) => setRequiredKinds(
+                e.target.checked ? ["staff", ...requiredKinds.filter((k) => k !== "staff"), ...(kind !== "staff" ? [kind] : [])] : kind === "staff" ? [] : requiredKinds.filter((k) => k !== kind))} />{t(`dental.resourceKinds.${kind}`)}
+            </label>)}
+            <Label htmlFor="i-recall">{t("dental.recallInterval")}</Label>
+            <Input id="i-recall" type="number" min={1} max={120} value={recall} onChange={(e) => setRecall(e.target.value)} />
+          </fieldset> : null}
           {kind === "service" ? (
             <div className="space-y-1">
               <Label htmlFor="i-duration">{t("catalog.fields.durationInput")}</Label>
@@ -114,7 +133,7 @@ function ItemDialog({ kind, onOpenChange }: { kind: Kind; onOpenChange: (open: b
         </form>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
-          <Button type="submit" form="item-form" disabled={create.isPending || !business.data}>{t("common.save")}</Button>
+          <Button type="submit" form="item-form" disabled={create.isPending || update.isPending || !business.data}>{t("common.save")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

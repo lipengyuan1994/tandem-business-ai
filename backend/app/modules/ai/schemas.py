@@ -59,6 +59,7 @@ class PaymentReminderDraft(BaseModel):
 
 
 class SafetyVerdict(BaseModel):
+    emergency: bool = False
     care_category: Literal["none", "complaint", "warranty", "dispute"] = "none"
     care_priority: Literal["normal", "high", "urgent"] = "high"
     flagged: bool

@@ -5,7 +5,7 @@
 | Release / phase | MVP · P3 |
 | Tier / kind | **A** for availability, booking and executors; B for resource CRUD and UI · PRE |
 | Depends on | platform, org, crm, catalog, inventory, conversations, approvals, notifications |
-| Owns tables | `resources`, `resource_services`, `availability_rules`, `availability_exceptions`, `appointments` |
+| Owns tables | `resources`, `resource_services`, `availability_rules`, `availability_exceptions`, `appointments`, `appointment_resources` |
 
 ## Purpose
 Who or what can be booked, when they are available, and appointments, including short-lived **holds** used during proposal review. It guarantees no double-booking at the database level. Availability is computed deterministically; the AI only calls it.
@@ -144,7 +144,18 @@ The executor creates the customer through `crm.create_customer` if `new`, then c
 - `test_holds_released_when_proposal_rejected`
 
 ## Out of scope
-Recurring appointments, multi-resource appointments (technician + bay), capacity > 1 (classes), customer self-service rebooking, external calendar sync (v1+ via connector).
+Recurring appointments, capacity > 1 (classes), customer self-service rebooking, external calendar sync (v1+ via connector).
+
+## P10-E1 contract (2026-11-06)
+
+Optional catalog `required_resources` declares unique roles/kinds, primary first.
+Slots reserve one qualified resource of each kind at the location, for the entire
+duration plus buffer. `resources` on slot/appointment DTOs identifies each role.
+`appointment_resources` stores primary mirrors and additional allocations with a
+business/resource/time exclusion constraint. Database triggers synchronize lifecycle
+changes, including bulk hold expiry; primary appointments created before migration
+remain protected without a backfill. All entry points use the shared finder and
+booking path. Services without requirements retain their single-resource behavior.
 
 ## As built (P3, 2026-11-03)
 - Slot windows are half-open: a start is offered when `start < latest`, so `latest` bounds the start time (see the algorithm above).

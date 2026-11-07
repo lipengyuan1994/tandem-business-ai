@@ -10,6 +10,19 @@ Kind = Literal["service", "product"]
 ResourceKind = Literal["staff", "room", "equipment"]
 
 
+class ResourceRequirement(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    role: str = Field(pattern=r"^[a-z][a-z0-9_]{0,39}$")
+    kind: ResourceKind
+
+
+def validate_requirements(values: list[ResourceRequirement], primary: str | None) -> None:
+    if len({v.role for v in values}) != len(values) or len({v.kind for v in values}) != len(values):
+        raise ValueError("required resource roles and kinds must be unique")
+    if values and values[0].kind != primary:
+        raise ValueError("first required resource must match the primary resource kind")
+
+
 class Money(BaseModel):
     amount_minor: int
     currency: str = Field(min_length=3, max_length=3)
@@ -28,6 +41,7 @@ class CatalogItemOut(BaseModel):
     duration_minutes: int | None
     recall_interval_months: int | None = None
     buffer_minutes: int
+    required_resources: list[ResourceRequirement] = Field(default_factory=list, max_length=3)
     resource_kind: ResourceKind | None
     is_stock_tracked: bool
     is_bookable_online: bool
@@ -45,6 +59,7 @@ class _ItemFields(BaseModel):
     duration_minutes: int | None = Field(default=None, ge=5, le=1440)
     recall_interval_months: int | None = Field(default=None, ge=1, le=120)
     buffer_minutes: int = Field(default=0, ge=0, le=240)
+    required_resources: list[ResourceRequirement] = Field(default_factory=list, max_length=3)
     resource_kind: ResourceKind | None = None
     is_stock_tracked: bool = False
     is_bookable_online: bool = False
@@ -55,6 +70,9 @@ class CatalogItemCreate(_ItemFields):
 
     @model_validator(mode="after")
     def _kind_rules(self) -> CatalogItemCreate:
+        validate_requirements(self.required_resources, self.resource_kind)
+        if self.kind != "service" and self.required_resources:
+            raise ValueError("only services have required resources")
         if self.kind == "service":
             if self.duration_minutes is None or self.resource_kind is None:
                 raise ValueError("catalog.service_requires_duration")
@@ -68,6 +86,7 @@ class CatalogItemCreate(_ItemFields):
 
 
 class CatalogItemUpdate(BaseModel):
+    required_resources: list[ResourceRequirement] = Field(default_factory=list, max_length=3)
     model_config = ConfigDict(extra="forbid")
     version: int
     sku: str | None = None
@@ -98,6 +117,7 @@ class ServiceRequirements(BaseModel):
     duration_minutes: int
     recall_interval_months: int | None = None
     buffer_minutes: int
+    required_resources: list[ResourceRequirement] = Field(default_factory=list, max_length=3)
     resource_kind: ResourceKind
     price_minor: int | None
     currency: str

@@ -78,7 +78,7 @@ class Expect(StrictModel):
 class Case(StrictModel):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]+$")
     suite: Suite
-    business: Literal["biz-cycle", "biz-garden"]
+    business: Literal["biz-cycle", "biz-garden", "biz-dental"]
     now: datetime
     input: dict[str, Any]
     expect: Expect

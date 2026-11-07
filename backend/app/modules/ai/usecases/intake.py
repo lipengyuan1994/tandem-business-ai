@@ -147,6 +147,8 @@ def run_agent_step(
         ),
         context_blocks=[
             ContextBlock(label="business_brief", text=state.business.model_dump_json(), untrusted=False),
+            ContextBlock(label="emergency_handling",
+                         text=str(state.server_facts.get("emergency_handling", False)), untrusted=False),
             ContextBlock(
                 label="opening_hours", untrusted=False,
                 text=json.dumps({"timezone": state.business.timezone, "weekday_key": "0 = Monday",
@@ -216,6 +218,7 @@ def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None
     with transaction(ctx) as db:
         message = conversations.get_message_context(db, ctx, message_id)
         brief = org.get_business_brief(db, ctx)
+        emergency_handling = org.get_settings(db, ctx).emergency_handling
     guard_ctx = system_context(business_id, frozenset({"approvals.proposal.read"}))
     with transaction(guard_ctx) as db:
         open_proposals = approvals.find_open_proposals(
@@ -225,18 +228,46 @@ def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None
     state = IntakeState(
         message_id=message_id, trigger_key=f"intake:{message_id}", business=brief, router=router,
         server_facts={"visitor_name": message.visitor_name, "visitor_email": message.visitor_email,
-                      "visitor_phone": message.visitor_phone, "ai_generation": message.message_ai_generation},
+                      "visitor_phone": message.visitor_phone, "ai_generation": message.message_ai_generation,
+                      "emergency_handling": emergency_handling},
     )  # fmt: skip
+    result: RunResult | None
+    if message.emergency:
+        result = _early_result(ctx_factory, state, {"reason": "emergency", "handoff_requested": True})
+        _outcome_note(ctx_factory, message.conversation_id, message_id, result)
+        return result
     if message.ai_mode != "auto" or message.ai_generation != message.message_ai_generation:
         return _early_result(ctx_factory, state, {"reason": "ai_paused"})
-    result: RunResult | None = None
+    if emergency_handling:
+        try:
+            verdict = safety.screen(ctx_factory, message.body, state.trigger_key, router=router)
+        except AiError:
+            verdict = None
+        if (
+            verdict is None
+            or "emergency" not in verdict.model_fields_set
+            or verdict.emergency
+            or verdict.flagged
+            or verdict.category != "none"
+        ):
+            with transaction(ctx) as db:
+                conversations.request_emergency_handoff(db, ctx, message.conversation_id)
+            emergency_result = _early_result(ctx_factory, state, {"reason": "emergency", "handoff_requested": True})
+            _outcome_note(ctx_factory, message.conversation_id, message_id, emergency_result)
+            return emergency_result
+        state.server_facts["safety_clean"] = verdict.category == "none"
+        if verdict.care_category != "none":
+            state.extra.update(care_category=verdict.care_category, care_priority=verdict.care_priority)
+    result = None
     with transaction(ctx) as db:
         allowed = admit_run(db, ctx, message_id)
     if not allowed:
         result = _early_result(ctx_factory, state, {"reason": "public_intake_limit"})
     elif open_proposals:
         result = _early_result(ctx_factory, state, {"reason": "open_proposal"})
-    elif message.channel == "web_chat":
+    elif emergency_handling and state.extra.get("care_category"):
+        result = _early_result(ctx_factory, state, {"reason": "customer_care"})
+    elif message.channel == "web_chat" and not emergency_handling:
         try:
             verdict = safety.screen(ctx_factory, message.body, state.trigger_key, router=router)
         except AiError:
@@ -270,6 +301,10 @@ def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None
             state.extra.update({"reason": "ambiguous_customer", "candidates": list(match.candidates)})
         result = run_agent_step(ctx_factory, message, match, state)
         result = result.model_copy(update={"extra": {**result.extra, **state.extra}})
+    if emergency_handling and result.final and result.final.emergency:
+        with transaction(ctx) as db:
+            conversations.request_emergency_handoff(db, ctx, message.conversation_id)
+        result = result.model_copy(update={"extra": {**result.extra, "reason": "emergency", "handoff_requested": True}})
     care_category = result.final.care_category if result.final else result.extra.get("care_category", "none")
     if care_category != "none":
         from ..customer_care.triage import enqueue

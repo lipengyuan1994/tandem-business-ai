@@ -56,7 +56,7 @@ export function ResourceDayGrid({ resources, appointments, timeZone, localDate, 
             {isToday && nowMinute >= window.startMinute && nowMinute < window.endMinute ? (
               <div data-testid="now-line" className="pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-destructive" style={{ top: `${((nowMinute - window.startMinute) / SLOT_MINUTES) * ROW_REM}rem` }}><span className="absolute right-0 -top-5 rounded bg-background px-1 text-sm text-destructive">{t("schedule.currentTime")}</span></div>
             ) : null}
-            {shown.filter((a) => a.resource_id === r.id).map((a) => {
+            {shown.filter((a) => a.resource_id === r.id || a.resources?.some((resource) => resource.resource_id === r.id)).map((a) => {
               const pos = place(a.starts_at, a.ends_at, timeZone, window)
               const time = `${formatInZone(a.starts_at, timeZone, "HH:mm")}–${formatInZone(a.ends_at, timeZone, "HH:mm")}`
               const aZone = zoneAbbreviation(a.starts_at, timeZone) // differs from the header only on DST days
@@ -69,6 +69,7 @@ export function ResourceDayGrid({ resources, appointments, timeZone, localDate, 
                   style={{ top: `${pos.top * ROW_REM}rem`, height: `${pos.height * ROW_REM}rem` }}>
                   <span className="block font-medium">{time} {a.service_name}</span>
                   <span className="block truncate">{a.customer_name}</span>
+                  {a.resources?.length ? <span className="block truncate">{a.resources.map((resource) => resource.resource_name).join(" + ")}</span> : null}
                   {left !== null ? <span className="block font-medium">{t("schedule.holdExpires", { n: left })}</span> : null}
                 </button>
               )

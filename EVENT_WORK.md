@@ -172,3 +172,29 @@ checkout with the dental work in progress; no screens changed). Deployment and r
 backup; `upgrade.sh 0.1.7 → 0.1.8` in 29 s, smoke passed. In-container live check: 7 agents, Customer Care off;
 safety v2 classified "my rear brake squeaks, please book" as `care_category=none` and a complaint about earlier
 brake work as `complaint/high`. SSH closed, Terraform no changes, readyz 200, pending charges $6.70.
+
+## 2026-11-06 — P10-E1 synthetic dental configuration (Codex, local only)
+
+Implemented provider/chair scheduling with an exclusion-protected occupancy ledger and no-backfill migration;
+conservative synchronous/classifier emergency hand-over, urgent Work items and deterministic clinic instructions;
+15-patient clinic fixtures, existing B2 six-month recall in shadow, backend legal banner and regulated marker
+refusal; service/emergency settings and allocation/banner UI. Contracts/M06 were updated first. No clinical
+features or inference-provider changes. Focused dental/demo-login verification: 49 passed in `smb_dental`. Full backend verification blocked
+by PostgreSQL tmpfs storage exhaustion; host has ~185 GiB free. No other databases were removed.
+Evidence, pending owner storage input and independent-check results are in `docs/roadmap/ai/cards/P10-E1.md`. No installs, downloads, external calls, Docker, commits or deployment.
+
+P10-E1 independent checks completed: 460 frontend tests; ruff/format, mypy (360 app source files),
+frontend typecheck/lint, OpenAPI/types, 283-row/33-table fixture validation, license checks and gitleaks
+passed. Offline deployment checks ran 106 cases with 19 skips; full backend/make check remain blocked
+by the observed PostgreSQL storage error. Detailed requirement evidence and changed-file list are in the card.
+
+## 2026-11-06 — P10-E1 reviewer follow-up (Codex)
+
+Reviewer reports shared tmpfs space restored and reserves full suites for sequential reviewer runs.
+Fixed synthetic_demo_exists search_path to place pg_temp last; downgraded/upgraded only smb_dental
+and confirmed head. Reproduced the intake privacy test's missing registry in the existing inbound
+message event publication path (before emergency handling); supplied the missing registry test fixture.
+Updated intended boolean context, v7 with retained v1–v6, empty legacy resource list and emergency
+DTO expectations. Nine reported cases plus regulated startup regression: 10 passed in 8.71 s.
+Ruff/format (686 files) and mypy (360 source files) passed. Full backend suite and make check were
+not run in this follow-up; next full verification is reviewer-run. No commits or external calls.

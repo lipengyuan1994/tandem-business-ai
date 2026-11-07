@@ -11,7 +11,7 @@ const ID = "00000000-0000-7000-8000-0000000000f1"
 const base = `*/api/v1/conversations/${ID}`
 const THREAD: Thread = {
   id: ID, channel: "web_chat", status: "waiting_on_staff", subject: "Warranty question", customer_id: null, customer_name: null, visitor_name: "Ada Example", visitor_email: null,
-  assigned_to: null, handoff_requested_at: "2026-11-05T17:00:00Z", last_message_at: "2026-11-05T17:00:00Z", version: 2,
+  assigned_to: null, emergency: false, handoff_requested_at: "2026-11-05T17:00:00Z", last_message_at: "2026-11-05T17:00:00Z", version: 2,
   ai_mode: "auto", ai_generation: 0, ai_paused_at: null, contact_consent_at: null, contact_consent_text: null,
   messages: [{ id: "reply-1", direction: "outbound", author_kind: "assistant", author_user_id: null, body: "Warranty draft", created_at: "2026-11-05T17:00:00Z", delivery_status: null, proposal_id: null,
     publication_state: "withheld", publish_at: new Date(Date.now() + 120000).toISOString(), sending_label: "Sending in 2:00", stop_url: "/api/v1/conversations/messages/reply-1/stop" }],
@@ -25,7 +25,7 @@ function setup(perms: string[] = []) {
     http.get(base, () => HttpResponse.json(thread)),
     http.get("*/api/v1/crm/customers/match", () => HttpResponse.json([])),
     http.post(`${base}/take-over`, () => { actions.push("take-over"); thread = { ...thread, ai_mode: "human", ai_generation: 1 }; return HttpResponse.json(thread) }),
-    http.post(`${base}/hand-back`, () => { actions.push("hand-back"); thread = { ...thread, ai_mode: "auto", ai_generation: 2, handoff_requested_at: null }; return HttpResponse.json(thread) }),
+    http.post(`${base}/hand-back`, () => { actions.push("hand-back"); thread = { ...thread, ai_mode: "auto", ai_generation: 2, emergency: false, handoff_requested_at: null }; return HttpResponse.json(thread) }),
     http.post("*/api/v1/conversations/messages/reply-1/stop", () => { actions.push("stop"); thread = { ...thread, messages: thread.messages.map((m) => ({ ...m, publication_state: "stopped", stop_url: null })) }; return HttpResponse.json(thread.messages[0]) }),
   )
   return actions

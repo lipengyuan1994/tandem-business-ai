@@ -31,6 +31,7 @@ def validate_step(
         and spec.trigger_message_id
         and not proposals
         and step.care_category == "none"
+        and not step.emergency
     ):
         raise ValueError(REPLY_REQUIRED)
     if isinstance(step, ToolCallStep) and spec.use_case == "intake" and step.tool == "search_knowledge" and state:

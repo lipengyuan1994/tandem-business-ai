@@ -61,3 +61,33 @@ Only if step 5 ended by 3:50.
 
 ## If something goes wrong during the demo
 Do not fix live. Say what the screen shows, reset with the command above after the demo, and write the issue into `PRE_EVENT_WORK.md`.
+
+## P10-E1: Example Dental Clinic (synthetic)
+
+Use the existing `demo-logins` command with `--business example-dental-clinic` for Ellery Example
+(dentist/owner), Devon Example (hygienist), and Rowan Example (front desk). Account creation is an
+explicit operator action; no external accounts were created during implementation.
+
+1. Switch to Example Dental Clinic (America/Chicago, USD). Show Patient, Provider and Treatment labels.
+   On AI Team, Autonomy, Knowledge, Inbox and the assistant, read the backend-provided banner:
+
+   > Synthetic demo data. In production, patients' protected health information (PHI) and other personal data must be processed only by AI models hosted locally under the clinic's control — no external AI API. Compliance also needs the clinic's HIPAA policies, agreements and a legal review.
+
+2. Schedule an Exam and cleaning: sixty minutes plus fifteen-minute buffer, qualified hygienist or
+   dentist and one of three chairs. Both columns show the booking. A busy chair/provider is excluded
+   for the whole blocked interval. Cancellation or expiry releases every allocated resource.
+3. In `/p/example-dental-clinic/chat`, ask to arrange a normal visit for a rough filling. No pain,
+   swelling, injury or urgency is mentioned; this may follow normal intake and staff booking approval.
+4. Start a fresh chat: "My face is swelling and I have severe pain." Before any model answer or
+   booking, show the clinic instructions and local-emergency-number sentence, human ownership,
+   urgent Work queue item, and staff notification. Negated emergency keywords also escalate; this
+   conservative demo does not infer medical severity or give advice.
+5. Customer Care is enabled, recall is six months and its autonomy rule is shadow/ask. Run the existing
+   recall job through the operator workflow: Avery, Blair and Emery are eligible in the seeded story;
+   Cedar already has a future booking, Drew lacks consent, Finley and Gray are recent. Review the
+   minimal draft: no treatment names, clinical details or notes. No automatic message delivery is claimed.
+6. Explain D5=a: hosted Vultr models process synthetic data only here. A regulated installation refuses
+   the demo marker; real clinic operation requires local models under clinic control and the policies,
+   agreements and legal review stated above.
+
+Live hosted-model evaluation and VM demo verification were not run for this implementation.

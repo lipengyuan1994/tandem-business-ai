@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toastError } from "@/lib/errors"
 import { useSettings, useUpdateSettings } from "../hooks"
 
 type NumberKey = "hold_minutes" | "booking_lead_time_minutes" | "retention_days_conversations"
-type BoolKey = "allow_self_approval" | "allow_backorders" | "public_chat_enabled"
+type BoolKey = "allow_self_approval" | "allow_backorders" | "public_chat_enabled" | "emergency_handling"
 
 export function PoliciesPage() {
   const settings = useSettings()
@@ -57,6 +58,13 @@ function PoliciesForm({ initial, version, onReload }: { initial: BusinessSetting
       <section className="space-y-3"><h2 className="font-medium">{t("settings.policies.scheduling")}</h2>{num("hold_minutes")}{num("booking_lead_time_minutes")}</section>
       <section className="space-y-3"><h2 className="font-medium">{t("settings.policies.approvals")}</h2>{bool("allow_self_approval")}{bool("allow_backorders")}</section>
       <section className="space-y-3"><h2 className="font-medium">{t("settings.policies.customers")}</h2>{bool("public_chat_enabled")}{num("retention_days_conversations")}</section>
+      <section className="space-y-3">
+        <h2 className="font-medium">{t("dental.emergencySettings")}</h2>
+        {bool("emergency_handling")}
+        <Label htmlFor="emergency-instructions">{t("dental.emergencyInstructions")}</Label>
+        <Textarea id="emergency-instructions" disabled={!canEdit} required maxLength={2000} value={draft.emergency_instructions ?? ""}
+          onChange={(e) => setDraft({ ...draft, emergency_instructions: e.target.value })} />
+      </section>
       <section className="space-y-2">
         <h2 className="font-medium">{t("settings.policies.terminology")}</h2>
         <p className="text-xs text-muted-foreground">{t("settings.policies.terminologyHelp")}</p>

@@ -13,11 +13,13 @@ from app.platform.crud import rows_affected
 from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
-from .models import Appointment, AvailabilityException, AvailabilityRule, Resource, ResourceService
+from .models import Appointment, AppointmentResource, AvailabilityException, AvailabilityRule, Resource, ResourceService
 
 
 def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:
-    tables = stream_models(db, ctx, [Resource, ResourceService, AvailabilityRule, AvailabilityException, Appointment])
+    tables = stream_models(
+        db, ctx, [Resource, ResourceService, AvailabilityRule, AvailabilityException, Appointment, AppointmentResource]
+    )
     return export_tables(tables, streaming=streaming)
 
 

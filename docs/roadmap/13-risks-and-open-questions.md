@@ -48,3 +48,19 @@ is included. Backend seed/migrations are verified separately. Pending answer, th
 | Q10 | Healthcare (for example dental clinics) as a later vertical? Checked 2026-11-03 from public pages: Vultr's Terms of Service §17 offer a "Configurable HIPAA Server" (virtual private servers only) after an architectural review and a signed acknowledgement; the ToS do not mention a BAA, Object Storage, Managed Databases or Serverless Inference, and say Vultr provides no backups for those servers. Vultr's inference docs say prompts are processed in memory and not stored by default, with no HIPAA statement. OpenAI (API, with modified retention) and Anthropic (first-party API, selected features) state that they sign BAAs; Google offers Vertex AI under its Cloud BAA. | Post-v1 | Keep healthcare out of scope for v1 and the event. Design for it by configuration: [ADR-018](03-decisions.md#adr-018-regulated-data-profile-health-clinics-later-by-configuration) (regulated data profile). Before any clinic edition: written confirmation from Vultr of which products a BAA covers, a BAA-covered inference route, read-access audit logging, retention vs erasure rules, legal review | OPEN |
 
 Agents append new questions here with the next `Q` number, the task ID that raised them and status `OPEN`.
+
+### P10-E1 verification storage (2026-11-06)
+
+The isolated `smb_dental` PostgreSQL server returned `DiskFull: No space left on device` while
+truncating test tables during full-suite teardown. Host disk has approximately 185 GiB free; the
+existing `db-test` configuration uses tmpfs for PostgreSQL data. Database sizes are only 22–39 MB each;
+the server filesystem's available bytes/inodes and WAL usage remain unverified without further server
+access. This is an observed test-infrastructure failure, not evidence of a dental business-rule failure.
+
+Resolved storage request (reviewer report, 2026-11-06): space restored; parallel full-suite runs had
+exhausted the shared tmpfs. No further storage action requested. No databases were dropped by this task;
+`smb`, `smb_c2a`, `smb_c2b` and the other tasks' databases were preserved. The reviewer now runs full
+suites one at a time; the implementer must not run the full backend suite or `make check`. Nine real
+failures identified by that review were fixed and passed targeted verification (10 cases including the
+regulated startup guard). `smb_dental` was downgraded/upgraded and confirmed at head. Full-suite
+verification is pending the reviewer-run result, rather than a storage action.

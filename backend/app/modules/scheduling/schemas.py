@@ -83,7 +83,14 @@ class SlotQuery(BaseModel):
     limit: int = Field(default=10, ge=1, le=100)
 
 
+class AllocatedResource(BaseModel):
+    role: str
+    resource_id: uuid.UUID
+    resource_name: str
+
+
 class SlotOut(BaseModel):
+    resources: list[AllocatedResource] = Field(default_factory=list)
     starts_at: datetime
     ends_at: datetime
     resource_id: uuid.UUID
@@ -92,6 +99,7 @@ class SlotOut(BaseModel):
 
 
 class AppointmentOut(BaseModel):
+    resources: list[AllocatedResource] = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     customer_id: uuid.UUID

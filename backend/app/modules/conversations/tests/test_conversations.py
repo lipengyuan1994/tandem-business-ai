@@ -149,6 +149,7 @@ def test_get_message_context_fields_and_isolation(app: Any, biz: uuid.UUID, staf
             "ai_mode": "auto",
             "ai_generation": 0,
             "message_ai_generation": 0,
+            "emergency": False,
         }
         with pytest.raises(NotFound):
             conversations.get_message_context(db, ctx, new_id())

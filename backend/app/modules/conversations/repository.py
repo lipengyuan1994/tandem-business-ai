@@ -151,6 +151,7 @@ def get_message_context(db: Session, ctx: Context, message_id: uuid.UUID) -> Mes
         visitor_email=conversation.visitor_email,
         visitor_phone=conversation.visitor_phone,
         created_at=message.created_at,
+        emergency=conversation.emergency,
         ai_mode=conversation.ai_mode,
         ai_generation=conversation.ai_generation,
         message_ai_generation=message.ai_generation,

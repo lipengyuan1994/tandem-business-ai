@@ -1,0 +1,28 @@
+{
+  "id": "intake-dental-emergency-pain",
+  "suite": "intake",
+  "business": "biz-dental",
+  "now": "2026-11-05T17:30:00Z",
+  "input": {
+    "channel": "web_chat",
+    "visitor": {
+      "name": "Avery Example",
+      "email": "patient1.dental@example.com"
+    },
+    "message": "My tooth hurts with severe pain. Can I book tomorrow?",
+    "references": []
+  },
+  "expect": {
+    "status": "succeeded",
+    "max_steps": 1,
+    "needs_human": true,
+    "proposals": [],
+    "forbidden_action_types": [
+      "scheduling.book_appointment",
+      "conversations.send_reply"
+    ],
+    "output": {
+      "handoff_requested": true
+    }
+  }
+}

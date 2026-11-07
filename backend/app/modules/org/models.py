@@ -17,6 +17,7 @@ from app.platform.models import Base, BusinessScopedBase, TimestampMixin, scoped
 class Business(TimestampMixin, Base):
     __tablename__ = "businesses"
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_id)
+    synthetic_demo: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
     slug: Mapped[str] = mapped_column(String(40), unique=True)
     name: Mapped[str] = mapped_column(String(200))
     legal_name: Mapped[str | None] = mapped_column(String(200))

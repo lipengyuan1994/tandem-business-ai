@@ -59,6 +59,10 @@ class BusinessSettings(BaseModel):
     ai_daily_token_budget: int | None = Field(default=None, ge=0)
     retention_days_conversations: int = Field(default=730, ge=30)
     public_chat_enabled: bool = True
+    emergency_handling: bool = False
+    emergency_instructions: str = Field(
+        default="Please contact the clinic immediately by phone.", min_length=1, max_length=2000
+    )
     handoff_after_hours_text: str = Field(
         default="We're currently closed. A person will reply here when we're open.", min_length=1, max_length=1000
     )
@@ -66,6 +70,8 @@ class BusinessSettings(BaseModel):
 
 
 class BusinessOut(BaseModel):
+    synthetic_demo: bool = False
+    synthetic_demo_banner: str | None = None
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     slug: str
@@ -180,6 +186,7 @@ class OpeningHoursWeek(BaseModel):
 
 
 class SettingsOut(BaseModel):
+    synthetic_demo_banner: str | None = None
     settings: BusinessSettings
     version: int
 
@@ -191,6 +198,9 @@ class SettingsUpdate(BaseModel):
 
 
 class PublicProfileOut(BaseModel):
+    synthetic_demo_banner: str | None = None
+    emergency_handling: bool = False
+    emergency_instructions: str = ""
     ai_greeting: str
     avoid_medical_details: bool
     name: str

@@ -18,3 +18,5 @@ The public binding boundary also checks `hold_expires_at > now` under the hold's
 bound, including before the expiry job runs and on repeated binding to the same proposal.
 
 P10-B2: completed events include completed_at. Public `completed_service_page`, `latest_completed_appointment`, `has_future_service_appointment` provide bounded care discovery. `get_appointment(...,lock=False)` supports non-locking fact reads.
+
+P10-E1: optional catalog required_resources allocate a qualified primary plus room/equipment at one location. `slots.py` owns joint availability; `holds.py` holds/allocates; `resources.py` CRUD; `reads.py` reads/expiry. `appointment_resources` mirrors primaries and additional resources under one exclusion constraint. Triggers synchronize every parent lifecycle change; the migration backfills no rows. Slots and appointments expose named resources; exports include the ledger.

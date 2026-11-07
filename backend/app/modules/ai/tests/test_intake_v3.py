@@ -24,10 +24,10 @@ def demo(owner_engine: Engine) -> Demo:
     return seed_demo(owner_engine)
 
 
-def test_intake_loads_v6_and_keeps_older_versions() -> None:
-    assert load_prompt("intake").version == 6
+def test_intake_loads_v7_and_keeps_older_versions() -> None:
+    assert load_prompt("intake").version == 7
     assert load_prompt("intake").output == "AgentStep"
-    assert [load_prompt("intake", version).version for version in (1, 2, 3, 4, 5)] == [1, 2, 3, 4, 5]
+    assert [load_prompt("intake", version).version for version in (1, 2, 3, 4, 5, 6)] == [1, 2, 3, 4, 5, 6]
 
 
 def assert_reply_draft(
@@ -49,7 +49,7 @@ def assert_reply_draft(
         "safety_clean": False,
         "bundled_action": False,
     }
-    assert (recorded.prompt_name, recorded.prompt_version, recorded.needs_human) == ("intake", 6, needs_human)
+    assert (recorded.prompt_name, recorded.prompt_version, recorded.needs_human) == ("intake", 7, needs_human)
     assert recorded.result["needs_human"] is needs_human
     with owner_engine.connect() as db:
         assert (

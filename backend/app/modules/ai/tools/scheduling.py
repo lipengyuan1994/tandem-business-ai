@@ -64,7 +64,8 @@ def _find_slots(db: Session, ctx: Context, args: BaseModel, state: RunState) -> 
             "slots",
             [
                 {"starts_at": utc(s.starts_at), "ends_at": utc(s.ends_at), "resource_id": s.resource_id,
-                 "resource_name": s.resource_name, "local_label": s.local_label}
+                 "resource_name": s.resource_name, "local_label": s.local_label,
+                 "resources": [r.model_dump(mode="json") for r in s.resources]}
                 for s in slots
             ],
             MAX_SLOTS,

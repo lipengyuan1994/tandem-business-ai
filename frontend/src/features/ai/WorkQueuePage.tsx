@@ -37,11 +37,11 @@ function QueueList({ exceptions, agentKey }: { exceptions: boolean; agentKey?: s
   const agents = useAgents(!!agentKey)
   const agent = agents.data?.items.find((item) => item.key === agentKey)
   const actions = new Set(agent?.autonomy.map((rule) => rule.action_type))
-  const items = queue.data?.pages.flatMap((page) => page.items).filter((item) => !agentKey || !!item.action_type && actions.has(item.action_type))
+  const items = queue.data?.pages.flatMap((page) => page.items).filter((item) => !agentKey || item.kind === "emergency_handoff" || !!item.action_type && actions.has(item.action_type))
   const prefix = exceptions ? "ai.exceptions" : "ai.workQueue"
   const columns: ColumnDef<WorkItem, unknown>[] = [
     { header: t("ai.queues.item"), cell: ({ row: { original: item } }) => {
-      const href = item.proposal_id ? `/approvals/${item.proposal_id}` : item.quote_request_id ? `/purchasing/quote-requests/${item.quote_request_id}` : null
+      const href = item.proposal_id ? `/approvals/${item.proposal_id}` : item.quote_request_id ? `/purchasing/quote-requests/${item.quote_request_id}` : item.conversation_id ? `/inbox/${item.conversation_id}` : null
       return <div className="space-y-1">{href ? <a className="record-link" href={href}>{item.title}</a> : <p>{item.title}</p>}<p className="text-sm text-muted-foreground">{t(`ai.queues.kinds.${item.kind}`)}</p></div>
     } },
     { header: t("ai.queues.state"), cell: ({ row: { original: item } }) => <div className="space-y-2">

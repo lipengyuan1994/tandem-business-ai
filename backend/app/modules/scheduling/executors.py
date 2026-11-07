@@ -68,6 +68,9 @@ def _validate_book(db: Session, ctx: Context, p: BookAppointmentPayload) -> None
 
 
 def _run_book(db: Session, ctx: Context, p: BookAppointmentPayload, meta: ExecutionMeta) -> dict[str, Any]:
+    if ctx.ai_run_id is not None and p.reply:
+        # Ownership changes (including emergency escalation) invalidate an AI booking before any write.
+        conversations.ensure_ai_active(db, ctx, p.reply.conversation_id, lock=True)
     customer_id = (
         p.customer.id if isinstance(p.customer, ExistingCustomer) else crm.create_customer(db, ctx, p.customer.new).id
     )

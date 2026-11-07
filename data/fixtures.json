@@ -44,6 +44,19 @@
         "currency": "GBP",
         "locale": "en-GB",
         "is_mock": 1
+      },
+      {
+        "id": "biz-dental",
+        "slug": "example-dental-clinic",
+        "name": "Example Dental Clinic",
+        "timezone": "America/Chicago",
+        "currency": "USD",
+        "locale": "en-US",
+        "is_mock": 1,
+        "synthetic": true,
+        "synthetic_demo": true,
+        "settings_json": "{\"terminology\": {\"customer\": \"Patient\", \"customers\": \"Patients\", \"technician\": \"Provider\", \"technicians\": \"Providers\", \"service\": \"Treatment\", \"services\": \"Treatments\"}, \"emergency_handling\": true, \"emergency_instructions\": \"Call Example Dental Clinic at +1 312 555 0100 immediately. Do not wait for a chat reply. If the clinic is closed, contact your local emergency service.\", \"ai_policy\": \"hosted_vultr\"}",
+        "public_profile_json": "{\"email\": \"dental@example.com\", \"avoid_medical_details\": true}"
       }
     ],
     "locations": [
@@ -59,6 +72,13 @@
         "business_id": "biz-garden",
         "name": "Garden centre",
         "timezone": "Europe/London",
+        "is_default": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "loc-dental-main",
+        "name": "Main clinic",
+        "timezone": "America/Chicago",
         "is_default": 1
       }
     ],
@@ -150,6 +170,46 @@
         "weekday": 5,
         "opens": "08:30",
         "closes": "17:30"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "oh-dental-0",
+        "location_id": "loc-dental-main",
+        "weekday": 0,
+        "opens": "08:00",
+        "closes": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "oh-dental-1",
+        "location_id": "loc-dental-main",
+        "weekday": 1,
+        "opens": "08:00",
+        "closes": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "oh-dental-2",
+        "location_id": "loc-dental-main",
+        "weekday": 2,
+        "opens": "08:00",
+        "closes": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "oh-dental-3",
+        "location_id": "loc-dental-main",
+        "weekday": 3,
+        "opens": "08:00",
+        "closes": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "oh-dental-4",
+        "location_id": "loc-dental-main",
+        "weekday": 4,
+        "opens": "08:00",
+        "closes": "17:00"
       }
     ],
     "users": [
@@ -199,6 +259,24 @@
         "id": "user-sam",
         "email": "sam@example.com",
         "display_name": "Sam Example",
+        "is_mock": 1
+      },
+      {
+        "id": "user-dental-ellery",
+        "email": "ellery.dental@example.com",
+        "display_name": "Ellery Example",
+        "is_mock": 1
+      },
+      {
+        "id": "user-dental-devon",
+        "email": "devon.dental@example.com",
+        "display_name": "Devon Example",
+        "is_mock": 1
+      },
+      {
+        "id": "user-dental-rowan",
+        "email": "rowan.dental@example.com",
+        "display_name": "Rowan Example",
         "is_mock": 1
       }
     ],
@@ -265,6 +343,27 @@
         "user_id": "user-morgan",
         "status": "active",
         "title": "Weekend help"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "mem-dental-ellery",
+        "user_id": "user-dental-ellery",
+        "status": "active",
+        "title": "Dentist"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "mem-dental-devon",
+        "user_id": "user-dental-devon",
+        "status": "active",
+        "title": "Hygienist"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "mem-dental-rowan",
+        "user_id": "user-dental-rowan",
+        "status": "active",
+        "title": "Front desk"
       }
     ],
     "role_grants": [
@@ -320,6 +419,24 @@
         "id": "rg-garden-morgan-operator",
         "business_id": "biz-garden",
         "membership_id": "mem-garden-morgan",
+        "role": "operator"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rg-dental-ellery",
+        "membership_id": "mem-dental-ellery",
+        "role": "owner"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rg-dental-devon",
+        "membership_id": "mem-dental-devon",
+        "role": "operator"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rg-dental-rowan",
+        "membership_id": "mem-dental-rowan",
         "role": "operator"
       }
     ],
@@ -383,6 +500,36 @@
         "daily_cap": 10,
         "active": true,
         "granted_by": "user-sam"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "autonomy-dental-inventory.create_reorder_draft",
+        "action_type": "inventory.create_reorder_draft",
+        "level": "act_notify",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-dental-ellery"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "autonomy-dental-conversations.send_reply",
+        "action_type": "conversations.send_reply",
+        "level": "ask",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-dental-ellery"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "autonomy-dental-customer_care.send_message",
+        "action_type": "customer_care.send_message",
+        "level": "ask",
+        "shadow": true,
+        "daily_cap": 10,
+        "active": true,
+        "granted_by": "user-dental-ellery"
       }
     ],
     "customers": [
@@ -455,6 +602,141 @@
         "kind": "person",
         "display_name": "Hal Example",
         "timezone": null,
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-1",
+        "kind": "person",
+        "display_name": "Avery Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-2",
+        "kind": "person",
+        "display_name": "Blair Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-3",
+        "kind": "person",
+        "display_name": "Cedar Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-4",
+        "kind": "person",
+        "display_name": "Drew Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-5",
+        "kind": "person",
+        "display_name": "Emery Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-6",
+        "kind": "person",
+        "display_name": "Finley Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-7",
+        "kind": "person",
+        "display_name": "Gray Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-8",
+        "kind": "person",
+        "display_name": "Harper Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-9",
+        "kind": "person",
+        "display_name": "Indigo Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-10",
+        "kind": "person",
+        "display_name": "Jules Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-11",
+        "kind": "person",
+        "display_name": "Kai Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-12",
+        "kind": "person",
+        "display_name": "Lane Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-13",
+        "kind": "person",
+        "display_name": "Marlowe Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-14",
+        "kind": "person",
+        "display_name": "Noel Example",
+        "timezone": "America/Chicago",
+        "source": "staff",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "patient-dental-15",
+        "kind": "person",
+        "display_name": "Oakley Example",
+        "timezone": "America/Chicago",
         "source": "staff",
         "status": "active"
       }
@@ -539,6 +821,126 @@
         "type": "phone",
         "value": "+447700900123",
         "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-1",
+        "customer_id": "patient-dental-1",
+        "type": "email",
+        "value": "patient1.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-2",
+        "customer_id": "patient-dental-2",
+        "type": "email",
+        "value": "patient2.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-3",
+        "customer_id": "patient-dental-3",
+        "type": "email",
+        "value": "patient3.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-4",
+        "customer_id": "patient-dental-4",
+        "type": "email",
+        "value": "patient4.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-5",
+        "customer_id": "patient-dental-5",
+        "type": "email",
+        "value": "patient5.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-6",
+        "customer_id": "patient-dental-6",
+        "type": "email",
+        "value": "patient6.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-7",
+        "customer_id": "patient-dental-7",
+        "type": "email",
+        "value": "patient7.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-8",
+        "customer_id": "patient-dental-8",
+        "type": "email",
+        "value": "patient8.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-9",
+        "customer_id": "patient-dental-9",
+        "type": "email",
+        "value": "patient9.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-10",
+        "customer_id": "patient-dental-10",
+        "type": "email",
+        "value": "patient10.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-11",
+        "customer_id": "patient-dental-11",
+        "type": "email",
+        "value": "patient11.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-12",
+        "customer_id": "patient-dental-12",
+        "type": "email",
+        "value": "patient12.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-13",
+        "customer_id": "patient-dental-13",
+        "type": "email",
+        "value": "patient13.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-14",
+        "customer_id": "patient-dental-14",
+        "type": "email",
+        "value": "patient14.dental@example.com",
+        "is_primary": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cp-dental-15",
+        "customer_id": "patient-dental-15",
+        "type": "email",
+        "value": "patient15.dental@example.com",
+        "is_primary": 1
       }
     ],
     "consent_records": [
@@ -618,6 +1020,160 @@
         "source": "form",
         "evidence": "Loyalty card form (synthetic)",
         "recorded_at": "2026-04-11T10:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-1",
+        "customer_id": "patient-dental-1",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-2",
+        "customer_id": "patient-dental-2",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-3",
+        "customer_id": "patient-dental-3",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-5",
+        "customer_id": "patient-dental-5",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-6",
+        "customer_id": "patient-dental-6",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-7",
+        "customer_id": "patient-dental-7",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-8",
+        "customer_id": "patient-dental-8",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-9",
+        "customer_id": "patient-dental-9",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-10",
+        "customer_id": "patient-dental-10",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-11",
+        "customer_id": "patient-dental-11",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-12",
+        "customer_id": "patient-dental-12",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-13",
+        "customer_id": "patient-dental-13",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-14",
+        "customer_id": "patient-dental-14",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "cr-dental-15",
+        "customer_id": "patient-dental-15",
+        "channel": "email",
+        "purpose": "service_updates",
+        "status": "granted",
+        "source": "staff",
+        "evidence": "Synthetic recall consent",
+        "recorded_at": "2026-01-01T15:00:00Z"
       }
     ],
     "tags": [
@@ -808,6 +1364,142 @@
         "is_stock_tracked": 1,
         "is_bookable_online": 0,
         "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "svc-dental-cleaning",
+        "kind": "service",
+        "sku": null,
+        "name": "Exam and cleaning",
+        "unit": "each",
+        "price_minor": null,
+        "currency": "USD",
+        "duration_minutes": 60,
+        "buffer_minutes": 15,
+        "resource_kind": "staff",
+        "required_resources_json": "[{\"role\": \"provider\", \"kind\": \"staff\"}, {\"role\": \"chair\", \"kind\": \"room\"}]",
+        "recall_interval_months": 6,
+        "is_stock_tracked": 0,
+        "is_bookable_online": true,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "svc-dental-emergency",
+        "kind": "service",
+        "sku": null,
+        "name": "Emergency visit",
+        "unit": "each",
+        "price_minor": null,
+        "currency": "USD",
+        "duration_minutes": 30,
+        "buffer_minutes": 15,
+        "resource_kind": "staff",
+        "required_resources_json": "[{\"role\": \"provider\", \"kind\": \"staff\"}, {\"role\": \"chair\", \"kind\": \"room\"}]",
+        "recall_interval_months": null,
+        "is_stock_tracked": 0,
+        "is_bookable_online": false,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "svc-dental-whitening",
+        "kind": "service",
+        "sku": null,
+        "name": "Whitening consultation",
+        "unit": "each",
+        "price_minor": null,
+        "currency": "USD",
+        "duration_minutes": 30,
+        "buffer_minutes": 15,
+        "resource_kind": "staff",
+        "required_resources_json": "[{\"role\": \"provider\", \"kind\": \"staff\"}, {\"role\": \"chair\", \"kind\": \"room\"}]",
+        "recall_interval_months": null,
+        "is_stock_tracked": 0,
+        "is_bookable_online": true,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "svc-dental-new",
+        "kind": "service",
+        "sku": null,
+        "name": "New-patient visit",
+        "unit": "each",
+        "price_minor": null,
+        "currency": "USD",
+        "duration_minutes": 90,
+        "buffer_minutes": 15,
+        "resource_kind": "staff",
+        "required_resources_json": "[{\"role\": \"provider\", \"kind\": \"staff\"}, {\"role\": \"chair\", \"kind\": \"room\"}]",
+        "recall_interval_months": null,
+        "is_stock_tracked": 0,
+        "is_bookable_online": true,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "item-dental-gloves",
+        "kind": "product",
+        "sku": "DENTAL-GLOVES",
+        "name": "Gloves",
+        "unit": "each",
+        "price_minor": 1000,
+        "currency": "USD",
+        "duration_minutes": null,
+        "buffer_minutes": 0,
+        "resource_kind": null,
+        "is_stock_tracked": 1,
+        "is_bookable_online": 0,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "item-dental-masks",
+        "kind": "product",
+        "sku": "DENTAL-MASKS",
+        "name": "Masks",
+        "unit": "each",
+        "price_minor": 1000,
+        "currency": "USD",
+        "duration_minutes": null,
+        "buffer_minutes": 0,
+        "resource_kind": null,
+        "is_stock_tracked": 1,
+        "is_bookable_online": 0,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "item-dental-bibs",
+        "kind": "product",
+        "sku": "DENTAL-BIBS",
+        "name": "Bibs",
+        "unit": "each",
+        "price_minor": 1000,
+        "currency": "USD",
+        "duration_minutes": null,
+        "buffer_minutes": 0,
+        "resource_kind": null,
+        "is_stock_tracked": 1,
+        "is_bookable_online": 0,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "item-dental-paste",
+        "kind": "product",
+        "sku": "DENTAL-PASTE",
+        "name": "Prophy paste",
+        "unit": "each",
+        "price_minor": 1000,
+        "currency": "USD",
+        "duration_minutes": null,
+        "buffer_minutes": 0,
+        "resource_kind": null,
+        "is_stock_tracked": 1,
+        "is_bookable_online": 0,
+        "status": "active"
       }
     ],
     "service_parts": [
@@ -859,6 +1551,51 @@
         "kind": "staff",
         "name": "Sam (designer)",
         "user_id": "user-sam",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "res-dental-dentist",
+        "location_id": "loc-dental-main",
+        "kind": "staff",
+        "name": "Ellery (dentist)",
+        "user_id": "user-dental-ellery",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "kind": "staff",
+        "name": "Devon (hygienist)",
+        "user_id": "user-dental-devon",
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "res-dental-chair1",
+        "location_id": "loc-dental-main",
+        "kind": "room",
+        "name": "Chair 1",
+        "user_id": null,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "res-dental-chair2",
+        "location_id": "loc-dental-main",
+        "kind": "room",
+        "name": "Chair 2",
+        "user_id": null,
+        "status": "active"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "res-dental-chair3",
+        "location_id": "loc-dental-main",
+        "kind": "room",
+        "name": "Chair 3",
+        "user_id": null,
         "status": "active"
       }
     ],
@@ -950,6 +1687,206 @@
         "weekday": 4,
         "start_time": "09:00",
         "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-dentist-0",
+        "resource_id": "res-dental-dentist",
+        "weekday": 0,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-dentist-1",
+        "resource_id": "res-dental-dentist",
+        "weekday": 1,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-dentist-2",
+        "resource_id": "res-dental-dentist",
+        "weekday": 2,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-dentist-3",
+        "resource_id": "res-dental-dentist",
+        "weekday": 3,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-dentist-4",
+        "resource_id": "res-dental-dentist",
+        "weekday": 4,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-hygienist-0",
+        "resource_id": "res-dental-hygienist",
+        "weekday": 0,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-hygienist-1",
+        "resource_id": "res-dental-hygienist",
+        "weekday": 1,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-hygienist-2",
+        "resource_id": "res-dental-hygienist",
+        "weekday": 2,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-hygienist-3",
+        "resource_id": "res-dental-hygienist",
+        "weekday": 3,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-hygienist-4",
+        "resource_id": "res-dental-hygienist",
+        "weekday": 4,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair1-0",
+        "resource_id": "res-dental-chair1",
+        "weekday": 0,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair1-1",
+        "resource_id": "res-dental-chair1",
+        "weekday": 1,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair1-2",
+        "resource_id": "res-dental-chair1",
+        "weekday": 2,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair1-3",
+        "resource_id": "res-dental-chair1",
+        "weekday": 3,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair1-4",
+        "resource_id": "res-dental-chair1",
+        "weekday": 4,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair2-0",
+        "resource_id": "res-dental-chair2",
+        "weekday": 0,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair2-1",
+        "resource_id": "res-dental-chair2",
+        "weekday": 1,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair2-2",
+        "resource_id": "res-dental-chair2",
+        "weekday": 2,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair2-3",
+        "resource_id": "res-dental-chair2",
+        "weekday": 3,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair2-4",
+        "resource_id": "res-dental-chair2",
+        "weekday": 4,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair3-0",
+        "resource_id": "res-dental-chair3",
+        "weekday": 0,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair3-1",
+        "resource_id": "res-dental-chair3",
+        "weekday": 1,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair3-2",
+        "resource_id": "res-dental-chair3",
+        "weekday": 2,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair3-3",
+        "resource_id": "res-dental-chair3",
+        "weekday": 3,
+        "start_time": "08:00",
+        "end_time": "17:00"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "ar-dental-chair3-4",
+        "resource_id": "res-dental-chair3",
+        "weekday": 4,
+        "start_time": "08:00",
+        "end_time": "17:00"
       }
     ],
     "appointments": [
@@ -1008,6 +1945,126 @@
         "timezone": "Europe/London",
         "status": "confirmed",
         "source": "staff"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "appt-dental-past-1",
+        "customer_id": "patient-dental-1",
+        "service_id": "svc-dental-cleaning",
+        "resource_id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "starts_at": "2026-03-30T16:00:00Z",
+        "ends_at": "2026-03-30T17:00:00Z",
+        "blocked_until": "2026-03-30T17:15:00Z",
+        "timezone": "America/Chicago",
+        "status": "completed",
+        "source": "staff",
+        "days_ago": 220
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "appt-dental-past-2",
+        "customer_id": "patient-dental-2",
+        "service_id": "svc-dental-cleaning",
+        "resource_id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "starts_at": "2026-04-03T16:00:00Z",
+        "ends_at": "2026-04-03T17:00:00Z",
+        "blocked_until": "2026-04-03T17:15:00Z",
+        "timezone": "America/Chicago",
+        "status": "completed",
+        "source": "staff",
+        "days_ago": 215
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "appt-dental-past-3",
+        "customer_id": "patient-dental-3",
+        "service_id": "svc-dental-cleaning",
+        "resource_id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "starts_at": "2026-04-09T16:00:00Z",
+        "ends_at": "2026-04-09T17:00:00Z",
+        "blocked_until": "2026-04-09T17:15:00Z",
+        "timezone": "America/Chicago",
+        "status": "completed",
+        "source": "staff",
+        "days_ago": 210
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "appt-dental-past-4",
+        "customer_id": "patient-dental-4",
+        "service_id": "svc-dental-cleaning",
+        "resource_id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "starts_at": "2026-04-14T16:00:00Z",
+        "ends_at": "2026-04-14T17:00:00Z",
+        "blocked_until": "2026-04-14T17:15:00Z",
+        "timezone": "America/Chicago",
+        "status": "completed",
+        "source": "staff",
+        "days_ago": 205
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "appt-dental-past-5",
+        "customer_id": "patient-dental-5",
+        "service_id": "svc-dental-cleaning",
+        "resource_id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "starts_at": "2026-04-17T16:00:00Z",
+        "ends_at": "2026-04-17T17:00:00Z",
+        "blocked_until": "2026-04-17T17:15:00Z",
+        "timezone": "America/Chicago",
+        "status": "completed",
+        "source": "staff",
+        "days_ago": 200
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "appt-dental-past-6",
+        "customer_id": "patient-dental-6",
+        "service_id": "svc-dental-cleaning",
+        "resource_id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "starts_at": "2026-09-04T16:00:00Z",
+        "ends_at": "2026-09-04T17:00:00Z",
+        "blocked_until": "2026-09-04T17:15:00Z",
+        "timezone": "America/Chicago",
+        "status": "completed",
+        "source": "staff",
+        "days_ago": 60
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "appt-dental-past-7",
+        "customer_id": "patient-dental-7",
+        "service_id": "svc-dental-cleaning",
+        "resource_id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "starts_at": "2026-10-06T16:00:00Z",
+        "ends_at": "2026-10-06T17:00:00Z",
+        "blocked_until": "2026-10-06T17:15:00Z",
+        "timezone": "America/Chicago",
+        "status": "completed",
+        "source": "staff",
+        "days_ago": 30
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "appt-dental-future-3",
+        "customer_id": "patient-dental-3",
+        "service_id": "svc-dental-cleaning",
+        "resource_id": "res-dental-hygienist",
+        "location_id": "loc-dental-main",
+        "starts_at": "2026-11-12T16:00:00Z",
+        "ends_at": "2026-11-12T17:00:00Z",
+        "blocked_until": "2026-11-12T17:15:00Z",
+        "timezone": "America/Chicago",
+        "status": "confirmed",
+        "source": "staff",
+        "days_ago": -7
       }
     ],
     "stock_locations": [
@@ -1021,6 +2078,12 @@
         "id": "sl-garden",
         "business_id": "biz-garden",
         "name": "Yard",
+        "is_default": 1
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "sl-dental",
+        "name": "Supply cabinet",
         "is_default": 1
       }
     ],
@@ -1094,6 +2157,46 @@
         "reason": "receipt",
         "note": null,
         "occurred_at": "2026-10-02T08:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "mv-dental-gloves",
+        "item_id": "item-dental-gloves",
+        "stock_location_id": "sl-dental",
+        "quantity": 8,
+        "reason": "receipt",
+        "note": "Synthetic supply receipt",
+        "occurred_at": "2026-11-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "mv-dental-masks",
+        "item_id": "item-dental-masks",
+        "stock_location_id": "sl-dental",
+        "quantity": 12,
+        "reason": "receipt",
+        "note": "Synthetic supply receipt",
+        "occurred_at": "2026-11-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "mv-dental-bibs",
+        "item_id": "item-dental-bibs",
+        "stock_location_id": "sl-dental",
+        "quantity": 30,
+        "reason": "receipt",
+        "note": "Synthetic supply receipt",
+        "occurred_at": "2026-11-01T15:00:00Z"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "mv-dental-paste",
+        "item_id": "item-dental-paste",
+        "stock_location_id": "sl-dental",
+        "quantity": 5,
+        "reason": "receipt",
+        "note": "Synthetic supply receipt",
+        "occurred_at": "2026-11-01T15:00:00Z"
       }
     ],
     "stock_reservations": [
@@ -1164,6 +2267,42 @@
         "reorder_point": 2,
         "target_level": 6,
         "lead_time_days": 5
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rr-dental-gloves",
+        "item_id": "item-dental-gloves",
+        "stock_location_id": "sl-dental",
+        "reorder_point": 10,
+        "target_level": 40,
+        "lead_time_days": 3
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rr-dental-masks",
+        "item_id": "item-dental-masks",
+        "stock_location_id": "sl-dental",
+        "reorder_point": 10,
+        "target_level": 40,
+        "lead_time_days": 3
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rr-dental-bibs",
+        "item_id": "item-dental-bibs",
+        "stock_location_id": "sl-dental",
+        "reorder_point": 10,
+        "target_level": 40,
+        "lead_time_days": 3
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rr-dental-paste",
+        "item_id": "item-dental-paste",
+        "stock_location_id": "sl-dental",
+        "reorder_point": 10,
+        "target_level": 40,
+        "lead_time_days": 3
       }
     ],
     "conversations": [
@@ -1436,6 +2575,128 @@
         "status": "published",
         "is_mock": 1,
         "tags_json": "[\"escalation\"]"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "kb-dental-0",
+        "title": "Insurance accepted",
+        "slug": "insurance",
+        "visibility": "public",
+        "body_markdown": "We accept many plans, call to confirm. We do not confirm coverage in chat.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"insurance\"]"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "kb-dental-1",
+        "title": "New-patient forms",
+        "slug": "new-patient-forms",
+        "visibility": "public",
+        "body_markdown": "Please contact the front desk for new-patient forms. Do not send medical details through chat.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"new-patient-forms\"]"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "kb-dental-2",
+        "title": "Emergency policy",
+        "slug": "emergency",
+        "visibility": "public",
+        "body_markdown": "For an emergency call Example Dental Clinic at +1 312 555 0100 immediately. Do not wait for a chat reply. If this is life-threatening call your local emergency number.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"emergency\"]"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "kb-dental-3",
+        "title": "Cancellation fee",
+        "slug": "cancellation",
+        "visibility": "public",
+        "body_markdown": "Please give at least 24 hours notice to cancel. A cancellation fee may apply within 24 hours; call the front desk to confirm the fee before any charge.",
+        "status": "published",
+        "is_mock": 1,
+        "tags_json": "[\"cancellation\"]"
+      }
+    ],
+    "resource_services": [
+      {
+        "business_id": "biz-dental",
+        "id": "rs-dental-cleaning-dentist",
+        "resource_id": "res-dental-dentist",
+        "service_id": "svc-dental-cleaning"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rs-dental-cleaning-hygienist",
+        "resource_id": "res-dental-hygienist",
+        "service_id": "svc-dental-cleaning"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rs-dental-emergency-dentist",
+        "resource_id": "res-dental-dentist",
+        "service_id": "svc-dental-emergency"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rs-dental-whitening-dentist",
+        "resource_id": "res-dental-dentist",
+        "service_id": "svc-dental-whitening"
+      },
+      {
+        "business_id": "biz-dental",
+        "id": "rs-dental-new-dentist",
+        "resource_id": "res-dental-dentist",
+        "service_id": "svc-dental-new"
+      }
+    ],
+    "suppliers": [
+      {
+        "id": "supplier-dental",
+        "business_id": "biz-dental",
+        "name": "Example Dental Supplies",
+        "email": "dental.supplies@example.com"
+      }
+    ],
+    "supplier_items": [
+      {
+        "id": "supplier-item-dental-gloves",
+        "business_id": "biz-dental",
+        "supplier_id": "supplier-dental",
+        "catalog_item_id": "item-dental-gloves",
+        "supplier_sku": "DENTAL-GLOVES",
+        "last_price_minor": 500,
+        "lead_time_days": 3
+      },
+      {
+        "id": "supplier-item-dental-masks",
+        "business_id": "biz-dental",
+        "supplier_id": "supplier-dental",
+        "catalog_item_id": "item-dental-masks",
+        "supplier_sku": "DENTAL-MASKS",
+        "last_price_minor": 500,
+        "lead_time_days": 3
+      },
+      {
+        "id": "supplier-item-dental-bibs",
+        "business_id": "biz-dental",
+        "supplier_id": "supplier-dental",
+        "catalog_item_id": "item-dental-bibs",
+        "supplier_sku": "DENTAL-BIBS",
+        "last_price_minor": 500,
+        "lead_time_days": 3
+      },
+      {
+        "id": "supplier-item-dental-paste",
+        "business_id": "biz-dental",
+        "supplier_id": "supplier-dental",
+        "catalog_item_id": "item-dental-paste",
+        "supplier_sku": "DENTAL-PASTE",
+        "last_price_minor": 500,
+        "lead_time_days": 3
       }
     ]
   }
