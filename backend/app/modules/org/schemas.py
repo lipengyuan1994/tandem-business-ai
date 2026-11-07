@@ -217,6 +217,8 @@ class SettingsUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     version: int
     settings: BusinessSettings
+    # Read-only field of SettingsOut, accepted so clients can send back what they read; always ignored.
+    synthetic_demo_banner: str | None = Field(default=None, exclude=True)
 
 
 class PublicProfileOut(BaseModel):

@@ -20,6 +20,6 @@ routes:
   grounding: [{provider: clinic, model: local-grounding}]
   # Optional local OpenAI-compatible embedding server; must accept dimensions: 1024.
   # Provider clinic above is hosted:false, vendor:local; use a separate local provider if necessary.
-  # embed: [{provider: clinic, model: local-embed-1024, price_in_per_m: 0, price_out_per_m: 0}]
+  embed: [{provider: clinic, model: local-embed-1024, price_in_per_m: 0, price_out_per_m: 0}]
   stt: [{provider: clinic, model: local-stt, price_per_audio_minute: 0}]
   tts: [{provider: clinic, model: local-tts}]

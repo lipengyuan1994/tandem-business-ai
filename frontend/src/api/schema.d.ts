@@ -7313,6 +7313,8 @@ export interface components {
         /** SettingsUpdate */
         SettingsUpdate: {
             settings: components["schemas"]["BusinessSettings-Input"];
+            /** Synthetic Demo Banner */
+            synthetic_demo_banner?: string | null;
             /** Version */
             version: number;
         };

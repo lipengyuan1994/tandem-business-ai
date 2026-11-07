@@ -11271,6 +11271,17 @@
           "settings": {
             "$ref": "#/components/schemas/BusinessSettings-Input"
           },
+          "synthetic_demo_banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Demo Banner"
+          },
           "version": {
             "title": "Version",
             "type": "integer"
