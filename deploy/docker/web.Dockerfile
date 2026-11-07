@@ -21,9 +21,11 @@ RUN apk upgrade --no-cache \
  && adduser -S -u 10003 -G caddy -H -h /nonexistent -s /sbin/nologin caddy \
  && chown -R caddy:caddy /data /config
 COPY --from=build /app/dist /srv
+COPY deploy/demo-site/dental /opt/demo-site/dental
 COPY deploy/compose/Caddyfile /etc/caddy/Caddyfile
 USER caddy
 # Fail the build on a broken Caddyfile (DOMAIN is only a placeholder here).
-RUN DOMAIN=example.com caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+RUN DOMAIN=example.com DEMO_SITE_DOMAIN='(demo_site_disabled)' caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile \
+ && DOMAIN=example.com DEMO_SITE_DOMAIN=clinic.example.com caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
 HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=3 \
   CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/healthz"]

@@ -10,6 +10,7 @@ base="${1:-}"
 [ -n "$base" ] || { echo "usage: smoke.sh BASE_URL [--compose-dir DIR] [--env-file FILE]" >&2; exit 64; }
 shift
 compose_dir="" env_file=""
+demo_domain="${DEMO_SITE_DOMAIN:-}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --compose-dir) compose_dir="${2:?}"; shift ;;
@@ -84,6 +85,14 @@ if [ -n "$compose_dir" ]; then
   compose=(docker compose --project-directory "$compose_dir" -f "$compose_dir/compose.yml")
   [ -f "$compose_dir/compose.yml" ] || compose=(docker compose --project-directory "$compose_dir" -f "$compose_dir/compose.prod.yml")
   [ -z "$env_file" ] || compose+=(--env-file "$env_file")
+  # Read Compose's resolved value (including its .env/--env-file), never source an operator file as shell code.
+  if resolved_config=$("${compose[@]}" config --format json 2>/dev/null); then
+    if ! demo_domain=$(printf '%s' "$resolved_config" | jq -er '.services.caddy.environment.DEMO_SITE_DOMAIN // ""'); then
+      fail "could not read demo site configuration from Compose"
+    fi
+  else
+    fail "could not resolve Compose configuration for demo site"
+  fi
   # Local rehearsals on macOS have no timedatectl; Linux VM checks must report synchronization.
   if [ "$(uname -s)" = Linux ]; then
     check "host clock synchronized" test "$(timedatectl show --property=NTPSynchronized --value 2>/dev/null)" = yes
@@ -136,6 +145,18 @@ if [ -n "$compose_dir" ]; then
   else
     fail "no successful backup recorded: ${backup:-no status}"
   fi
+fi
+
+if [ -n "$demo_domain" ] && [ "$demo_domain" != '(demo_site_disabled)' ]; then
+  demo_url="https://$demo_domain/"
+  check "demo clinic site answers 200" test "$(status_of "$demo_url")" = 200
+  check "demo clinic Content-Security-Policy" header_of "$demo_url" content-security-policy
+  check "demo clinic HSTS" header_of "$demo_url" strict-transport-security
+  check "demo clinic nosniff" header_of "$demo_url" x-content-type-options
+  check "demo clinic Referrer-Policy" header_of "$demo_url" referrer-policy
+  check "demo clinic has no Server header" no_header "$demo_url" server
+else
+  echo "  SKIP  demo clinic site (DEMO_SITE_DOMAIN unset)"
 fi
 
 if [ -n "$http_url" ]; then

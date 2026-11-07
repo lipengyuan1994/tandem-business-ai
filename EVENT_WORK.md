@@ -578,3 +578,48 @@ Not verified live: an actual judge sign-in and the Keycloak self-service paths (
 which need someone to sign in; Claude does not sign in with passwords on the public host.
 
 Owner verified 2026-11-07: clicking Sign in on the prefilled page signs in as the Demo Judge without a one-time code ("Works for me"). The account-console lockout check was not separately reported.
+
+## 2026-11-07 — P10-K: synthetic clinic website (Codex, uncommitted)
+
+Owner-requested work on `main`, without committing or deploying. Added the static Example Dental Clinic page and
+one stylesheet, fixture-derived content, persistent synthetic/judge banner, public appointment/booking links and
+the existing v1.0.1 widget loader. No assets, fonts, trackers, dependencies, services or containers were added from
+outside the checkout. Files are baked into `/opt/demo-site/dental`, outside the staff app document root.
+
+Optional `DEMO_SITE_DOMAIN` enables a separate Caddy host with automatic HTTPS. Compose maps empty/unset to an
+unused named snippet, avoiding a route or certificate subject; Caddy's own default applies when the variable is
+absent. The clinic has HSTS, nosniff, no-referrer, denied device permissions, Server-header removal and a strict CSP.
+Missing files use an explicit 404 response. Final review removed the extra clinic error handler: Caddy sites share
+listeners and the existing global prohibition on `handle_errors` protects upstream/capability error logging. That
+original regression remains unchanged. The microphone tests independently assert the main and clinic policies.
+The CSP permits the app origin for the loader/config/iframe and pins the exact
+loader shadow-root stylesheet by SHA-256, without allowing inline scripts or arbitrary inline styles.
+
+The dental fixture adds the allowed origin, with a regression that clears it and verifies reset restoration.
+The owner's report that this origin is already allowed on the VM is preserved as a user report; this task does not
+query the VM or reset its data. README, draft 0.1.17 changelog, installation runbook and roadmap card/status updated.
+
+Validation so far: fixture validation (290 rows / 33 tables); 584 frontend tests / 53 files; `pnpm tsc --noEmit`,
+frontend lint, backend Ruff/format; seed and dental integration suites 22 passed; deployment regressions 128 tests,
+21 skipped (no listeners/Docker); final focused native Caddy/smoke suite 7 passed, including two additional smoke
+tests added after discovery of the deployment suite. Native Caddy adaptation verifies the enabled host, absent
+variable and Compose-disabled snippet, normal security headers, root isolation and exact widget style hash.
+Local `docker compose config` resolution verifies empty/enabled values without starting containers. A static HTML
+audit checks fixture names/durations, emergency/footer copy, approved resource URLs, landmarks and absent inline
+styles/event handlers. Native arm64 uv, Python, Node, Caddy, Docker and psycopg extensions verified.
+
+Constrained full check is running with installed tools and the supplied local `smb_k1` database:
+
+```bash
+UV_OFFLINE=1 UV_NO_SYNC=1 UV_PYTHON_DOWNLOADS=never \
+UV_CACHE_DIR=/private/tmp/tandem-clinic-uv-cache \
+UV_PYTHON="$PWD/backend/.venv/bin/python" \
+PYTEST_ADDOPTS='--ignore=app/modules/notifications/tests/test_smtp.py -p no:cacheprovider -x --tb=short' \
+DEPLOY_CHECK_OFFLINE=1 DEPLOY_CHECK_NO_DOWNLOADS=1 make -o test-db check
+```
+
+`-o test-db` uses the supplied DB instead of starting Docker; SMTP listener tests and live Caddy listener checks are
+excluded under the network restriction. Unverified: image build, live Caddy HTTP/error headers, DNS/Let's Encrypt,
+375 px browser layout, keyboard/a11y, live widget/chat/appointment/booking/judge flows, and the VM rollout. Unexpected
+internal errors retain Caddy's existing potential Server-header limitation; this is not claimed fixed. The
+adaptation and fake-curl tests do not establish those runtime requirements. No downloads or installs performed.

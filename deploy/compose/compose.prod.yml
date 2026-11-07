@@ -193,6 +193,8 @@ services:
     image: ${REGISTRY:-smb}/smb-web:${VERSION}
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN is required}
+      # Caddy defaults apply to unset variables only. Compose maps empty/unset to an unused snippet name.
+      DEMO_SITE_DOMAIN: ${DEMO_SITE_DOMAIN:-(demo_site_disabled)}
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"

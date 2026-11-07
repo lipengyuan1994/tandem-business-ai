@@ -21,7 +21,7 @@ from app.modules.catalog.models import CatalogItem
 from app.modules.crm.models import Customer
 from app.modules.identity.testing import login_as
 from app.modules.org.demo import SYNTHETIC_DEMO_BANNER
-from app.modules.org.models import Business
+from app.modules.org.models import Business, BusinessSettingsRow
 from app.modules.scheduling.models import Appointment, AppointmentResource, Resource
 from app.platform import clock
 from app.platform.db import transaction
@@ -37,6 +37,19 @@ def clinic():
     counts = seed_business(document["tables"], business)
     assert counts["customers"] == 15 and counts["suppliers"] == 1
     return _ctx(fixture_id("biz-dental"))
+
+
+def test_reset_restores_clinic_website_origin(registry):
+    from app.seed import seed
+
+    ctx = clinic()
+    with transaction(ctx) as db:
+        settings = db.scalar(select(BusinessSettingsRow))
+        settings.settings = {**settings.settings, "embed_allowed_origins": []}
+    seed(do_reset=True)
+    with transaction(ctx) as db:
+        settings = db.scalar(select(BusinessSettingsRow))
+        assert settings.settings["embed_allowed_origins"] == ["https://tandemaidentaldemo.open-dl.com"]
 
 
 def test_clinic_recall_reuses_b2_consent_future_booking_and_minimal_templates(registry):

@@ -61,7 +61,7 @@
         "is_mock": 1,
         "synthetic": true,
         "synthetic_demo": true,
-        "settings_json": "{\"terminology\": {\"customer\": \"Patient\", \"customers\": \"Patients\", \"technician\": \"Provider\", \"technicians\": \"Providers\", \"service\": \"Treatment\", \"services\": \"Treatments\"}, \"emergency_handling\": true, \"emergency_instructions\": \"Call Example Dental Clinic at +1 312 555 0100 immediately. Do not wait for a chat reply. If the clinic is closed, contact your local emergency service.\", \"ai_policy\": \"hosted_vultr\"}",
+        "settings_json": "{\"terminology\": {\"customer\": \"Patient\", \"customers\": \"Patients\", \"technician\": \"Provider\", \"technicians\": \"Providers\", \"service\": \"Treatment\", \"services\": \"Treatments\"}, \"emergency_handling\": true, \"emergency_instructions\": \"Call Example Dental Clinic at +1 312 555 0100 immediately. Do not wait for a chat reply. If the clinic is closed, contact your local emergency service.\", \"ai_policy\": \"hosted_vultr\", \"embed_allowed_origins\": [\"https://tandemaidentaldemo.open-dl.com\"]}",
         "public_profile_json": "{\"email\": \"dental@example.com\", \"avoid_medical_details\": true}"
       }
     ],

@@ -274,6 +274,42 @@ It prints the path of the file and the e-mail addresses it made logins for, **ne
 - **What it refuses:** it creates accounts only for the demo staff listed in `data/fixtures.json` (example.com addresses), of the businesses `example-cycle-works`, `example-garden-store` and `example-dental-clinic` as the seed created them (matched by slug and by the id the seed gives them). Any other business name, any other person, a business that only borrows a demo name, and an installation with `DATA_PROFILE=regulated` are refused, so it cannot create a login for a customer's staff. Run `seed` first ("does not exist; run `seed` first").
 - **Output lines:** `not usable: <e-mail>: ...` means the person signed in before and their Keycloak account is gone or different, so a new account could not sign in either (fix it in the Keycloak console, [access.md](access.md)); the command then ends with exit status 1. `skipped: ...` names a person who is not an active member of the business (removed, or the user is disabled).
 
+### Demo installs only: clinic website
+
+The synthetic Example Dental Clinic website is optional and uses the existing `smb-web` image and `caddy` service.
+Patient pages need no login; the banner links judges to the staff app with its existing prefilled demo login.
+Do not enable this on customer installations. The static page deliberately links to `https://tandemai.open-dl.com`.
+
+1. Create the DNS **A** record `tandemaidentaldemo.open-dl.com` pointing to the same Vultr demo VM's IPv4 address.
+   Keep ports 80/443 reachable for Let's Encrypt; remove a stale AAAA record or point it to this VM too.
+2. Build the updated web image as part of the approved release and stage the updated `compose.yml` (the production
+   Caddyfile and clinic files are baked into `smb-web`). On the VM, add
+   `DEMO_SITE_DOMAIN=tandemaidentaldemo.open-dl.com` to `/opt/smb/.env`; retain `DOMAIN=tandemai.open-dl.com`.
+   Recreate the existing web proxy; there is no additional `web` service:
+
+   ```bash
+   $ cd /opt/smb
+   $ docker compose -f compose.yml pull caddy
+   $ docker compose -f compose.yml up -d --no-deps --force-recreate caddy
+   $ ./smoke.sh https://tandemai.open-dl.com --compose-dir /opt/smb
+   ```
+
+3. In the staff app, select Example Dental Clinic → Settings → Website and allow
+   `https://tandemaidentaldemo.open-dl.com`. The owner reports this is already allowed on the demo VM. Fresh seeds
+   and explicit demo resets restore it from fixtures; do not reset an existing demo just to add an origin.
+4. Check `https://tandemaidentaldemo.open-dl.com/` returns 200 with HSTS, nosniff, no-referrer, CSP and no Server
+   header. Check the bottom-right widget opens, loads chat and can pass a synthetic message to the front desk;
+   check appointment requests, booking management and the judge link. Check at 375 px and with a keyboard.
+   From a workstation, `DEMO_SITE_DOMAIN=tandemaidentaldemo.open-dl.com deploy/scripts/smoke.sh https://tandemai.open-dl.com`
+   checks the clinic too; `--compose-dir` reads its value from Compose's resolved environment.
+
+To disable, empty/remove `DEMO_SITE_DOMAIN` in `.env` and recreate `caddy`. Compose maps that value to the unused
+`(demo_site_disabled)` snippet; Caddy's direct unset default does the same. There is no clinic host route or ACME
+subject in the resulting configuration. Existing certificates may remain in the persistent volume. Files live at
+`/opt/demo-site/dental`, outside the main app's `/srv` root. The clinic CSP allows scripts, config fetches and frames
+only from itself and `https://<DOMAIN>`. Its style hash pins the shadow stylesheet in loader v1.0.1; a loader CSS
+change must update that hash (covered by `deploy/tests/test_demo_clinic.py`).
+
 ## 6. Verify
 
 Connect to the VM (this works only while SSH is open for your address):

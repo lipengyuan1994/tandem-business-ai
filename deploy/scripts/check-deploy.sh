@@ -73,12 +73,21 @@ if [ -z "$as_root" ]; then ok "every image ends as a non-root USER"; else bad "i
 
 # --- Caddyfile ---
 if command -v caddy >/dev/null; then
-  if DOMAIN=example.com caddy validate --config "$deploy/compose/Caddyfile" --adapter caddyfile >"$tmp/caddy.log" 2>&1; then ok "Caddyfile validates (native Caddy)"; else cat "$tmp/caddy.log"; bad "Caddyfile"; fi
+  if DOMAIN=example.com DEMO_SITE_DOMAIN='(demo_site_disabled)' caddy validate --config "$deploy/compose/Caddyfile" --adapter caddyfile >"$tmp/caddy.log" 2>&1; then ok "Caddyfile validates (native Caddy)"; else cat "$tmp/caddy.log"; bad "Caddyfile"; fi
+  for demo_domain in '(demo_site_disabled)' clinic.example.com; do
+    if DOMAIN=example.com DEMO_SITE_DOMAIN="$demo_domain" caddy adapt --config "$deploy/compose/Caddyfile" --adapter caddyfile >"$tmp/caddy.json" 2>"$tmp/caddy.log"; then
+      ok "Caddyfile adapts (DEMO_SITE_DOMAIN=${demo_domain:-unset}, native Caddy)"
+    else cat "$tmp/caddy.log"; bad "Caddyfile (DEMO_SITE_DOMAIN=${demo_domain:-unset})"; fi
+  done
   # The development file is only adapted (parsed): validating it would start Caddy's internal CA.
   if caddy adapt --config "$deploy/compose/Caddyfile.dev" --adapter caddyfile >/dev/null 2>"$tmp/caddy-dev.log"; then ok "Caddyfile.dev parses (native Caddy)"; else cat "$tmp/caddy-dev.log"; bad "Caddyfile.dev"; fi
 elif docker image inspect caddy:2.11.7-alpine >/dev/null 2>&1 || { [ "$no_downloads" != 1 ] && docker pull -q caddy:2.11.7-alpine >/dev/null 2>&1; }; then
-  if docker run --rm -e DOMAIN=example.com -v "$deploy/compose/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.7-alpine \
+  if docker run --rm -e DOMAIN=example.com -e 'DEMO_SITE_DOMAIN=(demo_site_disabled)' -v "$deploy/compose/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.7-alpine \
     caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; then ok "Caddyfile validates"; else bad "Caddyfile"; fi
+  for demo_domain in '(demo_site_disabled)' clinic.example.com; do
+    if docker run --rm -e DOMAIN=example.com -e DEMO_SITE_DOMAIN="$demo_domain" -v "$deploy/compose/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.7-alpine \
+      caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; then ok "Caddyfile adapts (DEMO_SITE_DOMAIN=${demo_domain:-unset})"; else bad "Caddyfile (DEMO_SITE_DOMAIN=${demo_domain:-unset})"; fi
+  done
   if docker run --rm -v "$deploy/compose/Caddyfile.dev:/etc/caddy/Caddyfile:ro" caddy:2.11.7-alpine \
     caddy adapt --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1; then ok "Caddyfile.dev parses"; else bad "Caddyfile.dev"; fi
 else skip "Caddyfile (caddy image unavailable)"; fi

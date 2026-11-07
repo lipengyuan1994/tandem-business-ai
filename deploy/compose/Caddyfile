@@ -145,6 +145,26 @@
 	}
 }
 
+# Demo installs only. Unset defaults to an unused snippet; Compose maps empty to the same snippet name.
+# No route or ACME subject exists in that mode.
+# Keep these files outside /srv so the main app cannot serve the clinic through its own file_server.
+{$DEMO_SITE_DOMAIN:(demo_site_disabled)} {
+	root * /opt/demo-site/dental
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), geolocation=(), microphone=()"
+		# embed.js v1.0.1 injects this exact shadow-root stylesheet. Recompute its hash if the loader CSS changes.
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://{$DOMAIN}; style-src 'self' 'sha256-04N62MZNzOqvtF4hNEeL28R9eLmIBqAHYT3RHYeSTaI='; img-src 'self'; connect-src 'self' https://{$DOMAIN}; frame-src 'self' https://{$DOMAIN}; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+		-Server
+	}
+	@missing_demo not file
+	respond @missing_demo "Not found" 404
+	file_server
+}
+
 # Plain HTTP only redirects to HTTPS (the same answer as Caddy's built-in redirect: 308 to the same host and path, for
 # every Host). ACME HTTP challenges are answered before any route is reached.
 http:// {

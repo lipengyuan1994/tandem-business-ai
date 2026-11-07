@@ -2,6 +2,19 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.17 (2026-11-07)
+
+- **Demo clinic website:** static, clearly synthetic Example Dental Clinic site with treatment durations, opening
+  hours, emergency notice, appointment/booking links, the existing embedded front desk and a judge staff-app link.
+- **Demo installs only:** set `DEMO_SITE_DOMAIN=tandemaidentaldemo.open-dl.com` in the VM's `.env` after pointing DNS
+  to it. Rebuild the web image, stage the updated Compose file and recreate `caddy`; see the
+  [clinic runbook](docs/runbooks/install.md#demo-installs-only-clinic-website). Empty/unset leaves no clinic route or
+  certificate request. Strict CSP permits the app loader, config fetch and iframe; a hash allows the loader's exact
+  shadow-root stylesheet without allowing inline scripts or arbitrary inline styles.
+- Dental fixtures retain the clinic's allowed embed origin after reset. Existing data is not reset on upgrade;
+  allow the origin in Settings → Website if needed (owner reports this is already set on the demo VM).
+- **Migrations, dependencies, services:** none. Deployment and live browser/TLS checks remain operator steps.
+
 ## 0.1.16 (2026-11-07)
 
 - **Public judge login:** synthetic `judge@example.com`, active in all three demo businesses, with the new
