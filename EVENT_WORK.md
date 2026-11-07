@@ -332,3 +332,11 @@ retrieval 8/8 and grounding 10/10 for committed reports (the merge-time reports 
 Route file now carries Vultr's own catalog prices from `GET /v1/models`: input and output priced separately (earlier
 files charged input at the output price) and Whisper at $0.00001111/s = $0.000667/min instead of the $0.006/min
 placeholder; costs recorded before 0.1.11 are overstated. Route, transcription and deploy tests: 276 passed.
+
+## 2026-11-07 ~04:40–05:20 — 0.1.11 released (Claude)
+
+`make check`: 2,398 backend, 554 frontend, deploy checks, licences, gitleaks. Images built from `9d08c9b`, pushed; files
+identical; manual backup; `upgrade.sh 0.1.10 → 0.1.11` in 29 s, smoke passed; route file with Vultr catalog prices
+uploaded after the upgrade, api/worker restarted healthy. Live: a safety call on mimo-v2.6-flash (635 in / 32 out tokens)
+was recorded at 72 micro-dollars, matching the catalog ($0.10 / $0.25 per million). SSH closed, Terraform no changes,
+pending charges $7.64.
