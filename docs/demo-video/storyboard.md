@@ -36,3 +36,13 @@ recording actually shows.
 - Riley: `riley@example.com` (scene 8). Same browser pane: sign out of Morgan first.
 - Passwords are in `install-smb-demo/demo-logins.txt` (local, private). Each account asks for an authenticator app at
   first sign-in.
+
+## Recording log
+
+- 2026-11-07, customer part done (2:02): title, Lena (tune-up question answered automatically from the knowledge
+  base in 25 s; brake booking + 20 % off held by the guardrail), Example Courier Co. request form, dental emergency.
+- Two earlier Lena takes (before 0.1.14) are waiting in Cycle Works' Approvals: their drafts were held by the fact
+  check (tune-up described from memory, wrong opening hours). Good material for scene 5: staff see why a draft was
+  held and reject it.
+- Staff part: the owner runs `node frontend/output/video/login.mjs morgan` (and later `riley`) and signs in in the
+  window that opens; scenes are then recorded at 1440 × 900.

@@ -44,6 +44,8 @@ Check the balance at any time: `GET https://api.vultr.com/v2/account` (`balance`
 | 2026-11-07 05:15 | Upgraded | VM to 0.1.11 (images pushed; SSH opened about 6 minutes for the upgrade, route-file swap with Vultr catalog prices and a live cost check, then closed; `terraform plan` no changes) | — | pending charges $7.64 of $200.00 |
 | 2026-11-07 12:55 | Changed | Demo domain `45-63-85-83.sslip.io` → `tandemai.open-dl.com` (Cloudflare A record, DNS only, owner's zone; SSH opened about 10 minutes, manual backup, Keycloak client and `.env` updated, Let's Encrypt certificate, smoke passed, SSH closed; `terraform plan` no changes) | — | pending charges $7.64 of $200.00 (no new resources) |
 | 2026-11-07 14:17 | Upgraded | VM to 0.1.12 (rename; images pushed; SSH opened about 8 minutes: realm and example config files uploaded, `upgrade.sh` with its own pre-upgrade backup, smoke passed; Keycloak realm display name and dental demo logins set earlier the same afternoon; SSH closed; `terraform plan` no changes) | — | pending charges $8.21 of $200.00 |
+| 2026-11-07 15:51 | Upgraded | VM to 0.1.13 (reply guardrail; manual backup, migration `20261107_1600_reply_guardrail`, smoke passed; Cycle Works reply rule made live with a 15-second delay and the owner guardrail through the org/approvals services as the owner; SSH closed; `terraform plan` no changes) | — | pending charges $8.52 of $200.00 |
+| 2026-11-07 17:16 | Upgraded | VM to 0.1.14 (intake prompt v8, guardrail prompt v2; manual backup, smoke passed; SSH opened briefly afterwards for read-only checks of the demo recording; `terraform plan` no changes) | — | pending charges $8.93 of $200.00 |
 
 ## Running resources (2026-11-04 12:15 UTC)
 

@@ -388,3 +388,24 @@ appointment requests and the website embed. Existing/private notices remain for 
 82 focused backend and 576 frontend tests pass; types/lint and backend static checks pass; API types regenerated.
 Exact owner-supplied wording retained with the policy-scope discrepancy raised and recorded in the P10-G card.
 No install, external service call, migration, deployment or commit.
+
+## 2026-11-07 ~09:10–17:30 — P10-G answer guardrail; 0.1.13 and 0.1.14 released; customer-side demo video (Claude + Codex)
+
+Owner asked for automatic answers to normal questions, staff approval for critical ones and a custom guardrail before
+answering. Codex (Sol) built P10-G; Claude reviewed it, corrected the privacy wording (it claimed prices wait for a
+person), added the new reasons to the eval harness and relaxed one injection case's autonomy assertion (the guardrail
+may safely hold it). Full `make check` 2,443 backend (96 %), 576 frontend; live guardrail 14/14. Released 0.1.13
+(backup, migration, smoke), then made Cycle Works' reply rule live (15-second delay, owner guardrail) through the
+services as the owner.
+
+Recording the customer scenes on the VM showed routine answers never went out: the assistant described a tune-up from
+the service name (no knowledge search) and the fact check held both drafts (nothing wrong was sent), and guardrail v1
+held any priced reply because it could not tell catalogue prices from invented ones. Fixed with intake prompt v8 and
+guardrail prompt v2 (shared `REPLY_GUARDRAIL_VERSION`), new eval cases; live intake 76/78 twice, guardrail 16/16
+twice; full `make check` again green. Released 0.1.14. On the VM, "What does your standard tune-up include?" was then
+answered from the article with catalogue price and duration and sent after the 15-second window (25 s end to end);
+the follow-up asking for 20 % off was held by the guardrail ("a person will reply").
+
+Customer-side demo video (2:02, macOS voice) rendered from Playwright recordings of the public pages: Lena's chat,
+Example Courier Co.'s request form, the dental emergency hand-over. Recording tools live in `frontend/output/video/`
+(gitignored); storyboard in `docs/demo-video/storyboard.md`. Staff side waits for the owner to sign in.
