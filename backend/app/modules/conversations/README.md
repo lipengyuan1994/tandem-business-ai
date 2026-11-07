@@ -53,3 +53,5 @@ P10-E1: locale emergency keywords run synchronously on inbound visitor/customer 
 P10-C2b: `embed.py` adds `/public/{slug}/embed/chat{,/messages,/handoff}` using the same services, disclosure,
 projection and quotas. Capability in `X-Embed-Token` (iframe sessionStorage/memory), never an embed cookie;
 mutations require our exact application Origin. Existing first-party Secure/HttpOnly/Lax cookie is unchanged.
+
+P10-G: automatic intake replies require non-critical server safety facts and owner guardrail approval; rules are rechecked by content hash at execution and delayed publication. See [card](../../../../docs/roadmap/ai/cards/P10-G.md).

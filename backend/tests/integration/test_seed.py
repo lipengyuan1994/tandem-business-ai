@@ -422,3 +422,31 @@ def test_showcase_dates_follow_the_clock_of_the_seed_run(registry, now) -> None:
     with transaction(ctx) as db:  # the request is neither due for comparison nor chased yet
         assert purchasing.list_quote_requests_due(db, ctx) == []
         assert purchasing.list_unanswered_invites(db, ctx) == []
+
+
+def test_reset_restores_live_guarded_cycle_shadow_garden_and_ask_dental(registry: Any, owner_engine: Engine) -> None:
+    from app.cli import main
+
+    seed()
+    with owner_engine.begin() as db:
+        db.execute(text("update autonomy_rules set shadow=true where business_id=:b"), {"b": CYCLE})
+        db.execute(
+            text("update business_settings set settings=settings - 'ai_reply_guardrail' where business_id=:b"),
+            {"b": CYCLE},
+        )
+    main(["reset-demo", "--yes"])
+    with owner_engine.connect() as db:
+        rows = db.execute(
+            text(
+                "select b.slug,r.level,r.shadow,s.settings from businesses b "
+                "join autonomy_rules r on r.business_id=b.id join business_settings s on s.business_id=b.id "
+                "where r.action_type='conversations.send_reply' order by b.slug"
+            )
+        ).all()
+    by_slug = {r.slug: r for r in rows}
+    cycle = by_slug["example-cycle-works"]
+    assert cycle.level == "act_notify" and cycle.shadow is False
+    assert cycle.settings["outbound_send_delay_seconds"] == 15
+    assert "discount" in cycle.settings["ai_reply_guardrail"]
+    assert by_slug["example-garden-store"].shadow is True
+    assert by_slug["example-dental-clinic"].level == "ask"

@@ -1775,6 +1775,18 @@
             "title": "Ai Policy",
             "type": "string"
           },
+          "ai_reply_guardrail": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Reply Guardrail"
+          },
           "allow_backorders": {
             "default": false,
             "title": "Allow Backorders",
@@ -1991,6 +2003,18 @@
             ],
             "title": "Ai Policy",
             "type": "string"
+          },
+          "ai_reply_guardrail": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Reply Guardrail"
           },
           "allow_backorders": {
             "default": false,
@@ -8993,6 +9017,11 @@
       },
       "PublicProfileOut": {
         "properties": {
+          "ai_auto_replies": {
+            "default": false,
+            "title": "Ai Auto Replies",
+            "type": "boolean"
+          },
           "ai_greeting": {
             "title": "Ai Greeting",
             "type": "string"
@@ -15496,6 +15525,7 @@
                     "payment_followup",
                     "safety",
                     "grounding",
+                    "reply_guardrail",
                     "dictation",
                     "customer_care",
                     "knowledge_index",

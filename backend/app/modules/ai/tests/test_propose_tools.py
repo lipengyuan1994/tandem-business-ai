@@ -256,6 +256,10 @@ def test_propose_reply_requires_read_conversation(demo: Demo, owner_engine: Engi
         "answers_message_id": None,
         "grounding": None,
         "safety_clean": False,
+        "care_category": None,
+        "guardrail": None,
+        "guardrail_hash": None,
+        "guardrail_version": None,
         "bundled_action": False,
     }  # as given
     assert proposal["title"] == "Reply to Ada (web chat)" and proposal["conversation_id"] == demo.conversations["Ada"]

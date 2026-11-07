@@ -84,7 +84,10 @@ export function ProposalDetailPage() {
             )}
           </section>
 
-          {p.action_type === "conversations.send_reply" ? <ReplyGrounding payload={rev.payload} /> : null}
+          {p.action_type === "conversations.send_reply" ? <>
+            {p.failure_code?.startsWith("guardrail_") ? <p role="status">{t(`ai.activity.reasons.${p.failure_code}`)}</p> : null}
+            <ReplyGrounding payload={rev.payload} />
+          </> : null}
 
           {p.status === "pending_review" && !editing ? (
             <div className="flex flex-wrap gap-2">

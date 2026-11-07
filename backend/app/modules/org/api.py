@@ -11,6 +11,7 @@ from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import error_responses
 from app.platform.permissions import public_context, require
+from app.platform.registry import get_registry
 
 from . import permissions as P
 from . import public, repository, service
@@ -126,7 +127,9 @@ def public_profile(ctx: Context = Depends(public_context)) -> PublicProfileOut:
     with transaction(ctx) as db:
         business = repository.get_business(db, ctx)
         assert business is not None
+        auto_replies = get_registry().public_ai_auto_replies
         return PublicProfileOut(
+            ai_auto_replies=auto_replies(db, ctx) if auto_replies else False,
             embed_button_label=public.get_settings(db, ctx).embed_button_label,
             ai_greeting=f"You're chatting with {business.name}'s AI assistant.",
             avoid_medical_details=is_regulated() or business.public_profile.get("avoid_medical_details") is True,

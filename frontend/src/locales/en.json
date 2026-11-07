@@ -1297,7 +1297,8 @@
         "procurement": "Supplier quotes",
         "campaign_draft": "Campaign draft",
         "payment_followup": "Payment reminder",
-        "safety": "Safety check"
+        "safety": "Safety check",
+        "reply_guardrail": "Business reply guardrail"
       },
       "runStatus": {
         "running": "Running",
@@ -1307,7 +1308,9 @@
         "budget_exceeded": "Stopped: daily limit",
         "policy_blocked": "Blocked by policy"
       },
-      "nav": "AI settings"
+      "nav": "AI settings",
+      "guardrailLabel": "Automatic reply rules",
+      "guardrailHelp": "Rules the assistant checks before answering a customer by itself. If a reply might break one, a person approves it first."
     },
     "area": "AI",
     "autonomy": {
@@ -1393,7 +1396,11 @@
         "bundled_action": "The reply is combined with a booking or another action.",
         "stale_reply": "A newer message or ownership change made this reply out of date.",
         "conversation_closed": "The conversation is closed.",
-        "conversation_restricted": "This conversation is restricted or its customer record was erased."
+        "conversation_restricted": "This conversation is restricted or its customer record was erased.",
+        "critical_topic": "A critical topic requires staff approval.",
+        "guardrail_needs_staff": "The business guardrail requires staff approval.",
+        "guardrail_unavailable": "The business guardrail check is unavailable.",
+        "guardrail_changed": "The business guardrail changed after this reply was checked."
       },
       "unknownReason": "A rule condition was not met. Open the proposal for details.",
       "failures": {
@@ -1728,6 +1735,10 @@
         "due_month": "Recall due month"
       },
       "reviewProposal": "Review suggested reply — approve, edit or reject"
+    },
+    "guardrail": {
+      "critical": "Critical topic: {{category}}",
+      "waiting": "Business guardrail: {{rule}} — {{reason}}"
     }
   },
   "dictation": {

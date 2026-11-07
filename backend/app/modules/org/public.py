@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import uuid
 from decimal import Decimal
 
@@ -74,6 +75,7 @@ __all__ = [
     "get_public_email",
     "get_sales_tax_rate",
     "get_settings",
+    "reply_guardrail_hash",
     "set_autonomy_paused",
 ]
 
@@ -134,3 +136,8 @@ def get_location(db: Session, ctx: Context, location_id: uuid.UUID) -> LocationO
     from .models import Location
 
     return LocationOut.model_validate(require_scoped(db, ctx, Location, location_id, "org.location_not_found"))
+
+
+def reply_guardrail_hash(text: str | None) -> str | None:
+    """Content version of normalized owner rules, shared by checking and execution."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest() if text else None

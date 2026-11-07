@@ -51,7 +51,12 @@ def test_chain_stock_can_lookup_a_product_absent_from_preloaded_parts(owner_engi
         router=fake_router_by_class(
             agent=FakeGateway(generate),
             grounding=FakeGateway(check),
-            safety=FakeGateway(['{"flagged":false,"category":"none"}']),
+            safety=FakeGateway(
+                [
+                    '{"flagged":false,"category":"none"}',
+                    '{"verdict":"allow","rule":null,"reason":"Synthetic ordinary reply"}',
+                ]
+            ),
         ),
     )
     scored = run_case(case, runtime.execute)
@@ -98,7 +103,12 @@ def test_ordinary_reply_requires_a_model_final(owner_engine: Engine, repair_succ
         router=fake_router_by_class(
             agent=gateway,
             grounding=FakeGateway(['{"claims":[],"verdict":"supported"}']),
-            safety=FakeGateway(['{"flagged":false,"category":"none"}']),
+            safety=FakeGateway(
+                [
+                    '{"flagged":false,"category":"none"}',
+                    '{"verdict":"allow","rule":null,"reason":"Synthetic ordinary reply"}',
+                ]
+            ),
         ),
     )
     assert len(gateway.calls) == 3 and len(result.proposal_ids) == 1
@@ -122,7 +132,12 @@ def test_real_handover_has_a_server_final_without_another_model_call(owner_engin
         demo.business,
         router=fake_router_by_class(
             agent=gateway,
-            safety=FakeGateway(['{"flagged":false,"category":"none"}']),
+            safety=FakeGateway(
+                [
+                    '{"flagged":false,"category":"none"}',
+                    '{"verdict":"allow","rule":null,"reason":"Synthetic ordinary reply"}',
+                ]
+            ),
         ),
     )
     assert result.status == "succeeded" and len(gateway.calls) == 1
@@ -191,7 +206,12 @@ def test_brake_09_checker_shapes_fail_closed_with_precise_safe_diagnostics(
         router=fake_router_by_class(
             agent=FakeGateway(generate),
             grounding=checker,
-            safety=FakeGateway(['{"flagged":false,"category":"none"}']),
+            safety=FakeGateway(
+                [
+                    '{"flagged":false,"category":"none"}',
+                    '{"verdict":"allow","rule":null,"reason":"Synthetic ordinary reply"}',
+                ]
+            ),
         ),
     )
     outcome = runtime.execute(case)

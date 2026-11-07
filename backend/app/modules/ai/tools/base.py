@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.modules.approvals.public import Evidence
-from app.modules.conversations.public import GroundingResult
+from app.modules.conversations.public import GroundingResult, ReplyGuardrailResult
 from app.platform.context import Context
 
 ToolKind = Literal["read", "hold", "propose"]
@@ -39,6 +39,9 @@ class RunState:
     db_facts: dict[str, Any] = field(default_factory=dict)
     reply_grounding: GroundingResult | None = None
     checked_reply: str | None = None
+    reply_guardrail: ReplyGuardrailResult | None = None
+    guardrail_hash: str | None = None
+    guardrail_checked_reply: str | None = None
 
 
 @dataclass(frozen=True)

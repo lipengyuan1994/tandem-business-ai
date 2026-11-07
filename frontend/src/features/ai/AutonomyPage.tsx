@@ -62,7 +62,7 @@ function RuleCard({ rule, onReload }: { rule: AutonomyRule; onReload: () => void
   return <Card>
     <CardHeader><CardTitle>{t(`ai.autonomy.actions.${rule.action_type.replaceAll(".", "_")}`, { defaultValue: rule.action_type })}</CardTitle></CardHeader>
     <CardContent>
-      {rule.action_type === "conversations.send_reply" ? <section className="mb-4 space-y-2 text-sm"><h3 className="font-medium">{t("ai.autonomy.replyFallbacks")}</h3><ul className="list-disc pl-5">{["not_intake", "safety_unchecked", "ungrounded", "contradicted", "grounding_unavailable", "human_mode", "bundled_action", "stale_reply", "conversation_closed"].map((reason) => <li key={reason}>{t(`ai.activity.reasons.${reason}`)}</li>)}</ul></section> : null}
+      {rule.action_type === "conversations.send_reply" ? <section className="mb-4 space-y-2 text-sm"><h3 className="font-medium">{t("ai.autonomy.replyFallbacks")}</h3><ul className="list-disc pl-5">{["critical_topic", "guardrail_needs_staff", "guardrail_unavailable", "guardrail_changed", "not_intake", "safety_unchecked", "ungrounded", "contradicted", "grounding_unavailable", "human_mode", "bundled_action", "stale_reply", "conversation_closed"].map((reason) => <li key={reason}>{t(`ai.activity.reasons.${reason}`)}</li>)}</ul></section> : null}
       <form className="space-y-5" onSubmit={(e) => {
         e.preventDefault()
         if (capValue === undefined || !canSave || conflict) return

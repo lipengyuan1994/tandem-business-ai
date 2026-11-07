@@ -180,6 +180,10 @@ def test_intake_unclear_request_proposes_question_reply(demo: Demo, owner_engine
         "answers_message_id": str(message),
         "grounding": {"claims": [], "verdict": "unavailable"},
         "safety_clean": False,
+        "care_category": None,
+        "guardrail": None,
+        "guardrail_hash": None,
+        "guardrail_version": None,
         "bundled_action": False,
     }
 

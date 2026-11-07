@@ -48,7 +48,8 @@ def _factory(
             assistant_context(business_id, permissions, on_behalf_of_user_id=user_id, ai_run_id=run_id),
             correlation_id=correlation_id,
             causation_id=parent.causation_id if parent else None,
-            agent_key=agent or (parent.agent_key if parent and use_case in {"safety", "grounding"} else None),
+            agent_key=agent
+            or (parent.agent_key if parent and use_case in {"safety", "grounding", "reply_guardrail"} else None),
             causing_agent_key=parent.agent_key if parent else None,
             ai_manager_required=use_case == "copilot",
             chain_depth=(parent.chain_depth if parent else 0) + 1,

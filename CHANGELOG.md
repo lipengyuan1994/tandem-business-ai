@@ -2,6 +2,25 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.13 (2026-11-07)
+
+- **Automatic answers for routine questions:** with a live reply rule, the public chat and website widget answer
+  ordinary questions by themselves (after the send delay, with a Stop control for staff). Complaints, warranty claims,
+  disputes, safety concerns and emergencies always wait for staff.
+- **The business's own guardrail:** Settings → AI has a field for plain-language rules ("a person approves any discount
+  or completion date"). A model checks every drafted reply against them before it may be sent automatically; if a rule
+  might be broken, or the check fails or times out, a person approves the reply first. Changing the rules cancels
+  automatic sending of replies checked under the old rules. Approvals shows why a reply waits.
+- **Honest privacy note:** the chat page says the assistant answers routine questions by itself only when the business
+  actually has a live reply rule; otherwise it keeps "staff review every reply".
+- **Demo data (on reset):** Cycle Works answers automatically with a guardrail and a 15-second delay; Garden Store stays
+  in shadow mode; Dental Clinic approves every reply. Existing installations keep their settings.
+- Checks: 2,443 backend tests (96 % coverage), 576 frontend tests. Live evals: reply guardrail 14/14 (about 0.7 s and
+  $0.00007 per check), intake 74/76, Customer Care 18/19. Browser end-to-end tests were not re-run for this release.
+
+- **Migration (applied by `upgrade.sh`):** `20261107_1600_reply_guardrail` (records the new AI use case). No
+  dependency, service, container or model-route change.
+
 ## 0.1.12 (2026-11-07)
 
 - **New name:** the product is now **Tandem Business AI** (by OpenDL): browser tab, sidebar, sign-in page and API

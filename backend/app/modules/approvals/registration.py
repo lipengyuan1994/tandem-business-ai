@@ -5,12 +5,13 @@ import os
 from app.platform.config import get_settings
 from app.platform.registry import Registry
 
-from . import api, engine, lifecycle, testing_executor
+from . import api, autonomy_service, engine, lifecycle, testing_executor
 from . import permissions as P
 
 
 def register(reg: Registry) -> None:
     reg.add_permissions(P.ALL)
+    reg.public_ai_auto_replies = autonomy_service.public_auto_replies
     reg.add_router(api.router, "/approvals", ["approvals"])
     reg.add_export_handler("approvals", lifecycle.export)
     reg.add_erasure_handler("approvals", lifecycle.erase)

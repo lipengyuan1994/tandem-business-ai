@@ -31,3 +31,7 @@ P10-E1: emergency_handling defaults off; emergency_instructions is public visito
 P10-C2b: exact normalized `embed_allowed_origins` (≤10; dev HTTP localhost origins), button label,
 self-service default-off, notice hours=24 and optional fee text. `embed.py` supplies a fail-closed CSP to Caddy
 forward_auth and an allowlisted public button config. `get_location` exposes a scoped location DTO to scheduling.
+
+P10-G: `ai_reply_guardrail` is trimmed nullable owner text (2,000 characters), protected by `ai.settings.write` with existing version/audit checks. `reply_guardrail_hash` provides its content version.
+
+P10-G privacy: public profile `ai_auto_replies` is derived by the registered approvals callback; false without a live, unpaused reply rule.

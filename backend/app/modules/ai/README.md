@@ -61,7 +61,7 @@ Imports other modules only through their `public.py`. P10-C2a adds metered 1024-
 - Procurement (U9, `usecases/procurement.py`): request quotes (job + `POST /procurement/items/{id}/request-quotes`),
   extract a pasted supplier reply (`POST /procurement/quote-requests/{id}/extract`, numbers verified against the text; supports operation keys),
   compare and propose a PO (`ai.compare-trigger`), chase late orders/invites (cron `ai-procurement-scan`).
-- Evals: intake shadow outcomes and labelled grounding precision/recall; live quality is supervisor-owned.
+- Evals: intake, grounding and 14 guardrail cases; [P10-G](../../../../docs/roadmap/ai/cards/P10-G.md) checks owner rules on safety with shared budgets; live quality is owner-run.
 - Payment follow-up (U10): paged scan → deduplicated invoice jobs; proposals lock/recheck version, pending proposals/cooldown.
 P10-A0: `/autonomy/rules` GET/PUT (owner/admin via `org.settings.write`, versioned), `/autonomy/pause|resume`
 POST, `/autonomy/activity` GET (`approvals.proposal.read`, cursor pagination). Policy is owned by approvals;

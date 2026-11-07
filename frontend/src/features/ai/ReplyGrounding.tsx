@@ -35,6 +35,10 @@ export function ReplyGrounding({ payload }: { payload: Record<string, unknown> }
   const verdict = typeof grounding?.verdict === "string" && ["supported", "unsupported", "contradicted", "unavailable"].includes(grounding.verdict) ? grounding.verdict : "unavailable"
   const claims = Array.isArray(grounding?.claims) ? grounding.claims.map(object).filter((c) => c && typeof c.text === "string" && typeof c.source === "string" && ["supported", "unsupported", "contradicted"].includes(String(c.verdict))) : []
   return <section aria-label={t("ai.grounding.title")} className="space-y-3 rounded-md border p-3">
+    {typeof payload.care_category === "string" && payload.care_category !== "none" ? <p>{t("ai.guardrail.critical", { category: payload.care_category })}</p> : null}
+    {payload.safety_clean === false ? <p>{t("ai.activity.reasons.safety_unchecked")}</p> : null}
+    {object(payload.guardrail)?.verdict === "needs_staff" ? <p>{t("ai.guardrail.waiting", { rule: String(object(payload.guardrail)?.rule ?? ""), reason: String(object(payload.guardrail)?.reason ?? "") })}</p> : null}
+    {payload.guardrail_hash && !object(payload.guardrail) ? <p>{t("ai.activity.reasons.guardrail_unavailable")}</p> : null}
     <h2 className="font-medium">{t("ai.grounding.title")}</h2>
     <p>{t("ai.grounding.overall")} <Badge variant={verdict === "supported" ? "secondary" : "outline"}>{t(`ai.grounding.verdicts.${verdict}`)}</Badge></p>
     <h3 className="text-sm font-medium">{t("ai.grounding.citations")}</h3>

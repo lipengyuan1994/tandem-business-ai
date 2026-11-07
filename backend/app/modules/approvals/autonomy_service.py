@@ -169,6 +169,13 @@ def activity(db: Session, ctx: Context, *, limit: int = 50, cursor: str | None =
         )
         grantor = decision.granted_by if decision is not None else snapshot.granted_by if snapshot else None
         names = identity.get_user_briefs(db, ctx, {grantor} if grantor else set())
+        reasons = list(ev.reasons)
+        if (
+            proposal.failure_code
+            and proposal.failure_code.startswith("guardrail_")
+            and proposal.failure_code not in reasons
+        ):
+            reasons.append(proposal.failure_code)
         items.append(
             ActivityOut(
                 delivery_state=delivery_state(db, ctx, proposal.id),
@@ -177,7 +184,7 @@ def activity(db: Session, ctx: Context, *, limit: int = 50, cursor: str | None =
                 rule_id=ev.rule_id,
                 rule_version=ev.rule_version,
                 outcome=ev.outcome,
-                reasons=ev.reasons,
+                reasons=reasons,
                 created_at=ev.created_at,
                 title=proposal.title,
                 action_type=proposal.action_type,
@@ -192,4 +199,22 @@ def activity(db: Session, ctx: Context, *, limit: int = 50, cursor: str | None =
     return ActivityPage(
         items=items,
         next_cursor=(encode_cursor(items[-1].created_at, items[-1].id) if len(rows) > limit and items else None),
+    )
+
+
+def public_auto_replies(db: Session, ctx: Context) -> bool:
+    """Public configuration disclosure only; execution still enforces every autonomy condition."""
+    if org.autonomy_paused(db, ctx):
+        return False
+    return (
+        db.scalar(
+            select(AutonomyRule.id).where(
+                AutonomyRule.business_id == ctx.business_id,
+                AutonomyRule.action_type == "conversations.send_reply",
+                AutonomyRule.active.is_(True),
+                AutonomyRule.shadow.is_(False),
+                AutonomyRule.level.in_(("act_notify", "act")),
+            )
+        )
+        is not None
     )

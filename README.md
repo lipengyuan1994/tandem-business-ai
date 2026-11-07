@@ -45,11 +45,11 @@ The [spend ledger](docs/vultr-spend.md) records $7.64 in pending charges against
 
 ## AI design and safety
 
-The assistant uses permission-checked tools to read information and create proposals. Staff review proposals before execution. A temporary booking hold is an exception to proposal-only writes. The system can also act under explicit autonomy rules: rules have limits and can be paused, and demo rules start in shadow mode. Shadow mode records what a rule would do without performing it. Some enabled rules can act and notify; AI-sent messages have a delay and a Stop control. Staff can take over a conversation.
+The assistant uses permission-checked tools to read information and create proposals. Staff review proposals before execution. A temporary booking hold is an exception to proposal-only writes. The system can also act under explicit autonomy rules: rules have limits and can be paused, and new rules start in shadow mode. The synthetic Cycle Works demo has a live reply rule; Garden Store stays in shadow and Dental Clinic requires approval. Shadow mode records what a rule would do without performing it. Some enabled rules can act and notify; AI-sent messages have a delay and a Stop control. Staff can take over a conversation.
 
 The AI Team includes Front Desk, Inventory, Purchasing, Finance, Marketing, Operations Manager and Customer Care. Each agent has controls and a daily budget. Hand-offs follow a fixed allowlist, with a chain budget of 6 steps, 30 model calls, 10 actions and $0.50. Customer Care checks consent, contact preference, quiet hours, duplicates and open disputes before sending.
 
-Front Desk answers from published business articles with citations. A separate grounding check tests claims against the cited material; unsupported answers go to a person. Customer and supplier text is treated as untrusted data, not instructions. Prices, availability and quote rankings come from code. Supplier numbers extracted by AI must appear in the source text. These safeguards reduce risk; evaluations cannot prove immunity to every injection.
+Front Desk answers routine customer questions by itself only when every check passes. The business writes its own rules in Settings (for example "a person approves any discount or completion date"), and a model checks each drafted reply against them before it can be sent. If a rule might be broken, or the check fails, a person approves the reply first. Complaints, warranty claims, disputes, safety concerns and emergencies always go to staff. Changing the rules cancels automatic sending of replies checked under the old rules. Front Desk answers from published business articles with citations. A separate grounding check tests claims against the cited material; unsupported answers go to a person. Customer and supplier text is treated as untrusted data, not instructions. Prices, availability and quote rankings come from code. Supplier numbers extracted by AI must appear in the source text. These safeguards reduce risk; evaluations cannot prove immunity to every injection.
 
 A `regulated` installation allows only models on the operator's private network. It does not fall back to hosted APIs. In the [local benchmark](backend/evals/reports/2026-11-06-local-models.md), grounding and extraction passed; the tested model did not pass the agent and writer criteria. Those agent features and summaries remain off in that profile until a local model passes. The dental demo is synthetic; its banner says real patient data needs models under the clinic's control. This is not a compliance certification.
 
@@ -59,10 +59,11 @@ These are measured synthetic-case results, not guarantees. Reports are in [backe
 
 | Suite | Result |
 |---|---:|
-| [Intake](backend/evals/reports/20261106T233716655394Z-intake-vultr-mimo-v2.6-flash.md) | 75/76 |
+| [Intake](backend/evals/reports/20261107T151457452765Z-intake-vultr-mimo-v2.6-flash.md) | 74/76 (with the reply guardrail; one failure was a safe hold for staff, one invalid model output) |
 | [Injection](backend/evals/reports/20261106T232900803303Z-injection-vultr-mimo-v2.6-flash.md) | 15/15 |
 | [Grounding](backend/evals/reports/20261105T222935011343Z-grounding-vultr-deepseek-v4.1-flash-1017.md) | 10/10 |
-| [Customer Care](backend/evals/reports/20261106T205753238190Z-customer_care-vultr-deepseek-v4.1-flash-1017.md) | 19/19 |
+| [Customer Care](backend/evals/reports/20261107T151608668070Z-customer_care-vultr-deepseek-v4.1-flash-1017.md) | 18/19 (one Spanish check-in missed an expected phrase) |
+| [Reply guardrail](backend/evals/reports/20261107T150114654493Z-guardrail-vultr-mimo-v2.6-flash.md) | 14/14 (discounts, dates, injuries, other customers, rules in Spanish and Chinese, an injection attempt; about 0.7 s and $0.00007 per check) |
 | [Retrieval](backend/evals/reports/20261107T042934404525Z-retrieval-vultr-qwen3-embedding-4b.md) | 8/8 (paraphrased questions; the right article is cited) |
 | [Dictation](backend/evals/reports/20261106T155040898824Z-dictation-vultr-deepseek-v4.1-flash-1017.md) | 87.5% (scores the clean-up step, which uses the writer model after `whisper-large-v3-turbo` transcribes) |
 

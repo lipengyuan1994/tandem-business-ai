@@ -255,7 +255,9 @@ def update_settings(
     old = _settings_value(row)
     old_dump, new_dump = old.model_dump(), new.model_dump()
     changed = sorted(k for k in new_dump if new_dump[k] != old_dump[k])
-    if ("ai_policy" in changed or "ai_daily_token_budget" in changed) and not ctx.has(P.AI_SETTINGS_WRITE):
+    if (set(changed) & {"ai_policy", "ai_daily_token_budget", "ai_reply_guardrail"}) and not ctx.has(
+        P.AI_SETTINGS_WRITE
+    ):
         raise Forbidden("auth.permission_denied", detail=P.AI_SETTINGS_WRITE)
     updated = repository.update_settings_row(
         db,

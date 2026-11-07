@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest"
 import { server } from "@/test/server"
 import { parseLocation } from "./api"
 import { Widget } from "./Widget"
+import { EmbedChat } from "./EmbedChat"
 
 const BASE = "*/api/v1/public/example-cycle-works"
 const profile = (ai_policy: string) => ({ name: "Example Cycle Works", timezone: "America/Denver", public_profile: {}, opening_hours: [], ai_policy })
@@ -230,3 +231,39 @@ it("shows the backend clinic banner and emergency instructions above chat", asyn
   expect(screen.getByText("Call the clinic immediately.")).toBeInTheDocument()
   expect(await screen.findByLabelText("Your name")).toBeInTheDocument()
 })
+
+
+const hostedNotices = [
+  ["hosted_vultr", "hosted on Vultr"],
+  ["hosted_any", "from a hosted provider"],
+] as const
+
+it.each(hostedNotices.flatMap(([policy, provider]) => [false, true].flatMap((auto) =>
+  (["chat", "request", "embed"] as const).map((surface) => ({ policy, provider, auto, surface })),
+)))("discloses $policy automatic=$auto on $surface", async ({ policy, provider, auto, surface }) => {
+  server.use(
+    http.get(`${BASE}/profile`, () => HttpResponse.json({ ...profile(policy), ai_auto_replies: auto })),
+    http.get(`${BASE}/chat`, () => HttpResponse.json({ code: "conversations.visitor_token_invalid" }, { status: 403 })),
+    http.get(`${BASE}/services`, () => HttpResponse.json([])),
+    http.get(`${BASE}/embed-config`, () => HttpResponse.json({ label: "Chat", allowed_origins: [] })),
+  )
+  render(surface === "embed" ? <EmbedChat slug="example-cycle-works" /> : <Widget slug="example-cycle-works" page={surface} />)
+  const expected = auto
+    ? `Our staff read your messages. An AI assistant ${provider} answers routine questions by itself; bookings, complaints and anything the business's own rules reserve for staff wait for a person.`
+    : `Our staff read your messages. An AI assistant ${provider} may help draft replies; staff review every reply before it is sent.`
+  expect(await screen.findByText(expected)).toBeInTheDocument()
+  expect(screen.queryByText(auto ? /staff review every reply/ : /answers routine questions by itself/)).not.toBeInTheDocument()
+})
+
+it.each([false, true].flatMap((auto) => (["chat", "request", "embed"] as const).map((surface) => ({ auto, surface }))))(
+  "keeps strict-private disclosure unchanged for automatic=$auto on $surface", async ({ auto, surface }) => {
+    server.use(
+      http.get(`${BASE}/profile`, () => HttpResponse.json({ ...profile("strict_private"), ai_auto_replies: auto })),
+      http.get(`${BASE}/chat`, () => HttpResponse.json({ code: "conversations.visitor_token_invalid" }, { status: 403 })),
+      http.get(`${BASE}/services`, () => HttpResponse.json([])),
+      http.get(`${BASE}/embed-config`, () => HttpResponse.json({ label: "Chat", allowed_origins: [] })),
+    )
+    render(surface === "embed" ? <EmbedChat slug="example-cycle-works" /> : <Widget slug="example-cycle-works" page={surface} />)
+    expect(await screen.findByText("Your messages are read by our staff only. They are not processed by AI.")).toBeInTheDocument()
+  },
+)

@@ -160,6 +160,7 @@ class Registry:
     cron: list[CronSpec] = field(default_factory=list)
     session_resolver: SessionResolver | None = None
     public_business_resolver: PublicBusinessResolver | None = None
+    public_ai_auto_replies: Callable[[Session, Context], bool] | None = None
     # Data lifecycle (M18). Dicts keep insertion order = module registration order (dependencies first).
     export_handlers: dict[str, ExportHandler] = field(default_factory=dict)  # (db, ctx) -> {table: rows}
     erasure_handlers: dict[str, Callable[..., Any]] = field(default_factory=dict)  # (db, ctx, target) -> {what: count}

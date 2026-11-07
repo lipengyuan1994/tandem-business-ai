@@ -163,6 +163,13 @@ class GroundingResult(BaseModel):
     verdict: Literal["supported", "unsupported", "contradicted", "unavailable"]
 
 
+class ReplyGuardrailResult(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, strict=True)
+    verdict: Literal["allow", "needs_staff"]
+    rule: str | None = Field(max_length=240)
+    reason: str = Field(min_length=1, max_length=400)
+
+
 class SendReplyPayload(BaseModel):
     """conversations.send_reply proposal payload."""
 
@@ -174,6 +181,10 @@ class SendReplyPayload(BaseModel):
     answers_message_id: uuid.UUID | None = None
     grounding: GroundingResult | None = None
     safety_clean: bool = False
+    care_category: Literal["none", "complaint", "warranty", "dispute"] | None = None
+    guardrail: ReplyGuardrailResult | None = None
+    guardrail_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    guardrail_version: int | None = Field(default=None, ge=1)
     bundled_action: bool = False
 
 

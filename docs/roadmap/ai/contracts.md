@@ -311,8 +311,7 @@ threads fall back with explicit codes (`not_intake`, `safety_unchecked`, `ungrou
 The intake's existing single-outcome claim prevents separate booking/reply proposals for the same message;
 booking-with-reply remains a booking action, outside the allowlist. A0 checks grantor, pause and atomically reserved
 per-business/local-day cap as before and rechecks reply conditions at policy execution. Manual proposals never
-enter rule evaluation. Demo reply rules are `act_notify`, shadow true, cap 10; this explicit owner request supersedes
-the earlier ask seed default for this slice. Existing shadow summaries, Activity and notifications remain the read path.
+enter rule evaluation. P10-G supersedes this slice's shadow seed: Cycle Works is live `act_notify` with owner guardrails and a 15-second delay; Garden Store stays shadow and Dental Clinic stays ask. New rules still start shadow. Existing shadow summaries, Activity and notifications remain the read path.
 
 **Web publication.** AI-origin executor replies in web chat commit with `publication_state=withheld`,
 `publish_at=now+outbound_send_delay_seconds`, original inbound id and ownership generation. They have no outbox
@@ -1339,3 +1338,19 @@ It never exposes actual email-channel messages or sends mail. Export includes ne
 tables with capability hashes omitted. Lifecycle changes revoke access; erasure clears receipt fee text. Demo seed enables self-service for its
 synthetic businesses. Security/API, MSW and static Caddy/loader tests are required;
 real browser framing, live Caddy headers and SMTP delivery remain reviewer checks.
+
+
+## P10-G answer guardrail (2026-11-07)
+
+The [P10-G card](cards/P10-G.md) extends C1: server-classified care_category none is mandatory for automatic
+intake replies; complaints, warranty claims, disputes, any safety flag and emergencies require staff. The owner may
+configure `BusinessSettings.ai_reply_guardrail` (trimmed nullable text, maximum 2,000 characters, AI_SETTINGS_WRITE
+and existing org settings version/audit checks). Every configured intake reply check uses `reply_guardrail.v1`, the
+existing safety model route and structured completion, even for ask/shadow rules. Owner rules are trusted; message
+and reply are fenced untrusted evidence. Output is allow/needs_staff, nullable rule and short reason. Failure/invalid
+output/timeout/budget exhaustion fails closed. Payloads store verdict, SHA-256 rules content and prompt version;
+agent tool arguments cannot supply these facts. Costs count toward public allowance, agent budget and model_calls.
+New reasons are critical_topic, guardrail_needs_staff, guardrail_unavailable and guardrail_changed. Execution compares
+current rules, returning stale policy proposals to staff with an audit/failure code; delayed publication also cancels
+stale rule checks. Human approvals retain their authority. Evaluation history remains append-only. Migration
+20261107_1600_reply_guardrail extends the recorded use-case constraint after self-service without changing routes.

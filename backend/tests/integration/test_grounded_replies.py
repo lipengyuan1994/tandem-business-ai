@@ -111,7 +111,7 @@ def execute(owner_engine: Engine, demo: Demo, proposal: uuid.UUID) -> uuid.UUID:
 
 def test_reply_shadow_no_claim_and_daily_cap(setup: tuple[Demo, Context], owner_engine: Engine) -> None:
     demo, ctx = setup
-    # Every seeded rule is shadow; only a separate explicit update may enable it.
+    # Cycle Works now starts live; explicitly select shadow for this test.
     rule(ctx, daily_cap=1)
     p = draft(demo)
     assert observed(owner_engine, p).outcome == "would_act"
@@ -211,7 +211,7 @@ def test_policy_execution_withholds_until_due_and_public_cursor_does_not_skip(
     staff = login_as(app, demo.business, ["owner"], user_id=ctx.user_id)
     dto = staff.get(f"/api/v1/conversations/{conv}").json()
     pending = next(m for m in dto["messages"] if m["id"] == str(mid))
-    assert pending["sending_label"] == "Sending in 2:00"
+    assert pending["sending_label"] == "Sending in 0:15"
     assert staff.get(f"/api/v1/approvals/proposals/{p}").json()["delivery_state"] == "withheld"
     before = visitor.get(CHAT).json()["next_cursor"]
     clock.set_clock(lambda: due)
@@ -346,3 +346,58 @@ def test_tied_clock_and_reversed_message_id_still_cancel_stale_reply(
     with transaction(ctx) as db:
         publication.publish(db, ctx, {"message_id": str(mid)})
         assert db.get(Message, mid).cancellation_reason == "stale_reply"
+
+
+@pytest.mark.parametrize("category", ["complaint", "warranty", "dispute"])
+def test_critical_category_never_acts_under_live_reply_rule(
+    setup: tuple[Demo, Context], owner_engine: Engine, category: str
+) -> None:
+    demo, ctx = setup
+    conv, msg = inbound(demo.business)
+    ai = dataclasses.replace(ctx, actor_kind="assistant", user_id=None, on_behalf_of_user_id=None)
+    with transaction(ctx) as db:
+        source = conversations.get_message_context(db, ctx, msg)
+        made = approvals.create_proposal(
+            db,
+            ai,
+            action_type=ACTION,
+            title="Critical customer question",
+            payload={
+                "conversation_id": str(conv),
+                "body": "A person will help you.",
+                "answers_message_id": str(msg),
+                "ai_generation": source.message_ai_generation,
+                "safety_clean": True,
+                "care_category": category,
+                "grounding": {"verdict": "supported", "claims": []},
+            },
+        )
+    row = observed(owner_engine, made.id)
+    assert row.status == "pending_review" and row.outcome == "fell_back"
+    assert row.reasons == ["critical_topic"]
+
+
+def test_guardrail_change_during_stop_delay_cancels_publication(
+    setup: tuple[Demo, Context], owner_engine: Engine
+) -> None:
+    demo, ctx = setup
+    p = draft(demo)
+    mid = execute(owner_engine, demo, p)
+    with owner_engine.begin() as db:
+        db.execute(
+            text(
+                "update business_settings set settings=jsonb_set(settings,'{ai_reply_guardrail}',:rules) "
+                "where business_id=:b"
+            ),
+            {"b": demo.business, "rules": '"Staff must approve all replies"'},
+        )
+    with transaction(ctx) as db:
+        due = db.get(Message, mid).publish_at
+    clock.set_clock(lambda: due)
+    with transaction(ctx) as db:
+        publication.publish(db, ctx, {"message_id": str(mid)})
+        row = db.get(Message, mid)
+        assert row.publication_state == "cancelled" and row.cancellation_reason == "guardrail_changed"
+        from app.modules.conversations.repository import public_messages
+
+        assert mid not in {m.id for m in public_messages(db, ctx, row.conversation_id)[0]}

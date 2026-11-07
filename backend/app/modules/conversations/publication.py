@@ -96,6 +96,13 @@ def publish(db: Session, ctx: Context, payload: dict[str, Any]) -> None:
         )
         return
     reasons = reply_blockers(db, ctx, row.conversation_id, row.ai_generation, row.answers_message_id)
+    checked = approvals.policy_reply_payload(db, ctx, row.proposal_id) if row.proposal_id else None
+    if checked is not None:
+        # Recheck the content version at actual visibility, including edits made during the Stop delay.
+        org.autonomy_paused(db, ctx, lock=True)
+        current_hash = org.reply_guardrail_hash(org.get_settings(db, ctx).ai_reply_guardrail)
+        if checked.get("guardrail_hash") != current_hash:
+            reasons.insert(0, "guardrail_changed")
     if guard:
         if guard.allow_human:
             reasons = [reason for reason in reasons if reason != "human_mode"]

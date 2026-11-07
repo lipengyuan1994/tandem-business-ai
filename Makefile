@@ -125,7 +125,7 @@ demo-logins: ## Keycloak logins for the demo staff on the dev stack; passwords i
 e2e: ## Playwright end-to-end tests against the running dev stack (`make dev` first); resets the demo data
 	$(FRONTEND) pnpm e2e
 
-eval: ## Synthetic AI eval: AI_LIVE=1 make eval suite=intake [model_class=agent provider=vultr model=...]
+eval: ## Synthetic AI eval (includes guardrail/safety): AI_LIVE=1 make eval suite=intake [model_class=agent provider=vultr model=...]
 	@test "$$AI_LIVE" = "1" || (echo "Refusing live evaluation: explicitly set AI_LIVE=1." >&2; exit 2)
 	$(BACKEND) .venv/bin/python -m evals.runner --suite "$(suite)" $(if $(model_class),--model-class "$(model_class)") $(if $(provider),--provider "$(provider)") $(if $(model),--model "$(model)") $(if $(baseline),--baseline "$(abspath $(baseline))")
 

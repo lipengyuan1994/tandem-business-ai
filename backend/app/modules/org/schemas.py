@@ -56,6 +56,13 @@ class BusinessSettings(BaseModel):
     always_review_action_types: list[str] = Field(default_factory=list)
     allow_backorders: bool = False
     ai_policy: Literal["hosted_vultr", "hosted_any", "strict_private"] = "hosted_vultr"
+    ai_reply_guardrail: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("ai_reply_guardrail", mode="before")
+    @classmethod
+    def _reply_guardrail(cls, value: object) -> object:
+        return (value.strip() or None) if isinstance(value, str) else value
+
     ai_daily_token_budget: int | None = Field(default=None, ge=0)
     retention_days_conversations: int = Field(default=730, ge=30)
     embed_allowed_origins: list[str] = Field(default_factory=list, max_length=10)
@@ -222,6 +229,7 @@ class SettingsUpdate(BaseModel):
 
 
 class PublicProfileOut(BaseModel):
+    ai_auto_replies: bool = False
     synthetic_demo_banner: str | None = None
     emergency_handling: bool = False
     emergency_instructions: str = ""

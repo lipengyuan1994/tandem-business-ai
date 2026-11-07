@@ -370,3 +370,21 @@ built from `8b7c8b6` after `make check` passed on the rename (2,398 backend at 9
 licences, gitleaks); realm and example AI config files uploaded; `upgrade.sh 0.1.11 → 0.1.12` in 31 s with its own
 pre-upgrade backup, smoke passed; live page title "Tandem Business AI" and sign-in title "Sign in to Tandem Business
 AI". SSH closed, Terraform no changes, pending charges $8.21.
+
+
+### 2026-11-07 — P10-G answer guardrail (Codex, EVENT)
+
+Implemented owner-written automatic reply rules, independent safety-route checks with fail-closed payload evidence,
+critical-topic autonomy reasons, rule-change execution/publication guards, Settings and Approvals explanations,
+synthetic live/shadow/ask demo differences and 14 offline-harness eval cases. Added the recorded use-case constraint
+migration after `20261106_1500_self_service`. No install, external service call, commit, deployment or route change.
+Verification and remaining owner-run gates are recorded in `docs/roadmap/ai/cards/P10-G.md`.
+
+
+### 2026-11-07 — P10-G public privacy follow-up (Codex, EVENT)
+
+Added a server-derived public-profile auto-reply flag and hosted notice selection shared by public chat,
+appointment requests and the website embed. Existing/private notices remain for the other configurations.
+82 focused backend and 576 frontend tests pass; types/lint and backend static checks pass; API types regenerated.
+Exact owner-supplied wording retained with the policy-scope discrepancy raised and recorded in the P10-G card.
+No install, external service call, migration, deployment or commit.

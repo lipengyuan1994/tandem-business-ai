@@ -405,6 +405,7 @@ def test_visitor_contacts_not_in_any_model_request(
             "visitor_phone": "+12025550123",
             "ai_generation": 0,
             "emergency_handling": False,
+            "care_category": "none",
             "safety_clean": True,
         }
     ]

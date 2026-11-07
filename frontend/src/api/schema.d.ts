@@ -3832,6 +3832,8 @@ export interface components {
              * @enum {string}
              */
             ai_policy: "hosted_vultr" | "hosted_any" | "strict_private";
+            /** Ai Reply Guardrail */
+            ai_reply_guardrail?: string | null;
             /**
              * Allow Backorders
              * @default false
@@ -3958,6 +3960,8 @@ export interface components {
              * @enum {string}
              */
             ai_policy: "hosted_vultr" | "hosted_any" | "strict_private";
+            /** Ai Reply Guardrail */
+            ai_reply_guardrail?: string | null;
             /**
              * Allow Backorders
              * @default false
@@ -6436,6 +6440,11 @@ export interface components {
         };
         /** PublicProfileOut */
         PublicProfileOut: {
+            /**
+             * Ai Auto Replies
+             * @default false
+             */
+            ai_auto_replies: boolean;
             /** Ai Greeting */
             ai_greeting: string;
             /**
@@ -9984,7 +9993,7 @@ export interface operations {
         parameters: {
             query?: {
                 cursor?: string | null;
-                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding" | "dictation" | "customer_care" | "knowledge_index" | "knowledge_query") | null;
+                use_case?: ("intake" | "copilot" | "summary" | "reorder_note" | "briefing" | "procurement" | "campaign_draft" | "payment_followup" | "safety" | "grounding" | "reply_guardrail" | "dictation" | "customer_care" | "knowledge_index" | "knowledge_query") | null;
                 status?: ("running" | "succeeded" | "failed" | "step_limit" | "budget_exceeded" | "policy_blocked") | null;
                 limit?: number;
             };

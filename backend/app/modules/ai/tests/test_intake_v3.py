@@ -47,6 +47,10 @@ def assert_reply_draft(
         "answers_message_id": recorded.trigger_key.removeprefix("intake:"),
         "grounding": {"claims": [], "verdict": "unavailable"},
         "safety_clean": False,
+        "care_category": None,
+        "guardrail": None,
+        "guardrail_hash": None,
+        "guardrail_version": None,
         "bundled_action": False,
     }
     assert (recorded.prompt_name, recorded.prompt_version, recorded.needs_human) == ("intake", 7, needs_human)

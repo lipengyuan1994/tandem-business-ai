@@ -605,6 +605,8 @@ def test_real_integration_one_case_per_suite(
                 text("select id from catalog_items where business_id=:b and name=:n"),
                 {"b": business, "n": "Brake pads (pair)"},
             ).scalar_one()
+        if request.use_case == "reply_guardrail":
+            return '{"verdict":"allow","rule":null,"reason":"Synthetic ordinary reply"}'
         if request.use_case == "safety":
             return json.dumps({"flagged": False, "category": "none"})
         if slug == "ambiguous-customer":
@@ -998,6 +1000,8 @@ def test_failed_dispatch_retains_all_diagnostics_before_cleanup(
     case = next(c for c in load_cases("intake") if c.id == "intake-brake-price")
 
     def reply(request: Any) -> Any:
+        if request.use_case == "reply_guardrail":
+            return '{"verdict":"allow","rule":null,"reason":"Synthetic ordinary reply"}'
         if request.use_case == "safety":
             return json.dumps({"flagged": False, "category": "none"})
         if len([c for c in gateway.calls if c.use_case == "intake"]) == 1:
@@ -1022,7 +1026,7 @@ def test_failed_dispatch_retains_all_diagnostics_before_cleanup(
     scored = run_case(case, runtime.execute)
     assert not scored.passed
     assert scored.error_code == "ai.interrupted" and scored.detail is not None and len(scored.detail) == 200
-    assert {r.use_case for r in scored.diagnostics.runs} == {"safety", "intake", "grounding"}
+    assert {r.use_case for r in scored.diagnostics.runs} == {"safety", "intake", "grounding", "reply_guardrail"}
     agent = next(r for r in scored.diagnostics.runs if r.use_case == "intake")
     assert agent.status == "succeeded" and agent.error_code is None
     assert agent.steps == [

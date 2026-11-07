@@ -19,6 +19,7 @@ from .publication import queue_items as publication_queue_items
 from .schemas import Citation as Citation
 from .schemas import GroundingResult as GroundingResult
 from .schemas import MessageContext, MessageOut, ThreadDto
+from .schemas import ReplyGuardrailResult as ReplyGuardrailResult
 from .service import HandoffRequested, MessageReceived, lock_for_customer
 from .visitors import issue_visitor_token, set_visitor_cookie
 

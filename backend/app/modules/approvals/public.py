@@ -34,7 +34,7 @@ from .invalidation import invalidate_ai_replies as invalidate_ai_replies
 from .lineage import workflow_for_result as workflow_for_result
 from .queue import fallback_items as fallback_queue_items
 from .queue import proposal_items as proposal_queue_items
-from .reading import outbound_authority, proposal_notification_state
+from .reading import outbound_authority, policy_reply_payload, proposal_notification_state
 from .schemas import ChatCard, ChatConfirmIn, Evidence, OpenProposal
 from .team import activity as team_activity
 from .team import return_items as team_return_items
@@ -151,6 +151,7 @@ __all__ = [
     "invalidate_ai_replies",
     "list_autonomy_rules",
     "outbound_authority",
+    "policy_reply_payload",
     "proposal_exists",
     "proposal_notification_state",
     "proposal_queue_items",

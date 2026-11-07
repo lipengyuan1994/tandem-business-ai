@@ -174,8 +174,16 @@ def check_execution(
                 ProposalRevision.business_id == ctx.business_id, ProposalRevision.id == decision.revision_id
             )
         )
-        if revision is None or spec.autonomy_reasons(
-            db, policy_context(ctx, decision), spec.payload_model.model_validate(revision.payload)
-        ):
+        reasons = (
+            spec.autonomy_reasons(
+                db, policy_context(ctx, decision), spec.payload_model.model_validate(revision.payload)
+            )
+            if revision is not None
+            else ["autonomy_revoked"]
+        )
+        guardrail_reason = next((r for r in reasons if r.startswith("guardrail_")), None)
+        if guardrail_reason:
+            raise Conflict(f"approvals.{guardrail_reason}")
+        if reasons:
             raise Conflict("approvals.autonomy_revoked")
     return policy_context(ctx, decision)

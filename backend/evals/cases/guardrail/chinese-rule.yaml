@@ -1,0 +1,17 @@
+{
+  "id": "guardrail-chinese-rule",
+  "suite": "guardrail",
+  "business": "biz-cycle",
+  "now": "2026-11-07T17:00:00Z",
+  "input": {
+    "message": "Can you promise delivery tomorrow?",
+    "reply": "We promise delivery tomorrow.",
+    "rules": "任何承诺完成或交付日期的回复必须先由员工批准。"
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "verdict": "needs_staff"
+    }
+  }
+}

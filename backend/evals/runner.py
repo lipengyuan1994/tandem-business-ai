@@ -28,6 +28,7 @@ Suite = Literal[
     "summary",
     "procurement",
     "grounding",
+    "guardrail",
     "dictation",
     "customer_care",
     "retrieval",
@@ -41,6 +42,7 @@ SUITES = (
     "summary",
     "procurement",
     "grounding",
+    "guardrail",
     "dictation",
     "customer_care",
     "retrieval",
@@ -449,6 +451,11 @@ def summarize(rows: list[ScoredCase]) -> dict[str, Any]:
     if care:
         threshold = yaml.safe_load((ROOT / "suites" / "customer_care.yaml").read_text())["thresholds"]["pass_rate"]
         metrics["thresholds_met"] = metrics["thresholds_met"] and sum(r.passed for r in care) / len(care) >= threshold
+    guardrail = [r for r in rows if r.suite == "guardrail"]
+    if guardrail:
+        threshold = yaml.safe_load((ROOT / "suites" / "guardrail.yaml").read_text())["thresholds"]["pass_rate"]
+        metrics["guardrail_pass_rate"] = sum(r.passed for r in guardrail) / len(guardrail)
+        metrics["thresholds_met"] = metrics["thresholds_met"] and metrics["guardrail_pass_rate"] >= threshold
     retrieval = [r for r in rows if r.suite == "retrieval"]
     if retrieval:
         threshold = yaml.safe_load((ROOT / "suites" / "retrieval.yaml").read_text())["thresholds"]["pass_rate"]

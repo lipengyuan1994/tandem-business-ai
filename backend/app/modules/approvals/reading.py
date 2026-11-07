@@ -252,3 +252,27 @@ def outbound_authority(db: Session, ctx: Context, proposal_id: uuid.UUID) -> dic
         (e.get("ref_id") for e in evidence if e.get("kind") == "message" and e.get("ref_type") == "message"), None
     )
     return result
+
+
+def policy_reply_payload(db: Session, ctx: Context, proposal_id: uuid.UUID) -> dict[str, Any] | None:
+    """Current policy-approved standalone reply only; human approvals retain their authority."""
+    return db.scalar(
+        select(ProposalRevision.payload)
+        .join(
+            ActionProposal,
+            (ActionProposal.current_revision_id == ProposalRevision.id)
+            & (ActionProposal.business_id == ProposalRevision.business_id),
+        )
+        .join(
+            ApprovalDecision,
+            (ApprovalDecision.revision_id == ProposalRevision.id)
+            & (ApprovalDecision.business_id == ProposalRevision.business_id),
+        )
+        .where(
+            ActionProposal.business_id == ctx.business_id,
+            ActionProposal.id == proposal_id,
+            ActionProposal.action_type == "conversations.send_reply",
+            ApprovalDecision.decision == "approve",
+            ApprovalDecision.decided_by_kind == "policy",
+        )
+    )

@@ -258,3 +258,13 @@ Offline integration coverage lives in `tests/integration/test_customer_care_writ
 an explicitly separate operator action. No live Customer Care eval was run by the backend task.
 The Customer Care cases also require language-specific words in non-English copy and exclude casual
 English wording in formal cases; live semantic language/tone quality still needs human/provider evaluation.
+
+
+## P10-G guardrail
+
+`guardrail` selects the existing `safety` class and the `reply_guardrail.v1` prompt. Fourteen synthetic cases cover
+ordinary hours/catalog prices/services/booking availability, discounts, completion dates, recalls/injuries, another
+customer, Spanish/Chinese owner rules and delimiter/instruction injection. The model sees trusted owner rules plus
+fenced customer message and drafted reply. `suites/guardrail.yaml` requires a 100% case pass rate, including valid
+structured output; unavailable/failed checks cannot pass. Scripted offline tests verify wiring, accounting and scoring,
+not live model accuracy. Owner command: `AI_LIVE=1 make eval suite=guardrail model_class=safety`.

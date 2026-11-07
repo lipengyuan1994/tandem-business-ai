@@ -190,3 +190,16 @@ already installs vector, so `CREATE EXTENSION IF NOT EXISTS vector` stays. The r
 Public name: **Tandem Business AI by OpenDL**; GitHub repository `tandem-business-ai`. Commits are authored as
 `Pengyuan Li <lpy@tuta.io>`; the history was rewritten once for this before the first push (the owner's explicit
 exception to the no-rewrite rule; see `EVENT_WORK.md`). Internal identifiers keep the `smb` prefix.
+
+
+### P10-G answer guardrail (owner scope, 2026-11-07)
+
+Public intake replies may use the existing live autonomy rule only after clean safety, non-critical care category,
+supported grounding and any owner-written reply guardrail allow it. The owner rules are trusted settings; customer
+messages and drafts are fenced untrusted text. Reuse `safety` routing, structured validation/repair, public allowance,
+agent and chain budgets; no new provider or route. Checks run even for ask/shadow rules. Persist verdict, SHA-256 of
+normalized rules and prompt version 1. Missing/invalid checks fail closed; changed rules return unexecuted policy
+proposals to staff and cancel withheld replies at publication. Human approval retains its existing authority.
+Autonomy evaluation history stays append-only; execution fallback is an audit event/failure code surfaced in Activity.
+Cycle Works seed explicitly opts into live guarded replies with a 15-second delay; Garden stays shadow and Dental
+stays ask. The new recorded `reply_guardrail` use-case requires one constraint migration after self-service.

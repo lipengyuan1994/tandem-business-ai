@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.approvals import public as approvals
 from app.modules.approvals.public import ExecutionMeta, ExecutorSpec, PreviewLine
+from app.modules.org import public as org
 from app.platform import crud
 from app.platform.context import Context
 
@@ -68,7 +69,17 @@ def autonomy_reasons(db: Session, ctx: Context, p: SendReplyPayload) -> list[str
     if p.answers_message_id is None or (ctx.actor_kind == "assistant" and ctx.on_behalf_of_user_id is not None):
         reasons.append("not_intake")
     if not p.safety_clean:
-        reasons.append("safety_unchecked")
+        reasons.extend(["safety_unchecked", "critical_topic"])
+    if p.care_category != "none":
+        reasons.append("critical_topic")
+    current_hash = org.reply_guardrail_hash(org.get_settings(db, ctx).ai_reply_guardrail)
+    if p.guardrail_hash != current_hash:
+        reasons.append("guardrail_changed" if p.guardrail_hash else "guardrail_unavailable")
+    if current_hash:
+        if p.guardrail is None or p.guardrail_version != 1:
+            reasons.append("guardrail_unavailable")
+        elif p.guardrail.verdict == "needs_staff":
+            reasons.append("guardrail_needs_staff")
     if p.grounding is None or p.grounding.verdict == "unavailable":
         reasons.append("grounding_unavailable")
     elif p.grounding.verdict != "supported":
@@ -76,7 +87,7 @@ def autonomy_reasons(db: Session, ctx: Context, p: SendReplyPayload) -> list[str
     if p.bundled_action:
         reasons.append("bundled_action")
     reasons.extend(reply_blockers(db, ctx, p.conversation_id, p.ai_generation, p.answers_message_id))
-    return reasons
+    return list(dict.fromkeys(reasons))
 
 
 SEND_REPLY = ExecutorSpec(

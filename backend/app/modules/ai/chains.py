@@ -33,7 +33,7 @@ def subject_context(db: Session, ctx: Context, field: str, ident: UUID, *, perio
 
 def run_context(ctx: Context, use_case: str) -> Context:
     key = ctx.agent_key or USE_CASE_OWNERS.get(use_case)
-    if key is None and use_case in {"safety", "grounding"}:
+    if key is None and use_case in {"safety", "grounding", "reply_guardrail"}:
         key = "front_desk"
     if use_case == "dictation":
         key = None

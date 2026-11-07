@@ -60,6 +60,7 @@ DEFAULT_CLASS: dict[str, ModelClass] = {
     "summary": "fast_extract",
     "procurement": "fast_extract",
     "grounding": "grounding",
+    "guardrail": "safety",
     "dictation": "writer",
     "customer_care": "writer",
     "retrieval": "embed",
@@ -128,6 +129,13 @@ def validate_cases(cases: list[Case], path: Path = seed_module.DEFAULT_FIXTURES)
             allowed |= {"dictionary", "expected_text"}
         if case.suite == "customer_care":
             allowed |= {"facts", "kind", "minimal", "customer_notes"}
+        if case.suite == "guardrail":
+            allowed |= {"rules", "reply"}
+            from app.modules.org.schemas import BusinessSettings
+
+            BusinessSettings(ai_reply_guardrail=case.input.get("rules"))
+            if not case.input.get("rules") or not isinstance(case.input.get("reply"), str):
+                raise ValueError(f"{case.id}: guardrail rules and reply required")
         if case.suite == "grounding":
             allowed |= {"articles", "db_facts"}
         if case.suite == "retrieval":
@@ -440,6 +448,19 @@ class LiveRuntime:
             )
             state.output = {"text": value, "polished": polished, "warnings": warnings}
             recording.close_run(ctx, state.run_id, "succeeded", result={"polished": polished})
+        elif case.suite == "guardrail":
+            from app.modules.ai.agent.contexts import background_ctx_factory
+            from app.modules.ai.reply_guardrail import check
+
+            value = check(
+                background_ctx_factory(state.business_id),
+                rules=case.input["rules"],
+                message=case.input["message"],
+                reply=case.input["reply"],
+                trigger_key=case.id,
+                router=self.router,
+            )
+            state.output = value.model_dump(mode="json") if value else {"verdict": "unavailable"}
         elif case.suite == "grounding":
             from app.modules.ai.agent.contexts import background_ctx_factory
             from app.modules.ai.grounding import check
@@ -556,7 +577,11 @@ class LiveRuntime:
             )
             for recorded in [*runs, *steps]:
                 db.expunge(recorded)
-        mains = [r for r in runs if r.use_case not in {"safety", "grounding"} or case.suite == "grounding"]
+        mains = [
+            r
+            for r in runs
+            if r.use_case not in {"safety", "grounding", "reply_guardrail"} or case.suite in {"grounding", "guardrail"}
+        ]
         main = next((r for r in mains if r.id == state.run_id), mains[-1] if mains else None)
         with self.owner_engine.connect() as db:
             # Test-only observer: scope by case business, include every assistant proposal (even if omitted in final).
@@ -610,6 +635,9 @@ class LiveRuntime:
                     Draft.model_validate({k: output[k] for k in ("subject", "body")})
                 elif case.suite == "summary":
                     ThreadSummary.model_validate(output)
+                elif case.suite == "guardrail":
+                    conversations.ReplyGuardrailResult.model_validate(state.output)
+                    output = state.output
                 elif case.suite == "grounding":
                     conversations.GroundingResult.model_validate(output)
                     output = state.output

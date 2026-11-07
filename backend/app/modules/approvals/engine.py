@@ -229,7 +229,18 @@ def execute(business_id: uuid.UUID, proposal_id: uuid.UUID, revision_id: uuid.UU
                 if check is not None and not check(db, ctx):
                     _return_to_person(db, failure_ctx, proposal, revision, decision, key, "ai.agent_disabled")
                     return "pending_review"
-                ctx = autonomy.check_execution(db, ctx, proposal, decision, spec)
+                try:
+                    ctx = autonomy.check_execution(db, ctx, proposal, decision, spec)
+                except DomainError as exc:
+                    if exc.code not in {
+                        "approvals.guardrail_changed",
+                        "approvals.guardrail_unavailable",
+                        "approvals.guardrail_needs_staff",
+                    }:
+                        raise
+                    reason = exc.code.removeprefix("approvals.")
+                    _return_to_person(db, failure_ctx, proposal, revision, decision, key, reason)
+                    return "pending_review"
             elif spec.approve_permission not in permissions:
                 raise ApproverNotAuthorized("approvals.approver_no_longer_authorized")
             reserve = get_registry().ai_reserve_action

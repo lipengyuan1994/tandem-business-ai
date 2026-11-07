@@ -13,6 +13,7 @@ import { PermissionGate } from "@/components/common/PermissionGate"
 import { QueryError } from "@/components/common/QueryError"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSettings, useUpdateSettings } from "@/features/org/hooks"
@@ -65,6 +66,7 @@ function PolicyForm({ initial, version, onReload }: { initial: BusinessSettings;
   const update = useUpdateSettings()
   const [policy, setPolicy] = useState<BusinessSettings["ai_policy"]>(initial.ai_policy)
   const [budget, setBudget] = useState(initial.ai_daily_token_budget == null ? "" : String(initial.ai_daily_token_budget))
+  const [guardrail, setGuardrail] = useState(initial.ai_reply_guardrail ?? "")
   const [conflict, setConflict] = useState(false)
   const canEdit = permissions.has("ai.settings.write") && permissions.has("org.settings.write")
   const effective: AiPolicy = status?.policy ?? initial.ai_policy
@@ -75,8 +77,8 @@ function PolicyForm({ initial, version, onReload }: { initial: BusinessSettings;
   return (
     <form className="space-y-6" onSubmit={(e) => {
       e.preventDefault()
-      if (budgetValue === undefined || !canEdit || locked) return
-      update.mutate({ version, settings: { ...initial, ai_policy: policy, ai_daily_token_budget: budgetValue } },
+      if (budgetValue === undefined || !canEdit) return
+      update.mutate({ version, settings: { ...initial, ai_policy: locked ? initial.ai_policy : policy, ai_daily_token_budget: budgetValue, ai_reply_guardrail: guardrail.trim() || null } },
         { onSuccess: () => toast.success(t("common.saved")), onError: (e2) => toastError(e2, () => setConflict(true)) })
     }}>
       <fieldset className="space-y-3" disabled={!canEdit || locked}>
@@ -104,7 +106,14 @@ function PolicyForm({ initial, version, onReload }: { initial: BusinessSettings;
         {today ? <p className="text-sm">{t("ai.settings.usedToday", { used: number.format(today.input_tokens + today.output_tokens), limit: number.format(today.budget_tokens), percent: today.percent })}</p> : null}
       </section>
 
-      {canEdit ? <Button type="submit" disabled={update.isPending || budgetValue === undefined || locked}>{t("common.save")}</Button> : <p className="text-sm text-muted-foreground">{t("ai.settings.readOnly")}</p>}
+      <section className="space-y-2">
+        <Label htmlFor="ai-reply-guardrail">{t("ai.settings.guardrailLabel")}</Label>
+        <Textarea id="ai-reply-guardrail" value={guardrail} maxLength={2000} disabled={!canEdit} aria-describedby="ai-guardrail-help ai-guardrail-count" onChange={(e) => setGuardrail(e.target.value)} />
+        <p id="ai-guardrail-help" className="text-xs text-muted-foreground">{t("ai.settings.guardrailHelp")}</p>
+        <p id="ai-guardrail-count" className="text-xs text-muted-foreground">{Array.from(guardrail).length} / 2000</p>
+      </section>
+
+      {canEdit ? <Button type="submit" disabled={update.isPending || budgetValue === undefined}>{t("common.save")}</Button> : <p className="text-sm text-muted-foreground">{t("ai.settings.readOnly")}</p>}
       <ConflictDialog open={conflict} onOpenChange={setConflict} onReload={() => { setConflict(false); onReload() }} />
     </form>
   )

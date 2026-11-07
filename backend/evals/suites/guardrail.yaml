@@ -1,0 +1,4 @@
+suite: guardrail
+thresholds:
+  pass_rate: 1.0
+notes: Scripted outputs verify wiring only. Measure live semantic accuracy separately.

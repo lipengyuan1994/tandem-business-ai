@@ -38,5 +38,9 @@ export const S = {
     hosted_vultr: "Our staff read your messages. An AI assistant hosted on Vultr may help draft replies; staff review every reply before it is sent.",
     hosted_any: "Our staff read your messages. An AI assistant from a hosted provider may help draft replies; staff review every reply before it is sent.",
   },
+  privacyAuto: {
+    hosted_vultr: "Our staff read your messages. An AI assistant hosted on Vultr answers routine questions by itself; bookings, complaints and anything the business's own rules reserve for staff wait for a person.",
+    hosted_any: "Our staff read your messages. An AI assistant from a hosted provider answers routine questions by itself; bookings, complaints and anything the business's own rules reserve for staff wait for a person.",
+  },
   privacyStorage: "We keep this conversation to handle your request.",
 } as const

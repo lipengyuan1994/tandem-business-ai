@@ -46,13 +46,20 @@ _CONVERSATIONS = (
 )
 
 
-def seed_demo(owner_engine: Engine, at: datetime = SEED_NOW) -> Demo:
+def seed_demo(owner_engine: Engine, at: datetime = SEED_NOW, *, guardrail: bool = False) -> Demo:
     """Load the original two-business scenario and keep its reference clock frozen."""
     from app.seed import seed
 
     clock.set_clock(lambda: at)
     seed(business_keys={"biz-cycle", "biz-garden"})
     business, other = fixture_id("biz-cycle"), fixture_id("biz-garden")
+    if not guardrail:
+        # Existing tool/grounding fixtures exercise no owner rules; P10-G opts in explicitly.
+        with owner_engine.begin() as conn:
+            conn.execute(
+                text("update business_settings set settings=settings - 'ai_reply_guardrail' where business_id=:b"),
+                {"b": business},
+            )
     customers = "select display_name, id from customers where business_id = :b"
     items = "select name, id from catalog_items where business_id = :b"
     with owner_engine.connect() as conn:

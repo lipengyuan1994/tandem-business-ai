@@ -26,6 +26,10 @@ REASONS = {
     "conversation_restricted",
     "closed",
     "restricted",
+    "critical_topic",
+    "guardrail_needs_staff",
+    "guardrail_unavailable",
+    "guardrail_changed",
 }
 
 

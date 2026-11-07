@@ -288,7 +288,14 @@ def test_all_twelve_live_failures_through_real_fake_harness(
     runtime = LiveRuntime(
         "intake",
         router=fake_router_by_class(
-            agent=gateway, grounding=FakeGateway(check), safety=FakeGateway(['{"flagged":false,"category":"none"}'])
+            agent=gateway,
+            grounding=FakeGateway(check),
+            safety=FakeGateway(
+                [
+                    '{"flagged":false,"category":"none"}',
+                    '{"verdict":"allow","rule":null,"reason":"Synthetic ordinary reply"}',
+                ]
+            ),
         ),
         owner_engine=owner_engine,
     )

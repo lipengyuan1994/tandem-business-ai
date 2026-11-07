@@ -69,3 +69,5 @@ ownership again and durable hand-over/ownership subscribers clean up skipped pro
 P10-B1: proposal causality/producer fields; registered AI execution guards and atomic chain action accounting.
 Disabled producer policy actions return to a fresh human-review revision; immutable decisions remain. Public
 `team_summary`, `team_activity`, `team_return_items`, `workflow_for_result` supply scoped metadata and durable lineage; Team activity includes the owning proposal's recorded depth (P10-gaps).
+
+P10-G privacy: `public_auto_replies` registers the public-profile boolean callback for an active, non-shadow act_notify/act send_reply rule while autonomy is unpaused.

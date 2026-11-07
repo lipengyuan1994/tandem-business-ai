@@ -418,7 +418,12 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
         )
         settings, settings_version = org_service.get_settings(db, ctx)
         org_service.update_settings(
-            db, ctx, settings.model_copy(update={"self_service_enabled": True}), settings_version
+            db,
+            ctx,
+            org.BusinessSettings.model_validate(
+                {**settings.model_dump(), "self_service_enabled": True, **json.loads(b.get("settings_json", "{}"))}
+            ),
+            settings_version,
         )
         from app import seed_dental
 
@@ -463,18 +468,20 @@ def seed_business(tables: dict[str, list[dict[str, Any]]], b: dict[str, Any]) ->
 
         for rule in _rows(tables, "autonomy_rules", key):
             grantor_ctx = _ctx(business_id, k[rule["granted_by"]], ("owner",))
-            approvals.put_autonomy_rule(
-                db,
-                grantor_ctx,
-                approvals.RulePut(
-                    action_type=rule["action_type"],
-                    level=rule["level"],
-                    shadow=rule["shadow"],
-                    daily_cap=rule["daily_cap"],
-                    active=rule["active"],
-                    version=0,
-                ),
+            rule_data = approvals.RulePut(
+                action_type=rule["action_type"],
+                level=rule["level"],
+                shadow=rule["shadow"],
+                daily_cap=rule["daily_cap"],
+                active=rule["active"],
+                version=0,
             )
+            saved_rule = approvals.put_autonomy_rule(db, grantor_ctx, rule_data)
+            if not rule["shadow"]:
+                # Normal creation always starts shadow. The synthetic fixture explicitly authorizes going live.
+                approvals.put_autonomy_rule(
+                    db, grantor_ctx, rule_data.model_copy(update={"version": saved_rule.version})
+                )
 
         for item in _rows(tables, "catalog_items", key):
             data = {

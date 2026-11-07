@@ -71,6 +71,10 @@ def test_summary_creates_one_reply_proposal_with_evidence(registry: Registry, ow
             "answers_message_id": None,
             "grounding": None,
             "safety_clean": False,
+            "care_category": None,
+            "guardrail": None,
+            "guardrail_hash": None,
+            "guardrail_version": None,
             "bundled_action": False,
         }
         assert any(e.get("ref_id") == str(conv) for e in proposal.evidence)

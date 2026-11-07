@@ -95,7 +95,7 @@ describe("Front-desk Autonomy and Exceptions", () => {
     expect(screen.getByRole("radio", { name: "Act and notify" })).toBeChecked()
     expect(screen.getByRole("switch", { name: "Shadow mode" })).toBeChecked()
     expect(screen.getByLabelText("Daily limit")).toHaveValue("10")
-    for (const reason of ["The reply is not grounded in its sources.", "A claim contradicts the available sources.", "The grounding check is unavailable.", "A person is handling this conversation.", "The reply is combined with a booking or another action."]) expect(screen.getByText(reason)).toBeInTheDocument()
+    for (const reason of ["A critical topic requires staff approval.", "The business guardrail requires staff approval.", "The business guardrail check is unavailable.", "The business guardrail changed after this reply was checked.", "The reply is not grounded in its sources.", "A claim contradicts the available sources.", "The grounding check is unavailable.", "A person is handling this conversation.", "The reply is combined with a booking or another action."]) expect(screen.getByText(reason)).toBeInTheDocument()
     const button = screen.getByRole("button", { name: "Save" })
     if (allowed) {
       await userEvent.click(button)
@@ -125,4 +125,20 @@ describe("Front-desk Autonomy and Exceptions", () => {
     expect(await screen.findByText("Nothing is waiting.")).toBeInTheDocument()
     expect(stopped).toBe(true)
   })
+})
+
+
+it("shows critical topics and business guardrail explanations on Approvals", async () => {
+  mockMe()
+  mockEvidence({ ...reply, care_category: "complaint", guardrail: { verdict: "needs_staff", rule: "Discounts need staff", reason: "A discount was requested" } })
+  renderApp(`/approvals/${PROPOSAL}`)
+  expect(await screen.findByText("Critical topic: complaint")).toBeInTheDocument()
+  expect(screen.getByText("Business guardrail: Discounts need staff — A discount was requested")).toBeInTheDocument()
+})
+
+it("shows unavailable business checks on Approvals", async () => {
+  mockMe()
+  mockEvidence({ ...reply, guardrail_hash: "a".repeat(64), guardrail: null })
+  renderApp(`/approvals/${PROPOSAL}`)
+  expect(await screen.findByText("The business guardrail check is unavailable.")).toBeInTheDocument()
 })

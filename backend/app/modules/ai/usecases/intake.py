@@ -255,7 +255,10 @@ def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None
             emergency_result = _early_result(ctx_factory, state, {"reason": "emergency", "handoff_requested": True})
             _outcome_note(ctx_factory, message.conversation_id, message_id, emergency_result)
             return emergency_result
-        state.server_facts["safety_clean"] = verdict.category == "none"
+        state.server_facts["care_category"] = verdict.care_category
+        state.server_facts["safety_clean"] = (
+            not verdict.flagged and not verdict.emergency and verdict.category == "none"
+        )
         if verdict.care_category != "none":
             state.extra.update(care_category=verdict.care_category, care_priority=verdict.care_priority)
     result = None
@@ -294,7 +297,10 @@ def _run(message_id: uuid.UUID, business_id: uuid.UUID, *, router: Router | None
                 },
             )
         else:
-            state.server_facts["safety_clean"] = verdict.category == "none"
+            state.server_facts["care_category"] = verdict.care_category
+            state.server_facts["safety_clean"] = (
+                not verdict.flagged and not verdict.emergency and verdict.category == "none"
+            )
     if result is None:
         match = _match_customer(message, business_id)
         if match.kind == "ambiguous":

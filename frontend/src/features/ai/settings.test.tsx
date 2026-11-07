@@ -9,7 +9,7 @@ import type { RunOut, RunPage, UsageOut } from "./types"
 
 const READ = ["ai.settings.read", "org.settings.read", "ai.assistant.use"]
 const WRITE = [...READ, "ai.settings.write", "org.settings.write"]
-const SETTINGS = { settings: { terminology: {}, ai_policy: "hosted_vultr", ai_daily_token_budget: null }, version: 4 }
+const SETTINGS = { settings: { terminology: {}, ai_policy: "hosted_vultr", ai_daily_token_budget: null, ai_reply_guardrail: null }, version: 4 }
 
 const run = (n: number, over: Partial<RunOut> = {}): RunOut => ({
   id: `run-${n}`, use_case: "copilot", status: "succeeded", needs_human: false, model: "example-model", provider: "example", steps: 3, input_tokens: 1200, output_tokens: 300,
@@ -91,7 +91,7 @@ describe("AI settings page", () => {
     const regulated = screen.getByRole("radio", { name: "Regulated (locked)" })
     expect(regulated).toBeChecked()
     for (const radio of screen.getAllByRole("radio")) expect(radio).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled()
   })
 
   it("saves the policy and the daily limit with the version it was loaded at", async () => {
@@ -112,7 +112,7 @@ describe("AI settings page", () => {
     await userEvent.clear(limit)
     await userEvent.type(limit, "500000")
     await userEvent.click(screen.getByRole("button", { name: "Save" }))
-    await waitFor(() => expect(sent).toEqual({ version: 4, settings: { terminology: {}, ai_policy: "strict_private", ai_daily_token_budget: 500000 } }))
+    await waitFor(() => expect(sent).toEqual({ version: 4, settings: { terminology: {}, ai_policy: "strict_private", ai_daily_token_budget: 500000, ai_reply_guardrail: null } }))
   })
 
   it("is read-only without the write permission, and hidden without the read permission", async () => {
@@ -149,4 +149,33 @@ describe("AI settings page", () => {
     expect(await screen.findByText(/AI is not set up on this installation yet/)).toBeInTheDocument()
     expect(await screen.findByText("No AI runs yet.")).toBeInTheDocument()
   })
+})
+
+
+it("saves trimmed owner guardrails with a count and version", async () => {
+  mockMe(meWith(...WRITE))
+  mockStatus()
+  mockAi()
+  let sent: unknown
+  server.use(http.patch("*/api/v1/org/settings", async ({ request }) => {
+    sent = await request.json()
+    return HttpResponse.json({ ...SETTINGS, version: 5 })
+  }))
+  renderApp("/settings/ai")
+  const field = await screen.findByRole("textbox", { name: "Automatic reply rules" })
+  expect(field).toHaveAttribute("maxlength", "2000")
+  expect(screen.getByText("0 / 2000")).toBeInTheDocument()
+  expect(screen.getByText("Rules the assistant checks before answering a customer by itself. If a reply might break one, a person approves it first.")).toBeVisible()
+  await userEvent.type(field, " Refunds need staff ")
+  expect(screen.getByText("20 / 2000")).toBeInTheDocument()
+  await userEvent.click(screen.getByRole("button", { name: "Save" }))
+  await waitFor(() => expect(sent).toMatchObject({ version: 4, settings: { ai_reply_guardrail: "Refunds need staff" } }))
+})
+
+it("makes the guardrail read-only without AI settings permission", async () => {
+  mockMe(meWith(...READ, "org.settings.write"))
+  mockStatus()
+  mockAi()
+  renderApp("/settings/ai")
+  expect(await screen.findByRole("textbox", { name: "Automatic reply rules" })).toBeDisabled()
 })

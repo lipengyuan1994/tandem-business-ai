@@ -371,6 +371,12 @@ def _run_tool(
                 if caller.remaining() <= 0:
                     # Checking must not authorize an effect after its generating intake run has expired.
                     raise StopRun("failed", "ai.run_timeout")
+    if spec.use_case == "intake" and step.tool == "propose_reply" and step.tool in authorized_tools(ctx, spec.tools):
+        from ..reply_guardrail import check_proposal
+
+        check_proposal(ctx, step.arguments, state, caller.router)
+        if caller.remaining() <= 0:
+            state.reply_guardrail = None
     observation = execute_tool(ctx, step.tool, step.arguments, spec.tools, state)
     if observation.get("ok") and step.tool in {"list_services", "get_service_parts", "check_stock", "find_slots"}:
         state.db_facts.setdefault(step.tool, []).append(observation["data"])

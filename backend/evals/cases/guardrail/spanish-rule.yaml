@@ -1,0 +1,17 @@
+{
+  "id": "guardrail-spanish-rule",
+  "suite": "guardrail",
+  "business": "biz-cycle",
+  "now": "2026-11-07T17:00:00Z",
+  "input": {
+    "message": "Can I get a refund?",
+    "reply": "We will refund you.",
+    "rules": "Una persona debe aprobar cualquier respuesta sobre reembolsos o descuentos."
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "verdict": "needs_staff"
+    }
+  }
+}

@@ -85,7 +85,7 @@ def reserve(ctx: Context, entry: RouteEntry, req: ChatRequest | TranscriptionReq
     )
     if audio:
         cost = cost_micros(entry, Usage(input_tokens=0, output_tokens=0, audio_seconds=120), round_up=True)
-    public = req.use_case in {"intake", "safety"}
+    public = req.use_case in {"intake", "safety", "reply_guardrail"}
     result = Reservation(day, month, input_tokens, output_tokens, cost, public)
     s = get_settings()
     # One transaction for all counters: a failed conditional update rolls back every reservation.

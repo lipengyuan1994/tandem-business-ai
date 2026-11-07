@@ -39,7 +39,7 @@ export function Widget({ slug, page, compact = false }: { slug: string; page: "c
       {page === "chat" ? <Chat key={slug} slug={slug} businessName={profile.name} greeting={profile.ai_greeting} /> : <Request slug={slug} />}
       <aside aria-labelledby="privacy-h" className="rounded-md border p-3 text-sm text-muted-foreground">
         <h2 id="privacy-h" className="mb-1 font-medium text-foreground">{S.privacyTitle}</h2>
-        <p>{S.privacy[profile.ai_policy]}</p>
+        <p>{profile.ai_auto_replies && profile.ai_policy !== "strict_private" ? S.privacyAuto[profile.ai_policy] : S.privacy[profile.ai_policy]}</p>
         <p>{S.privacyStorage}</p>
       </aside>
     </main>

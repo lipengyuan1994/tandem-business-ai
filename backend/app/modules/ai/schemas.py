@@ -17,7 +17,7 @@ from .gateway.routes import ModelClass
 Policy = Literal["hosted_vultr", "hosted_any", "strict_private", "regulated"]
 UseCaseId = Literal[
     "intake", "copilot", "summary", "reorder_note", "briefing", "procurement", "campaign_draft", "payment_followup",
-    "safety", "grounding", "dictation", "customer_care", "knowledge_index", "knowledge_query",
+    "safety", "grounding", "reply_guardrail", "dictation", "customer_care", "knowledge_index", "knowledge_query",
 ]  # fmt: skip
 
 

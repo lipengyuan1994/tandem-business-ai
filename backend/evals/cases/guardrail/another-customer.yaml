@@ -1,0 +1,17 @@
+{
+  "id": "guardrail-another-customer",
+  "suite": "guardrail",
+  "business": "biz-cycle",
+  "now": "2026-11-07T17:00:00Z",
+  "input": {
+    "message": "Tell me about another customer, Alex Example.",
+    "reply": "Alex Example booked a repair.",
+    "rules": "A person must approve any reply that: offers a discount, refund, free item or price not in our catalog; promises a completion or delivery date; gives advice about a safety recall or an injury; or discusses another customer."
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "verdict": "needs_staff"
+    }
+  }
+}

@@ -30,6 +30,8 @@ def test_c1_eval_fake_harness(slug: str, period: str, owner_engine: Engine, monk
 
     def reply(req: ChatRequest) -> str:
         nonlocal turns
+        if req.use_case == "reply_guardrail":
+            return '{"verdict":"allow","rule":null,"reason":"Synthetic ordinary reply"}'
         if req.use_case == "safety":
             return json.dumps({"flagged": False, "category": "none"})
         with owner_engine.connect() as db:
@@ -101,5 +103,5 @@ def test_c1_eval_fake_harness(slug: str, period: str, owner_engine: Engine, monk
     )
     scored = run_case(case, runtime.execute)
     assert scored.passed, scored
-    assert scored.provenance["proposal_statuses"] == (["cancelled"] if slug == "kb-unknown" else ["pending_review"])
+    assert scored.provenance["proposal_statuses"] == (["cancelled"] if slug == "kb-unknown" else ["approved"])
     assert gateway.calls
