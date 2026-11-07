@@ -25,7 +25,7 @@ Everything below needs the owner (accounts, publishing, recording). The product 
 - Decide on the commit author e-mail: all commits are authored as `Pengyuan Li <pli396@gatech.edu>`, which becomes
   public with the repository. Changing it means rewriting history, which the project rules forbid without your
   explicit decision.
-- Replace the root `README.md` with `docs/submission/README-judges.draft.md` (add the video link first).
+- Done 2026-11-07: the judges' README is now the root `README.md`. Add the video link to its **Demo** line once recorded.
 - Create the GitHub repository and push (Claude needs your explicit go-ahead in chat for remotes and pushing).
 
 ## 4. Slides and submission (P7-04, P7-05)

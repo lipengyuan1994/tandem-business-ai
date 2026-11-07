@@ -1,56 +1,88 @@
-# SMB Operations Suite — AI-assisted ERP for small and mid-size businesses
+# SMB Operations Suite
 
-**Status (2026-11-03 UTC): the non-AI ERP is built and tested locally; no AI functionality, no deployment and no commits yet.** Everything here is disclosed pre-event preparation for the Vultr "Agent Rush" hackathon (lablab.ai), with synthetic data only. See [PRE_EVENT_WORK.md](PRE_EVENT_WORK.md). The judge-facing README is drafted in [docs/submission/](docs/submission/README-judges.draft.md) and replaces this file at submission.
+SMB Operations Suite is an AI-assisted ERP for small businesses. It brings customers, appointments, stock, messages, sales and purchasing into one app. A business can install it on its own Vultr account. The demo uses synthetic data for Example Cycle Works, Example Garden Store and Example Dental Clinic.
 
-## Start here
+**Demo:** https://45-63-85-83.sslip.io · Version 0.1.11, according to the deployment ledger. A demo video is not yet available.
 
-| You want to… | Read |
+## What it does
+
+| Area | What staff or customers can do |
 |---|---|
-| Understand the product and build plan | [docs/roadmap/README.md](docs/roadmap/README.md) — the single source of truth for development |
-| Pick up a build task (human or coding agent) | [docs/roadmap/12-agent-playbook.md](docs/roadmap/12-agent-playbook.md), then [docs/roadmap/phases/README.md](docs/roadmap/phases/README.md) |
-| See what was prepared before the event, and when | [PRE_EVENT_WORK.md](PRE_EVENT_WORK.md) |
-| Understand repository rules for agents | [AGENTS.md](AGENTS.md) |
+| Customers | Keep profiles, contact preferences, consent and a timeline. |
+| Schedule | Find available times, hold and book appointments, and reserve parts. The database prevents overlapping bookings. |
+| Catalog and stock | Manage services and parts, stock movements, reservations and reorder suggestions. |
+| Inbox | Read public chat messages, add notes and hand conversations to a person. |
+| Approvals | Review, edit, approve or reject proposed changes. Decisions and execution are audited. |
+| Sales | Create quotes, orders, invoices and credit notes; export accounting data and propose payment reminders. |
+| Purchasing and procurement | Manage suppliers, quote requests, comparisons, purchase orders and receipts. The assistant can read pasted supplier replies and explain a comparison; code calculates the scores. |
+| Marketing | Prepare campaigns using consent and suppression checks. |
+| Knowledge base | Publish articles for cited answers, search by text and embeddings, and import PDFs as drafts for review. |
+| AI Team | View agents, their switches, budgets, work and permitted hand-offs. Ask an agent for help in the assistant. |
+| Customer Care | Propose check-ins and recall reminders, and hand complaints or disputes to staff. |
+| Voice dictation | Dictate into supported staff text fields and review the text before sending. |
+| Website widget | Embed chat on website addresses the business allows. |
+| My bookings | Eligible customers use an emailed link to view, cancel or reschedule upcoming bookings without an account. |
+| Example Dental Clinic | Synthetic clinic data demonstrates emergency hand-over and appointments that require both a provider and a chair. |
+| Today and System | See work needing attention, delivery problems and backup status. Owners can export data. |
 
-## Folder map
+## Architecture
 
-| Path | Contents | State |
-|---|---|---|
-| `docs/roadmap/` | Implementation roadmap: architecture, module specs, phased tasks | Current |
-| `data/` | Synthetic demo dataset (`fixtures.json`), portable data-contract schema (`schema.sql`), validator | Current, synthetic only |
-| `design-review-cloud-20261103/` | Imported cloud design documents and their review | Historical input to the roadmap |
-| `docs/SCOPE.md`, `docs/ARCHITECTURE.md`, `docs/KICKOFF_PLAN.md`, `docs/SOURCES.md` | Earliest local drafts | Superseded, kept for provenance |
-| `docs/runbooks/` | Install, upgrade, backup and restore, secrets, incident, access, teardown | Written 2026-11-03; Vultr steps unverified until the first deployment |
-| `backend/`, `frontend/`, `deploy/` | Application code and deployment files | Built through phase P4 (deployment files tested locally only) |
+The React frontend talks to a FastAPI modular monolith. PostgreSQL stores business data and uses row-level security for tenant isolation. A worker handles background jobs. Keycloak handles sign-in and Caddy provides TLS. Modules own their data and communicate through defined interfaces. See the [architecture diagram and details](docs/roadmap/02-architecture.md).
 
-## What you can run today
+## How Vultr is used
 
-Prerequisites: Docker, `uv`, Node 24 + pnpm (Corepack), GNU Make.
+| Service | Use in the demo |
+|---|---|
+| Compute | One `vhp-2c-4gb-amd` VM runs the application stack with Docker Compose. |
+| Serverless Inference | The [route file](deploy/config/ai-routes.yaml) selects hosted models through a gateway. Agent: `mimo-v2.6-flash`, fallback `deepseek-v4.1-flash-1017`; extraction: `mimo-v2.6-flash`, fallback `qwen3.8-flash-next`; writer: `deepseek-v4.1-flash-1017`, fallback `mimo-v2.6-flash`; grounding: `deepseek-v4.1-flash-1017`, fallback `qwen3.8-flash-next`; safety: `mimo-v2.6-flash`; embeddings: `qwen3-embedding-4b`; speech-to-text: `whisper-large-v3-turbo`. |
+| Object Storage | Encrypted backups; a restore drill recovered the demo databases. |
+| Container Registry | Stores versioned application images. |
+| Terraform | The `vultr/vultr` provider provisions the demo infrastructure; cloud-init and install scripts configure it. |
 
-```sh
-make dev           # dev stack on https://localhost:8443 (accept the local certificate warning)
-make seed reset=1  # recreate the two synthetic demo businesses in the dev stack
-make demo-logins   # Keycloak logins for the demo staff (Morgan, Riley, ...); passwords go to .demo-logins/ (mode 600), never to the screen
-make check         # everything that must pass before a task is done
-make e2e           # Playwright end-to-end tests against the running dev stack (resets the demo data)
-make images        # production images (smb-api, smb-web, smb-backup); VERSION=0.1.0 REGISTRY=host/ns PLATFORM=linux/amd64
-make rehearse      # local production rehearsal: images, smoke, e2e, upgrade, rollback, restore (stop `make dev` first)
-make backup-test   # backup and restore round trip on a throwaway stack
-make help          # all commands
-```
+The [spend ledger](docs/vultr-spend.md) records $7.64 in pending charges against $200 of credit as of 7 Nov 2026 05:15 UTC. This is a snapshot, not a current bill.
 
-Synthetic data check (no dependencies): `python3 -I data/validate_fixtures.py`.
+## AI design and safety
 
-Status: phases P1–P4 (platform kernel, core services, business modules without AI, packaging and deployment files), plus marketing, the System page and data export/erasure, are built locally; nothing is deployed to Vultr; see [docs/roadmap/phases/STATUS.md](docs/roadmap/phases/STATUS.md). Nothing is committed yet.
+The assistant uses permission-checked tools to read information and create proposals. Staff review proposals before execution. A temporary booking hold is an exception to proposal-only writes. The system can also act under explicit autonomy rules: rules have limits and can be paused, and demo rules start in shadow mode. Shadow mode records what a rule would do without performing it. Some enabled rules can act and notify; AI-sent messages have a delay and a Stop control. Staff can take over a conversation.
 
-## AI: synthetic dental example (P10-E1)
+The AI Team includes Front Desk, Inventory, Purchasing, Finance, Marketing, Operations Manager and Customer Care. Each agent has controls and a daily budget. Hand-offs follow a fixed allowlist, with a chain budget of 6 steps, 30 model calls, 10 actions and $0.50. Customer Care checks consent, contact preference, quiet hours, duplicates and open disputes before sending.
 
-Example Dental Clinic uses the standard hosted Vultr routes with invented patients only (D5=a).
-Provider-plus-chair booking, human emergency hand-over and six-month recall are configuration over the
-same scheduling, Inbox and Customer Care workflows. No clinical charts, notes, imaging, treatment plans
-or insurance claims are provided. The clinic's AI screens and public widget display this statement:
+Front Desk answers from published business articles with citations. A separate grounding check tests claims against the cited material; unsupported answers go to a person. Customer and supplier text is treated as untrusted data, not instructions. Prices, availability and quote rankings come from code. Supplier numbers extracted by AI must appear in the source text. These safeguards reduce risk; evaluations cannot prove immunity to every injection.
 
-> Synthetic demo data. In production, patients' protected health information (PHI) and other personal data must be processed only by AI models hosted locally under the clinic's control — no external AI API. Compliance also needs the clinic's HIPAA policies, agreements and a legal review.
+A `regulated` installation allows only models on the operator's private network. It does not fall back to hosted APIs. In the [local benchmark](backend/evals/reports/2026-11-06-local-models.md), grounding and extraction passed; the tested model did not pass the agent and writer criteria. Those agent features and summaries remain off in that profile until a local model passes. The dental demo is synthetic; its banner says real patient data needs models under the clinic's control. This is not a compliance certification.
 
-`synthetic_demo` is seeded, cannot be set through the normal API, and is refused by regulated seed
-and API startup. A production clinic needs the local-only regulated profile and independent operational
-and legal verification; the banner does not attest compliance.
+## Evaluations and tests
+
+These are measured synthetic-case results, not guarantees. Reports are in [backend/evals/reports](backend/evals/reports/).
+
+| Suite | Result |
+|---|---:|
+| [Intake](backend/evals/reports/20261106T233716655394Z-intake-vultr-mimo-v2.6-flash.md) | 75/76 |
+| [Injection](backend/evals/reports/20261106T232900803303Z-injection-vultr-mimo-v2.6-flash.md) | 15/15 |
+| [Grounding](backend/evals/reports/20261105T222935011343Z-grounding-vultr-deepseek-v4.1-flash-1017.md) | 10/10 |
+| [Customer Care](backend/evals/reports/20261106T205753238190Z-customer_care-vultr-deepseek-v4.1-flash-1017.md) | 19/19 |
+| [Retrieval](backend/evals/reports/20261107T042934404525Z-retrieval-vultr-qwen3-embedding-4b.md) | 8/8 (paraphrased questions; the right article is cited) |
+| [Dictation](backend/evals/reports/20261106T155040898824Z-dictation-vultr-deepseek-v4.1-flash-1017.md) | 87.5% (scores the clean-up step, which uses the writer model after `whisper-large-v3-turbo` transcribes) |
+
+The [0.1.10 release notes](CHANGELOG.md) record 2,398 backend tests at 96% coverage, 554 frontend tests and 35 end-to-end tests. A [demo VM performance run](docs/performance-local.md) with 20 staff over 5 minutes recorded 204 ms p95 and 0 errors in 5,251 requests. The [security review](docs/security/2026-11-event-review.md) recorded no high findings, one accepted medium CSP finding and an open egress hardening item.
+
+## What was built before and during the event
+
+The non-AI ERP, including sales, purchasing and procurement, was built before kickoff. No AI code, prompts, inference calls, agent loops or evals were built before kickoff. The AI design was documented in advance. All AI functionality was built after kickoff at **3 Nov 2026 15:00 UTC**, including the gateway, agents, prompts, tools, evaluations and voice dictation. The dated records are [PRE_EVENT_WORK.md](PRE_EVENT_WORK.md) and [EVENT_WORK.md](EVENT_WORK.md). Later non-AI features also appear in event work.
+
+## Setup
+
+For local development, follow the repository prerequisites and run `make dev`. To install on a Vultr account, follow the [install runbook](docs/runbooks/install.md), including `deploy/scripts/install.sh` and its dry run. These operations require the operator's own configuration and credentials.
+
+## Limitations and next steps
+
+- The demo has no SMTP configured. Email is simulated, including supplier messages and self-service links. There are no real customers or patient records.
+- From 0.1.11 the route file carries Vultr's own catalog prices (`GET /v1/models`, read 7 November 2026); costs recorded by earlier versions are overstated (input was charged at the output price, audio at a $0.006/min placeholder). The catalog is not an invoice: compare with the Vultr bill. Spending and latency vary with use.
+- Application-level outbound destinations are restricted, but raw container egress is open. An egress proxy is tracked as P8-09. The security review also accepts an inline-style CSP finding.
+- There is no payment processing or general ledger. Direct accounting integration and inbound email are not built. Backups retain erased data until expiry; six-hourly backups can lose changes since the last backup.
+- The local benchmark is on an M1 Pro workstation, not the demo VM or clinic hardware. Regulated use needs suitable locally controlled models, infrastructure, agreements and independent review.
+- Next: complete the egress proxy, compare recorded costs with the Vultr bill, rehearse and record the demo, and test a stronger local model against the same suites.
+
+## License
+
+MIT
