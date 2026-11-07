@@ -27,7 +27,7 @@ from .budget_models import CostPeriod, PublicAllowance
 from .errors import AiError
 from .gateway.pricing import cost_micros
 from .gateway.routes import RouteEntry
-from .gateway.types import Adapter, ChatRequest, ChatResult, TranscriptionRequest, Usage
+from .gateway.types import Adapter, ChatRequest, ChatResult, EmbedRequest, TranscriptionRequest, Usage
 from .models import AiRun, AiUsageDaily
 from .usage import effective_budget, maybe_notify_80_percent
 
@@ -66,12 +66,17 @@ def conservative_input(req: ChatRequest) -> int:
     return 256 + len(schema.encode()) + sum(len(m.content.encode()) + len(m.role) + 32 for m in req.messages)
 
 
-def reserve(ctx: Context, entry: RouteEntry, req: ChatRequest | TranscriptionRequest) -> Reservation:
+def reserve(ctx: Context, entry: RouteEntry, req: ChatRequest | TranscriptionRequest | EmbedRequest) -> Reservation:
     day = clock.now().astimezone(UTC).date()
     month = day.replace(day=1)
     audio = isinstance(req, TranscriptionRequest)
-    input_tokens = 0 if isinstance(req, TranscriptionRequest) else conservative_input(req)
-    output_tokens = 0 if isinstance(req, TranscriptionRequest) else req.max_output_tokens
+    if isinstance(req, TranscriptionRequest):
+        input_tokens = 0
+    elif isinstance(req, EmbedRequest):
+        input_tokens = 256 + sum(len(t.encode()) for t in req.inputs)
+    else:
+        input_tokens = conservative_input(req)
+    output_tokens = req.max_output_tokens if isinstance(req, ChatRequest) else 0
     tokens = input_tokens + output_tokens
     cost = int(
         (
@@ -223,7 +228,7 @@ class ReservedAdapter:
         self.ctx, self.adapter, self.entries = ctx, adapter, entries
         self.name = adapter.name
 
-    def chat(self, req: ChatRequest | TranscriptionRequest) -> ChatResult:
+    def chat(self, req: ChatRequest | TranscriptionRequest | EmbedRequest) -> ChatResult:
         # Duplicate model entries may have different prices: reserve the more expensive rates conservatively.
         entries = [e for e in self.entries if e.model == req.model]
         entry = entries[0].model_copy(
@@ -248,7 +253,9 @@ class ReservedAdapter:
                 raise
             result = None
             try:
-                if isinstance(req, TranscriptionRequest):
+                if isinstance(req, EmbedRequest):
+                    result = self.adapter.embed(req)  # type: ignore[attr-defined]
+                elif isinstance(req, TranscriptionRequest):
                     result = self.adapter.transcribe(req)  # type: ignore[attr-defined]
                 else:
                     result = self.adapter.chat(req)

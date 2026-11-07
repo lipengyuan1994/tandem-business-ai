@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toastError } from "@/lib/errors"
 import { ArticleEditor } from "./ArticleEditor"
+import { PdfImport } from "./PdfImport"
 import { type Filters, type Suggestion, useArticle, useArticles, useDismissSuggestion, useSuggestions } from "./hooks"
 
 export function KnowledgePage() {
@@ -27,12 +28,13 @@ function KnowledgeList() {
     <Tabs value={tab} onValueChange={setTab}>
       <TabsList><TabsTrigger value="articles">{t("knowledge.articles")}</TabsTrigger><TabsTrigger value="suggestions">{t("knowledge.suggestions")}</TabsTrigger></TabsList>
       <TabsContent value="articles" className="space-y-4">
+        <PermissionGate permission="org.settings.write"><PdfImport /></PermissionGate>
         <div className="flex flex-wrap gap-3">
           <Input type="search" className="max-w-md" aria-label={t("knowledge.search")} value={filters.query ?? ""} onChange={(e) => setFilters({ ...filters, query: e.target.value || undefined })} />
           <label className="space-y-1 text-sm">{t("knowledge.statusFilter")}<select className="block min-h-11 rounded-md border bg-background p-2" value={filters.status ?? ""} onChange={(e) => setFilters({ ...filters, status: e.target.value as Filters["status"] || undefined })}><option value="">{t("knowledge.allStatuses")}</option>{["draft", "published", "archived"].map((s) => <option key={s} value={s}>{t(`knowledge.statuses.${s}`)}</option>)}</select></label>
           <label className="space-y-1 text-sm">{t("knowledge.visibilityFilter")}<select className="block min-h-11 rounded-md border bg-background p-2" value={filters.visibility ?? ""} onChange={(e) => setFilters({ ...filters, visibility: e.target.value as Filters["visibility"] || undefined })}><option value="">{t("knowledge.allVisibilities")}</option>{["public", "internal"].map((s) => <option key={s} value={s}>{t(`knowledge.visibilities.${s}`)}</option>)}</select></label>
         </div>
-        {articles.error ? <QueryError error={articles.error} onRetry={() => articles.refetch()} /> : articles.isPending ? <p role="status">{t("common.loading")}</p> : !articles.data?.length ? <EmptyState title={t("knowledge.empty")} /> : <ul className="divide-y rounded-md border">{articles.data.map((article) => <li key={article.id} className="flex flex-wrap items-center gap-3 p-3"><Link to="/knowledge/$articleId" params={{ articleId: article.id }} className="record-link mr-auto">{article.title}</Link><Badge variant="outline">{t(`knowledge.statuses.${article.status}`)}</Badge><Badge variant="secondary">{t(`knowledge.visibilities.${article.visibility}`)}</Badge></li>)}</ul>}
+        {articles.error ? <QueryError error={articles.error} onRetry={() => articles.refetch()} /> : articles.isPending ? <p role="status">{t("common.loading")}</p> : !articles.data?.length ? <EmptyState title={t("knowledge.empty")} /> : <ul className="divide-y rounded-md border">{articles.data.map((article) => <li key={article.id} className="flex flex-wrap items-center gap-3 p-3"><Link to="/knowledge/$articleId" params={{ articleId: article.id }} className="record-link mr-auto">{article.title}</Link><Badge variant="outline">{t(`knowledge.statuses.${article.status}`)}</Badge><Badge variant="secondary">{t(`knowledge.visibilities.${article.visibility}`)}</Badge>{article.status === "published" && article.visibility === "public" && <Badge variant="outline">{t(`knowledge.index.${article.search_index_state ?? "pending"}`)}</Badge>}</li>)}</ul>}
         <p className="text-sm text-muted-foreground">{t("knowledge.listLimit")}</p>
       </TabsContent>
       <TabsContent value="suggestions"><Suggestions /></TabsContent>

@@ -12,8 +12,8 @@ from app.platform import audit, clock
 from app.platform.context import Context
 from app.platform.errors import Conflict
 
+from . import indexing, repository, retrieval
 from . import permissions as P
-from . import repository
 from .models import Article, ArticleVersion, Suggestion
 from .schemas import ArticleCreate, ArticleEdit, SearchHit
 
@@ -95,6 +95,8 @@ def edit(db: Session, ctx: Context, article_id: uuid.UUID, data: ArticleEdit) ->
             a.status = "draft"  # Widening access requires explicit publication of the new revision.
         a.visibility = data.visibility
     a.title = data.title
+    if a.status != "published" or a.visibility != "public":
+        indexing.invalidate(db, ctx, a)
     db.add(
         ArticleVersion(
             business_id=ctx.business_id,
@@ -140,6 +142,7 @@ def publish(db: Session, ctx: Context, article_id: uuid.UUID, version: int) -> A
         summary=f"Published article version {a.published_version}",
     )
     db.flush()
+    indexing.schedule(db, ctx, a)
     return a
 
 
@@ -148,6 +151,7 @@ def archive(db: Session, ctx: Context, article_id: uuid.UUID, version: int) -> A
     a = repository.get(db, ctx, article_id, lock=True)
     _version(a.version, version)
     a.status = "archived"
+    indexing.invalidate(db, ctx, a)
     a.version += 1
     audit.record(
         db,
@@ -161,9 +165,27 @@ def archive(db: Session, ctx: Context, article_id: uuid.UUID, version: int) -> A
     return a
 
 
+def unpublish(db: Session, ctx: Context, article_id: uuid.UUID, version: int) -> Article:
+    ctx.require(P.WRITE)
+    a = repository.get(db, ctx, article_id, lock=True)
+    _version(a.version, version)
+    a.status, a.version = "draft", a.version + 1
+    indexing.invalidate(db, ctx, a)
+    audit.record(
+        db,
+        ctx,
+        action="knowledge.unpublished",
+        target_type="kb_article",
+        target_id=a.id,
+        summary="Unpublished knowledge article",
+    )
+    db.flush()
+    return a
+
+
 def search_public(db: Session, ctx: Context, query: str, limit: int = 5) -> list[SearchHit]:
     ctx.require(P.READ)
-    return repository.search(db, ctx, query, limit)
+    return retrieval.search(db, ctx, query, limit)
 
 
 def search_staff(db: Session, ctx: Context, query: str, limit: int = 5) -> list[SearchHit]:

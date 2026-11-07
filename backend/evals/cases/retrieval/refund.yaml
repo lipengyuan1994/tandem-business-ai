@@ -1,0 +1,23 @@
+{
+  "id": "retrieval-refund",
+  "suite": "retrieval",
+  "business": "biz-cycle",
+  "now": "2026-11-06T17:30:00Z",
+  "input": {
+    "message": "May I request reimbursement?",
+    "article": {
+      "title": "Refund policy",
+      "slug": "eval-refund",
+      "body_markdown": "Refund requests require the original receipt."
+    }
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "cited_slug": "eval-refund",
+      "cited_version": 2,
+      "fts_missed": true,
+      "citation_correct": true
+    }
+  }
+}

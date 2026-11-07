@@ -13,6 +13,7 @@ from .dictation import DictationOut
 from .dictation import available as voice_available
 from .dictation import transcribe as transcribe_dictation
 from .dictation_dictionary import dictionary as dictation_dictionary
+from .embeddings import embed_texts, embedding_model
 from .gateway.router import effective_policy, load_router
 from .gateway.routes import ModelClass
 from .schemas import AiStatus, ModelClassStatus
@@ -55,6 +56,15 @@ def status(db: Session, ctx: Context) -> AiStatus:
     return AiStatus(enabled=reason is None, reason=reason, policy=policy, budget_percent=percent, model_classes=classes)
 
 
-__all__ = ["AiStatus", "DictationOut", "dictation_dictionary", "status", "transcribe_dictation", "voice_available"]
+__all__ = [
+    "AiStatus",
+    "DictationOut",
+    "dictation_dictionary",
+    "embed_texts",
+    "embedding_model",
+    "status",
+    "transcribe_dictation",
+    "voice_available",
+]
 
 # Voice uses only this facade; implementation/recording remain owned by ai.

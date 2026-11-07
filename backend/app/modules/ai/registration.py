@@ -8,6 +8,9 @@ from .gateway.router import check_routes_at_startup
 
 
 def register(reg: Registry) -> None:
+    from .embeddings import EmbeddingGateway
+
+    reg.knowledge_embeddings = EmbeddingGateway()
     from . import chains, team_budget
     from .customer_care import classification, delivery, executor, triage, workflows
 

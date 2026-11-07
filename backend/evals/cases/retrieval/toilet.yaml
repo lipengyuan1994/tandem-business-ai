@@ -1,0 +1,23 @@
+{
+  "id": "retrieval-toilet",
+  "suite": "retrieval",
+  "business": "biz-cycle",
+  "now": "2026-11-06T17:30:00Z",
+  "input": {
+    "message": "Is there a washroom?",
+    "article": {
+      "title": "Toilet facilities",
+      "slug": "eval-toilet",
+      "body_markdown": "Toilet facilities are provided to visitors."
+    }
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "cited_slug": "eval-toilet",
+      "cited_version": 2,
+      "fts_missed": true,
+      "citation_correct": true
+    }
+  }
+}

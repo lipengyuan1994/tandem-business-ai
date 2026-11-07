@@ -29,16 +29,23 @@ def test_export_includes_knowledge_history_and_redacted_suggestions(demo: Any, o
         knowledge.suggest(db, ctx, conv, "Fit question: ada@example.com, +1 303 555 0100.")
     archive = export_zip(demo["owner"])
     manifest = json.loads(archive.read("manifest.json"))
-    assert set(manifest["modules"]["knowledge"]) == {"kb_articles", "kb_article_versions", "kb_suggestions"}
+    assert set(manifest["modules"]["knowledge"]) == {
+        "kb_articles",
+        "kb_article_versions",
+        "kb_suggestions",
+        "kb_chunks",
+    }
     articles = json.loads(archive.read("knowledge/kb_articles.json"))
     versions = json.loads(archive.read("knowledge/kb_article_versions.json"))
     suggestions = json.loads(archive.read("knowledge/kb_suggestions.json"))
+    chunks = json.loads(archive.read("knowledge/kb_chunks.json"))
+    assert all("embedding" not in row and "text" not in row for row in chunks)
     warranty = next(row for row in articles if row["slug"] == "repair-warranty")
     history = [row for row in versions if row["article_id"] == warranty["id"]]
     assert {row["version_no"] for row in history} == {1, 2}
     assert any(row["published_at"] is None for row in history) and any(row["published_at"] for row in history)
     assert all("workmanship" in row["body_markdown"] for row in history)
-    assert all(row["business_id"] == str(CYCLE) for row in [*articles, *versions, *suggestions])
+    assert all(row["business_id"] == str(CYCLE) for row in [*articles, *versions, *suggestions, *chunks])
     assert {row["article_id"] for row in versions} <= {row["id"] for row in articles}
     assert len(suggestions) == 1 and "[email hidden]" in suggestions[0]["question_text"]
     assert "ada@example.com" not in suggestions[0]["question_text"] and "555" not in suggestions[0]["question_text"]

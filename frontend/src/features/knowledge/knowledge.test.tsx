@@ -7,6 +7,7 @@ import { meWith, mockMe, renderApp } from "@/test/app"
 import { server } from "@/test/server"
 
 export const ARTICLE: Schemas["ArticleDetail"] = {
+  source: "manual", search_index_state: "not_applicable",
   id: "00000000-0000-7000-8000-0000000000d1", title: "Returns", slug: "returns", status: "draft", visibility: "public",
   current_version: 2, published_version: null, version: 3, created_by: null,
   created_at: "2026-11-05T17:00:00Z", updated_at: "2026-11-05T17:00:00Z",

@@ -1,0 +1,23 @@
+{
+  "id": "retrieval-pets",
+  "suite": "retrieval",
+  "business": "biz-cycle",
+  "now": "2026-11-06T17:30:00Z",
+  "input": {
+    "message": "Is my dog welcome?",
+    "article": {
+      "title": "Pets policy",
+      "slug": "eval-pets",
+      "body_markdown": "Pets welcome inside on a leash."
+    }
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "cited_slug": "eval-pets",
+      "cited_version": 2,
+      "fts_missed": true,
+      "citation_correct": true
+    }
+  }
+}

@@ -22,7 +22,16 @@ import structlog
 
 from app.platform.http import EgressDenied, client
 
-from .types import ChatMessage, ChatRequest, ChatResult, ProviderError, TranscriptionRequest, Usage
+from .types import (
+    ChatMessage,
+    ChatRequest,
+    ChatResult,
+    EmbedRequest,
+    EmbedResult,
+    ProviderError,
+    TranscriptionRequest,
+    Usage,
+)
 
 log = structlog.get_logger(__name__)
 
@@ -180,6 +189,48 @@ class OpenAICompatAdapter(HttpAdapterBase):
                 messages = with_schema_instruction(messages, req.json_schema)
         body["messages"] = [{"role": m.role, "content": m.content} for m in messages]
         return body
+
+    def embed(self, req: EmbedRequest) -> EmbedResult:
+        if not 1 <= len(req.inputs) <= 32:
+            raise ProviderError("bad_request", "embedding batch must contain 1 to 32 inputs")
+        headers = {"Accept": "application/json"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        data, latency = self._post(
+            f"{self.base_url}/embeddings",
+            headers,
+            {"model": req.model, "input": req.inputs, "dimensions": 1024, "encoding_format": "float"},
+            model=req.model,
+            timeout_s=req.timeout_s,
+        )
+        try:
+            rows = data["data"]
+            if not isinstance(rows, list) or len(rows) != len(req.inputs):
+                raise ValueError
+            vectors: dict[int, list[float]] = {}
+            for row in rows:
+                index = int_field(row, "index")
+                vector = row["embedding"]
+                if index >= len(rows) or index in vectors or not isinstance(vector, list) or len(vector) != 1024:
+                    raise ValueError
+                if any(
+                    isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or abs(v) > 3.4e38
+                    for v in vector
+                ):
+                    raise ValueError
+                if not any(vector):
+                    raise ValueError
+                vectors[index] = vector
+            tokens = int_field(data["usage"], "prompt_tokens")
+        except (KeyError, TypeError, ValueError, AttributeError):
+            raise self.malformed(req.model) from None
+        return EmbedResult(
+            embeddings=[vectors[i] for i in range(len(rows))],
+            usage=Usage(input_tokens=tokens, output_tokens=0),
+            provider=self.name,
+            model=req.model,
+            latency_ms=latency,
+        )
 
     def transcribe(self, req: TranscriptionRequest) -> ChatResult:
         headers = {"Accept": "application/json"}

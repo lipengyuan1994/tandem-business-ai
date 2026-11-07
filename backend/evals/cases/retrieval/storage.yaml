@@ -1,0 +1,23 @@
+{
+  "id": "retrieval-storage",
+  "suite": "retrieval",
+  "business": "biz-cycle",
+  "now": "2026-11-06T17:30:00Z",
+  "input": {
+    "message": "May my bicycle stay overnight?",
+    "article": {
+      "title": "Storage policy",
+      "slug": "eval-storage",
+      "body_markdown": "Storage accepts a bike awaiting collection."
+    }
+  },
+  "expect": {
+    "proposals": [],
+    "output": {
+      "cited_slug": "eval-storage",
+      "cited_version": 2,
+      "fts_missed": true,
+      "citation_correct": true
+    }
+  }
+}

@@ -1,7 +1,7 @@
 # ai · M13
 
 Assistant runs, tools, use cases and AI team controls. Contracts: `docs/roadmap/ai/contracts.md`; build order/state: `docs/roadmap/ai/{README,HANDOFF}.md`. P10-B1's registry, settings, chain counters, APIs and evidence: [backend card](../../../../docs/roadmap/ai/cards/P10-B1-backend.md).
-Imports other modules only through their `public.py`.
+Imports other modules only through their `public.py`. P10-C2a adds metered 1024-dimensional embedding batches and the registry provider; queries charge the parent run, indexing records metadata only, and regulated embed stays private/local. Dev hashes are deterministic test evidence only. [C2a evidence](../../../../docs/roadmap/ai/cards/P10-C2a.md).
 - `ai_runs` — one per run: use case, trigger (`trigger_key`), prompt name/version, model, status, tokens, cost,
   `result` (validated final output only). `ai_run_steps` (append-only) — per step: kind, tool, redacted arguments,
   short summary, tokens. No prompt or completion text is ever stored.

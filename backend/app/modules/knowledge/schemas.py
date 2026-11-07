@@ -48,6 +48,13 @@ class ArticleOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     version: int
+    source: str = "manual"
+    source_filename: str | None = None
+    source_page_start: int | None = None
+    source_page_end: int | None = None
+    search_index_state: str = "not_applicable"
+    search_index_error: str | None = None
+    search_index_model: str | None = None
 
 
 class VersionOut(BaseModel):
@@ -65,6 +72,14 @@ class ArticleDetail(ArticleOut):
     versions: list[VersionOut]
 
 
+class ImportOut(BaseModel):
+    drafts: list[ArticleDetail]
+
+
+class ReindexOut(BaseModel):
+    job_id: uuid.UUID
+
+
 class SuggestionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
@@ -76,8 +91,14 @@ class SuggestionOut(BaseModel):
     version: int
 
 
+class SearchSpan(BaseModel):
+    start: int
+    end: int
+
+
 class SearchHit(BaseModel):
     article_id: uuid.UUID
     version: int
     title: str
     passages: list[str]
+    spans: list[SearchSpan] = Field(default_factory=list)

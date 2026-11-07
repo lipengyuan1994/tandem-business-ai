@@ -154,7 +154,17 @@
     "purchasing.over_receipt": "This would exceed 110% of the ordered quantity. Ask an owner or admin to record an override.",
     "purchasing.invite_not_unanswered": "This supplier has already answered, or the invitation has expired.",
     "purchasing.quote_request_closed": "This quote request is closed.",
-    "purchasing.quote_link_unavailable": "This link can no longer be rebuilt. Send a follow-up instead."
+    "purchasing.quote_link_unavailable": "This link can no longer be rebuilt. Send a follow-up instead.",
+    "knowledge.invalid_pdf": "Choose a valid PDF with selectable text.",
+    "knowledge.pdf_encrypted": "This PDF is encrypted. Upload an unencrypted copy.",
+    "knowledge.pdf_too_many_pages": "The PDF must contain no more than 100 pages.",
+    "knowledge.pdf_too_much_text": "The PDF contains more than 300,000 text characters. Split it into smaller files.",
+    "knowledge.pdf_too_large": "The PDF must be no larger than 10 MB.",
+    "knowledge.pdf_timeout": "PDF extraction timed out. Try a smaller PDF.",
+    "knowledge.pdf_resource_limit": "The PDF exceeded extraction limits. Try a smaller PDF.",
+    "knowledge.pdf_no_text": "No selectable text was found. Scanned PDFs need text recognition before import.",
+    "knowledge.invalid_multipart": "Choose one PDF and try again.",
+    "knowledge.single_pdf_required": "Upload one PDF at a time."
   },
   "identity": {
     "selectBusiness": {
@@ -1786,7 +1796,24 @@
     "suggestionsHelp": "Questions the AI could not answer. Write an article for staff review, or dismiss the suggestion.",
     "noSuggestions": "No open suggestions.",
     "writeArticle": "Write article",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "pdf": {
+      "title": "Import from PDF",
+      "file": "PDF file",
+      "limits": "PDF only · up to 10 MB, 100 pages and 300,000 characters. Files are discarded after extraction. Review and publish each draft explicitly.",
+      "invalid": "Choose a PDF no larger than 10 MB.",
+      "import": "Import drafts",
+      "progress": "Uploading and extracting PDF…",
+      "review": "Drafts ready for review. Nothing has been published.",
+      "pages": "Pages {{start}}–{{end}}"
+    },
+    "index": {
+      "indexed": "Indexed for search",
+      "pending": "Search index pending (full-text only)",
+      "unavailable": "Search index unavailable (full-text only)",
+      "failed": "Search index failed (full-text only)",
+      "not_applicable": "Full-text only when published"
+    }
   },
   "dental": {
     "demoNotice": "Synthetic clinic demo notice",
