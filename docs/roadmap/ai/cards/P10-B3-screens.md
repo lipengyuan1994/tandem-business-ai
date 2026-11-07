@@ -114,6 +114,10 @@ Deployment offline mode skips Docker Compose resolution, live Caddy, Terraform p
 
 ## Not done / API limits
 
+Follow-up: [P10-gaps](P10-gaps.md) implements the measured depth, trigger/switch capabilities and
+assistant-only discovery described below. That card tracks current verification; this section records
+the original screen task's API boundary and test conditions.
+
 - No measured chain-depth usage exists in `ChainOut`/`TeamActivityItem`; depth is shown as a ceiling and unknown
   usage, not reconstructed from timeline length. Backend additions are outside this task.
 - No trigger list or explicit switch capability exists in `AgentOut`; the reserved Customer Care decision above

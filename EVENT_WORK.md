@@ -260,3 +260,43 @@ where full-text finds nothing; embed CSP allows only the configured origin (cycl
 unconfigured shops get `frame-ancestors 'none'`, a spoofed X-Embed-CSP request header is ignored; self-service enabled
 for the three demo businesses. Not verified: Safari framing in a real browser, real e-mail delivery (no SMTP).
 SSH closed, Terraform no changes, readyz 200, pending charges $7.40.
+
+## 2026-11-07 UTC — P10-gaps (Codex; owner request November 6 locally)
+
+Contracts first; implemented disjoint emergency/Care-priority/ordinary Work pagination and gated display names,
+measured chain/activity depth, registry triggers/switch capability, and minimal ai.assistant.use discovery for
+assistant @ and Manager-off. Updated screens, generated API/types, focused tests and reviewer-run self-service,
+widget/CSP/sessionStorage and dental emergency specs, including Ellery's seeded dev-account login helper.
+Evidence, decisions and file inventory: docs/roadmap/ai/cards/P10-gaps.md. No migration or new dependency.
+Focused checks: first backend regression 48 passed; expanded backend 42 passed; frontend 47 passed before the
+last legacy reason formatter removal. Ruff/format/mypy and frontend typecheck/lint pass. Full make check is
+running once at the end on isolated smb_gaps, bypassing Docker startup and using documented offline deployment
+checks. Playwright is deliberately not run (Docker/reseed prohibited). Native ARM tools/bindings verified;
+stale local pnpm .bin paths repaired without installs. No installs, downloads, external calls, Docker, commits,
+cloud actions or deployment. Final aggregate evidence will be recorded in the gap card and below.
+
+P10-gaps final verification (2026-11-07 UTC): full backend invoked exactly once, 2,397 passed / 1 failed in
+2,097.87 s, 96% coverage. The failure was the exhaustive AI endpoint permission inventory (26 entries versus
+27 routes); added the new addressable route and its assistant-only access assertion. No production code changed
+after that full run. Complete safety-boundary file plus gap cases: 30 passed in 28.62 s after correction.
+Full frontend: 539 passed / 52 files in 27.46 s. Final scoped make check (-o backend-test -o frontend-test)
+passed Ruff/format (713), mypy (375), frontend typecheck/lint, fixtures (283 rows / 33 tables), offline deploy
+regressions (108 tests, 19 skipped), both licence checks and Gitleaks. The unrestricted full check is not claimed
+green and was not rerun. smb_gaps read back at 20261106_1500_self_service (head); no migration added. E2E
+specifications remain unexecuted by explicit owner instruction. P10-gaps card and STATUS mark the implementation
+done under these recorded conditions; hosted/browser verification and release remain outside this task.
+
+## 2026-11-07 — P10-gaps reviewer widget UX follow-up (Codex)
+
+Reviewer reports real cross-site Chromium send/reload/CSP checks succeeded before this follow-up. Fixed the
+reported UX defects: loader v1.0.1 mounts only after valid successful business config, catches failures silently,
+keeps its closed shadow root, and places iframe below a nonshrinking header through flex layout. Embedded
+heading receives preventScroll focus. Updated widget.e2e.ts for absent loader on refused origin, a separate
+CSP iframe probe, and 1280/375 px heading/header/frame geometry; send/sessionStorage/settings restoration kept.
+Contracts updated first; module README, handoff, STATUS and P10-gaps card updated. No backend edits this turn.
+Pre-fix unit tests reproduced 12 failures; final focused widget 60 passed / 5 files (2.43 s), final full frontend
+554 passed / 52 files (24.08 s). Types/lint and pnpm build pass. Built loader matches source byte-for-byte:
+4,365 raw / 1,714 B gzip (<=5,000); initial widget static JS graph 76,875 B gzip (<=80,000), native arm64 Node.
+Frontend-scoped make check passes fixtures/lint/types/full Vitest/secrets; backend, deploy and licences excluded.
+No Playwright run, backend tests, installs, downloads, external calls, Docker, commits, publishing or deployment.
+Post-fix painted layout and cross-site browser acceptance remain reviewer checks. Evidence: P10-gaps card.

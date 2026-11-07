@@ -10,7 +10,8 @@ from app.platform.errors import error_responses
 from app.platform.permissions import require
 
 from . import team_activity, team_service
-from .team_schemas import AgentOut, AgentPatch, AgentsOut, ChainOut, TeamActivityPage
+from .permissions import ASSISTANT_USE
+from .team_schemas import AddressableAgentsOut, AgentOut, AgentPatch, AgentsOut, ChainOut, TeamActivityPage
 from .team_settings import patch_settings
 
 router = APIRouter()
@@ -20,6 +21,12 @@ router = APIRouter()
 def agents(ctx: Context = Depends(require("approvals.proposal.read"))) -> AgentsOut:
     with transaction(ctx) as db:
         return team_service.list_agents(db, ctx)
+
+
+@router.get("/agents/addressable", response_model=AddressableAgentsOut, responses=error_responses(401, 403))
+def addressable(ctx: Context = Depends(require(ASSISTANT_USE))) -> AddressableAgentsOut:
+    with transaction(ctx) as db:
+        return team_service.addressable_agents(db, ctx)
 
 
 @router.patch("/agents/{key}", response_model=AgentOut, responses=error_responses(401, 403, 404, 409, 422))

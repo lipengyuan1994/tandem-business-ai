@@ -45,6 +45,8 @@ class AgentOut(BaseModel):
     key: str
     name: str
     job: str
+    triggers: list[str]
+    switchable: bool
     enabled: bool
     version: int
     updated_by: UUID | None = None
@@ -62,6 +64,18 @@ class AgentsOut(BaseModel):
     items: list[AgentOut]
 
 
+class AddressableAgent(BaseModel):
+    key: str
+    name: str
+    enabled: bool
+
+
+class AddressableAgentsOut(BaseModel):
+    items: list[AddressableAgent]
+    manager_enabled: bool
+    manager_reason: str | None
+
+
 class TeamActivityItem(BaseModel):
     id: UUID
     agent: str | None
@@ -74,6 +88,7 @@ class TeamActivityItem(BaseModel):
     action_type: str | None = None
     correlation_id: UUID | None = None
     causation_id: UUID | None = None
+    depth: int | None = None
     cost_micros: int = 0
     reasons: list[str] = Field(default_factory=list)
     result_link: str | None = None
@@ -87,6 +102,7 @@ class TeamActivityPage(BaseModel):
 
 class ChainOut(BaseModel):
     correlation_id: UUID
+    depth: int
     model_calls: int
     actions: int
     cost_micros: int

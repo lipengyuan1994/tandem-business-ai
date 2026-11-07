@@ -47,6 +47,7 @@ def _runs(
             run_id=r.id,
             correlation_id=r.correlation_id,
             causation_id=r.causation_id,
+            depth=r.chain_depth,
             cost_micros=r.cost_micros,
             reasons=[r.error_code] if r.error_code else [],
             result_link=f"/api/v1/ai/runs?use_case={r.use_case}",
@@ -110,6 +111,7 @@ def timeline(
                 title="Outbound delivery" if delivery else event.type,
                 correlation_id=event.correlation_id,
                 causation_id=event.causation_id,
+                depth=event.chain_depth,
                 proposal_id=event.causation_id if delivery else None,
                 result_link=f"/api/v1/notifications/outbox?proposal_id={event.causation_id}" if outbox_id else None,
                 reasons=[str(event.payload["reason"])]
@@ -133,6 +135,7 @@ def timeline(
                     title=job.kind,
                     correlation_id=job.correlation_id,
                     causation_id=job.causation_id,
+                    depth=job.chain_depth,
                 )
             )
     return sorted(rows, key=lambda r: (r.created_at, r.id), reverse=True)
@@ -174,6 +177,7 @@ def chain(db: Session, ctx: Context, correlation_id: UUID) -> ChainOut:
         visit(row)
     return ChainOut(
         correlation_id=correlation_id,
+        depth=max((r.depth for r in rows if r.kind in {"run", "proposal"} and r.depth is not None), default=0),
         model_calls=counter.model_calls if counter else 0,
         actions=counter.actions if counter else 0,
         cost_micros=counter.cost_micros if counter else 0,

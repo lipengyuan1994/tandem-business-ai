@@ -5,6 +5,7 @@ import { useSession } from "@/app/session-context"
 import { ApiProblem } from "@/lib/problem"
 
 export type Agent = Schemas["AgentOut"]
+export type AddressableAgent = Schemas["AddressableAgent"]
 export type TeamItem = Schemas["TeamActivityItem"]
 export const teamKey = ["ai", "team"] as const
 
@@ -12,6 +13,13 @@ export function useAgents(enabled = true) {
   const { permissions } = useSession()
   return useQuery({ queryKey: teamKey, enabled: enabled && permissions.has("approvals.proposal.read"), refetchInterval: 15_000,
     queryFn: async () => unwrap(await api.GET("/api/v1/ai/agents")),
+  })
+}
+
+export function useAddressableAgents(enabled = true) {
+  const { permissions } = useSession()
+  return useQuery({ queryKey: ["ai", "addressable-agents"], enabled: enabled && permissions.has("ai.assistant.use"), refetchInterval: 15_000,
+    queryFn: async () => unwrap(await api.GET("/api/v1/ai/agents/addressable")),
   })
 }
 

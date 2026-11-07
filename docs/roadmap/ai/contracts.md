@@ -49,6 +49,15 @@ the effective publication time accounts for both `not_before` and AI send delay.
 Complaint cases hold identifiers, classification/priority and human resolution state, without copying notes.
 They appear in Work with relevant latest past appointment/invoice and a reply proposal when customer identity
 is known. Open cases suppress check-ins/reviews/recalls. A versioned human resolution endpoint clears the hold.
+P10-gaps (owner-authorized 2026-11-06): Work has three disjoint server-ordered bands: emergency hand-overs,
+then open Care cases (urgent, high, normal; newest created_at then descending UUID within each priority),
+then ordinary work (newest created_at then descending UUID). Opaque continuation tokens retain their band
+(`emergency:`, `care:`, `ordinary:`); the Care token retains priority, timestamp and UUID. Exhausting a band
+starts the next at its beginning, including when a page spans bands. Care cases never enter ordinary work.
+Pagination is a live keyset view, not a frozen snapshot; unchanged rows neither repeat nor disappear at
+band boundaries. Care Work rows add category, version and customer_name. The name is display name only,
+null unless the caller also has crm.customer.read (and null for unknown/missing customers).
+Screens preserve server order across loaded pages and use the supplied row metadata.
 Intake/safety classification fields default none for old outputs; prompt versions are bumped. Classification
 alone cannot authorize sending, warranty eligibility, refunds, offers, prices or medical advice.
 Care independently subscribes to inbound customer messages, even with Front Desk disabled, human ownership,
@@ -122,6 +131,21 @@ unknown/foreign chains 404. Metadata only: never prompts, customer/supplier bodi
 Copilot messages accept optional `agent` (registry key); selected job/context and tool allowlist intersect the
 staff member's existing permissions. Without it the Manager retains current routing. Targeted agents must also
 be enabled; neither targeting nor hand-offs grants permissions or expands rule eligibility.
+
+P10-gaps (owner-authorized 2026-11-06): AgentOut also returns triggers (stable registry codes, including
+assistant_request for targeted chat) and switchable (false only for an agent whose enabled PATCH is refused;
+all seven current agents are switchable). Screens translate triggers into short plain-language chips and
+hide switches when switchable is false; status/reason prose does not determine switch capability.
+TeamActivityItem.depth is the recorded chain_depth when known, otherwise null. Proposal-derived evidence
+uses the proposal's recorded depth. ChainOut.depth is the maximum recorded chain_depth on its runs and
+proposals, default 0 for a root with no such records; it is not inferred from timeline length. The existing
+admission convention (agent-run root depth 1) and max_depth 6 are unchanged. Screens show “Depth 2 of 6”.
+New GET /ai/agents/addressable requires ai.assistant.use, the copilot permission. It returns exactly
+{items:[{key,name,enabled}],manager_enabled,manager_reason}. All registry agents can be targeted with @;
+disabled agents remain discoverable but unavailable for selection. Manager reason is ai.agent_disabled
+when disabled, otherwise null. It reads only tenant-scoped settings and registry metadata, with no Team
+statistics, autonomy, costs, waiting counts or activity. Existing endpoint permissions remain unchanged.
+The assistant uses this endpoint for @ discovery and Manager-off, including without proposal-read.
 
 Export includes settings/counters and new columns on existing rows. Erasure is unchanged; metadata contains
 identifiers and fixed reason codes only. Chain history follows source-row retention; aggregate accounting is
@@ -1230,6 +1254,13 @@ Dental uses hosted Vultr on synthetic data only (D5=a). Recall reuses B2 unchang
 six months, consent/future-booking checks, shadow rules, minimal messages without
 treatment names when `avoid_medical_details` is true. No clinical features.
 
+P10-gaps browser specifications are reviewer-run only: seeded cycle-shop self-service link request,
+simulated email link retrieval, fresh-context booking cancellation/notice acknowledgment and staff notification;
+an actual localhost:5555 host loading the embed script, iframe chat and sessionStorage persistence, plus
+CSP refusal from another host origin; dental banner, emergency instructions and synchronous emergency
+hand-over with deterministic instructions and no AI answer. Settings are restored after the specifications.
+Dental e2e setup creates ellery.dental@example.com's seeded login through dev-account like Casey's.
+
 
 ## P10-C2b: website embed and customer self-service
 
@@ -1244,7 +1275,14 @@ origins; HTTP localhost origins only in development), `embed_button_label`,
 fragments and non-HTTPS origins. `/embed.js` is a small versioned/revalidated vanilla
 loader with cross-origin CORP. It owns only its button/iframe, uses strict
 origin + source + message-shape checks, supports keyboard/Escape/focus return and
-reduced motion. `/embed/<slug>/chat` reuses the public widget entry. Caddy
+reduced motion. Reviewer follow-up (2026-11-07): fetch the business embed-config before mounting any
+launcher, shadow host or panel. Only a successful response with a nonblank string label of at most 80
+characters permits mounting; HTTP/CORS/network/JSON/label failures are silent and leave the host untouched.
+The shadow root stays closed. The panel reserves the header's actual height in its layout and gives the
+remaining space to the iframe, including at 375 px width. Opening focuses the embedded heading without
+scrolling the page to the form. Loader remains at most 5 KB gzip. Disallowed-host e2e checks absence of
+the launcher; a separately injected direct iframe still proves CSP refusal.
+`/embed/<slug>/chat` reuses the public widget entry. Caddy
 `forward_auth` calls an org policy endpoint and copies a complete CSP, built from
 that business's allowlist; unknown/disabled/empty origins give `frame-ancestors
 'none'`. This avoids serving or discovering fingerprinted frontend assets in the

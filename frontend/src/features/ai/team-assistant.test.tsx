@@ -2,16 +2,17 @@ import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
-import { meWith, mockMe, renderApp } from "@/test/app"
+import { ME, mockMe, renderApp } from "@/test/app"
 import { server } from "@/test/server"
 import { TEAM_AGENT } from "./team-testing"
 import { mockStatus, RUN, sseResponse, THREAD } from "./testing"
 
 function setup(managerEnabled = true) {
-  mockMe(meWith("ai.assistant.use"))
+  mockMe({ ...ME, permissions: ["ai.assistant.use"] })
   mockStatus()
   server.use(
-    http.get("*/api/v1/ai/agents", () => HttpResponse.json({ items: [TEAM_AGENT, { ...TEAM_AGENT, key: "operations_manager", name: "Operations Manager", enabled: managerEnabled, status: managerEnabled ? "on" : "off", reason: managerEnabled ? null : "The Manager is off for this business. Turn it on in Team." }, { ...TEAM_AGENT, key: "finance", name: "Finance", enabled: false, status: "off" }] })),
+    http.get("*/api/v1/ai/agents", () => { throw new Error("Assistant-only discovery must not fetch Team") }),
+    http.get("*/api/v1/ai/agents/addressable", () => HttpResponse.json({ items: [{ key: TEAM_AGENT.key, name: TEAM_AGENT.name, enabled: true }, { key: "operations_manager", name: "Operations Manager", enabled: managerEnabled }, { key: "finance", name: "Finance", enabled: false }], manager_enabled: managerEnabled, manager_reason: managerEnabled ? null : "ai.agent_disabled" })),
     http.get("*/api/v1/ai/copilot/threads", () => HttpResponse.json([])),
     http.post("*/api/v1/ai/copilot/threads", () => HttpResponse.json({ id: THREAD, title: "Stock", created_at: "2026-11-06T17:00:00Z", updated_at: "2026-11-06T17:00:00Z" }, { status: 201 })),
     http.get(`*/api/v1/ai/copilot/threads/${THREAD}`, () => HttpResponse.json({ id: THREAD, title: "Stock", messages: [] })),
@@ -66,7 +67,7 @@ describe("Team assistant", () => {
     setup(false)
     renderApp("/approvals")
     const p = await panel()
-    expect(await p.findByText("The Manager is off for this business. Turn it on in Team.")).toHaveAttribute("role", "status")
+    expect(await p.findByText("This agent is off. Its queued work goes back to people.")).toHaveAttribute("role", "status")
     expect(p.queryByLabelText("Ask the assistant")).not.toBeInTheDocument()
     expect(p.queryByRole("button", { name: "Ask" })).not.toBeInTheDocument()
   })

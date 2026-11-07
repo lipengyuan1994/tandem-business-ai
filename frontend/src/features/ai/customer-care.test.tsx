@@ -125,27 +125,45 @@ it("switches Customer Care with the normal off confirmation and version", async 
   await waitFor(() => expect(patch).toHaveBeenCalledTimes(1))
 })
 
-const CASE = { id: "case1", category: "complaint", priority: "normal", status: "open", version: 7, customer_id: "customer1", conversation_id: "thread1", source_message_id: "message1", appointment_id: "appointment1", invoice_id: "invoice1", proposal_id: null, resolved_at: null }
+const CASE = { customer_name: "River Example", id: "case1", category: "complaint", priority: "normal", status: "open", version: 7, customer_id: "customer1", conversation_id: "thread1", source_message_id: "message1", appointment_id: "appointment1", invoice_id: "invoice1", proposal_id: null, resolved_at: null }
 function queueCases(write = true) {
   setup(write)
   server.use(http.get("*/api/v1/ai/work-queue", () => HttpResponse.json({ items: [
     { ...CASE, kind: "customer_care_case", title: "Normal complaint", created_at: "2026-11-06T17:00:00Z" },
-    { ...CASE, id: "case2", priority: "urgent", customer_id: null, kind: "customer_care_case", title: "Urgent warranty", created_at: "2026-11-05T17:00:00Z" },
+    { ...CASE, id: "case2", priority: "urgent", customer_id: null, customer_name: null, kind: "customer_care_case", title: "Urgent warranty", created_at: "2026-11-05T17:00:00Z" },
     { ...CASE, id: "case3", priority: "high", kind: "customer_care_case", title: "High dispute", created_at: "2026-11-05T18:00:00Z" },
   ], next_cursor: null })), http.get("*/api/v1/ai/customer-care/cases/case1", () => HttpResponse.json(CASE)))
 }
 
-it("orders loaded cases by priority and links known and unknown customers", async () => {
+it("preserves server order and uses supplied names without CRM lookup", async () => {
   queueCases()
   mockMe(meWith("crm.customer.read"))
-  server.use(http.get("*/api/v1/crm/customers/customer1", () => HttpResponse.json({ id: "customer1", display_name: "River Example" })))
+  server.use(http.get("*/api/v1/crm/customers/customer1", () => { throw new Error("Work must use its supplied display name") }))
   renderApp("/ai/work-queue")
   const table = await screen.findByRole("table")
   await screen.findAllByText("River Example")
   const rows = within(table).getAllByRole("row").slice(1)
-  expect(rows.map((row) => row.textContent)).toEqual([expect.stringContaining("Urgent warranty"), expect.stringContaining("High dispute"), expect.stringContaining("Normal complaint")])
-  expect(within(rows[2]!).getByRole("link", { name: "River Example" })).toHaveAttribute("href", "/customers/customer1")
-  expect(within(rows[0]!).getByRole("link", { name: "Unknown customer — identify in Inbox" })).toHaveAttribute("href", "/inbox/thread1")
+  expect(rows.map((row) => row.textContent)).toEqual([expect.stringContaining("Normal complaint"), expect.stringContaining("Urgent warranty"), expect.stringContaining("High dispute")])
+  expect(within(rows[0]!).getByRole("link", { name: "River Example" })).toHaveAttribute("href", "/customers/customer1")
+  expect(within(rows[1]!).getByRole("link", { name: "Unknown customer — identify in Inbox" })).toHaveAttribute("href", "/inbox/thread1")
+})
+
+it("keeps opaque cursor pages in server order without a loaded-row sorting note", async () => {
+  setup(false)
+  const cursors: (string | null)[] = []
+  server.use(http.get("*/api/v1/ai/work-queue", ({ request }) => {
+    const cursor = new URL(request.url).searchParams.get("cursor")
+    cursors.push(cursor)
+    return HttpResponse.json({ items: [{ ...CASE, id: cursor ? "later" : "first", kind: "customer_care_case", title: cursor ? "Second server row" : "First server row", priority: cursor ? "urgent" : "normal", created_at: "2026-11-06T17:00:00Z" }], next_cursor: cursor ? null : "care:opaque+priority/=" })
+  }))
+  renderApp("/ai/work-queue")
+  await screen.findByText("First server row")
+  expect(screen.queryByText(/among loaded items|sorted within loaded rows/)).not.toBeInTheDocument()
+  await userEvent.click(screen.getByRole("button", { name: "Load more" }))
+  await screen.findByText("Second server row")
+  expect(screen.getAllByRole("row").slice(1).map((row) => row.textContent)).toEqual([expect.stringContaining("First server row"), expect.stringContaining("Second server row")])
+  expect(cursors).toEqual([null, "care:opaque+priority/="])
+  expect(screen.queryByText("River Example")).not.toBeInTheDocument() // no CRM permission
 })
 
 it("reloads the case after resolve conflict and requires another confirmation", async () => {

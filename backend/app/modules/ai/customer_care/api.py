@@ -1,20 +1,23 @@
 from __future__ import annotations
 
+import base64
+import binascii
+import json
 import uuid
 from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import select, tuple_
+from sqlalchemy import case, select, tuple_
 from sqlalchemy.orm import Session
 
 from app.modules.crm import public as crm
 from app.platform import audit, clock
 from app.platform.context import Context
 from app.platform.db import transaction
-from app.platform.errors import Conflict, NotFound, error_responses
-from app.platform.pagination import decode_cursor
+from app.platform.errors import Conflict, Invalid, NotFound, error_responses
+from app.platform.pagination import decode_cursor, encode_cursor
 from app.platform.permissions import require
 
 from .models import CareCase
@@ -90,11 +93,33 @@ def resolve(
         return CaseOut.model_validate(row)
 
 
+PRIORITIES = {"urgent": 2, "high": 1, "normal": 0}
+
+
+def queue_cursor(priority: str, created_at: datetime, ident: uuid.UUID) -> str:
+    raw = json.dumps([PRIORITIES[priority], encode_cursor(created_at, ident)]).encode()
+    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
 def queue_items(db: Session, ctx: Context, *, limit: int, cursor: str | None = None) -> list[dict[str, Any]]:
+    rank = case(PRIORITIES, value=CareCase.priority, else_=0)
     stmt = select(CareCase).where(CareCase.business_id == ctx.business_id, CareCase.status == "open")
     if cursor:
-        ts, rid = decode_cursor(cursor)
-        stmt = stmt.where(tuple_(CareCase.created_at, CareCase.id) < tuple_(ts, rid))
+        try:
+            priority, keyset = json.loads(base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4)))
+            if type(priority) is not int or priority not in PRIORITIES.values() or not isinstance(keyset, str):
+                raise ValueError
+        except (ValueError, TypeError, binascii.Error):
+            raise Invalid("platform.invalid_cursor") from None
+        ts, rid = decode_cursor(keyset)
+        stmt = stmt.where(tuple_(rank, CareCase.created_at, CareCase.id) < tuple_(priority, ts, rid))
+
+    rows = list(db.scalars(stmt.order_by(rank.desc(), CareCase.created_at.desc(), CareCase.id.desc()).limit(limit)))
+    names = (
+        crm.customer_names(db, ctx, {r.customer_id for r in rows if r.customer_id})
+        if ctx.has("crm.customer.read")
+        else {}
+    )
     return [
         {
             "id": r.id,
@@ -104,11 +129,14 @@ def queue_items(db: Session, ctx: Context, *, limit: int, cursor: str | None = N
             "created_at": r.created_at,
             "proposal_id": r.proposal_id,
             "priority": r.priority,
+            "category": r.category,
+            "version": r.version,
+            "customer_name": names.get(r.customer_id) if r.customer_id else None,
             "customer_id": r.customer_id,
             "conversation_id": r.conversation_id,
             "appointment_id": r.appointment_id,
             "invoice_id": r.invoice_id,
             "reasons": ["customer_care.requires_person"],
         }
-        for r in db.scalars(stmt.order_by(CareCase.created_at.desc(), CareCase.id.desc()).limit(limit))
+        for r in rows
     ]

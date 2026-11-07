@@ -192,6 +192,7 @@ def activity(
             "action_type": p.action_type,
             "correlation_id": p.correlation_id,
             "causation_id": cause or p.causation_id,
+            "depth": p.chain_depth,
             "reasons": reasons or [],
             "result_link": result_link or f"/api/v1/approvals/proposals/{p.id}",
             "delivery_state": delivery_state(db, ctx, p.id),

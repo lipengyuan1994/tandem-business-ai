@@ -32,14 +32,15 @@ export function AgentCard({ agent }: { agent: Agent }) {
   return <Card className="min-w-0">
     <CardHeader><CardTitle><a className="record-link" href={`/ai/team/${encodeURIComponent(agent.key)}`}>{agent.name}</a></CardTitle>
       <p className="text-sm text-muted-foreground">{agent.job}</p>
+      <ul aria-label={t("ai.team.triggersLabel")} className="flex flex-wrap gap-1">{agent.triggers.map((trigger) => <li key={trigger} className="rounded-full border px-2 py-0.5 text-xs">{t(`ai.team.triggers.${trigger.replaceAll(".", "_")}`, { defaultValue: t("ai.team.otherTrigger") })}</li>)}</ul>
       <span className="status-badge w-fit" data-tone={agent.status === "on" ? "success" : agent.status === "unavailable" ? "failed" : "neutral"}>{t(`ai.team.status.${agent.status}`)}</span>
       {agent.reason ? <p className="text-sm">{teamReason(t, agent.reason)}</p> : null}
     </CardHeader>
     <CardContent className="space-y-4">
-      <PermissionGate permission="org.settings.write"><div className="flex items-center gap-2">
+      {agent.switchable ? <PermissionGate permission="org.settings.write"><div className="flex items-center gap-2">
         <Switch id={`${agent.key}-enabled`} checked={agent.enabled} disabled={patch.isPending} onCheckedChange={(enabled) => enabled ? save({ enabled }) : setConfirmOff(true)} />
         <Label htmlFor={`${agent.key}-enabled`}>{t("ai.team.enable", { name: agent.name })}</Label>
-      </div></PermissionGate>
+      </div></PermissionGate> : null}
       {conflict ? <p role="alert">{t("ai.team.conflict")}</p> : patch.error && !(patch.error instanceof ApiProblem && patch.error.isConflict) ? <QueryError error={patch.error} onRetry={() => patch.reset()} /> : null}
       <section className="space-y-1"><h3 className="font-medium">{t("ai.team.autonomy")}</h3>
         {agent.autonomy.length ? <ul className="space-y-1 text-sm">{agent.autonomy.map((rule) => <li key={rule.action_type}><a className="record-link" href={`/ai/autonomy?action=${encodeURIComponent(rule.action_type)}`}>

@@ -7,7 +7,7 @@ export const AUTH_DIR = resolve(import.meta.dirname, "../.auth")
 export const REPO_ROOT = resolve(import.meta.dirname, "../../..")
 
 export interface Account {
-  name: "morgan" | "casey"
+  name: "morgan" | "casey" | "ellery"
   email: string
   password: string
   totpSecret?: string
@@ -51,6 +51,12 @@ const caseyPath = resolve(AUTH_DIR, "casey.json")
 export function casey(): Account {
   const data = JSON.parse(readFileSync(caseyPath, "utf8")) as { email: string; password: string; totpSecret?: string }
   return { name: "casey", ...data, save: (a) => writeAccount("casey", a.email, a.password, a.totpSecret) }
+}
+
+/** Seeded dental owner; global setup issues an isolated dev-account login like Casey's. */
+export function ellery(): Account {
+  const data = JSON.parse(readFileSync(resolve(AUTH_DIR, "ellery.json"), "utf8")) as { email: string; password: string; totpSecret?: string }
+  return { name: "ellery", ...data, save: (a) => writeAccount("ellery", a.email, a.password, a.totpSecret) }
 }
 
 export function writeAccount(name: Account["name"], email: string, password: string, totpSecret?: string): void {

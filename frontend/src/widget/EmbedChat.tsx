@@ -14,7 +14,7 @@ export function EmbedChat({ slug }: { slug: string }) {
       if (event.source !== parent || !allowed.includes(event.origin) || !event.data || typeof event.data !== "object" || Object.keys(event.data).length !== 1) return
       if (event.data.type === "smb:open") {
         parentOrigin = event.origin
-        document.querySelector<HTMLElement>("main input, main button")?.focus()
+        document.querySelector<HTMLElement>("main h1")?.focus({ preventScroll: true })
         parent.postMessage({ type: "smb:resize", height: Math.min(800, document.documentElement.scrollHeight + 44) }, parentOrigin)
       }
       if (event.data.type === "smb:close") parentOrigin = null

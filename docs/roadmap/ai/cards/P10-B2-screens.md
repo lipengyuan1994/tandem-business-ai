@@ -122,6 +122,10 @@ make check: ALL PASSED
 
 ## API limits and untested conditions
 
+Follow-up: [P10-gaps](P10-gaps.md) implements server priority pagination and Work row category/version/
+permission-gated display names. That card tracks current verification; the limits below record the
+original screen task's API boundary and test conditions.
+
 - Work's existing endpoint uses chronological cursor pagination and exposes no priority query/order parameter.
   Frontend sorts all **loaded** cases; a visible note and Load more retain that distinction. Global priority
   across unloaded pages is **not implemented or verified**. A server-side priority pagination contract is

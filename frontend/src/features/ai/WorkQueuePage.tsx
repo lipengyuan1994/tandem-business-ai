@@ -14,7 +14,7 @@ import { QueryError } from "@/components/common/QueryError"
 import { useAgents } from "./team-api"
 import { workQueueRoute } from "./routes"
 import { CareCaseButton } from "./CustomerCareCase"
-import { CareProposalSummary, CareCustomer } from "./CustomerCareProposal"
+import { CareProposalSummary } from "./CustomerCareProposal"
 import { teamReason } from "./team-text"
 import { useClock } from "./useClock"
 import { DeliveryBadge, ScheduledMail } from "./DeliveryStatus"
@@ -35,19 +35,17 @@ function Age({ since }: { since: string }) {
 
 function QueueList({ exceptions, agentKey }: { exceptions: boolean; agentKey?: string }) {
   const { t } = useTranslation()
-  const { businessTimeZone } = useSession()
+  const { businessTimeZone, permissions } = useSession()
   const queue = useWorkQueue(exceptions)
   const agents = useAgents(!!agentKey)
   const agent = agents.data?.items.find((item) => item.key === agentKey)
   const actions = new Set(agent?.autonomy.map((rule) => rule.action_type))
   const items = queue.data?.pages.flatMap((page) => page.items).filter((item) => !agentKey || item.kind === "emergency_handoff" || agentKey === "customer_care" && item.kind === "customer_care_case" || !!item.action_type && actions.has(item.action_type))
-  const priority = (item: WorkItem) => item.kind === "emergency_handoff" ? -1 : item.kind === "customer_care_case" ? ({ urgent: 0, high: 1, normal: 2 }[item.priority ?? "normal"] ?? 2) : 3
-  items?.sort((a, b) => priority(a) - priority(b))
   const prefix = exceptions ? "ai.exceptions" : "ai.workQueue"
   const columns: ColumnDef<WorkItem, unknown>[] = [
     { header: t("ai.queues.item"), cell: ({ row: { original: item } }) => {
       const href = item.proposal_id ? `/approvals/${item.proposal_id}` : item.quote_request_id ? `/purchasing/quote-requests/${item.quote_request_id}` : item.conversation_id && item.kind !== "customer_care_case" ? `/inbox/${item.conversation_id}` : null
-      return <div className="space-y-1">{href ? <a className="record-link" href={href}>{item.title}</a> : <p>{item.title}</p>}<p className="text-sm text-muted-foreground">{t(`ai.queues.kinds.${item.kind}`)}</p>{item.kind === "customer_care_case" ? <><p>{t(`ai.care.priorities.${item.priority}`, { defaultValue: t("ai.care.priorities.normal") })}</p><p>{item.customer_id ? <CareCustomer id={item.customer_id} /> : item.conversation_id ? <a className="record-link" href={`/inbox/${encodeURIComponent(item.conversation_id)}`}>{t("ai.care.unknownCustomer")}</a> : t("ai.care.customer")}</p><CareCaseButton key={item.id} id={item.id} /></> : item.action_type === "customer_care.send_message" && item.proposal_id ? <CareProposalSummary key={item.proposal_id} id={item.proposal_id} /> : null}</div>
+      return <div className="space-y-1">{href ? <a className="record-link" href={href}>{item.title}</a> : <p>{item.title}</p>}<p className="text-sm text-muted-foreground">{t(`ai.queues.kinds.${item.kind}`)}</p>{item.kind === "customer_care_case" ? <><p>{t(`ai.care.priorities.${item.priority}`, { defaultValue: t("ai.care.priorities.normal") })}</p><p>{item.customer_id ? <a className="record-link" href={`/customers/${encodeURIComponent(item.customer_id)}`}>{permissions.has("crm.customer.read") && item.customer_name ? item.customer_name : `${t("ai.care.customer")} · ${item.customer_id}`}</a> : item.conversation_id ? <a className="record-link" href={`/inbox/${encodeURIComponent(item.conversation_id)}`}>{t("ai.care.unknownCustomer")}</a> : t("ai.care.customer")}</p><p>{t(`ai.care.categories.${item.category}`, { defaultValue: t("ai.care.categories.other") })}</p><CareCaseButton key={`${item.id}:${item.version}`} id={item.id} /></> : item.action_type === "customer_care.send_message" && item.proposal_id ? <CareProposalSummary key={item.proposal_id} id={item.proposal_id} /> : null}</div>
     } },
     { header: t("ai.queues.state"), cell: ({ row: { original: item } }) => <div className="space-y-2">
       {item.kind === "outbound_mail" ? <><DeliveryBadge state={item.status === "pending" ? "scheduled" : item.status === "cancelled" ? "stopped" : item.status === "sending" || item.status === "delivered" || item.status === "failed" || item.status === "unknown" ? item.status : "none"} />{!exceptions && item.status === "pending" ? <ScheduledMail id={item.id} sendAt={item.stop_until} /> : null}</> : <StatusBadge status={item.status} />}
@@ -67,7 +65,6 @@ function QueueList({ exceptions, agentKey }: { exceptions: boolean; agentKey?: s
     <PageHeader title={t(`${prefix}.title`)} description={t(`${prefix}.description`)} />
     {exceptions && queue.data?.pages[0]?.paused ? <p role="status" className="rounded-md border border-destructive p-4">{t("ai.autonomy.paused")} <a href="/ai/autonomy" className="record-link">{t("ai.exceptions.reviewAutonomy")}</a></p> : null}
     {agentKey ? <p>{agent?.name ?? agentKey} · <a className="record-link" href="/ai/work-queue">{t("ai.team.allAgents")}</a></p> : null}
-    {queue.hasNextPage && items?.some((item) => item.kind === "customer_care_case") ? <p className="text-sm text-muted-foreground">{t("ai.care.priorityHelp")}</p> : null}
     {agents.error ? <QueryError error={agents.error} onRetry={() => agents.refetch()} /> : null}
     <DataTable columns={columns} data={items} isLoading={queue.isPending || !!agentKey && agents.isPending} error={queue.error} onRetry={() => queue.refetch()} emptyTitle={t(`${prefix}.empty`)} emptyDescription={t(`${prefix}.emptyHelp`)} caption={t(`${prefix}.title`)} hasMore={!agentKey && queue.hasNextPage} onLoadMore={() => void queue.fetchNextPage()} />
     {agentKey && queue.hasNextPage ? <Button variant="outline" disabled={queue.isFetchingNextPage} onClick={() => void queue.fetchNextPage()}>{t("common.loadMore")}</Button> : null}

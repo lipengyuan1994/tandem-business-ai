@@ -16,7 +16,7 @@ from app.modules.org import public as org
 from app.modules.purchasing import public as purchasing
 from app.platform.context import Context
 from app.platform.db import transaction
-from app.platform.errors import error_responses
+from app.platform.errors import Invalid, error_responses
 from app.platform.pagination import encode_cursor
 from app.platform.permissions import require
 
@@ -48,6 +48,9 @@ class WorkItem(BaseModel):
     quote_request_id: uuid.UUID | None = None
     supplier_id: uuid.UUID | None = None
     priority: str | None = None
+    category: Literal["complaint", "warranty", "dispute"] | None = None
+    version: int | None = None
+    customer_name: str | None = None
     customer_id: uuid.UUID | None = None
     conversation_id: uuid.UUID | None = None
     appointment_id: uuid.UUID | None = None
@@ -77,7 +80,7 @@ def page(rows: list[dict[str, Any]], limit: int) -> WorkPage:
 @router.get(
     "/work-queue",
     response_model=WorkPage,
-    summary="What is waiting now, newest first",
+    summary="Emergency hand-overs, priority Care cases, then newest ordinary work",
     responses=error_responses(400, 401, 403, 422),
 )
 def work_queue(
@@ -86,30 +89,47 @@ def work_queue(
     ctx: Context = Depends(require("approvals.proposal.read")),
 ) -> WorkPage:
     with transaction(ctx) as db:
+        from .customer_care.api import queue_cursor
         from .customer_care.api import queue_items as care_items
 
-        if cursor is None or cursor.startswith("emergency:"):
-            emergency_cursor = cursor.removeprefix("emergency:") if cursor else None
-            urgent = conversations.emergency_queue_items(db, ctx, limit=limit + 1, cursor=emergency_cursor)
-            if len(urgent) >= limit:
-                selected = [WorkItem.model_validate(row) for row in urgent[:limit]]
-                return WorkPage(
-                    items=selected, next_cursor="emergency:" + encode_cursor(selected[-1].created_at, selected[-1].id)
+        band, token = "emergency", None
+        if cursor:
+            prefix, _, value = cursor.partition(":")
+            if prefix in {"emergency", "care", "ordinary"} and not value:
+                raise Invalid("platform.invalid_cursor")
+            # Retain pre-band chronological cursors as ordinary continuations.
+            band, token = (prefix, value) if prefix in {"emergency", "care", "ordinary"} else ("ordinary", cursor)
+        selected: list[WorkItem] = []
+        continuations: list[str] = []
+
+        def append(rows: list[dict[str, Any]], prefix: str) -> None:
+            for row in rows:
+                item = WorkItem.model_validate(row)
+                selected.append(item)
+                keyset = (
+                    queue_cursor(item.priority or "normal", item.created_at, item.id)
+                    if prefix == "care"
+                    else encode_cursor(item.created_at, item.id)
                 )
-            # Once emergency pages are exhausted, start the ordinary queue from its newest row.
-            cursor = None
-        else:
-            urgent = []
-            cursor = cursor.removeprefix("ordinary:")
-        rows = care_items(db, ctx, limit=limit + 1, cursor=cursor)
-        rows += approvals.proposal_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
-        rows += notifications.outbound_queue_items(db, ctx, statuses=("pending",), limit=limit + 1, cursor=cursor)
-        rows += purchasing.awaiting_supplier_items(db, ctx, limit=limit + 1, cursor=cursor)
-        rows += conversations.publication_queue_items(db, ctx, limit=limit + 1, cursor=cursor)
-        ordinary = page(rows, limit - len(urgent))
+                continuations.append(prefix + ":" + keyset)
+
+        if band == "emergency":
+            append(conversations.emergency_queue_items(db, ctx, limit=limit + 1, cursor=token), "emergency")
+            band, token = "care", None
+        if band == "care" and len(selected) <= limit:
+            append(care_items(db, ctx, limit=limit + 1 - len(selected), cursor=token), "care")
+            band, token = "ordinary", None
+        if band == "ordinary" and len(selected) <= limit:
+            remaining = limit + 1 - len(selected)
+            rows = approvals.proposal_queue_items(db, ctx, limit=remaining, cursor=token)
+            rows += notifications.outbound_queue_items(db, ctx, statuses=("pending",), limit=remaining, cursor=token)
+            rows += purchasing.awaiting_supplier_items(db, ctx, limit=remaining, cursor=token)
+            rows += conversations.publication_queue_items(db, ctx, limit=remaining, cursor=token)
+            ordered = sorted(rows, key=lambda r: (r["created_at"], r["id"]), reverse=True)
+            append(ordered[:remaining], "ordinary")
         return WorkPage(
-            items=[WorkItem.model_validate(row) for row in urgent] + ordinary.items,
-            next_cursor="ordinary:" + ordinary.next_cursor if ordinary.next_cursor else None,
+            items=selected[:limit],
+            next_cursor=continuations[limit - 1] if len(selected) > limit else None,
         )
 
 

@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
-import type { Agent } from "./team-api"
+import type { AddressableAgent } from "./team-api"
 
 export function AgentMention({ agents, selected, onSelect, text, onTextChange, disabled }: {
-  agents: Agent[]; selected?: string; onSelect: (key: string | undefined) => void; text: string; onTextChange: (value: string) => void; disabled: boolean
+  agents: AddressableAgent[]; selected?: string; onSelect: (key: string | undefined) => void; text: string; onTextChange: (value: string) => void; disabled: boolean
 }) {
   const { t } = useTranslation()
   const [dismissed, setDismissed] = useState<string>()

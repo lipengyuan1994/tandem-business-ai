@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 import { AiDisabledBanner } from "./AiDisabledBanner"
 import { problemCode, useCopilotThread, useCopilotThreads, useCreateCopilotThread, useSendCopilotMessage } from "./api"
 import { ActionCard } from "./ActionCard"
-import { useAgents } from "./team-api"
+import { useAddressableAgents } from "./team-api"
 import { teamReason } from "./team-text"
 import { AgentMention } from "./AgentMention"
 import { aiErrorText, useAiAvailability } from "./text"
@@ -25,8 +25,7 @@ const MAX_LENGTH = 4000
 export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation()
   const { status, enabled } = useAiAvailability()
-  const agents = useAgents(open)
-  const manager = agents.data?.items.find((agent) => agent.key === "operations_manager")
+  const agents = useAddressableAgents(open)
   const [agentKey, setAgentKey] = useState<string | undefined>()
   const threads = useCopilotThreads(open)
   const [threadId, setThreadId] = useState<string | undefined>(undefined)
@@ -39,7 +38,7 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
   const input = useRef<HTMLTextAreaElement>(null)
   const busy = stream.status === "streaming" || create.isPending
   // Unknown status (still loading) does not block typing; a known "off" does.
-  const managerOff = manager !== undefined && !manager.enabled
+  const managerOff = agents.data?.manager_enabled === false
   const targetOff = !!agentKey && !agents.data?.items.some((agent) => agent.key === agentKey && agent.enabled)
   const blocked = (status !== undefined && !enabled) || managerOff || targetOff
 
@@ -149,7 +148,7 @@ export function AssistantPanel({ open, onOpenChange }: { open: boolean; onOpenCh
           {startError ? <p role="alert" className="rounded-md border border-destructive/40 p-3 text-sm">{startError}</p> : null}
         </div>
 
-        {managerOff ? <p role="status" className="p-4 text-sm">{manager.reason ? teamReason(t, manager.reason) : t("ai.team.managerOff")}</p> : <form className="space-y-2 px-4 pt-1" onSubmit={(e) => void submit(e)}>
+        {managerOff ? <p role="status" className="p-4 text-sm">{agents.data?.manager_reason ? teamReason(t, agents.data.manager_reason) : t("ai.team.managerOff")}</p> : <form className="space-y-2 px-4 pt-1" onSubmit={(e) => void submit(e)}>
           <p className="text-xs text-muted-foreground">{t("ai.cards.confirmHint")}</p>
           {agents.error ? <QueryError error={agents.error} onRetry={() => agents.refetch()} /> : null}
           <AgentMention agents={agents.data?.items ?? []} selected={agentKey} onSelect={setAgentKey} text={text} onTextChange={setText} disabled={busy || blocked} />

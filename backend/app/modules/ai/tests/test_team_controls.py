@@ -30,6 +30,7 @@ def test_registry_consistent(registry):
     assert "purchasing" in AGENTS["inventory"].handoffs
     assert "marketing" not in AGENTS["purchasing"].handoffs
     assert set(AGENTS["customer_care"].triggers) == {
+        "assistant_request",
         "scheduling.appointment_completed",
         "conversations.message_received",
         "ai.customer_care_classify",

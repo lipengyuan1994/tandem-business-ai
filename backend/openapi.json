@@ -195,6 +195,62 @@
         "title": "ActivityPage",
         "type": "object"
       },
+      "AddressableAgent": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "enabled"
+        ],
+        "title": "AddressableAgent",
+        "type": "object"
+      },
+      "AddressableAgentsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AddressableAgent"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "manager_enabled": {
+            "title": "Manager Enabled",
+            "type": "boolean"
+          },
+          "manager_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manager Reason"
+          }
+        },
+        "required": [
+          "items",
+          "manager_enabled",
+          "manager_reason"
+        ],
+        "title": "AddressableAgentsOut",
+        "type": "object"
+      },
       "AgentOut": {
         "properties": {
           "autonomy": {
@@ -269,8 +325,19 @@
             "title": "Status",
             "type": "string"
           },
+          "switchable": {
+            "title": "Switchable",
+            "type": "boolean"
+          },
           "today": {
             "$ref": "#/components/schemas/TodayWork"
+          },
+          "triggers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Triggers",
+            "type": "array"
           },
           "updated_by": {
             "anyOf": [
@@ -296,6 +363,8 @@
           "key",
           "name",
           "job",
+          "triggers",
+          "switchable",
           "enabled",
           "version",
           "autonomy",
@@ -3170,6 +3239,10 @@
             "title": "Cost Micros",
             "type": "integer"
           },
+          "depth": {
+            "title": "Depth",
+            "type": "integer"
+          },
           "max_actions": {
             "default": 10,
             "title": "Max Actions",
@@ -3210,6 +3283,7 @@
         },
         "required": [
           "correlation_id",
+          "depth",
           "model_calls",
           "actions",
           "cost_micros",
@@ -12395,6 +12469,17 @@
             "title": "Delivery State",
             "type": "string"
           },
+          "depth": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depth"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -13258,6 +13343,22 @@
             ],
             "title": "Approve Permission"
           },
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "complaint",
+                  "warranty",
+                  "dispute"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
           "conversation_id": {
             "anyOf": [
               {
@@ -13286,6 +13387,17 @@
               }
             ],
             "title": "Customer Id"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
           },
           "due_date": {
             "anyOf": [
@@ -13426,6 +13538,17 @@
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
           },
           "waiting_on_roles": {
             "items": {
@@ -13845,6 +13968,39 @@
           }
         },
         "summary": "Agents",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/api/v1/ai/agents/addressable": {
+      "get": {
+        "operationId": "addressable_api_v1_ai_agents_addressable_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressableAgentsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          }
+        },
+        "summary": "Addressable",
         "tags": [
           "ai"
         ]
@@ -15572,7 +15728,7 @@
             "description": "Validation failed"
           }
         },
-        "summary": "What is waiting now, newest first",
+        "summary": "Emergency hand-overs, priority Care cases, then newest ordinary work",
         "tags": [
           "ai"
         ]

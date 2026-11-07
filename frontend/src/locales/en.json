@@ -1597,8 +1597,6 @@
       "actions": "Actions",
       "chainCost": "Cost",
       "depth": "Depth",
-      "depthLimit": "Limit: {{count}}",
-      "depthUnknown": "Current depth is unavailable.",
       "agentFilter": "Agent",
       "allAgents": "All agents",
       "mentionTitle": "Talk to an agent",
@@ -1615,11 +1613,37 @@
         "ai_chain_depth_exceeded": "this chain reached its depth limit",
         "ai_chain_call_limit": "this chain reached its model call limit",
         "ai_chain_action_limit": "this chain reached its action limit",
-        "ai_chain_cost_limit": "this chain reached its cost limit",
-        "ai_agent_coming_soon": "Coming soon"
+        "ai_chain_cost_limit": "this chain reached its cost limit"
       },
-      "comingSoon": "Coming soon",
-      "needsLocal": "Needs a local model under this business's privacy setting"
+      "needsLocal": "Needs a local model under this business's privacy setting",
+      "depthUsage": "Depth {{depth}} of {{max}}",
+      "triggersLabel": "Starts when",
+      "otherTrigger": "Staff request",
+      "triggers": {
+        "conversations_message_received": "Customer message",
+        "ai_intake": "Chat message",
+        "api_summary": "Summary request",
+        "assistant_request": "Assistant request",
+        "scheduling_appointment_completed": "Appointment completed",
+        "ai_customer_care_checkin": "After-service check-in",
+        "ai_customer_care_recall": "Daily recall check",
+        "ai_customer_care_triage": "Complaint received",
+        "ai_customer_care_recall_subject": "Recall due",
+        "ai_customer_care_classify": "Inbound complaint",
+        "api_campaign_draft": "Campaign request",
+        "inventory_stock_below_reorder_level": "Low stock",
+        "ai_reorder_note": "Reorder needed",
+        "purchasing_quote_received": "Supplier quote",
+        "ai_procurement_request_quotes": "Quote request",
+        "ai_procurement_compare": "Quote comparison",
+        "ai_procurement_scan": "Daily purchasing check",
+        "ai_procurement_followup": "Supplier follow-up",
+        "api_procurement": "Purchasing request",
+        "ai_payment_followup": "Overdue invoice",
+        "ai_payment_followup_scan": "Daily invoice check",
+        "api_briefing": "Briefing request",
+        "api_copilot": "Chat message"
+      }
     },
     "care": {
       "settings": "Customer Care settings",
@@ -1703,8 +1727,7 @@
         "source_message_id": "Source message",
         "due_month": "Recall due month"
       },
-      "reviewProposal": "Review suggested reply — approve, edit or reject",
-      "priorityHelp": "Cases are ordered by priority among loaded items. Load more to include older cases."
+      "reviewProposal": "Review suggested reply — approve, edit or reject"
     }
   },
   "dictation": {

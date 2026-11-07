@@ -1,4 +1,4 @@
-/* SMB front desk embed v1.0.0. Cache entry is revalidated hourly. */
+/* SMB front desk embed v1.0.1. Cache entry is revalidated hourly. */
 (function () {
   "use strict";
   var script = document.currentScript;
@@ -6,14 +6,14 @@
   var slug = script.getAttribute("data-business") || "";
   if (!/^[a-z0-9-]{3,40}$/.test(slug)) return;
   var origin = new URL(script.src).origin;
-  function mount() {
+  function mount(label) {
     var host = document.createElement("div");
     var shadow = host.attachShadow({mode: "closed"});
     var style = document.createElement("style");
-    style.textContent = ":host{position:fixed;right:16px;bottom:16px;z-index:2147483000;font:16px system-ui}button{font:inherit;cursor:pointer;min-height:44px;border:1px solid #555;border-radius:22px;background:#182c40;color:white;padding:10px 18px}button:focus-visible{outline:3px solid #f9b800;outline-offset:3px}.panel{width:min(390px,calc(100vw - 32px));height:min(600px,calc(100dvh - 100px));background:white;border:1px solid #777;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px #0004;margin-bottom:12px}.bar{display:flex;justify-content:flex-end;background:#182c40}.bar button{border:0;padding:2px 16px}iframe{display:block;width:100%;height:calc(100% - 44px);border:0}[hidden]{display:none!important}@media(prefers-reduced-motion:no-preference){button{transition:background-color .15s}}";
+    style.textContent = ":host{position:fixed;right:16px;bottom:16px;z-index:2147483000;font:16px system-ui}button{font:inherit;cursor:pointer;min-height:44px;border:1px solid #555;border-radius:22px;background:#182c40;color:white;padding:10px 18px}button:focus-visible{outline:3px solid #f9b800;outline-offset:3px}.panel{display:flex;flex-direction:column;box-sizing:border-box;width:min(390px,calc(100vw - 32px));height:min(600px,calc(100dvh - 100px));background:white;border:1px solid #777;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px #0004;margin-bottom:12px}.bar{display:flex;flex-shrink:0;justify-content:flex-end;background:#182c40}.bar button{box-sizing:border-box;border:0;padding:2px 16px}iframe{display:block;flex:1;min-height:0;width:100%;border:0}[hidden]{display:none!important}@media(prefers-reduced-motion:no-preference){button{transition:background-color .15s}}";
     var button = document.createElement("button");
     button.type = "button";
-    button.textContent = "Chat with us";
+    button.textContent = label;
     button.setAttribute("aria-expanded", "false");
     button.setAttribute("aria-controls", "smb-chat-panel");
     var panel = document.createElement("section");
@@ -63,10 +63,14 @@
     panel.append(bar, frame);
     shadow.append(style, panel, button);
     document.body.append(host);
-    fetch(origin + "/api/v1/public/" + slug + "/embed-config", {credentials: "omit", mode: "cors"})
-      .then(function (r) { if (!r.ok) throw new Error("config"); return r.json(); })
-      .then(function (data) { if (typeof data.label === "string" && data.label.length <= 80) { button.textContent = data.label; panel.setAttribute("aria-label", data.label); } })
-      .catch(function () {});
   }
-  if (document.body) mount(); else document.addEventListener("DOMContentLoaded", mount, {once: true});
+  fetch(origin + "/api/v1/public/" + slug + "/embed-config", {credentials: "omit", mode: "cors"})
+    .then(function (r) { if (!r.ok) throw new Error("config"); return r.json(); })
+    .then(function (data) {
+      if (!data || typeof data.label !== "string" || !data.label.trim() || data.label.length > 80) return;
+      var label = data.label.trim();
+      if (document.body) mount(label);
+      else document.addEventListener("DOMContentLoaded", function () { mount(label); }, {once: true});
+    })
+    .catch(function () {});
 }());

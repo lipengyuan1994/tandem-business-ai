@@ -26,7 +26,7 @@ function Chain({ id }: { id: string }) {
       <div><dt>{t("ai.team.calls")}</dt><dd>{data.model_calls} / {data.max_model_calls}</dd></div>
       <div><dt>{t("ai.team.actions")}</dt><dd>{data.actions} / {data.max_actions}</dd></div>
       <div><dt>{t("ai.team.chainCost")}</dt><dd>{usdMicros(data.cost_micros)} / {usdMicros(data.cost_limit_micros)}</dd></div>
-      <div><dt>{t("ai.team.depth")}</dt><dd>{t("ai.team.depthLimit", { count: data.max_depth })}</dd><dd className="text-xs text-muted-foreground">{t("ai.team.depthUnknown")}</dd></div>
+      <div><dt>{t("ai.team.depth")}</dt><dd>{t("ai.team.depthUsage", { depth: data.depth, max: data.max_depth })}</dd></div>
     </dl>
     <ActivitySteps items={data.steps} handoffs />
   </div>

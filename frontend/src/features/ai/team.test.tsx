@@ -15,7 +15,7 @@ const PATCH = "*/api/v1/ai/agents/inventory"
 
 describe("AI Team", () => {
   afterEach(() => vi.unstubAllGlobals())
-  it("renders every status, unavailable and Coming soon explanations, counters and filtered links", async () => {
+  it("renders every status, availability explanations, counters and filtered links", async () => {
     setup([
       TEAM_AGENT,
       { ...TEAM_AGENT, key: "finance", name: "Finance" },
@@ -27,7 +27,7 @@ describe("AI Team", () => {
     ], false)
     renderApp("/ai/team")
     expect(await screen.findAllByText("On")).toHaveLength(3)
-    for (const text of ["Off", "Paused for everyone", "Daily limit reached", "Unavailable", "Coming soon", "Needs a local model under this business's privacy setting"]) expect(screen.getByText(text)).toBeInTheDocument()
+    for (const text of ["Off", "Paused for everyone", "Daily limit reached", "Unavailable", "No triggers yet; coming soon", "Needs a local model under this business's privacy setting"]) expect(screen.getByText(text)).toBeInTheDocument()
     expect(screen.getAllByText("4 runs · 3 proposals")).toHaveLength(7)
     expect(screen.getAllByText("Done by people: 1 · By rules: 2 · Handed to a person: 1")).toHaveLength(7)
     expect(screen.getAllByText("Cost today: $0.12 / $1.00")).toHaveLength(7)
@@ -142,10 +142,10 @@ describe("AI Team", () => {
 
   it.each(["ai.chain_cost_limit", "Purchasing may not start Marketing work"])("shows chain ceilings, ordered hand-offs and stop reason %s", async (reason) => {
     setup([TEAM_AGENT, { ...TEAM_AGENT, key: "purchasing", name: "Purchasing" }], false)
-    server.use(http.get("*/api/v1/ai/chains/chain-1", () => HttpResponse.json({ correlation_id: "chain-1", model_calls: 7, max_model_calls: 30, actions: 2, max_actions: 10, cost_micros: 500000, cost_limit_micros: 500000, max_depth: 6, stopped_reason: reason, steps: [teamItem("1", { title: "First step" }), teamItem("2", { title: "Next step", agent: "purchasing" })] })))
+    server.use(http.get("*/api/v1/ai/chains/chain-1", () => HttpResponse.json({ correlation_id: "chain-1", model_calls: 7, max_model_calls: 30, actions: 2, max_actions: 10, cost_micros: 500000, cost_limit_micros: 500000, depth: 2, max_depth: 6, stopped_reason: reason, steps: [teamItem("1", { title: "First step" }), teamItem("2", { title: "Next step", agent: "purchasing" })] })))
     renderApp("/ai/chains/chain-1")
     expect(await screen.findByText(reason === "ai.chain_cost_limit" ? "Stopped: this chain used its $0.50 budget" : `Stopped: ${reason}`)).toBeInTheDocument()
-    for (const text of ["7 / 30", "2 / 10", "$0.50 / $0.50", "Limit: 6"]) expect(screen.getByText(text)).toBeInTheDocument()
+    for (const text of ["7 / 30", "2 / 10", "$0.50 / $0.50", "Depth 2 of 6"]) expect(screen.getByText(text)).toBeInTheDocument()
     const list = screen.getByRole("list", { name: "Activity timeline" })
     const steps = within(list).getAllByRole("listitem")
     expect(steps[0]).toHaveTextContent("First step")
@@ -177,6 +177,15 @@ describe("AI Team", () => {
     setup([{ ...TEAM_AGENT, key: "customer_care", name: "Customer Care", status: "off", enabled: false, reason: "No triggers yet; coming soon" }])
     renderApp("/ai/team")
     expect(await screen.findByRole("switch", { name: "Enable Customer Care" })).toBeEnabled()
+  })
+
+  it("renders trigger chips and hides an explicitly unswitchable agent's switch", async () => {
+    setup([{ ...TEAM_AGENT, switchable: false }])
+    renderApp("/ai/team")
+    expect(await screen.findByText("Low stock")).toBeInTheDocument()
+    expect(screen.getByText("Assistant request")).toBeInTheDocument()
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument()
+    expect(screen.getByLabelText("Daily cost limit (USD)")).toBeInTheDocument()
   })
 
   it("permits the Customer Care switch when backend reservation has cleared", async () => {

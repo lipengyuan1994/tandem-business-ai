@@ -41,3 +41,10 @@ P10-C2b production measurement (Node gzipSync, each static transitive JS file se
 76,792 bytes; embed.js 1,680 bytes. Bookings and supplier quotes load on their routes;
 bookings plus its static dependencies total less than 80 KB (see task card for the exact measurement). Dev Caddy permits Vite's inline React-refresh
 preamble only on the embed route; production script-src remains self-only. Live headers remain a reviewer check.
+
+P10-gaps reviewer follow-up (2026-11-07): loader v1.0.1 mounts its closed shadow root only after successful
+business config with a nonblank label (at most 80 characters); failures leave no UI and add no console logging.
+The panel uses a column flex layout with a nonshrinking header and a shrinking iframe below it. Embedded
+heading focus uses preventScroll instead of scrolling to the form. Unit tests cover admission, closed-root
+controls/layout rules and focus. The reviewer-run e2e spec checks 1280/375 px geometry, absent UI on the
+disallowed host and CSP refusal for a directly injected iframe. Evidence and build sizes: [P10-gaps](../../../docs/roadmap/ai/cards/P10-gaps.md).

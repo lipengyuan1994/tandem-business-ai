@@ -5,7 +5,7 @@
 import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync, rmSync } from "node:fs"
 import { resolve } from "node:path"
-import { AUTH_DIR, REPO_ROOT, writeAccount } from "./support/accounts.ts"
+import { AUTH_DIR, REPO_ROOT, writeAccount, type Account } from "./support/accounts.ts"
 
 const composeFile = process.env.E2E_COMPOSE_FILE ?? "deploy/compose/compose.dev.yml"
 const envFile = process.env.E2E_ENV_FILE
@@ -22,7 +22,7 @@ function exec(args: string[], env: NodeJS.ProcessEnv = process.env, passthrough:
   return execFileSync("docker", compose, { cwd: REPO_ROOT, env, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] })
 }
 
-function freshLogin(email: string, name: "morgan" | "casey"): void {
+function freshLogin(email: string, name: Account["name"]): void {
   const out = exec(["dev-account", "--email", email])
   const temporary = /^temporary_password=(.+)$/m.exec(out)?.[1]
   if (!temporary) throw new Error(`dev-account did not issue a temporary password for ${email}`)
@@ -31,7 +31,7 @@ function freshLogin(email: string, name: "morgan" | "casey"): void {
 
 export default function globalSetup(): void {
   // Sessions from an earlier run are stale once the demo data is recreated.
-  for (const f of ["morgan.state.json", "casey.state.json", ...(fresh ? [] : ["morgan.json"])]) rmSync(resolve(AUTH_DIR, f), { force: true })
+  for (const f of ["morgan.state.json", "casey.state.json", "ellery.state.json", ...(fresh ? [] : ["morgan.json"])]) rmSync(resolve(AUTH_DIR, f), { force: true })
 
   // The production api container has no migration credentials; reset needs them, so pass them by name only.
   const env = { ...process.env }
@@ -44,4 +44,5 @@ export default function globalSetup(): void {
   exec(["seed", "--reset"], env, passthrough)
   if (fresh) freshLogin("morgan@example.com", "morgan")
   freshLogin("casey@example.com", "casey")
+  freshLogin("ellery.dental@example.com", "ellery")
 }

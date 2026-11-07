@@ -15,10 +15,11 @@ from app.platform.models import DomainEvent
 from .agents import AGENTS, get_agent
 from .budget_models import CostPeriod
 from .models import AiRun
+from .permissions import ASSISTANT_USE
 from .public import status as ai_status
 from .team_models import AgentUsageDaily
-from .team_schemas import AgentOut, AgentsOut, TodayWork, WaitingItems
-from .team_settings import settings
+from .team_schemas import AddressableAgent, AddressableAgentsOut, AgentOut, AgentsOut, TodayWork, WaitingItems
+from .team_settings import enabled, settings
 
 
 def agent_out(db: Session, ctx: Context, key: str) -> AgentOut:
@@ -110,6 +111,8 @@ def agent_out(db: Session, ctx: Context, key: str) -> AgentOut:
         key=key,
         name=agent.name,
         job=agent.job,
+        triggers=list(agent.triggers),
+        switchable=True,
         enabled=is_enabled,
         version=config.version if config else 0,
         updated_by=config.updated_by if config else None,
@@ -134,3 +137,14 @@ def agent_out(db: Session, ctx: Context, key: str) -> AgentOut:
 
 def list_agents(db: Session, ctx: Context) -> AgentsOut:
     return AgentsOut(items=[agent_out(db, ctx, key) for key in AGENTS])
+
+
+def addressable_agents(db: Session, ctx: Context) -> AddressableAgentsOut:
+    ctx.require(ASSISTANT_USE)
+    items = [AddressableAgent(key=a.key, name=a.name, enabled=enabled(db, ctx, a.key)) for a in AGENTS.values()]
+    manager_enabled = next(a.enabled for a in items if a.key == "operations_manager")
+    return AddressableAgentsOut(
+        items=items,
+        manager_enabled=manager_enabled,
+        manager_reason=None if manager_enabled else "ai.agent_disabled",
+    )

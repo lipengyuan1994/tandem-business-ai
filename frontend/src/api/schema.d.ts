@@ -90,6 +90,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai/agents/addressable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Addressable */
+        get: operations["addressable_api_v1_ai_agents_addressable_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai/agents/{key}": {
         parameters: {
             query?: never;
@@ -473,7 +490,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** What is waiting now, newest first */
+        /** Emergency hand-overs, priority Care cases, then newest ordinary work */
         get: operations["work_queue_api_v1_ai_work_queue_get"];
         put?: never;
         post?: never;
@@ -3225,6 +3242,24 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** AddressableAgent */
+        AddressableAgent: {
+            /** Enabled */
+            enabled: boolean;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+        };
+        /** AddressableAgentsOut */
+        AddressableAgentsOut: {
+            /** Items */
+            items: components["schemas"]["AddressableAgent"][];
+            /** Manager Enabled */
+            manager_enabled: boolean;
+            /** Manager Reason */
+            manager_reason: string | null;
+        };
         /** AgentOut */
         AgentOut: {
             /** Autonomy */
@@ -3250,7 +3285,11 @@ export interface components {
              * @enum {string}
              */
             status: "on" | "off" | "paused" | "limit_reached" | "unavailable";
+            /** Switchable */
+            switchable: boolean;
             today: components["schemas"]["TodayWork"];
+            /** Triggers */
+            triggers: string[];
             /** Updated By */
             updated_by?: string | null;
             /** Version */
@@ -4368,6 +4407,8 @@ export interface components {
             cost_limit_micros: number;
             /** Cost Micros */
             cost_micros: number;
+            /** Depth */
+            depth: number;
             /**
              * Max Actions
              * @default 10
@@ -7739,6 +7780,8 @@ export interface components {
              * @enum {string}
              */
             delivery_state: "none" | "scheduled" | "sending" | "delivered" | "failed" | "unknown" | "stopped" | "withheld" | "published";
+            /** Depth */
+            depth?: number | null;
             /**
              * Id
              * Format: uuid
@@ -8063,6 +8106,8 @@ export interface components {
             appointment_id?: string | null;
             /** Approve Permission */
             approve_permission?: string | null;
+            /** Category */
+            category?: ("complaint" | "warranty" | "dispute") | null;
             /** Conversation Id */
             conversation_id?: string | null;
             /**
@@ -8072,6 +8117,8 @@ export interface components {
             created_at: string;
             /** Customer Id */
             customer_id?: string | null;
+            /** Customer Name */
+            customer_name?: string | null;
             /** Due Date */
             due_date?: string | null;
             /** Expires At */
@@ -8106,6 +8153,8 @@ export interface components {
             supplier_id?: string | null;
             /** Title */
             title: string;
+            /** Version */
+            version?: number | null;
             /** Waiting On Roles */
             waiting_on_roles?: string[];
         };
@@ -8436,6 +8485,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentsOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    addressable_api_v1_ai_agents_addressable_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressableAgentsOut"];
                 };
             };
             /** @description Authentication required */
