@@ -24,6 +24,7 @@ Small and mid-size businesses run on a patchwork: a calendar app, a spreadsheet 
 |---|---|---|
 | `owner` | Business owner | Everything, including staff, roles, settings, AI policy and approving sensitive actions |
 | `admin` | Office manager | Same as owner except ownership transfer and deleting the business |
+| `demo_reviewer` | Public synthetic Demo Judge | Admin operations with read-only business/settings/staff; no account-console access |
 | `operator` | Front desk or technician | Conversations, customers, appointments; approves routine proposals |
 | `inventory_manager` | Stock keeper | Catalog, stock adjustments, reorder |
 | `marketing_manager` | Marketing person | Segments and campaigns |

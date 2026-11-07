@@ -154,3 +154,60 @@ def set_enabled(user_id: str, enabled: bool) -> None:
     response = _request("PUT", f"/users/{user_id}", json={"enabled": enabled})
     if response.status_code not in (200, 204):
         raise KeycloakError("identity.keycloak_unavailable", detail=f"update user: HTTP {response.status_code}")
+
+
+def _judge_request(method: str, path: str, **kwargs: Any) -> httpx.Response:
+    response = _request(method, path, **kwargs)
+    if response.status_code not in (200, 204):
+        # Never include response bodies: Keycloak errors can echo credential values.
+        raise KeycloakError("identity.keycloak_unavailable", detail=f"judge account setup: HTTP {response.status_code}")
+    return response
+
+
+def harden_judge_user(user_id: str) -> None:
+    """Remove self-service authority and second factors from the shared, fixture-only public account.
+
+    manage-users/view-users suffice: use the user's mappings rather than enumerating realm clients.
+    Removing every direct realm/client role (including default-roles-smb) and group also removes composite and
+    inherited account-console authority. Staff roles live in our DB, not in Keycloak. Reapply on every --judge run.
+    """
+    base = f"/users/{user_id}"
+    groups = _judge_request("GET", base + "/groups").json()
+    for group in groups:
+        _judge_request("DELETE", base + f"/groups/{group['id']}")
+    mappings = _judge_request("GET", base + "/role-mappings").json()
+    realm_roles = mappings.get("realmMappings", [])
+    if realm_roles:
+        _judge_request("DELETE", base + "/role-mappings/realm", json=realm_roles)
+    for client in mappings.get("clientMappings", {}).values():
+        if client.get("mappings"):
+            _judge_request("DELETE", base + f"/role-mappings/clients/{client['id']}", json=client["mappings"])
+    for credential in _judge_request("GET", base + "/credentials").json():
+        if credential["type"] != "password":
+            _judge_request("DELETE", base + f"/credentials/{credential['id']}")
+    _judge_request(
+        "PUT",
+        base,
+        json={
+            "enabled": True,
+            "emailVerified": True,
+            "requiredActions": [],
+            "firstName": "Demo",
+            "lastName": "Judge",
+        },
+    )
+    # Do not leave existing Keycloak account-console sessions with the old authority.
+    _judge_request("POST", base + "/logout")
+
+
+def reset_judge_password(user_id: str, password: str) -> None:
+    """Explicit repair of the shared password, including repeat resets under passwordHistory(3).
+
+    Remove the judge's old password/history before applying the fixed value: history must not reject the same public
+    value on a second repair. An interrupted reset is repaired by repeating --judge --reset-password.
+    """
+    base = f"/users/{user_id}"
+    for credential in _judge_request("GET", base + "/credentials").json():
+        if credential["type"] in {"password", "password-history"}:
+            _judge_request("DELETE", base + f"/credentials/{credential['id']}")
+    set_password(user_id, password, temporary=False)

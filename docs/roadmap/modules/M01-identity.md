@@ -37,7 +37,7 @@ Authenticates staff through Keycloak (backend-for-frontend OIDC), manages server
 
 `memberships` — a user's membership in one business. Columns: `user_id` (FK), `status` (`invited` \| `active` \| `suspended` \| `removed`), `title` (e.g. "Technician"). Unique `(business_id, user_id)`.
 
-`role_grants` — roles held through a membership. Columns: `membership_id` (composite FK), `role` (`owner` \| `admin` \| `operator` \| `inventory_manager` \| `marketing_manager` \| `auditor`), `granted_by`, `granted_at`, `revoked_at` (null = active). Unique active `(membership_id, role)` (partial unique index where `revoked_at is null`).
+`role_grants` — roles held through a membership. Columns: `membership_id` (composite FK), `role` (`owner` \| `admin` \| `demo_reviewer` \| `operator` \| `inventory_manager` \| `marketing_manager` \| `auditor`), `granted_by`, `granted_at`, `revoked_at` (null = active). Unique active `(membership_id, role)` (partial unique index where `revoked_at is null`).
 
 `oidc_login_states` — global, short-lived: `state_hash`, `nonce`, `code_verifier`, `return_to`, `expires_at` (10 minutes); deleted on use or by the nightly cleanup.
 
@@ -122,3 +122,19 @@ Custom roles; SSO with external identity providers (v1+ via Keycloak identity br
 - **Passwords:** random (the generator `bootstrap-business` uses), written only to FILE (mode 600, replaced atomically after every account, merged with an earlier run's lines) and never printed or logged; the output names the file and the e-mail addresses. Permanent by default (no forced change); `--temporary-password` makes Keycloak ask for a new one. CONFIGURE_TOTP stays mandatory either way.
 - **Re-runs:** an account that exists is skipped; `--reset-passwords` issues a new password (the authenticator app is kept). `keycloak_admin.create_user` gained keyword options (`temporary`, `required_actions`, `existing_ok`) and `set_password`; existing callers are unchanged.
 - Code: `identity/demo_logins.py` (Keycloak side), `app/demo_logins.py` (composition root: fixtures, scope, file). Tests: `identity/tests/test_demo_logins.py` (requests to Keycloak, who may sign in), `tests/integration/test_demo_logins.py` (the command on the seeded data). Procedure: [install.md](../../runbooks/install.md#demo-installs-only-logins-for-the-demo-staff-morgan-riley-and-the-others).
+
+### Public judge account (P10-J, synthetic demo only)
+
+`demo-logins --judge` ensures the fixture app user and active `demo_reviewer` memberships/grants in all three seeded
+businesses (slug + fixed id checked before writes), without a seed/reset or changes to other members/demo records.
+Existing linked subjects survive and repeat runs leave app rows unchanged; only missing rows/grants or a judge
+membership reactivation are written. It then provisions only `judge@example.com` from `DEMO_JUDGE_PASSWORD` (minimum 12).
+It clears required actions/non-password credentials, all direct realm/client roles and groups, and logs out old
+Keycloak sessions. No account-console roles; no TOTP or forced password change. Reruns reapply restrictions;
+`--reset-password` reapplies the fixed public password after removing old password/history credentials.
+Normal staff mode excludes the judge and otherwise keeps the existing behavior above. The fixture account has
+`demo_reviewer` in all three businesses; reset restores memberships while preserving the linked global user.
+The role is admin minus org writes and membership writes, with no owner-only permissions.
+The demo-only Keycloak theme is explicitly activated by operators; customer imports keep the default theme.
+See the [judge runbook](../../runbooks/install.md#demo-installs-only-public-judge-login) for rendering, activation
+and the live account-console/direct-action lockout checks that cannot be established by faked API tests.

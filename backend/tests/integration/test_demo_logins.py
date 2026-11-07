@@ -40,7 +40,8 @@ def fixture_emails() -> dict[str, set[str]]:
     slugs = {b["id"]: b["slug"] for b in tables["businesses"]}
     staff: dict[str, set[str]] = {slug: set() for slug in slugs.values()}
     for m in tables["memberships"]:
-        staff[slugs[m["business_id"]]].add(emails[m["user_id"]])
+        if emails[m["user_id"]] != "judge@example.com":  # dedicated --judge path; never random staff passwords
+            staff[slugs[m["business_id"]]].add(emails[m["user_id"]])
     return staff
 
 
@@ -445,3 +446,67 @@ def test_a_disabled_user_and_a_removed_member_are_skipped_with_a_reason(
     assert "skipped: jordan@example.com: the user is disabled" in shown
     assert "skipped: casey@example.com: not an active member of example-cycle-works" in shown
     assert set(keycloak.created_emails) == ALL_DEMO_STAFF - {"jordan@example.com", "casey@example.com"}
+
+
+def test_judge_uses_env_password_without_totp_and_rehardens_on_rerun(
+    seeded: None,
+    keycloak: FakeKeycloak,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    password = "Public-judge-test-2026"
+    monkeypatch.setenv("DEMO_JUDGE_PASSWORD", password)
+    hardened: list[str] = []
+    monkeypatch.setattr(keycloak_admin, "harden_judge_user", hardened.append)
+    monkeypatch.setattr(
+        keycloak_admin, "reset_judge_password", lambda uid, pw: keycloak.set_password(uid, pw, temporary=False)
+    )
+    main(["demo-logins", "--judge"])
+    assert keycloak.created == [
+        {
+            "email": "judge@example.com",
+            "name": "Demo Judge",
+            "password": password,
+            "temporary": False,
+            "required_actions": [],
+            "existing_ok": False,
+        }
+    ]
+    main(["demo-logins", "--judge"])
+    assert len(keycloak.created) == 1 and not keycloak.resets
+    main(["demo-logins", "--judge", "--reset-password"])
+    assert keycloak.resets == [{"id": "kc-1", "password": password, "temporary": False}]
+    assert hardened == ["kc-1"] * 3
+    assert password not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("password", [None, "too-short"])
+def test_judge_refuses_missing_or_short_password_before_keycloak(
+    seeded: None,
+    keycloak: FakeKeycloak,
+    monkeypatch: pytest.MonkeyPatch,
+    password: str | None,
+) -> None:
+    if password is None:
+        monkeypatch.delenv("DEMO_JUDGE_PASSWORD", raising=False)
+    else:
+        monkeypatch.setenv("DEMO_JUDGE_PASSWORD", password)
+    with pytest.raises(SystemExit, match="DEMO_JUDGE_PASSWORD"):
+        main(["demo-logins", "--judge"])
+    assert not keycloak.created
+
+
+def test_judge_rejects_regulated_non_demo_and_staff_password_options(
+    seeded: None,
+    keycloak: FakeKeycloak,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DEMO_JUDGE_PASSWORD", "Public-judge-test-2026")
+    for args in [["--business", "acme-cycles"], ["--email", "riley@example.com"], ["--temporary-password"]]:
+        with pytest.raises(SystemExit):
+            main(["demo-logins", "--judge", *args])
+    monkeypatch.setattr(get_settings(), "data_profile", "regulated")
+    with pytest.raises(SystemExit, match="DATA_PROFILE=regulated"):
+        main(["demo-logins", "--judge"])
+    assert not keycloak.created

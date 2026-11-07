@@ -69,7 +69,8 @@ def cmd_demo_logins(args: argparse.Namespace) -> None:
     from app.demo_logins import run
 
     status = run(
-        Path(args.out),
+        Path(args.out) if args.out else None,
+        judge=args.judge,
         businesses=args.business,
         emails=args.email,
         reset_passwords=args.reset_passwords,
@@ -123,9 +124,7 @@ def main(argv: list[str] | None = None) -> None:
             "(mode 600) and are never printed; the output lists the file and the e-mail addresses."
         ),
     )
-    logins.add_argument(
-        "--out", required=True, help="file for the passwords (mode 600); a mounted folder in a container"
-    )
+    logins.add_argument("--out", help="file for the passwords (mode 600); a mounted folder in a container")
     logins.add_argument(
         "--business",
         action="append",
@@ -134,12 +133,18 @@ def main(argv: list[str] | None = None) -> None:
     )
     logins.add_argument("--email", action="append", metavar="ADDRESS", help="only this demo staff member (repeatable)")
     logins.add_argument(
-        "--reset-passwords", action="store_true", help="issue a new password to accounts that already exist"
+        "--reset-passwords",
+        "--reset-password",
+        action="store_true",
+        help="issue a new password to accounts that already exist",
     )
     logins.add_argument(
         "--temporary-password",
         action="store_true",
         help="make Keycloak ask for a new password at first sign-in (default: no; a demo has no time for it)",
+    )
+    logins.add_argument(
+        "--judge", action="store_true", help="public judge only: env password, no TOTP; no --out needed"
     )
     logins.set_defaults(func=cmd_demo_logins)
     dev = sub.add_parser("dev-account", help="dev/test only: fresh Keycloak login for an existing staff user")

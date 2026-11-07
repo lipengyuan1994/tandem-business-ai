@@ -5,9 +5,9 @@ Permission strings for modules that are not built yet are listed here so the mat
 
 from __future__ import annotations
 
-POLICY_VERSION = "2026-10-28.2"
+POLICY_VERSION = "2026-11-07.1"
 
-ROLE_NAMES = ("owner", "admin", "operator", "inventory_manager", "marketing_manager", "auditor")
+ROLE_NAMES = ("owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor")
 
 ORG_READ = {"org.business.read", "org.location.read", "org.settings.read"}
 ORG_WRITE = {"org.business.write", "org.location.write", "org.settings.write"}
@@ -81,6 +81,7 @@ ROLES: dict[str, frozenset[str]] = {
         | {"org.business.admin", "identity.owner.grant", "audit.export", "ai.settings.write", "admin_ops.data.manage"}
     ),
     "admin": frozenset(_ADMIN),
+    "demo_reviewer": frozenset(_ADMIN - ORG_WRITE - {"identity.membership.write"}),
     "operator": frozenset(
         ORG_READ
         | CRM_READ

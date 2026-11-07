@@ -160,7 +160,7 @@ Used on 2026-11-07 to move the demo from `45-63-85-83.sslip.io` to `tandemai.ope
 
 1. Open `https://<domain>` and sign in. Username: the owner's email. Password: the temporary one printed by the installer.
 2. Keycloak requires a **new password** (at least 12 characters).
-3. Keycloak then shows a QR code: scan it with an authenticator app (any TOTP app) and enter the six-digit code. This second factor is mandatory for everyone.
+3. Keycloak then shows a QR code: scan it with an authenticator app (any TOTP app) and enter the six-digit code. This second factor is mandatory for normal staff. The explicitly public synthetic judge account below is the demo-only exception.
 4. The owner lands on the Today page of their business.
 
 **Inviting colleagues:** Settings → Staff → Invite. Two modes:
@@ -169,9 +169,92 @@ Used on 2026-11-07 to move the demo from `45-63-85-83.sslip.io` to `tandemai.ope
 - **With e-mail:** configure the shop's chosen provider in `SMTP_URL` (and optional `SMTP_FROM`) in both private `.env` copies, then configure the **same decoded values manually in Keycloak**. Follow [SMTP setup and Keycloak test steps](email.md). Use submission port 587 with STARTTLS (or 465 with implicit TLS); Vultr may block outgoing port 25. Realm imports do not update existing realms, so verify Keycloak mail settings on upgrades too. System → Send test e-mail tests application delivery; invitations and Forgot password must each be tested separately in Keycloak. **Production provider and Keycloak e-mail delivery have not been verified locally.**
 
 
+### Demo installs only: public judge login
+
+This is an explicitly public credential for synthetic data, not a customer account. After **0.1.16 is built and
+released through the normal operator process**, judges open <https://tandemai.open-dl.com>, choose Sign in, then click
+Sign in on the prefilled Keycloak form. The password is visible in a public JavaScript resource by design. Never use
+an owner, staff or customer password. Morgan/Riley can clear both fields and enter their own credentials; their TOTP
+setup remains mandatory. The notice explains that proposals requested by the judge need another staff member's
+approval (`allow_self_approval=false`) and that email is simulated.
+
+For the **existing demo VM**, in `/opt/smb`:
+
+1. Stage this release on the operator machine (`deploy/scripts/stage.sh /tmp/tandem-judge-stage`) and transfer the
+   updated `compose.yml`, `themes/`, and `configure-demo-judge.py` to `/opt/smb` through the normal approved release
+   procedure. Keep `.env` and `config/ai-routes.yaml`. Upgrade to the built 0.1.16 images with `./upgrade.sh 0.1.16`;
+   this applies `20261107_1700_demo_reviewer`. No image is published by this checkout change.
+2. Check that this is the synthetic demo with `DATA_PROFILE=standard`, `SMTP_URL` empty, Keycloak SMTP unconfigured,
+   and the existing AI budgets/rate limits enabled. The renderer refuses `regulated` from either the shell or `.env`;
+   the CLI also refuses non-demo slugs/IDs. Set the public password once in the current shell (at least 12 characters,
+   matching both shipped realms; Keycloak additionally validates the live policy on creation/reset):
+
+   ```bash
+   read -rs DEMO_JUDGE_PASSWORD; echo
+   export DEMO_JUDGE_PASSWORD
+   python3 ./configure-demo-judge.py --demo --compose-dir /opt/smb
+   docker compose run --rm --no-deps -T -e DEMO_JUDGE_PASSWORD api \
+     python -m app.cli demo-logins --judge --reset-password
+   unset DEMO_JUDGE_PASSWORD
+   ```
+
+   Use exactly the same environment value for both commands. No `--out` is needed and neither command prints the
+   password. `--judge` only touches `judge@example.com`, excludes normal staff, verifies seeded business identities,
+   creates the app user and missing `demo_reviewer` grants/memberships in **all three** seeded businesses, and
+   reactivates the judge's membership if needed. Existing linked user identities are retained; a disabled app user or
+   unexpected extra judge roles refuses for review. A second run leaves existing app rows unchanged.
+   **Do not run seed or reset-demo to add the judge to an existing VM.** This command preserves other members,
+   conversations, approvals, autonomy settings and the knowledge index. Even with a demo `--business` selector, the
+   judge receives all three memberships; a non-demo selector still refuses before anything is provisioned.
+   It then enables/verifies the Keycloak account, clears all required actions and non-password credentials, removes realm defaults,
+   direct client roles and groups (including inherited account authority), and logs out old Keycloak sessions.
+   Normal staff mode excludes the judge; `--email judge@example.com` without `--judge` refuses. A rerun preserves the password unless `--reset-password`
+   (alias `--reset-passwords`) is supplied. Explicit repair removes the old password/history first so the fixed public
+   value can be reapplied under `passwordHistory(3)`; if interrupted, repeat the repair command. Linked-identity
+   conflicts refuse rather than attaching a different Keycloak account.
+3. Recreate Keycloak to add the read-only `./themes:/opt/keycloak/themes:ro` mount, then authenticate kcadm as the
+   administrator (it prompts; never put the admin password in the command). Realm imports happen only once, so an
+   updated import JSON alone will not activate a theme on an existing VM:
+
+   ```bash
+   docker compose up -d --force-recreate keycloak
+   docker compose exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+     --server http://localhost:8080/auth --realm master --user admin
+   docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh update realms/smb -s loginTheme=tandem-demo
+   ```
+
+   Substitute the configured admin username if different. A fresh demo also uses this explicit step after seed;
+   **customer installs keep `loginTheme` unset/default**. Both bundled realm files intentionally leave it unset.
+   No realm-wide required action, OTP browser flow or CSP is changed. Theme scripts are served from Keycloak itself.
+4. In a fresh/private browser, verify: the two fields are prefilled, password-only sign-in works with no required
+   action; all three businesses are available; settings, autonomy and staff changes are denied; read/assistant,
+   booking, purchasing and another staff member's proposal are usable; a self-requested proposal cannot be approved.
+   Try the account console, direct password/OTP action links, and password recovery as well: removing console roles
+   alone is not live evidence that every Keycloak self-service entry point is blocked. Check effective account roles
+   and credentials with kcadm. These live checks are required before calling the shared account lockout-safe.
+   Test Morgan/Riley sign-in after clearing both fields. No live Keycloak/browser verification was performed locally.
+
+The generated file is `themes/tandem-demo/login/resources/js/demo-credentials.js`, mode 644 for Keycloak's uid 1000.
+It contains only the intentionally public synthetic credential; gitleaks has a narrow, commented allowlist for this
+exact asset. The tracked template contains `null`, not a password. Staging in place preserves a rendered asset;
+when uploading a fresh stage over a VM, **rerender with the same public password after copying** (or preserve the
+existing rendered asset). Recreate Keycloak after changing an asset to clear its production theme cache. On subsequent
+upgrades keep the mount and selected demo theme. To withdraw public prefill, use kcadm:
+
+```bash
+docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh update realms/smb -s loginTheme=keycloak.v2
+```
+
+Disable the judge account separately if withdrawing public access. The limited role prevents configuration and
+identity damage, but judges share mutable synthetic operational records; this is not per-judge isolation. The
+operator decides separately whether to reset data in a future rehearsal. Preserve the current video/demo state;
+judge login setup never requires a reset. Existing AI daily/monthly/token limits,
+concurrency and request rate limits cap consumption; public shared credentials do not bypass them. Real customer data
+and real SMTP delivery are prohibited for this public demo setup.
+
 ### Demo installs only: logins for the demo staff (Morgan, Riley and the others)
 
-Skip this on a customer's installation. A **demo** VM is seeded with the synthetic businesses Example Cycle Works and Example Garden Store (`seed`; the [demo script](../demo-script.md) resets them with `reset-demo`). The seed creates their staff (Morgan Example the owner, Riley Example the admin, and six more) as users that claim a login the first time someone signs in with their e-mail address. **Keycloak has no accounts for them**: only `bootstrap-business` and invitations create accounts, and `dev-account` refuses production. Until you run the command below nobody can sign in as Morgan or Riley, and the demo needs both signed in at once (Morgan creates a proposal, Riley approves it).
+Skip this on a customer's installation. A **demo** VM is seeded with the synthetic businesses Example Cycle Works, Example Garden Store and Example Dental Clinic (`seed`; the [demo script](../demo-script.md) resets them with `reset-demo`). The seed creates their staff (Morgan Example the owner, Riley Example the admin, and the other normal staff) as users that claim a login the first time someone signs in with their e-mail address. **Keycloak has no accounts for them**: only `bootstrap-business` and invitations create accounts, and `dev-account` refuses production. Until you run the command below nobody can sign in as Morgan or Riley, and the demo needs both signed in at once (Morgan creates a proposal, Riley approves it).
 
 ```bash
 vm$ cd /opt/smb
@@ -185,10 +268,10 @@ vm$ docker compose run --rm -T --user "$(id -u):$(id -g)" \
 It prints the path of the file and the e-mail addresses it made logins for, **never a password**. The file `/opt/smb/demo-logins/logins.txt` has mode 600 and belongs to you; each line is an e-mail address and a password. Read the passwords (`vm$ cat /opt/smb/demo-logins/logins.txt`), store them in your password manager and delete the file (`vm$ rm /opt/smb/demo-logins/logins.txt`). It is not part of the backups. On a laptop with `make dev` the same command is `make demo-logins` (the file is `.demo-logins/logins.txt`, ignored by git).
 
 - **Why the folder and `--user`:** the api container's file system is read-only and it runs as another user, so it writes into a folder mounted from the VM, as you. Without the mounted folder the command stops before it creates anything ("the folder ... does not exist").
-- **Who:** leave out the two `--email` options to create logins for all eight demo staff; `--business example-cycle-works` limits it to one business.
-- **First sign-in:** open `https://<domain>`, enter the e-mail address and the password. The password is permanent: Keycloak does **not** ask for a new one (add `--temporary-password` if you want it to). It does ask for an authenticator app, as for everyone: scan the QR code once (one phone can hold both accounts). Use two browser profiles, or a private window for the second person, so both stay signed in.
+- **Who:** leave out the two `--email` options to create logins for all normal demo staff (the public judge uses `--judge`); `--business example-cycle-works` limits it to one business.
+- **First sign-in:** open `https://<domain>`, enter the e-mail address and the password. The password is permanent: Keycloak does **not** ask for a new one (add `--temporary-password` if you want it to). It does ask for an authenticator app, as for other normal staff: scan the QR code once (one phone can hold both accounts). Use two browser profiles, or a private window for the second person, so both stay signed in.
 - **Safe to repeat:** an account that already exists is left alone ("already had a login") and the file is not touched. If a password is lost: `... demo-logins --out /opt/smb/demo-logins/logins.txt --email riley@example.com --reset-passwords` issues a new one, and the other lines of the file stay. The person's authenticator app is kept. `reset-demo` does not remove the logins (it recreates the businesses, not the users or the Keycloak accounts).
-- **What it refuses:** it creates accounts only for the demo staff listed in `data/fixtures.json` (example.com addresses), of the businesses `example-cycle-works` and `example-garden-store` as the seed created them (matched by name and by the id the seed gives them). Any other business name, any other person, a business that only borrows a demo name, and an installation with `DATA_PROFILE=regulated` are refused, so it cannot create a login for a customer's staff. Run `seed` first ("does not exist; run `seed` first").
+- **What it refuses:** it creates accounts only for the demo staff listed in `data/fixtures.json` (example.com addresses), of the businesses `example-cycle-works`, `example-garden-store` and `example-dental-clinic` as the seed created them (matched by slug and by the id the seed gives them). Any other business name, any other person, a business that only borrows a demo name, and an installation with `DATA_PROFILE=regulated` are refused, so it cannot create a login for a customer's staff. Run `seed` first ("does not exist; run `seed` first").
 - **Output lines:** `not usable: <e-mail>: ...` means the person signed in before and their Keycloak account is gone or different, so a new account could not sign in either (fix it in the Keycloak console, [access.md](access.md)); the command then ends with exit status 1. `skipped: ...` names a person who is not an active member of the business (removed, or the user is disabled).
 
 ## 6. Verify

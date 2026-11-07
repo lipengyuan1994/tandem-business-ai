@@ -104,6 +104,7 @@
   "roles": {
     "owner": "Owner",
     "admin": "Admin",
+    "demo_reviewer": "Demo reviewer",
     "operator": "Operator",
     "inventory_manager": "Inventory manager",
     "marketing_manager": "Marketing manager",

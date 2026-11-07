@@ -40,10 +40,10 @@ sequenceDiagram
 - **Timeouts:** standard idle 60 minutes, absolute 12 hours (configurable up to 24 hours). Regulated idle is 15 minutes and absolute is 8 hours from `authenticated_at`, which persists through business switches/session rotation. Reauthentication starts a new authentication lifetime.
 - **CSRF:** `/auth/me` returns a per-session CSRF token. The SPA sends it as `X-CSRF-Token` on every unsafe method, and the server compares hashes in constant time.
 - **Logout:** `POST /auth/logout` revokes the session and redirects to Keycloak end-session.
-- **MFA:** the realm requires TOTP for all users (required action `CONFIGURE_TOTP`). WebAuthn passkeys can be enabled later.
+- **MFA:** normal staff require TOTP through `CONFIGURE_TOTP` (also a realm default action). The explicitly public synthetic `judge@example.com` account is the demo-only password-only exception; `--judge` clears its actions and OTP credentials. WebAuthn passkeys can be enabled later.
 - **Revocation:** suspending a membership or removing a role takes effect on the next request, because permissions are resolved per request from `role_grants`. Logging out everywhere revokes all of a user's sessions.
 - **Bootstrap:** `python -m app.cli bootstrap-business --name … --slug … --timezone … --owner-email …` creates the business, creates the owner's Keycloak user through the admin API (temporary password and required actions) and creates an active owner membership. `install.sh` calls it.
-- **Demo logins:** `python -m app.cli demo-logins --out FILE` creates Keycloak accounts for the staff of the synthetic demo businesses (Morgan, Riley and the others of `data/fixtures.json`) on a demo install, because the seed creates them as claimable users and nothing else creates their accounts. It is the one account-creating command that is not limited to dev, so it is fenced: only people listed in the fixtures (example.com) of businesses matched by slug and seed id, nothing for any other business or person, refused under `DATA_PROFILE=regulated`; random passwords go only to a mode-600 file, never to output or logs; the authenticator app (`CONFIGURE_TOTP`) stays mandatory, only the forced password change is off (`--temporary-password` turns it on). See [M01](modules/M01-identity.md).
+- **Demo logins:** `python -m app.cli demo-logins --out FILE` creates Keycloak accounts for the staff of the synthetic demo businesses (Morgan, Riley and the others of `data/fixtures.json`) on a demo install, because the seed creates them as claimable users and nothing else creates their accounts. It is the one account-creating command that is not limited to dev, so it is fenced: only people listed in the fixtures (example.com) of businesses matched by slug and seed id, nothing for any other business or person, refused under `DATA_PROFILE=regulated`; random passwords go only to a mode-600 file, never to output or logs; the authenticator app (`CONFIGURE_TOTP`) stays mandatory, only the forced password change is off (`--temporary-password` turns it on). Staff mode excludes the public judge, which uses `--judge` and its separate restrictions. See [M01](modules/M01-identity.md).
 - **Invitations:** an owner or admin invites by email and roles. The app creates a Keycloak user with required actions. If SMTP is configured, Keycloak emails the link. Otherwise the inviter sees a one-time temporary password once.
 - **Visitors** (public chat and appointment requests) never log in. Starting a public conversation issues a random `visitor_token`. It is stored hashed in `visitor_tokens` and set as a cookie scoped to `/api/v1/public/{slug}/`. It grants access to that one conversation only and expires after 7 days. **Conversation IDs alone never grant access.**
 
@@ -55,28 +55,32 @@ Permissions are strings `<module>.<resource>.<action>`. Each module declares its
 
 `R` = read, `W` = create/update, `A` = approve proposals of this type, `X` = admin action. A blank cell means no access.
 
-| Area (permission prefix) | owner | admin | operator | inventory_manager | marketing_manager | auditor |
-|---|---|---|---|---|---|---|
-| Business settings, locations, hours (`org.*`) | R W X | R W | R | R | R | R |
-| Staff and roles (`identity.membership.*`) | R W X | R W | | | | R |
-| Customers, notes, consent (`crm.*`) | R W | R W | R W | R | R | R |
-| Conversations and replies (`conversations.*`) | R W | R W | R W | | R | R |
-| Catalog (`catalog.*`) | R W | R W | R | R W | R | R |
-| Scheduling and appointments (`scheduling.*`) | R W | R W | R W | R | | R |
-| Stock view (`inventory.stock.read`) | R | R | R | R | | R |
-| Stock adjustment (`inventory.stock.adjust`) | W | W | | W | | |
-| Reorder rules (`inventory.reorder.*`) | R W | R W | R | R W | | R |
-| Marketing (`marketing.*`) | R W | R W | | | R W | R |
-| Approvals queue (`approvals.proposal.read`) | R | R | R | R | R | R |
-| Approve `scheduling.*`, `crm.*`, `conversations.*` actions | A | A | A | | | |
-| Approve `inventory.*` actions | A | A | | A | | |
-| Approve `marketing.*` send actions | A | A | | | A | |
-| Audit log (`audit.event.read`, `audit.export`) | R X | R | | | | R X |
-| AI assistant use (`ai.assistant.use`) | ✓ | ✓ | ✓ | ✓ | ✓ | (read-only questions) |
-| AI policy and budgets (`ai.settings.*`) | R W | R | | | | R |
-| System, backups, erasure (`admin_ops.*`) | R X | R | | | | |
+| Area (permission prefix) | owner | admin | demo_reviewer | operator | inventory_manager | marketing_manager | auditor |
+|---|---|---|---|---|---|---|---|
+| Business settings, locations, hours (`org.*`) | R W X | R W | R | R | R | R | R |
+| Staff and roles (`identity.membership.*`) | R W X | R W | R | | | | R |
+| Customers, notes, consent (`crm.*`) | R W | R W | R W | R W | R | R | R |
+| Conversations and replies (`conversations.*`) | R W | R W | R W | R W | | R | R |
+| Catalog (`catalog.*`) | R W | R W | R W | R | R W | R | R |
+| Scheduling and appointments (`scheduling.*`) | R W | R W | R W | R W | R | | R |
+| Stock view (`inventory.stock.read`) | R | R | R | R | R | | R |
+| Stock adjustment (`inventory.stock.adjust`) | W | W | W | | W | | |
+| Reorder rules (`inventory.reorder.*`) | R W | R W | R W | R | R W | | R |
+| Marketing (`marketing.*`) | R W | R W | R W | | | R W | R |
+| Approvals queue (`approvals.proposal.read`) | R | R | R | R | R | R | R |
+| Approve `scheduling.*`, `crm.*`, `conversations.*` actions | A | A | A | A | | | |
+| Approve `inventory.*` actions | A | A | A | | A | | |
+| Approve `marketing.*` send actions | A | A | A | | | A | |
+| Audit log (`audit.event.read`, `audit.export`) | R X | R | R | | | | R X |
+| AI assistant use (`ai.assistant.use`) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | (read-only questions) |
+| AI policy and budgets (`ai.settings.*`) | R W | R | R | | | | R |
+| System, backups, erasure (`admin_ops.*`) | R X | R | R | | | | |
 
-**Approval rule:** who may approve a proposal depends on its `action_type` (`approvals.policy.APPROVER_PERMISSION[action_type]`). By default the creator of a staff-originated proposal cannot approve it. A business setting `allow_self_approval` (default `false`; `true` for one-person businesses) changes that. Assistant-originated proposals can be approved by any staff member holding the approve permission, including the user the assistant was helping.
+**Approval rule:** who may approve a proposal depends on its `action_type` (`approvals.policy.APPROVER_PERMISSION[action_type]`). By default the creator of a staff-originated proposal cannot approve it. A business setting `allow_self_approval` (default `false`; `true` for one-person businesses) changes that. The same self-approval check applies to assistant-originated proposals: the user who asked for the proposal cannot approve it while `allow_self_approval=false`.
+
+`demo_reviewer` is exactly `admin` minus `org.settings.write`, `org.business.write`, `org.location.write` and
+`identity.membership.write`; it also lacks every owner-only permission. It can operate synthetic records, so an
+operator resets the shared demo between rehearsals. It is not a read-only sandbox.
 
 ## Network exposure
 

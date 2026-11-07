@@ -27,7 +27,7 @@ def test_seed_reproduces_the_demo_story(registry) -> None:  # type: ignore[no-un
     clock.set_clock(lambda: datetime(2026, 11, 5, 17, 30, tzinfo=UTC))
     counts = seed()
     assert counts["example-cycle-works"] == {
-        "staff": 7,
+        "staff": 8,
         "kb_articles": 6,
         "catalog_items": 7,
         "customers": 6,
@@ -450,3 +450,29 @@ def test_reset_restores_live_guarded_cycle_shadow_garden_and_ask_dental(registry
     assert "discount" in cycle.settings["ai_reply_guardrail"]
     assert by_slug["example-garden-store"].shadow is True
     assert by_slug["example-dental-clinic"].level == "ask"
+
+
+def test_reset_restores_judge_membership_in_all_businesses_and_retains_linked_user(
+    registry: Any, owner_engine: Engine
+) -> None:
+    from app.cli import main
+
+    seed()
+    with owner_engine.begin() as db:
+        user_id = db.execute(text("select id from users where email='judge@example.com'")).scalar_one()
+        db.execute(text("update users set oidc_subject='kc-judge' where id=:id"), {"id": user_id})
+        db.execute(text("update memberships set status='removed' where user_id=:id"), {"id": user_id})
+    main(["reset-demo", "--yes"])
+    with owner_engine.connect() as db:
+        rows = db.execute(
+            text(
+                "select u.id,u.oidc_subject,m.status,r.role,b.slug from users u "
+                "join memberships m on m.user_id=u.id join role_grants r on r.membership_id=m.id "
+                "join businesses b on b.id=m.business_id where u.email='judge@example.com'"
+            )
+        ).all()
+    assert len(rows) == 3
+    assert {r.slug for r in rows} == {"example-cycle-works", "example-garden-store", "example-dental-clinic"}
+    assert all(
+        (r.id, r.oidc_subject, r.status, r.role) == (user_id, "kc-judge", "active", "demo_reviewer") for r in rows
+    )

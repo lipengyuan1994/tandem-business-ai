@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.platform.context import Context
 
-from . import keycloak_admin, repository
+from . import keycloak_admin, public, repository
 from .login import PENDING_PREFIX
 
 State = Literal["created", "reset", "exists", "conflict"]
@@ -58,6 +58,32 @@ def active_staff(db: Session, ctx: Context) -> dict[str, StaffIdentity]:
     }
 
 
+def ensure_judge_membership(db: Session, ctx: Context, email: str, display_name: str) -> None:
+    """Add only the judge to an already validated seeded business; preserve every other member and demo record.
+
+    Use the seed's claimable-user path, retain a linked subject, and write only missing grants/memberships or a
+    necessary membership reactivation. The caller validates ALL demo business slugs/ids before any writes.
+    """
+    repository.lock_owner_changes(db, ctx)
+    user_id = public.ensure_user(db, email, display_name)
+    user = repository.get_user(db, user_id)
+    assert user is not None
+    if user.status != "active":
+        raise SystemExit("refusing: judge user is disabled; no login provisioned")
+    membership = repository.get_membership_for_user(db, ctx, user_id)
+    if membership is not None and repository.membership_roles(db, ctx, membership.id) - {"demo_reviewer"}:
+        raise SystemExit("refusing: judge has unexpected roles; review its grants before making a public login")
+    public.ensure_membership(db, ctx, user_id, ["demo_reviewer"], "Demo reviewer")
+    membership = repository.get_membership_for_user(db, ctx, user_id)
+    assert membership is not None
+    if membership.status != "active":
+        membership.status = "active"
+        membership.version += 1
+    if user.display_name != display_name:
+        user.display_name = display_name
+    db.flush()
+
+
 def ensure_demo_login(person: StaffIdentity, *, reset_passwords: bool, temporary_password: bool) -> DemoLogin:
     """Give one person a Keycloak login. Idempotent: an account that exists is left alone unless `reset_passwords`.
 
@@ -88,3 +114,27 @@ def ensure_demo_login(person: StaffIdentity, *, reset_passwords: bool, temporary
         existing_ok=False,  # an account that appeared meanwhile has another password: do not claim it is ours
     )
     return DemoLogin("created", password)
+
+
+def ensure_judge_login(person: StaffIdentity, password: str, *, reset_password: bool) -> DemoLogin:
+    """Same identity conflict rules as staff; fixed env password, no self-service or second factor."""
+    existing = keycloak_admin.find_user_id(person.email)
+    if person.linked_subject is not None and existing != person.linked_subject:
+        return DemoLogin("conflict", reason="the Keycloak account is missing or differs from the linked identity")
+    state: State = "exists"
+    if existing is None:
+        existing = keycloak_admin.create_user(
+            person.email,
+            person.display_name,
+            password,
+            temporary=False,
+            required_actions=[],
+            existing_ok=False,
+        )
+        state = "created"
+    # Strip account authority before resetting a password; retrying repairs a partially completed setup.
+    keycloak_admin.harden_judge_user(existing)
+    if state == "exists" and reset_password:
+        keycloak_admin.reset_judge_password(existing, password)
+        state = "reset"
+    return DemoLogin(state)

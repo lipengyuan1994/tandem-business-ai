@@ -18,6 +18,14 @@ for script in smoke.sh upgrade.sh restore.sh wait-backup-healthy.sh watchdog.sh 
   install -m 0755 "$here/$script" "$dest/$script"
 done
 install -m 0644 "$here/watchdog.py" "$dest/watchdog.py"
+# Preserve a previously rendered public credential asset when staging an upgrade in place.
+mkdir -p "$dest/themes/tandem-demo/login/resources/js"
+install -m 0644 "$deploy/keycloak/themes/tandem-demo/login/theme.properties" "$dest/themes/tandem-demo/login/theme.properties"
+install -m 0644 "$deploy/keycloak/themes/tandem-demo/login/resources/js/judge-login.js" "$dest/themes/tandem-demo/login/resources/js/judge-login.js"
+if [ ! -f "$dest/themes/tandem-demo/login/resources/js/demo-credentials.js" ]; then
+  install -m 0644 "$deploy/keycloak/themes/tandem-demo/login/resources/js/demo-credentials.js" "$dest/themes/tandem-demo/login/resources/js/demo-credentials.js"
+fi
+install -m 0755 "$here/configure-demo-judge.py" "$dest/configure-demo-judge.py"
 mkdir -p "$dest/config"
 for file in "$deploy"/config/*.yaml; do
   [ "$(basename "$file")" = ai-routes.yaml ] && continue

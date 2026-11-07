@@ -409,3 +409,151 @@ the follow-up asking for 20 % off was held by the guardrail ("a person will repl
 Customer-side demo video (2:02, macOS voice) rendered from Playwright recordings of the public pages: Lena's chat,
 Example Courier Co.'s request form, the dental emergency hand-over. Recording tools live in `frontend/output/video/`
 (gitignored); storyboard in `docs/demo-video/storyboard.md`. Staff side waits for the owner to sign in.
+
+
+## 2026-11-07 — P10-J public judge login (Codex, EVENT; main, uncommitted)
+
+Owner-requested local implementation: Demo reviewer is exactly admin minus the three org writes and membership
+write (48 permissions; complete enumerated set in the P10-J card). Added the role/schema/DB constraint migration,
+fixture judge and three reset-safe memberships, dedicated demo-logins --judge, account-role/group/OTP removal and
+old Keycloak session logout, explicit fixed-password repair under password history, and a demo-only theme with a
+public credential asset rendered from DEMO_JUDGE_PASSWORD. Both realm imports retain their default theme.
+No new dependency, installation, service, container, API/model call, cloud change, deployment, commit or push.
+Existing VM commands, planned reset implications and activation/withdrawal steps are in the install runbook.
+
+Final verification (2026-11-07, approximately 19:43 UTC):
+
+- `make -o test-db check`: ALL PASSED **with the explicit scope below**. 2,422 backend tests, 95% coverage;
+  584 frontend tests; 290 fixture rows in 33 tables; backend Ruff/format/mypy and frontend lint/types;
+  offline deployment regressions 110 run (91 passed, 19 skipped), install dry run, licenses and gitleaks pass.
+- Existing local `smb_j1` was used; no Docker DB startup. All 35 tests in notifications/tests/test_smtp.py were
+  excluded to honor database-only network access. No test was persistently skipped or weakened.
+- Focused backend command: `cd backend && .venv/bin/python -m pytest -q -x --tb=short -p no:cacheprovider
+  app/modules/identity/tests/test_demo_judge.py app/modules/identity/tests/test_staff.py
+  tests/integration/test_demo_logins.py tests/integration/test_seed.py` → 62 passed. The final broad run also covers
+  the subsequent Keycloak-session logout assertion and admin/system/work-queue role-list updates.
+- `cd frontend && pnpm vitest run` → 584 passed (also 9 focused identity/theme tests passed).
+  `pnpm typecheck`, `pnpm tsc --noEmit`, `pnpm lint` → passed.
+- `python3 -I data/validate_fixtures.py` → passed.
+  `DEPLOY_CHECK_OFFLINE=1 DEPLOY_CHECK_NO_DOWNLOADS=1 bash deploy/scripts/check-deploy.sh` → passed with skips above.
+- Gitleaks also passed against a staged theme rendered with an intentionally public synthetic test password;
+  documented brace-expanded permissions were compared exactly against all 48 code permissions.
+- Native arm64 manager/interpreters/Node and compiled psycopg/pydantic extensions verified; no runtime was installed.
+- Untested: SMTP delivery; Docker Compose resolution, actual Caddy, Terraform providers and cloud-init schema;
+  live Keycloak/browser/CSP, effective account roles, direct required-action/recovery lockout prevention and actual
+  password-history repair; existing VM rollout. Faked Keycloak calls do not verify these live requirements.
+  Public activation needs those live security checks. Judges share mutable records, so reset remains the recovery
+  boundary; this change does not create per-judge isolation.
+
+Exact scoped make invocation from the checkout root:
+
+```bash
+UV_OFFLINE=1 UV_NO_SYNC=1 UV_PYTHON_DOWNLOADS=never \
+UV_CACHE_DIR=/private/tmp/tandem-judge-uv-cache \
+UV_PYTHON="$PWD/backend/.venv/bin/python" \
+PYTEST_ADDOPTS='--ignore=app/modules/notifications/tests/test_smtp.py -p no:cacheprovider -x --tb=short' \
+DEPLOY_CHECK_OFFLINE=1 DEPLOY_CHECK_NO_DOWNLOADS=1 make -o test-db check
+```
+
+<details>
+<summary>Changed files (complete local inventory)</summary>
+
+- `.gitleaks.toml`
+- `CHANGELOG.md`
+- `EVENT_WORK.md`
+- `README.md`
+- `backend/app/cli.py`
+- `backend/app/demo_logins.py`
+- `backend/app/modules/admin_ops/tests/test_email.py`
+- `backend/app/modules/admin_ops/tests/test_system.py`
+- `backend/app/modules/identity/README.md`
+- `backend/app/modules/identity/demo_logins.py`
+- `backend/app/modules/identity/keycloak_admin.py`
+- `backend/app/modules/identity/models.py`
+- `backend/app/modules/identity/roles.py`
+- `backend/app/modules/identity/schemas.py`
+- `backend/app/modules/identity/tests/test_demo_judge.py`
+- `backend/app/modules/identity/tests/test_staff.py`
+- `backend/migrations/versions/20261107_1700_demo_reviewer.py`
+- `backend/openapi.json`
+- `backend/tests/integration/test_a1_work_queue.py`
+- `backend/tests/integration/test_demo_logins.py`
+- `backend/tests/integration/test_seed.py`
+- `data/README.md`
+- `data/fixtures.json`
+- `data/schema.sql`
+- `data/validate_fixtures.py`
+- `deploy/compose/compose.prod.yml`
+- `deploy/keycloak/themes/tandem-demo/login/resources/js/demo-credentials.js`
+- `deploy/keycloak/themes/tandem-demo/login/resources/js/judge-login.js`
+- `deploy/keycloak/themes/tandem-demo/login/theme.properties`
+- `deploy/scripts/configure-demo-judge.py`
+- `deploy/scripts/stage.sh`
+- `deploy/tests/test_demo_judge_theme.py`
+- `docs/roadmap/01-product-and-scope.md`
+- `docs/roadmap/06-security-and-privacy.md`
+- `docs/roadmap/ai/cards/P10-J.md`
+- `docs/roadmap/modules/M01-identity.md`
+- `docs/roadmap/phases/STATUS.md`
+- `docs/runbooks/install.md`
+- `frontend/src/api/schema.d.ts`
+- `frontend/src/features/identity/hooks.ts`
+- `frontend/src/features/identity/login-theme.test.ts`
+- `frontend/src/features/identity/staff.test.tsx`
+- `frontend/src/locales/en.json`
+
+</details>
+
+
+## 2026-11-07 — P10-J no-reset follow-up (Codex, EVENT; main, uncommitted)
+
+Owner correction: the existing demo's video state must survive judge setup. This supersedes the prior P10-J
+procedure's reset recommendation. The current install runbook explicitly forbids seed/reset as part of adding
+this login to an existing VM.
+
+`demo-logins --judge` now validates all three demo business slugs AND fixture ids before any app write, then uses
+identity's seed-compatible ensure_user/ensure_membership path to add the claimable judge user and missing reviewer
+grants/memberships. It reactivates only the judge's inactive membership, retains linked subjects and other members,
+and leaves existing app rows unchanged on reruns. Even a valid demo --business selector still provisions all three;
+non-demo selectors/ids and regulated profiles refuse before writes. Disabled app users and unexpected elevated judge
+grants refuse rather than exposing an unsafe public login. Existing Keycloak setup/hardening behavior is retained.
+No new migration, dependency, service/container, installation, model/API call, VM operation, reset, commit or push.
+Fresh fixture seed/reset behavior is retained and covered by the seed suite on the isolated local test database.
+
+Follow-up files:
+- `backend/app/demo_logins.py`, `backend/app/modules/identity/demo_logins.py`
+- `backend/tests/integration/test_judge_provisioning.py` (new)
+- `docs/runbooks/install.md`, `docs/roadmap/ai/cards/P10-J.md`, `CHANGELOG.md`
+- `backend/app/modules/identity/README.md`, `docs/roadmap/modules/M01-identity.md`, `data/README.md`
+- `docs/roadmap/phases/STATUS.md`, `EVENT_WORK.md`
+
+Verification (2026-11-07, approximately 19:55 UTC):
+
+```bash
+cd backend
+.venv/bin/python -m pytest -q -x --tb=short -p no:cacheprovider \
+  app/modules/identity/tests tests/integration/test_demo_logins.py \
+  tests/integration/test_judge_provisioning.py tests/integration/test_seed.py
+```
+
+121 passed in 124.74 seconds. Includes 10 new provisioning cases: existing-install creation without reset;
+second-run app id/row/version/timestamp stability; full snapshots of every non-judge row/table (including business
+records and a customized guardrail) and unrelated members; missing-grant/membership repair and reactivation while
+retaining a linked subject; missing/spoofed business and regulated/non-demo preflight; disabled/privileged judge refusal.
+The four initial preservation/idempotency tests also passed separately. Keycloak calls were faked.
+Verified existing native arm64 Python/uv and compiled psycopg/pydantic extensions; no runtime installed.
+
+From the checkout root:
+
+```bash
+UV_OFFLINE=1 UV_NO_SYNC=1 UV_PYTHON_DOWNLOADS=never \
+UV_CACHE_DIR=/private/tmp/tandem-judge-uv-cache \
+UV_PYTHON="$PWD/backend/.venv/bin/python" \
+make -o test-db -o backend-test -o frontend-test -o deploy-check check
+```
+
+ALL PASSED: fixtures (290 rows/33 tables), backend Ruff/format/mypy, frontend lint/typecheck, both license checks,
+and gitleaks. Backend tests ran separately as above; the full backend, frontend and deploy suites were not rerun in
+this follow-up. No Docker or network beyond the existing local `smb_j1` test database was used. Live VM/Keycloak
+verification and the previously recorded lockout/CSP unknowns remain untested. No claim that the earlier broad test
+run verifies this follow-up's changes; the new 121-test run is its backend evidence.

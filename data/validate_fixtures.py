@@ -16,7 +16,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 HERE = Path(__file__).resolve().parent
-ROLES = {"owner", "admin", "operator", "inventory_manager", "marketing_manager", "auditor"}
+ROLES = {"owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor"}
 FICTIONAL_PHONE = re.compile(r"^(\+1\d{3}5550[1]\d{2}|\+447700900\d{3})$")  # 555-01xx (US) and Ofcom drama range (UK)
 
 

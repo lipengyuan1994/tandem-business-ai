@@ -164,6 +164,8 @@ services:
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
     volumes:
       - ./realm-smb.prod.json:/opt/keycloak/data/import/realm-smb.json:ro
+      # Available on all hosts, selected explicitly only on synthetic demos (never in realm imports).
+      - ./themes:/opt/keycloak/themes:ro
     mem_limit: 768m
     healthcheck:
       # Healthy only when the realm itself answers: the management "ready" endpoint turns green before the realm

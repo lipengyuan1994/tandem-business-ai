@@ -15,3 +15,10 @@ Spec: [docs/roadmap/modules/M01-identity.md](../../../../docs/roadmap/modules/M0
 - Owner status changes require owner authority, including reactivation. Membership and role edits share a business-scoped transaction lock before checking the last-active-owner invariant.
 
 P10-D: public.dictation_names(db, ctx, entity_ids) returns bounded permission/business-scoped names only.
+
+P10-J: `demo_reviewer` = admin minus org writes and membership writes; policy 2026-11-07.1.
+`demo-logins --judge` uses the env public password, clears actions/OTP and removes Keycloak roles/groups;
+`--reset-password` repairs the fixed password (including password history). Staff mode excludes the judge.
+Fixtures restore judge memberships in all three businesses on reset, preserving the linked global user.
+`--judge` also ensures the fixture app user and active reviewer memberships/grants in all three validated demo
+businesses without seed/reset, preserving other app rows and linked subjects; reruns leave app rows unchanged.

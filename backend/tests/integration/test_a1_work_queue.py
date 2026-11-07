@@ -53,7 +53,7 @@ def test_work_queue_and_exceptions_contents_pagination_and_rls(shop: Any) -> Non
     assert {i["kind"] for i in items} == {"proposal", "outbound_mail", "supplier_quote"}
     pending = next(i for i in items if i["id"] == str(p["id"]))
     assert pending["approve_permission"] == "purchasing.po.approve"
-    assert pending["waiting_on_roles"] == ["admin", "owner"]
+    assert pending["waiting_on_roles"] == ["admin", "demo_reviewer", "owner"]
     mail = next(i for i in items if i["id"] == str(ident))
     assert mail["stop_until"] and mail["status"] == "pending"
     supplier = next(i for i in items if i["kind"] == "supplier_quote")

@@ -5516,7 +5516,7 @@ export interface components {
              */
             email: string;
             /** Roles */
-            roles: ("owner" | "admin" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
+            roles: ("owner" | "admin" | "demo_reviewer" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
         };
         /** InvitationOut */
         InvitationOut: {
@@ -5535,7 +5535,7 @@ export interface components {
              */
             id: string;
             /** Roles */
-            roles: ("owner" | "admin" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
+            roles: ("owner" | "admin" | "demo_reviewer" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
             /** Status */
             status: string;
             /**
@@ -5745,7 +5745,7 @@ export interface components {
              */
             membership_id: string;
             /** Roles */
-            roles: ("owner" | "admin" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
+            roles: ("owner" | "admin" | "demo_reviewer" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
             /** Status */
             status: string;
             /** Title */
@@ -5779,7 +5779,7 @@ export interface components {
             /** Business Slug */
             business_slug: string;
             /** Roles */
-            roles: ("owner" | "admin" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
+            roles: ("owner" | "admin" | "demo_reviewer" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
         };
         /** MessageCreate */
         MessageCreate: {
@@ -7135,7 +7135,7 @@ export interface components {
         /** RolesIn */
         RolesIn: {
             /** Roles */
-            roles: ("owner" | "admin" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
+            roles: ("owner" | "admin" | "demo_reviewer" | "operator" | "inventory_manager" | "marketing_manager" | "auditor")[];
         };
         /** RuleIn */
         RuleIn: {

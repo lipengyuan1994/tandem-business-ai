@@ -110,3 +110,47 @@ def test_role_matrix_sanity() -> None:
         "org.business.admin",
     }
     assert ROLES["admin"] < ROLES["owner"]
+
+
+def test_demo_reviewer_has_exactly_admin_permissions_except_configuration() -> None:
+    excluded = {"org.settings.write", "org.business.write", "org.location.write", "identity.membership.write"}
+    forbidden = excluded | {
+        "ai.settings.write",
+        "identity.owner.grant",
+        "audit.export",
+        "admin_ops.data.manage",
+        "org.business.admin",
+    }
+    assert ROLES["demo_reviewer"] == ROLES["admin"] - excluded
+    assert not (ROLES["demo_reviewer"] & forbidden)
+
+
+def test_demo_reviewer_can_read_staff_but_cannot_change_roles_or_invite(app: Any) -> None:
+    business = make_business("example-cycle-works")
+    judge = login_as(app, business, ["demo_reviewer"])
+    target = add_member(make_user("riley@example.com"), business, ["admin"])
+    assert judge.get("/api/v1/identity/members").status_code == 200
+    assert judge.put(f"/api/v1/identity/members/{target}/roles", json={"roles": ["owner"]}).status_code == 403
+    assert (
+        judge.patch(f"/api/v1/identity/members/{target}", json={"version": 1, "status": "suspended"}).status_code == 403
+    )
+    assert (
+        judge.post(
+            "/api/v1/identity/invitations", json={"email": "x@example.com", "display_name": "X", "roles": ["admin"]}
+        ).status_code
+        == 403
+    )
+
+
+def test_demo_reviewer_cannot_mutate_business_ai_or_autonomy_settings(app: Any) -> None:
+    business = make_business("example-cycle-works")
+    judge = login_as(app, business, ["demo_reviewer"])
+    assert judge.get("/api/v1/org/business").status_code == 200
+    settings = judge.get("/api/v1/org/settings").json()
+    assert judge.patch("/api/v1/org/settings", json=settings).status_code == 403
+    assert judge.patch("/api/v1/org/business", json={"version": 1, "name": "Changed"}).status_code == 403
+    assert judge.post("/api/v1/org/locations", json={"name": "Changed", "timezone": "UTC"}).status_code == 403
+    assert judge.patch("/api/v1/ai/agents/front_desk", json={"version": 1, "enabled": False}).status_code == 403
+    assert judge.put("/api/v1/ai/autonomy/rules", json={}).status_code == 403
+    assert judge.post("/api/v1/ai/autonomy/pause").status_code == 403
+    assert judge.post("/api/v1/ai/autonomy/resume").status_code == 403

@@ -79,4 +79,4 @@ export function useUpdateMember() {
   })
 }
 
-export const ROLES: Role[] = ["owner", "admin", "operator", "inventory_manager", "marketing_manager", "auditor"]
+export const ROLES: Role[] = ["owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor"]

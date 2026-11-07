@@ -26,10 +26,11 @@ def app(registry: Registry) -> Any:
     return create_app(registry)
 
 
-def test_only_owner_and_admin_may_read_the_system_page(app: Any) -> None:
+def test_owner_admin_and_demo_reviewer_may_read_the_system_page(app: Any) -> None:
     business = make_business()
     assert login_as(app, business, ["owner"]).get("/api/v1/admin/system").status_code == 200
     assert login_as(app, business, ["admin"]).get("/api/v1/admin/system").status_code == 200
+    assert login_as(app, business, ["demo_reviewer"]).get("/api/v1/admin/system").status_code == 200
     for role in ("operator", "inventory_manager", "marketing_manager", "auditor"):
         assert login_as(app, business, [role]).get("/api/v1/admin/system").status_code == 403
 

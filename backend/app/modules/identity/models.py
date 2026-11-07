@@ -75,7 +75,8 @@ class RoleGrant(BusinessScopedBase):
             "uq_role_grants_active", "membership_id", "role", unique=True, postgresql_where=text("revoked_at is null")
         ),
         CheckConstraint(
-            "role in ('owner','admin','operator','inventory_manager','marketing_manager','auditor')", name="role"
+            "role in ('owner','admin','demo_reviewer','operator','inventory_manager','marketing_manager','auditor')",
+            name="role",
         ),
     )
 

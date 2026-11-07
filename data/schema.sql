@@ -33,7 +33,7 @@ CREATE TABLE memberships (
 );
 CREATE TABLE role_grants (
   id TEXT NOT NULL, business_id TEXT NOT NULL, membership_id TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('owner','admin','operator','inventory_manager','marketing_manager','auditor')),
+  role TEXT NOT NULL CHECK (role IN ('owner','admin','demo_reviewer','operator','inventory_manager','marketing_manager','auditor')),
   PRIMARY KEY (business_id, id), UNIQUE (business_id, membership_id, role),
   FOREIGN KEY (business_id, membership_id) REFERENCES memberships(business_id, id)
 );

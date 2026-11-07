@@ -127,3 +127,10 @@ to the seed's business-local day (weekends move to Friday), so recall examples r
 Default seed and demo-logins include all three businesses. The original AI test helper explicitly selects
 the cycle/garden fixtures; dental has its own integration cases. The clinic supplier and four supply offers
 are stored in the portable fixture tables and created through the existing purchasing service.
+
+## Public judge account (P10-J)
+
+`judge@example.com` (Demo Judge) has one active `demo_reviewer` membership in each of the three businesses.
+`seed` and `reset-demo` restore these memberships; reset preserves users and linked Keycloak subjects.
+Use `demo-logins --judge` to ensure this app user and all three memberships on an existing seeded install without
+resetting its demo state; normal staff mode deliberately excludes the judge.

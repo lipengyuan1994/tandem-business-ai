@@ -2,6 +2,21 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.16 (2026-11-07)
+
+- **Public judge login:** synthetic `judge@example.com`, active in all three demo businesses, with the new
+  Demo reviewer role (admin operations except business/location/settings/staff writes; no owner-only permissions).
+- `demo-logins --judge` uses `DEMO_JUDGE_PASSWORD`, no required actions or second factor, and removes Keycloak
+  account authority. It creates the app user and missing active `demo_reviewer` memberships/grants in all three
+  validated seeded businesses without reseeding or resetting; existing demo records, other members and linked
+  identities are preserved. Staff logins retain TOTP and random passwords. Explicit password repair tolerates password history.
+- **Demo-only login theme:** staged `tandem-demo` assets fill empty username/password fields and explain self-approval
+  and simulated mail. The public password is rendered from the operator environment at deploy time.
+- **Migration:** `20261107_1700_demo_reviewer`, after `20261107_1600_reply_guardrail` (role-grant check constraint).
+- **After upgrade, existing demo only:** render the credential asset, run `demo-logins --judge --reset-password`, mount themes,
+  and explicitly set the existing realm's `loginTheme` with kcadm. See [judge setup](docs/runbooks/install.md#demo-installs-only-public-judge-login).
+  Customer realm imports keep the default theme. No deploy or live sign-in verification in this change.
+
 ## 0.1.15 (2026-11-07)
 
 - **Assistant knows today's date:** asked "which mornings next week are free?", the staff assistant searched August

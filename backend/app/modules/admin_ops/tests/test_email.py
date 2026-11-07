@@ -20,13 +20,17 @@ def app(registry: Registry, monkeypatch: pytest.MonkeyPatch) -> Any:
     return create_app(registry)
 
 
-@pytest.mark.parametrize("role", ["owner", "admin", "operator", "inventory_manager", "marketing_manager", "auditor"])
+@pytest.mark.parametrize(
+    "role", ["owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor"]
+)
 def test_test_email_permission(app: Any, role: str, owner_engine: Engine) -> None:
     client = login_as(app, make_business(), [role])
     response = client.post("/api/v1/admin/test-email", json={"to": "ada@example.com"})
-    assert response.status_code == (202 if role in {"owner", "admin"} else 403)
+    assert response.status_code == (202 if role in {"owner", "admin", "demo_reviewer"} else 403)
     with owner_engine.connect() as conn:
-        assert conn.execute(text("select count(*) from outbox_messages")).scalar_one() == (role in {"owner", "admin"})
+        assert conn.execute(text("select count(*) from outbox_messages")).scalar_one() == (
+            role in {"owner", "admin", "demo_reviewer"}
+        )
 
 
 def test_email_rate_limit_and_audit_and_host_only(

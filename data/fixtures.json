@@ -284,6 +284,12 @@
         "email": "rowan.dental@example.com",
         "display_name": "Rowan Example",
         "is_mock": 1
+      },
+      {
+        "id": "user-judge",
+        "email": "judge@example.com",
+        "display_name": "Demo Judge",
+        "is_mock": 1
       }
     ],
     "memberships": [
@@ -370,6 +376,27 @@
         "user_id": "user-dental-rowan",
         "status": "active",
         "title": "Front desk"
+      },
+      {
+        "id": "mem-judge-cycle",
+        "business_id": "biz-cycle",
+        "user_id": "user-judge",
+        "status": "active",
+        "title": "Demo reviewer"
+      },
+      {
+        "id": "mem-judge-garden",
+        "business_id": "biz-garden",
+        "user_id": "user-judge",
+        "status": "active",
+        "title": "Demo reviewer"
+      },
+      {
+        "id": "mem-judge-dental",
+        "business_id": "biz-dental",
+        "user_id": "user-judge",
+        "status": "active",
+        "title": "Demo reviewer"
       }
     ],
     "role_grants": [
@@ -444,6 +471,24 @@
         "id": "rg-dental-rowan",
         "membership_id": "mem-dental-rowan",
         "role": "operator"
+      },
+      {
+        "id": "rg-judge-cycle",
+        "business_id": "biz-cycle",
+        "membership_id": "mem-judge-cycle",
+        "role": "demo_reviewer"
+      },
+      {
+        "id": "rg-judge-garden",
+        "business_id": "biz-garden",
+        "membership_id": "mem-judge-garden",
+        "role": "demo_reviewer"
+      },
+      {
+        "id": "rg-judge-dental",
+        "business_id": "biz-dental",
+        "membership_id": "mem-judge-dental",
+        "role": "demo_reviewer"
       }
     ],
     "autonomy_rules": [

@@ -8,6 +8,8 @@ command creates the accounts. Unlike `dev-account` it works on a production inst
 * WHO: only staff listed in `data/fixtures.json` (synthetic, example.com), of businesses identified by their slug AND by
   the fixed id the seed gives them. Any other business is refused; a person not in the fixtures is never touched, even
   when they are a member of a demo business.
+* JUDGE: --judge ensures the fixture app user and all three reviewer memberships without seed/reset, then provisions
+  its fixed public password login; other members and demo state are untouched.
 * WHEN: never under the regulated data profile (an install for a real customer's records).
 * PASSWORDS: random, written only to the `--out` file (mode 600, replaced atomically, written after every account so a
   later failure cannot lose one), never printed or logged. The output names the file and the e-mail addresses.
@@ -36,6 +38,9 @@ from app.platform.ids import fixture_id
 from app.seed import DEFAULT_FIXTURES
 
 DEMO_DOMAIN = "@example.com"
+JUDGE_EMAIL = "judge@example.com"
+# Both bundled realms use length(12); Keycloak also enforces its active policy on create/reset.
+JUDGE_PASSWORD_MIN_LENGTH = 12
 FILE_HEADER = (
     "# Demo logins for the synthetic demo businesses. SECRET: keep this file private (mode 600), delete it when the\n"
     "# demo is over. One account per line: e-mail address, a space, password.\n"
@@ -158,7 +163,9 @@ def require_writable(path: Path) -> None:
 
 
 # --------------------------------------------------------------------------------------------------- the command
-def _targets(chosen: list[DemoBusiness]) -> tuple[list[StaffIdentity], dict[str, str]]:
+def _targets(
+    chosen: list[DemoBusiness], *, provision_judge: bool = False
+) -> tuple[list[StaffIdentity], dict[str, str]]:
     """The people to log in, from the database, and those skipped with the reason. Refuses an unfamiliar business."""
     resolver = build_registry().public_business_resolver
     assert resolver is not None
@@ -179,6 +186,9 @@ def _targets(chosen: list[DemoBusiness]) -> tuple[list[StaffIdentity], dict[str,
     for business in chosen:
         ctx = Context(request_id="cli", actor_kind="system", user_id=None, business_id=ids[business.slug])
         with transaction(ctx) as db:
+            if provision_judge:
+                for person in business.staff:
+                    identity_logins.ensure_judge_membership(db, ctx, person.email, person.display_name)
             members = identity_logins.active_staff(db, ctx)
         for person in business.staff:
             member = members.get(person.email)
@@ -230,8 +240,9 @@ def _report(
 
 
 def run(
-    out: Path,
+    out: Path | None,
     *,
+    judge: bool = False,
     businesses: list[str] | None = None,
     emails: list[str] | None = None,
     reset_passwords: bool = False,
@@ -244,18 +255,45 @@ def run(
             "refusing: DATA_PROFILE=regulated. Demo logins belong to installs that hold only the synthetic demo data; "
             "a regulated install holds a real customer's records."
         )
-    chosen = choose(load_demo_businesses(fixtures), businesses, emails)
+    if judge:
+        if temporary_password or (emails and {e.lower() for e in emails} != {JUDGE_EMAIL}):
+            raise SystemExit("refusing: --judge cannot use --temporary-password or select other staff")
+        password = os.environ.get("DEMO_JUDGE_PASSWORD", "")
+        if len(password) < JUDGE_PASSWORD_MIN_LENGTH:
+            raise SystemExit("refusing: DEMO_JUDGE_PASSWORD must be set and at least 12 characters (realm policy)")
+        emails = [JUDGE_EMAIL]
+    elif emails and JUDGE_EMAIL in {e.lower() for e in emails}:
+        raise SystemExit("refusing: use --judge for the public judge account")
+    catalog = load_demo_businesses(fixtures)
+    chosen = choose(catalog, businesses, emails)
+    if judge:
+        # --business still rejects non-demo slugs, but the shared judge always needs all three memberships.
+        chosen = choose(catalog, None, [JUDGE_EMAIL])
+    if not judge:
+        chosen = [replace(b, staff=tuple(p for p in b.staff if p.email != JUDGE_EMAIL)) for b in chosen]
     if not chosen:
         raise SystemExit("refusing: no demo staff selected")
-    out = Path(os.path.abspath(out))
-    require_writable(out)
+    if not judge:
+        if out is None:
+            raise SystemExit("refusing: staff logins require --out")
+        out = Path(os.path.abspath(out))
+        require_writable(out)
     settings = get_settings()
     if not settings.oidc_internal_issuer_url or not settings.keycloak_admin_client_secret.get_secret_value():
         raise SystemExit(
             "refusing: Keycloak admin access is not configured (OIDC_INTERNAL_ISSUER_URL, KEYCLOAK_ADMIN_*)"
         )
-    targets, skipped = _targets(chosen)
+    targets, skipped = _targets(chosen, provision_judge=judge)
+    if judge:
+        if skipped or len(targets) != 1:
+            raise SystemExit("refusing: judge must be an active member of the seeded demo businesses")
+        outcome = identity_logins.ensure_judge_login(targets[0], password, reset_password=reset_passwords)
+        if outcome.state == "conflict":
+            raise SystemExit(f"not usable: {JUDGE_EMAIL}: {outcome.reason}")
+        print(f"judge login: {JUDGE_EMAIL}: {outcome.state}; no TOTP or account-console roles")
+        return 0
 
+    assert out is not None
     credentials = read_credentials(out)
     outcomes: dict[str, DemoLogin] = {}
     wrote = False

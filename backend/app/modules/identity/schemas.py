@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-Role = Literal["owner", "admin", "operator", "inventory_manager", "marketing_manager", "auditor"]
+Role = Literal["owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor"]
 
 
 class UserBrief(BaseModel):

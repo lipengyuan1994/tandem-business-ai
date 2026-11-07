@@ -6,6 +6,7 @@ useDefault = true
 description = "Development-only dummy credentials and third-party/vendor folders"
 paths = [
   '''^\.env$''',
+  '''(^|/)themes/tandem-demo/login/resources/js/demo-credentials\.js$''',  # deliberately public judge password, rendered at deploy time
   '''^\.dev-credentials$''',  # gitignored local dev login (never committed)
   '''^\.demo-logins/''',  # gitignored passwords of the demo logins on the local dev stack (never committed)
   '''^install-[^/]+/''',  # gitignored installer output
