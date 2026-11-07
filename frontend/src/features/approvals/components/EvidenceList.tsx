@@ -7,7 +7,7 @@ export function EvidenceList({ evidence }: { evidence: Schemas["Evidence"][] }) 
   return (
     <ul className="space-y-2">
       {evidence.map((e, i) => (
-        <li key={i} className="rounded-md border p-2 text-sm">
+        <li key={i} className="rounded-md border p-2 text-sm [overflow-wrap:anywhere]">
           <span className="mr-2 text-xs uppercase text-muted-foreground">{t(`approvals.evidenceKinds.${e.kind}`)}</span>
           <q className="italic">{e.excerpt}</q>
         </li>

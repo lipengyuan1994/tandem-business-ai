@@ -2,6 +2,18 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.15 (2026-11-07)
+
+- **Assistant knows today's date:** asked "which mornings next week are free?", the staff assistant searched August
+  instead of November because, unlike the customer intake, it was not told the business-local date. It now is. New
+  eval case `copilot-next-week-slots`; live assistant eval 23/25 (earlier runs 78–83 %; the two failures reached the
+  right reorder proposal without the expected lookup step).
+- **Approvals layout:** a long reply no longer stretches the Approve button and the page sideways; long evidence
+  values wrap.
+- Both found while recording the demo video.
+
+- **Migrations, deployment files, route file:** none.
+
 ## 0.1.14 (2026-11-07)
 
 - **Answers from the knowledge base:** asked what a service includes ("what does a tune-up include?") or about

@@ -15,6 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette.types import Receive, Scope, Send
 
+from app.modules.org import public as org
 from app.platform import clock, ratelimit
 from app.platform.context import Context
 from app.platform.db import transaction
@@ -216,9 +217,13 @@ def prepare_message(
                             untrusted=True,
                         )
                     )
+            # Relative dates ("next week", "tomorrow") need the business-local date, as intake already has.
+            timezone = org.get_business_brief(db, ctx).timezone
+            local_now = clock.to_zone(clock.now(), timezone)
             spec = RunSpec(
                 use_case="copilot", prompt=prompt, tools=tools,
-                task=(f"You are {selected.name}. Your job: {selected.job} "
+                task=(f"Current business-local date and time: {local_now.isoformat()} ({timezone}).\n"
+                      f"You are {selected.name}. Your job: {selected.job} "
                       "Answer the latest staff message using only the available tools and the thread history."),
                 context_blocks=blocks, trigger_type="api", trigger_key=f"copilot:{message_id}",
             )  # fmt: skip

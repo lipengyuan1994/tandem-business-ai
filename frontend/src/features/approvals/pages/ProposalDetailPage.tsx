@@ -93,7 +93,7 @@ export function ProposalDetailPage() {
             <div className="flex flex-wrap gap-2">
               {p.can_decide ? (
                 <>
-                  <Button disabled={decide.isPending} onClick={() => decide.mutate({ decision: "approve", revision_id: rev.id, payload_hash: rev.payload_hash }, { onError: onDecisionError })}>
+                  <Button className="h-auto max-w-full whitespace-normal text-left [overflow-wrap:anywhere]" disabled={decide.isPending} onClick={() => decide.mutate({ decision: "approve", revision_id: rev.id, payload_hash: rev.payload_hash }, { onError: onDecisionError })}>
                     {t("approvals.approveEffect", { effect })}
                   </Button>
                   <Button variant="outline" onClick={() => setRejecting(true)}>{t("approvals.reject")}</Button>
