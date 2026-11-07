@@ -2,6 +2,16 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.12 (2026-11-07)
+
+- **New name:** the product is now **Tandem Business AI** (by OpenDL): browser tab, sidebar, sign-in page and API
+  title. Internal names (`smb-*` images, realm `smb`, Terraform) are unchanged.
+- **Demo address:** the demo moved to `https://tandemai.open-dl.com` (done on the VM before this release; see the
+  install runbook section "Move a running installation to your own domain").
+
+- **Migrations, deployment files, route file:** none. **Sign-in display name (existing installs, optional):** the
+  realm file is imported only once, so set the realm display name in Keycloak (done on the demo).
+
 ## 0.1.11 (2026-11-07)
 
 - **Real AI prices:** the route file now uses Vultr's own catalog prices (`GET /v1/models`, read 2026-11-07): input and
