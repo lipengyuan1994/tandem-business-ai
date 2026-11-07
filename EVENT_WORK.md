@@ -576,3 +576,5 @@ without a reset, the realm uses the `tandem-demo` theme, and Keycloak shows no r
 password as the only credential. The public sign-in page shows both fields prefilled (checked without submitting).
 Not verified live: an actual judge sign-in and the Keycloak self-service paths (account console, password/OTP links),
 which need someone to sign in; Claude does not sign in with passwords on the public host.
+
+Owner verified 2026-11-07: clicking Sign in on the prefilled page signs in as the Demo Judge without a one-time code ("Works for me"). The account-console lockout check was not separately reported.
