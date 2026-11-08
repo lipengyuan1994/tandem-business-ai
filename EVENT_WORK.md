@@ -623,3 +623,20 @@ excluded under the network restriction. Unverified: image build, live Caddy HTTP
 375 px browser layout, keyboard/a11y, live widget/chat/appointment/booking/judge flows, and the VM rollout. Unexpected
 internal errors retain Caddy's existing potential Server-header limitation; this is not claimed fixed. The
 adaptation and fake-curl tests do not establish those runtime requirements. No downloads or installs performed.
+
+## 2026-11-08 01:30 UTC: 0.1.17 rolled back, 0.1.18 released (demo clinic website live)
+
+- Owner moved networks; the Vultr API allow-list held only the owner's IPv6 range, so pushes waited until the Mac was
+  back on that network (the allow-list is the owner's to change; Claude did not edit it).
+- 0.1.17 upgrade on the VM rolled itself back twice on the clinic smoke check: first the new domain's certificate was
+  still being issued, then `/` answered 404 because Caddy's `not file` matcher treats the site root directory as missing.
+- 0.1.18 (commit d545f25): the matcher also tries `{path}index.html` (deploy test added); `smoke.sh` waits up to 90 s
+  (`SMOKE_DEMO_WAIT_SECONDS`) for a new clinic domain's first certificate. Verified in the built image (`/` 200,
+  missing page 404), deploy tests 129 passed, `check-deploy.sh` ALL PASSED (with Docker). Full `make check` not rerun:
+  only deploy files changed; the last full run (0.1.17 tree) passed.
+- VM: `DEMO_SITE_DOMAIN=tandemaidentaldemo.open-dl.com`, compose and smoke files uploaded (judge credential asset left as
+  generated on the VM), manual backup, `upgrade.sh 0.1.18` OK, smoke passed including all six clinic checks.
+- Dental `embed_allowed_origins` set to the clinic site through the org service as owner Ellery (audited). Browser check:
+  the site loads, "Chat with us" opens the clinic chat with the synthetic-data and emergency notices, no CSP errors.
+- `terraform plan` no changes; SSH closed; spend $9.49 of $200.
+
