@@ -43,7 +43,7 @@ cancelling through an emailed link.
 **Built on Vultr:** one Compute VM (Docker Compose, provisioned with Terraform), Vultr Serverless Inference for every
 model call (mimo, DeepSeek and Qwen models through a routing gateway, Qwen embeddings for search, Whisper for voice
 dictation), Object Storage for encrypted backups with a tested restore, and the Container Registry for versioned
-images. The whole public demo has cost under $10 of the $200 credit.
+images. The whole public demo has cost about $10 of the $200 credit.
 
 **Measured:** synthetic evaluation suites on live Vultr models: reply guardrail 16/16 (two runs), prompt injection
 15/15, grounding 10/10, retrieval 8/8, intake 76/78, Customer Care 18/19. Over 2,400 backend tests at 96% coverage.

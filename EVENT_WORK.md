@@ -654,5 +654,7 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   08:45 by self-service, Ellery's authenticator registered.
 - Submission materials in `docs/submission/`: lablab form text, 10-slide PDF, cover image.
 - 0.1.19: System page AI panel shows today's usage instead of the old "not installed" placeholder. Frontend 585 tests,
-  type check and lint pass; full `make check` not rerun (frontend-only change).
+  type check and lint pass; full `make check` not rerun (frontend-only change).- 0.1.19 released 15:29 UTC: manual backup, upgrade OK, smoke passed, SSH closed, `terraform plan` no changes; pending
+  charges $10.38, so the video, slides and form text now say "about $10". The new System panel was not checked in a
+  signed-in browser after release (needs a staff login).
 
