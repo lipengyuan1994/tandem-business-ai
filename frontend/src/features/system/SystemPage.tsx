@@ -7,6 +7,7 @@ import { useSession } from "@/app/session-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { useAiUsage } from "@/features/ai/api"
 import { DataPanel } from "./DataPanel"
 import { EmailPanel } from "./EmailPanel"
 import { BACKUP_WARN_AFTER_SECONDS, formatAge, useSystemStatus } from "./hooks"
@@ -48,9 +49,7 @@ export function SystemPage() {
           <p>{t("system.outboxIssues", { count: s.outbox.needs_attention })}</p>
           <p className="text-sm text-muted-foreground">{Object.entries(s.outbox.counts).map(([k, n]) => `${t(`status.${k}`, { defaultValue: k })}: ${n}`).join(" · ") || t("system.noMessages")}</p>
         </Panel>
-        <Panel title={t("system.ai")} ok>
-          <p>{t("system.aiNotInstalled")}</p>
-        </Panel>
+        <AiUsagePanel />
         {s.data_profile === "regulated" ? (
           <Panel title={t("system.regulated.title")} ok>
             <p>{t("system.regulated.host", { text: s.regulated_host_baa })}</p>
@@ -62,6 +61,23 @@ export function SystemPage() {
         <DataPanel />
       </div>
     </>
+  )
+}
+
+/** Today's AI token use against the business budget; details live on the AI settings page. */
+function AiUsagePanel() {
+  const { t, i18n } = useTranslation()
+  const { permissions } = useSession()
+  const canRead = permissions.has("ai.settings.read")
+  const usage = useAiUsage(canRead)
+  const today = usage.data?.today
+  const number = new Intl.NumberFormat(i18n.language)
+  return (
+    <Panel title={t("system.ai")} ok={today ? today.percent < 90 : true}>
+      {today ? <p>{t("ai.settings.usedToday", { used: number.format(today.input_tokens + today.output_tokens), limit: number.format(today.budget_tokens), percent: today.percent })}</p> : null}
+      {!canRead || usage.error ? <p>{t("system.aiUsageHidden")}</p> : null}
+      {canRead ? <a className="record-link text-sm" href="/ai">{t("system.aiSettingsLink")}</a> : null}
+    </Panel>
   )
 }
 

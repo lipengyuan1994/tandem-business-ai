@@ -640,3 +640,19 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   the site loads, "Chat with us" opens the clinic chat with the synthetic-data and emergency notices, no CSP errors.
 - `terraform plan` no changes; SSH closed; spend $9.49 of $200.
 
+## 2026-11-08 16:30 UTC: demo video v2, submission materials, System page fix (0.1.19)
+
+- Video v2 follows Example Dental Clinic: clinic website with embedded chat and emergency hand-over, judge sign-in and
+  Ellery's first sign-in with authenticator setup (QR pixelated), Today briefing, inbox, summary and four-eyes block,
+  voice dictation (synthetic spoken question fed as the recording browser's microphone; Whisper on Vultr), "@Purchasing"
+  hand-off with chain limits, Inventory, Customer Care (recall facts; refuses to promise a refund without a policy),
+  Marketing (consent exclusion, AI draft), Finance (Cycle Works reminder), AI Team, patient self-service reschedule via
+  the simulated email link, audit log, owner policies and staff roles; then Cycle Works automatic answers. Local
+  Kokoro narration. Full cut 9:38, short cut 6:09.
+- Live demo data changed by the recording (synthetic): Priya Shah and Jordan Lee conversations, a quote request to
+  Example Dental Supplies, campaign "Check-up reminder for autumn" (draft), Cedar Example's visit moved to Thu 12 Nov
+  08:45 by self-service, Ellery's authenticator registered.
+- Submission materials in `docs/submission/`: lablab form text, 10-slide PDF, cover image.
+- 0.1.19: System page AI panel shows today's usage instead of the old "not installed" placeholder. Frontend 585 tests,
+  type check and lint pass; full `make check` not rerun (frontend-only change).
+

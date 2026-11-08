@@ -1,48 +1,40 @@
-# Demo video storyboard: "A busy week at Example Cycle Works"
+# Demo video storyboard (v2): "A week at Example Dental Clinic"
 
-Target length about 5 minutes, English voice-over, recorded on the public demo `https://tandemai.open-dl.com`.
-All people, e-mail addresses and companies are synthetic. Live AI steps can vary; the narration describes what the
-recording actually shows.
+Target about 8 minutes, English voice-over (local Kokoro voice), recorded on the public demo
+`https://tandemai.open-dl.com` and the clinic website `https://tandemaidentaldemo.open-dl.com`. All people, e-mail
+addresses and companies are synthetic. Live AI steps can vary; the narration describes what the recording shows.
+
+v1 (2026-11-07, 5:35) followed Example Cycle Works. v2 follows the dental clinic, whose website is the customer-facing
+page judges open, shows all seven AI agents at work, and keeps the Cycle Works scenes as a second business that uses
+automatic replies and two-person purchasing.
 
 ## Cast (synthetic)
 
-- **Lena Park** (`lena.park@example.com`), a commuter whose brakes squeal. Customer on the public chat.
-- **Example Courier Co.** (Marta Lopez, `fleet@courier.example.com`), a delivery company with six e-bikes. Business
-  inquiry through the appointment request form.
-- **Morgan Example**, owner of Example Cycle Works (staff app).
-- **Riley Example**, admin (second person who approves what Morgan's assistant proposed).
-- Example Dental Clinic's public chat for the safety moment.
+- **Sam Rivera** and **Priya Shah**, patients writing on the clinic website.
+- **Ellery Example**, owner of Example Dental Clinic (staff app; first sign-in with authenticator setup).
+- Cycle Works: **Lena Park**, **Marta Lopez** (Example Courier Co.), **Morgan** (owner) and **Riley** (admin).
 
 ## Scenes
 
 | # | Scene | Where | What it proves |
 |---|---|---|---|
-| 0 | Title card | — | Product name, one-line pitch, built on Vultr |
-| 1 | Lena asks what a tune-up includes and the holiday hours | Public chat (phone width) | Front Desk answers from the business's own knowledge base, with sources, automatically after the guardrail allows it |
-| 2 | Lena asks for a brake service on a weekday morning and for 20 % off | Public chat | Real availability from code; the booking and the discount answer wait for staff (business guardrail) |
-| 3 | Example Courier Co. asks for brake service on six e-bikes next week | Public request form | Business inquiry captured as a request, no account needed |
-| 4 | Morgan signs in: Today shows what needs attention | Staff app | One place for the day's work |
-| 5 | Inbox and Approvals: the auto-sent answer with its sources; the held reply with the guardrail reason; Morgan edits the reply and approves the booking | Inbox, Approvals, Schedule | People stay in control; evidence on every proposal |
-| 6 | Morgan asks the assistant whether there are enough brake pads and technician hours for the courier job | Assistant | Tools read stock, reservations and availability; the assistant proposes a quote and supplier quote requests |
-| 7 | Supplier answers; the comparison ranks quotes by price, delivery and reliability (code, not AI); purchase-order proposal | Purchasing | AI reads messy supplier text, code decides the numbers |
-| 8 | Riley approves the purchase order Morgan's assistant proposed | Approvals (Riley) | Four-eyes approval; audited |
-| 9 | AI Team and Autonomy activity: agents, budgets, hand-offs, what was sent automatically and what fell back and why | AI → Team, Autonomy | Transparent agents with limits |
-| 10 | Dental clinic chat: "My face is swelling and I have severe pain" | Public chat (clinic) | Emergency hand-over; the AI never answers or books it |
-| 11 | Closing card: architecture on Vultr (Compute, Serverless Inference, Object Storage, Container Registry, Terraform), measured eval scores, cost of the run | — | Built on Vultr, measured, cheap |
-
-## Logins needed (owner signs in; Claude never types passwords)
-
-- Morgan: `morgan@example.com` (scenes 4–7, 9).
-- Riley: `riley@example.com` (scene 8). Same browser pane: sign out of Morgan first.
-- Passwords are in `install-smb-demo/demo-logins.txt` (local, private). Each account asks for an authenticator app at
-  first sign-in.
+| 0 | Title | — | Product, pitch, built on Vultr |
+| 1 | Clinic website: a patient browses, opens "Chat with us", asks about whitening, then reports swelling and severe pain | Clinic website (desktop) | Embeddable chat on a business's own site; emergencies handed to a person at once with the phone number; no AI answer |
+| 2 | Judges' sign-in (prefilled) and Ellery's first sign-in with authenticator setup (QR blurred) | Sign-in | Easy judge access; staff accounts use a second factor |
+| 3 | Today: the Operations Manager's briefing, low stock for gloves and prophy paste | Today | One page for the day; numbers from the clinic's own records |
+| 4 | Inbox: Sam's emergency is with a person; the AI's earlier whitening draft was withdrawn automatically | Inbox | AI stops when a person must handle it |
+| 5 | Priya asks about Saturdays and a first exam; the clinic is closed; Ellery asks for a summary; the drafted reply cannot be approved by the person who asked for it; Ellery answers herself | Inbox, Approvals | Summaries, four-eyes rule (Settings → Policies), people stay in control |
+| 6 | Ellery speaks a question to the assistant (voice dictation, Whisper on Vultr) | Assistant | Voice input; answers from tools over live records |
+| 7 | Agents at work: Inventory (reorder draft), Purchasing (quote requests and comparison), Customer Care (after-visit check-in and recall), Marketing (campaign draft), Finance (overdue-invoice reminder), Operations Manager (hand-off chain with cost) | Inventory, Purchasing, Schedule, Approvals, Marketing, Sales, AI → Team, Activity | Seven agents, each with a job, switch, budget and visible results |
+| 8 | Patients, Schedule, Knowledge, Audit log, Settings (website, guardrail, policies), System health | Staff app | A complete back office |
+| 9 | A patient reschedules their own booking through the emailed link (simulated email) | Clinic website → bookings | Customer self-service with the clinic's own rules |
+| 10 | Cycle Works: automatic answers after the owner's guardrail, fleet request, held draft, second approver for purchasing | Existing v1 footage | The same platform at a different business, with automatic replies |
+| 11 | Closing: architecture on Vultr, eval scores, cost | — | Built on Vultr, measured, cheap |
 
 ## Recording log
 
-- 2026-11-07, customer part done (2:02): title, Lena (tune-up question answered automatically from the knowledge
-  base in 25 s; brake booking + 20 % off held by the guardrail), Example Courier Co. request form, dental emergency.
-- Two earlier Lena takes (before 0.1.14) are waiting in Cycle Works' Approvals: their drafts were held by the fact
-  check (tune-up described from memory, wrong opening hours). Good material for scene 5: staff see why a draft was
-  held and reject it.
-- Staff part: the owner runs `node frontend/output/video/login.mjs morgan` (and later `riley`) and signs in in the
-  window that opens; scenes are then recorded at 1440 × 900.
+- 2026-11-08: clinic website scene recorded (`raw/clinic.webm`); staff tour as Ellery recorded (`raw/staff-tour.webm`,
+  marks in `raw/staff-tour.events.json`). Rendered `tandem-demo-v2.mp4` (9:38) and `tandem-demo-short.mp4` (6:09) in
+  `frontend/output/video/` (not committed). The authenticator QR code and the emailed sign-in and supplier links are
+  pixelated. Finance is shown at Cycle Works (the clinic has no invoices). The clinic's front desk hands every
+  question to a person, so the "AI answers automatically" moment uses the Cycle Works scene from v1.

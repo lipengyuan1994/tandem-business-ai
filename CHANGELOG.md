@@ -2,6 +2,13 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.19 (2026-11-08)
+
+- **Fix, System page:** the AI panel still said "The AI assistant is not installed" (a placeholder from before the AI
+  layer). It now shows today's AI token use against the business budget, with a link to AI settings, for people who
+  can read AI settings.
+- **Migrations, dependencies, services:** none. No manual steps.
+
 ## 0.1.18 (2026-11-07)
 
 - **Fix, demo clinic website:** the site root `/` answered 404 because Caddy's missing-file rule treated the folder as

@@ -809,7 +809,8 @@
     "outboxIssues_other": "{{count}} messages need attention",
     "noMessages": "No messages yet.",
     "ai": "AI usage today",
-    "aiNotInstalled": "The AI assistant is not installed.",
+    "aiUsageHidden": "AI usage is visible to people who can read AI settings.",
+    "aiSettingsLink": "Open AI settings",
     "fine": "OK",
     "attention": "Needs attention",
     "data": {

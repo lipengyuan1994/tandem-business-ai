@@ -21,7 +21,7 @@ describe("system page", () => {
     expect([formatAge(45), formatAge(300), formatAge(3 * 3600 + 12 * 60), formatAge(72 * 3600)]).toEqual(["45 s", "5 min", "3 h 12 min", "3 d 0 h"])
   })
 
-  it("shows version, queue, messages, backup and that AI is not installed", async () => {
+  it("shows version, queue, messages and backup; AI usage needs AI settings access", async () => {
     mockMe(meWith("admin_ops.system.read"))
     server.use(http.get("*/api/v1/admin/system", () => HttpResponse.json(OK)))
     renderApp("/system")
@@ -29,8 +29,20 @@ describe("system page", () => {
     expect(screen.getByText("The last backup succeeded.")).toBeInTheDocument()
     expect(screen.getByText(/Last successful backup 2 h 0 min ago/)).toBeInTheDocument()
     expect(screen.getByText("Nothing is waiting.")).toBeInTheDocument()
-    expect(screen.getByText("The AI assistant is not installed.")).toBeInTheDocument()
+    expect(screen.getByText("AI usage is visible to people who can read AI settings.")).toBeInTheDocument()
+    expect(screen.queryByText("Open AI settings")).not.toBeInTheDocument()
     expect(screen.queryByText("Needs attention")).not.toBeInTheDocument()
+  })
+
+  it("shows today's AI usage against the budget", async () => {
+    mockMe(meWith("admin_ops.system.read", "ai.settings.read"))
+    server.use(
+      http.get("*/api/v1/admin/system", () => HttpResponse.json(OK)),
+      http.get("*/api/v1/ai/usage", () => HttpResponse.json({ today: { input_tokens: 1200, output_tokens: 300, budget_tokens: 200000, percent: 1, cost_micros: 900 }, days: [] })),
+    )
+    renderApp("/system")
+    expect(await screen.findByText("Used today: 1,500 of 200,000 (1%)")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Open AI settings" })).toHaveAttribute("href", "/ai")
   })
 
   it("flags overdue backups, dead tasks and messages that need attention", async () => {
