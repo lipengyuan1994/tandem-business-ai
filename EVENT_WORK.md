@@ -658,3 +658,17 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   charges $10.38, so the video, slides and form text now say "about $10". The new System panel was not checked in a
   signed-in browser after release (needs a staff login).
 
+## 2026-11-08 15:48 UTC: repository published and hackathon entry submitted (P7-01, P7-03, P7-04, P7-05)
+
+- On the owner's instruction ("Push it now"): public repository https://github.com/lipengyuan1994/tandem-business-ai
+  created and `main` pushed over HTTPS with the owner's GitHub CLI login (gitleaks: no leaks in 83 commits; no private
+  files tracked). SSH to github.com reported a changed host key on the owner's Mac; not used, not changed.
+- The demo video was pushed alone on a separate branch `demo-media` (one commit, no application files) so the lablab
+  page could fetch it; the cover and slides came from `docs/submission` on `main`.
+- lablab.build entry submitted with the owner's approval ("Submit as is"): team boston-hacker, track C2 Powering the
+  Future of Work, categories Business, Customer Support, Productivity; technologies Vultr, Whisper, Qwen3; full video
+  (9:38), 10-slide PDF, cover, repository and demo URL; "PreExistingProject" not selected (disclosure is in the
+  descriptions and README). Public entry:
+  https://lablab.build/ai-hackathons/vultr-hackathon/boston-hacker/tandem-business-ai-by-opendl
+- Freeze (P7-06): no feature changes on the demo VM from now on; only fixes for breakage, each recorded here.
+

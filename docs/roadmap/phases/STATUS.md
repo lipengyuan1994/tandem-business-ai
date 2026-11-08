@@ -116,11 +116,11 @@ Update this table when you start or finish a task ([12-agent-playbook.md](../12-
 | [P10-C2b](../ai/cards/P10-C2b.md) | Website embed and customer self-service | EVENT | A/B | P10-C1 | DONE (2026-11-07): full suite on the merged tree, live CSP checks; released in 0.1.9 |
 | [P10-C2](P10-ai-workflows.md) | Embed snippet, customer self-service, embeddings and PDF upload | EVENT | B | P10-C1 | DONE (2026-11-07): C2a + C2b released in 0.1.9 |
 | [P10-C2a](../ai/cards/P10-C2a.md) | Hybrid knowledge retrieval and PDF draft import | EVENT | A/B | P10-C1, P10-E0 | DONE — Codex 2026-11-06: 66 focused tests + Ruff/format/mypy; owner-approved macOS AS exception; full merge suites/Linux-image limits reviewer-owned; see card |
-| [P7-01](P7-submission.md) | Publish the repository | GATE | Owner | P6 gate | PLANNED |
+| [P7-01](P7-submission.md) | Publish the repository | GATE | Owner | P6 gate | DONE (2026-11-08): public repository github.com/lipengyuan1994/tandem-business-ai |
 | [P7-02](P7-submission.md) | Judge-facing README | DOC | B | P6-04 | PARTIAL (2026-11-07): judge README refreshed for 0.1.10; independent cold read by GPT-6.1 Sol from the README alone explained the architecture, Vultr use and the pre-event/AI split correctly (its clarity notes fixed); remaining: demo video link (owner, P7-03) |
-| [P7-03](P7-submission.md) | Demo video | GATE | Owner | P6-04 | PLANNED |
+| [P7-03](P7-submission.md) | Demo video | GATE | Owner | P6-04 | DONE (2026-11-08): demo video v2 (9:38) uploaded with the entry |
 | [P7-04](P7-submission.md) | Slides | DOC | B draft, owner final | — | DONE (2026-11-07): eight-slide draft refreshed for 0.1.10; owner finalises slides and confirms business prices. |
-| [P7-05](P7-submission.md) | Submit on lablab.ai | GATE | Owner | P7-01 … P7-04 | PLANNED |
+| [P7-05](P7-submission.md) | Submit on lablab.ai | GATE | Owner | P7-01 … P7-04 | DONE (2026-11-08): submitted on lablab.build; entry boston-hacker/tandem-business-ai-by-opendl |
 | [P7-06](P7-submission.md) | Freeze | PRE | B | — | PLANNED |
 
 | [P10-D backend](../ai/cards/P10-D-backend.md) | Voice dictation backend | EVENT | A | P10-E0 | DONE (2026-11-06): 2,083 backend tests; restricted make check; live eval/UI separate |
