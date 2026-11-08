@@ -4,7 +4,7 @@
 
 Tandem Business AI is an AI-assisted ERP for small and medium-sized businesses (SMBs). It brings customers, appointments, stock, messages, sales and purchasing into one app. A business can install it on its own Vultr account. The demo uses synthetic data for Example Cycle Works, Example Garden Store and Example Dental Clinic.
 
-**Demo:** https://tandemai.open-dl.com · [Synthetic clinic website with embedded chat](https://tandemaidentaldemo.open-dl.com) (0.1.17, after demo setup) · Judge login (0.1.16, after demo setup): click **Sign in** with the prefilled public `judge@example.com` account; no authenticator code. Switch among the three synthetic businesses. Proposals you request need another staff member to approve. [Operator setup](docs/runbooks/install.md#demo-installs-only-public-judge-login).
+**Demo:** https://tandemai.open-dl.com · [Synthetic clinic website with embedded chat](https://tandemaidentaldemo.open-dl.com) (0.1.18) · Judge login (0.1.16, after demo setup): click **Sign in** with the prefilled public `judge@example.com` account; no authenticator code. Switch among the three synthetic businesses. Proposals you request need another staff member to approve. [Operator setup](docs/runbooks/install.md#demo-installs-only-public-judge-login).
 
 ## What it does
 

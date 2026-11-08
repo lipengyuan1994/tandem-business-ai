@@ -160,7 +160,8 @@
 		Content-Security-Policy "default-src 'self'; script-src 'self' https://{$DOMAIN}; style-src 'self' 'sha256-04N62MZNzOqvtF4hNEeL28R9eLmIBqAHYT3RHYeSTaI='; img-src 'self'; connect-src 'self' https://{$DOMAIN}; frame-src 'self' https://{$DOMAIN}; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
 		-Server
 	}
-	@missing_demo not file
+	# A directory is not a file: without {path}index.html the site root "/" would answer 404.
+	@missing_demo not file {path} {path}index.html
 	respond @missing_demo "Not found" 404
 	file_server
 }

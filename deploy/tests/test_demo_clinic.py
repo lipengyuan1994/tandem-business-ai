@@ -49,6 +49,8 @@ class DemoClinicAdaptationTests(unittest.TestCase):
         self.assertNotIn("reverse_proxy", encoded)
         self.assertNotIn('"/srv"', encoded)
         self.assertNotIn("disable_certificates", json.dumps(config))
+        # The site root is a directory: the missing-file 404 must also try index.html, or "/" answers 404.
+        self.assertIn('"try_files": ["{http.request.uri.path}", "{http.request.uri.path}index.html"]', encoded)
 
         def objects(value):
             if isinstance(value, dict):
@@ -79,7 +81,8 @@ class DemoClinicAdaptationTests(unittest.TestCase):
 
 class DemoClinicSmokeTests(OperationsCase):
     def run_smoke(self, domain="", status="200", csp=True, compose=False):
-        self.env.update(DEMO_SITE_DOMAIN=domain, CLINIC_STATUS=status, CLINIC_CSP="1" if csp else "0")
+        self.env.update(DEMO_SITE_DOMAIN=domain, CLINIC_STATUS=status, CLINIC_CSP="1" if csp else "0",
+                        SMOKE_DEMO_WAIT_SECONDS="0")
         self.stub("curl", """
 a = sys.argv[1:]
 url = next(x for x in reversed(a) if x.startswith('http'))

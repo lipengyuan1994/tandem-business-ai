@@ -149,6 +149,11 @@ fi
 
 if [ -n "$demo_domain" ] && [ "$demo_domain" != '(demo_site_disabled)' ]; then
   demo_url="https://$demo_domain/"
+  # A newly added demo domain gets its first certificate while Caddy starts: wait for it (default 90 seconds).
+  waited=0
+  until [ "$(status_of "$demo_url" || true)" = 200 ] || [ "$waited" -ge "${SMOKE_DEMO_WAIT_SECONDS:-90}" ]; do
+    sleep 5; waited=$((waited + 5))
+  done
   check "demo clinic site answers 200" test "$(status_of "$demo_url")" = 200
   check "demo clinic Content-Security-Policy" header_of "$demo_url" content-security-policy
   check "demo clinic HSTS" header_of "$demo_url" strict-transport-security

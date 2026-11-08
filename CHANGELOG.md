@@ -2,6 +2,13 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.18 (2026-11-07)
+
+- **Fix, demo clinic website:** the site root `/` answered 404 because Caddy's missing-file rule treated the folder as
+  missing; it now also tries `index.html`. Found by the 0.1.17 upgrade's smoke test, which rolled the demo back.
+- `smoke.sh` waits up to 90 seconds (`SMOKE_DEMO_WAIT_SECONDS`) for a newly added clinic domain's first certificate.
+- **Migrations, dependencies, services:** none. Same manual steps as 0.1.17.
+
 ## 0.1.17 (2026-11-07)
 
 - **Demo clinic website:** static, clearly synthetic Example Dental Clinic site with treatment durations, opening
