@@ -671,4 +671,8 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   descriptions and README). Public entry:
   https://lablab.build/ai-hackathons/vultr-hackathon/boston-hacker/tandem-business-ai-by-opendl
 - Freeze (P7-06): no feature changes on the demo VM from now on; only fixes for breakage, each recorded here.
+- Owner request: descriptions revised to lead with production readiness (one install script, Terraform for the VM and
+  firewall, versioned images from the Vultr registry, backups to the customer's Object Storage, automatic rollback,
+  tested restore, tests and load test). Claims checked against the repository (Terraform creates only the VM, firewall
+  and SSH key, so the text says so). Updated on lablab ("Updated!"); public page shows the new long description.
 

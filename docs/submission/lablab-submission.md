@@ -7,50 +7,19 @@ every field below is ready to paste. Items marked **OWNER** need an account or a
 
 Tandem Business AI by OpenDL
 
-## Short description (one line)
+## Short description (as submitted, updated 2026-11-08)
 
-An AI front desk and back office for small businesses on Vultr: seven agents answer customers, book, restock and
-follow up, while people approve everything that matters.
+Not a prototype: a production-ready AI front desk and back office for small businesses. Seven AI agents work under human approval, and one script deploys the whole system to a customer's own Vultr account with Docker and Terraform.
 
-## Long description
+## Long description (as submitted, updated 2026-11-08; lablab limit 2,000 characters)
 
-Small businesses juggle customer messages, bookings, stock, suppliers, invoices and follow-ups across too many tools,
-and most AI products either do too little or act without asking. Tandem Business AI is a complete, customer-owned
-ERP with an AI team built in. Each business installs it on its own Vultr account.
+Tandem Business AI is a production-ready product, not a proof of concept. The public demo runs the same release images any customer gets. One install script deploys the complete system (React front end, FastAPI back end, PostgreSQL, worker, Keycloak sign-in, Caddy with automatic HTTPS) to a business's own Vultr account in about 30 minutes: Terraform provisions the VM and its firewall, versioned Docker images come from the Vultr Container Registry, and backups go to the customer's Object Storage. Upgrades run a backup and a smoke test and roll back automatically on failure. Encrypted backups have a tested restore. Staff sign in with an authenticator app; each business's data is isolated in the database. Over 2,400 backend tests (96% coverage), a load test (20 staff, 204 ms p95, 0 errors) and a security review back it.
 
-**What judges can try:** the public demo at https://tandemai.open-dl.com (one-click judge login, three synthetic
-businesses) and the clinic website at https://tandemaidentaldemo.open-dl.com, which embeds the chat.
+The product is a complete ERP for small businesses (customers, schedule, stock, inbox, sales, purchasing, marketing, knowledge base) with seven AI agents, each with a job, a switch, a budget and limits: Front Desk answers customers from the business's own knowledge after a fact check and the owner's plain-language guardrail; Customer Care drafts check-ins, recalls and complaint replies; Marketing drafts campaigns and respects consent; Inventory suggests reorders; Purchasing requests and compares supplier quotes; Finance drafts overdue-invoice reminders; Operations Manager writes the daily briefing and routes work. Staff hand tasks to any agent with "@", by text or voice.
 
-**Seven agents, each with a job, a switch, a budget and limits:**
-- *Front Desk* answers customers from the business's own knowledge base, with citations. Before any automatic
-  reply, a fact check and the owner's own guardrail (written in plain words) must pass; otherwise a person approves.
-  Possible emergencies are handed to a person before any AI runs.
-- *Customer Care* drafts after-visit check-ins, recall reminders and complaint replies, using only the facts it
-  needs, and refuses to promise refunds it cannot verify.
-- *Marketing* drafts campaign emails; patients or customers without marketing consent are excluded automatically.
-- *Inventory* watches stock against reorder points; *Purchasing* requests and compares supplier quotes (code ranks
-  them) and prepares purchase orders; *Finance* drafts overdue-invoice reminders.
-- *Operations Manager* writes the morning briefing and routes work; staff can hand a task to any agent with "@".
+People stay in control: agents propose, staff approve with evidence, nobody approves their own request, every chain has hard limits and everything is audited. Emergencies go to a person before any AI runs.
 
-**People stay in control.** Agents propose; staff approve in one queue with evidence. Nobody approves their own
-request (four-eyes rule). Every hand-off chain has hard limits (6 steps, 30 model calls, 10 actions, $0.50), every
-action is in the audit log, and AI-sent messages wait in a stop window. Owners set autonomy per action: off, ask,
-act and notify, or act, with shadow mode first.
-
-**Customers get service without accounts:** website chat, appointment requests, and self-service rescheduling or
-cancelling through an emailed link.
-
-**Built on Vultr:** one Compute VM (Docker Compose, provisioned with Terraform), Vultr Serverless Inference for every
-model call (mimo, DeepSeek and Qwen models through a routing gateway, Qwen embeddings for search, Whisper for voice
-dictation), Object Storage for encrypted backups with a tested restore, and the Container Registry for versioned
-images. The whole public demo has cost about $10 of the $200 credit.
-
-**Measured:** synthetic evaluation suites on live Vultr models: reply guardrail 16/16 (two runs), prompt injection
-15/15, grounding 10/10, retrieval 8/8, intake 76/78, Customer Care 18/19. Over 2,400 backend tests at 96% coverage.
-
-**Honest scope:** the non-AI ERP was built before the event and disclosed; all AI was built during the event
-(dated logs in the repository). The demo uses synthetic data and simulated email; it is not a compliance
-certification for real patient data.
+Every model call uses Vultr Serverless Inference. The non-AI ERP was built before the event and disclosed; all AI was built during it. The demo uses synthetic data and simulated email; a customer install sends real email once its mail server is configured.
 
 ## Technologies / tags
 
