@@ -17,7 +17,7 @@ export function DocumentBody({ document: d, family }: { document: SalesDocument;
     <header className="space-y-1">
       <h2 className="text-xl font-semibold">{businessName}</h2>
       <p>{t(d.kind === "credit_note" ? "sales.creditNote" : `sales.documentTypes.${family}`)} · {d.number ?? t("status.draft")}</p>
-      <StatusBadge status={d.status} />
+      <StatusBadge status={d.status} />{d.payment_status === "partially_paid" ? <StatusBadge status="partially_paid" className="ml-2" /> : null}
     </header>
     <div className="grid gap-4 sm:grid-cols-2">
       <section aria-label={t("sales.billTo")}>
@@ -49,6 +49,10 @@ export function DocumentBody({ document: d, family }: { document: SalesDocument;
       <dt>{t("sales.fields.subtotal")}</dt><dd className="text-right">{money(d.subtotal_minor)}</dd>
       <dt>{t("sales.fields.tax")}</dt><dd className="text-right">{money(d.tax_minor)}</dd>
       <dt className="font-semibold">{t("sales.fields.total")}</dt><dd className="text-right font-semibold">{money(d.total_minor)}</dd>
+      {d.balance_minor != null ? <>
+        <dt>{t("sales.fields.amountPaid")}</dt><dd className="text-right">{money(d.amount_paid_minor ?? 0)}</dd>
+        <dt className="font-semibold">{t("sales.fields.balanceDue")}</dt><dd className="text-right font-semibold">{money(d.balance_minor)}</dd>
+      </> : null}
     </dl>
     {d.notes ? <section><h3 className="font-medium">{t("sales.fields.notes")}</h3><p className="whitespace-pre-wrap text-sm">{d.notes}</p></section> : null}
   </article>

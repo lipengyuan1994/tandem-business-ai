@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from decimal import Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -16,12 +17,13 @@ from app.platform import audit, clock, events
 from app.platform.context import Context
 from app.platform.errors import Conflict, Invalid
 
+from . import payments
 from . import permissions as P
 from . import repository as repo
 from .calculations import prepare_lines
 from .events import DocumentChanged
 from .models import Document, Invoice, SalesOrder
-from .schemas import DocumentOut, DocumentType, DocumentUpdate, LineOut
+from .schemas import DocumentOut, DocumentType, DocumentUpdate, LineOut, PaymentIn, PaymentOut
 
 FLOWS: dict[DocumentType, dict[str, tuple[str, str]]] = {
     "quote": {
@@ -49,7 +51,7 @@ def require_status(row: Document, expected: str) -> None:
         raise Conflict("sales.invalid_transition", detail=f"Expected {expected}; document is {row.status}")
 
 
-def record(db: Session, ctx: Context, family: DocumentType, row: Document, action: str) -> None:
+def record(db: Session, ctx: Context, family: DocumentType, row: Document, action: str, **changes: object) -> None:
     db.flush()
     audit.record(
         db,
@@ -58,7 +60,7 @@ def record(db: Session, ctx: Context, family: DocumentType, row: Document, actio
         target_type=f"sales.{family}",
         target_id=row.id,
         summary=f"Sales {family}: {action}",
-        changes={"status": row.status, "version": row.version},
+        changes={"status": row.status, "version": row.version, **changes},
     )
     events.publish(
         db,
@@ -81,6 +83,13 @@ def store_lines(db: Session, ctx: Context, family: DocumentType, row: Document, 
 def detail(db: Session, ctx: Context, family: DocumentType, row: Document) -> DocumentOut:
     out = DocumentOut.model_validate(row)
     out.lines = [LineOut.model_validate(line) for line in repo.lines(db, ctx, family, row.id)]
+    if isinstance(row, Invoice):
+        if row.kind == "invoice":
+            out.balance_minor = payments.balance(row) if row.status in ("issued", "paid") else None
+            out.payment_status = payments.payment_status(row)
+            out.payments = [PaymentOut.model_validate(p) for p in payments.for_invoice(db, ctx, row.id)]
+        else:
+            out.amount_paid_minor = None
     return out
 
 
@@ -117,8 +126,16 @@ def transition(
     if flow is None:
         raise Conflict("sales.invalid_transition")
     require_status(row, flow[0])
-    if action == "mark-paid" and isinstance(row, Invoice) and row.kind != "invoice":
-        raise Conflict("sales.invalid_transition", detail="Credit notes cannot be marked paid")
+    if action == "mark-paid":
+        assert isinstance(row, Invoice)
+        if row.kind != "invoice":
+            raise Conflict("sales.invalid_transition", detail="Credit notes cannot be marked paid")
+        # Marking paid records the open balance as one payment received today, so history and aging stay exact.
+        amount = payments.balance(row)
+        payments.add(db, ctx, row, amount, business_today(db, ctx), "other", None)
+        row.version += 1
+        record(db, ctx, family, row, action, amount_minor=amount)
+        return row
     if action in ("send", "confirm", "issue"):
         if not repo.lines(db, ctx, family, row.id):
             raise Invalid("sales.lines_required")
@@ -130,11 +147,47 @@ def transition(
     row.status = flow[1]
     if family == "order":
         stock_transition(db, ctx, row, action)
-    if action == "mark-paid":
-        assert isinstance(row, Invoice)
-        row.paid_at = clock.now()
     row.version += 1
     record(db, ctx, family, row, action)
+    return row
+
+
+def business_today(db: Session, ctx: Context) -> date:
+    return clock.now().astimezone(ZoneInfo(org.get_business_brief(db, ctx).timezone)).date()
+
+
+def record_payment(db: Session, ctx: Context, row_id: uuid.UUID, data: PaymentIn) -> Invoice:
+    ctx.require(P.MARK_PAID)
+    row = repo.get(db, ctx, "invoice", row_id, lock=True)
+    assert isinstance(row, Invoice)
+    check_version(row, data.version)
+    if data.paid_on > business_today(db, ctx):
+        raise Invalid("sales.payment_date_in_future")
+    payment = payments.add(db, ctx, row, data.amount_minor, data.paid_on, data.method, data.reference)
+    assert payment is not None
+    row.version += 1
+    record(
+        db,
+        ctx,
+        "invoice",
+        row,
+        "payment_recorded",
+        payment_id=str(payment.id),
+        amount_minor=payment.amount_minor,
+        method=payment.method,
+        paid_on=payment.paid_on.isoformat(),
+    )
+    return row
+
+
+def void_payment(db: Session, ctx: Context, row_id: uuid.UUID, payment_id: uuid.UUID, version: int) -> Invoice:
+    ctx.require(P.CREDIT)
+    row = repo.get(db, ctx, "invoice", row_id, lock=True)
+    assert isinstance(row, Invoice)
+    check_version(row, version)
+    payment = payments.void(db, ctx, row, payment_id)
+    row.version += 1
+    record(db, ctx, "invoice", row, "payment_voided", payment_id=str(payment.id), amount_minor=payment.amount_minor)
     return row
 
 
@@ -226,6 +279,8 @@ def credit(db: Session, ctx: Context, row_id: uuid.UUID, version: int) -> Docume
     assert isinstance(original, Invoice)
     if original.kind != "invoice":
         raise Conflict("sales.invalid_transition", detail="Cannot credit a credit note")
+    if original.amount_paid_minor > 0:
+        raise Conflict("sales.invoice_has_payments", detail="Void the invoice's payments before crediting it")
     issue_date = clock.now().astimezone(ZoneInfo(org.get_business_brief(db, ctx).timezone)).date()
     number = repo.next_number(db, ctx, "CN", issue_date.year)
     row = copy_document(

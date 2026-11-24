@@ -2684,6 +2684,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sales/invoices/{document_id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a full or partial payment against an issued invoice */
+        post: operations["record_payment_api_v1_sales_invoices__document_id__payments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sales/invoices/{document_id}/payments/{payment_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void a payment recorded in error and reopen the invoice balance */
+        post: operations["void_payment_api_v1_sales_invoices__document_id__payments__payment_id__void_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sales/invoices/{document_id}/reminders": {
         parameters: {
             query?: never;
@@ -2920,6 +2954,23 @@ export interface paths {
         put?: never;
         /** Send quote */
         post: operations["sales_quote_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sales/receivables/aging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Accounts receivable aging by customer (defaults to today in the business timezone) */
+        get: operations["receivables_aging_api_v1_sales_receivables_aging_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3327,6 +3378,66 @@ export interface components {
         AgentsOut: {
             /** Items */
             items: components["schemas"]["AgentOut"][];
+        };
+        /** AgingCustomer */
+        AgingCustomer: {
+            /** Currency */
+            currency: string;
+            /** Current Minor */
+            current_minor: number;
+            /**
+             * Customer Id
+             * Format: uuid
+             */
+            customer_id: string;
+            /** Customer Name */
+            customer_name: string;
+            /** Days 1 30 Minor */
+            days_1_30_minor: number;
+            /** Days 31 60 Minor */
+            days_31_60_minor: number;
+            /** Days 61 90 Minor */
+            days_61_90_minor: number;
+            /** Days Over 90 Minor */
+            days_over_90_minor: number;
+            /** Invoice Count */
+            invoice_count: number;
+            /** Total Minor */
+            total_minor: number;
+        };
+        /**
+         * AgingReport
+         * @description Open balances of issued invoices on `as_of`, bucketed by days past due (issue date when no due date).
+         */
+        AgingReport: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Customers */
+            customers: components["schemas"]["AgingCustomer"][];
+            /** Totals */
+            totals: components["schemas"]["AgingTotal"][];
+        };
+        /** AgingTotal */
+        AgingTotal: {
+            /** Currency */
+            currency: string;
+            /** Current Minor */
+            current_minor: number;
+            /** Days 1 30 Minor */
+            days_1_30_minor: number;
+            /** Days 31 60 Minor */
+            days_31_60_minor: number;
+            /** Days 61 90 Minor */
+            days_61_90_minor: number;
+            /** Days Over 90 Minor */
+            days_over_90_minor: number;
+            /** Invoice Count */
+            invoice_count: number;
+            /** Total Minor */
+            total_minor: number;
         };
         /** AiStatus */
         AiStatus: {
@@ -5215,6 +5326,10 @@ export interface components {
         };
         /** DocumentOut */
         DocumentOut: {
+            /** Amount Paid Minor */
+            amount_paid_minor?: number | null;
+            /** Balance Minor */
+            balance_minor?: number | null;
             /** Bill To Address */
             bill_to_address: string | null;
             /** Bill To Email */
@@ -5256,6 +5371,10 @@ export interface components {
             number: string | null;
             /** Paid At */
             paid_at?: string | null;
+            /** Payment Status */
+            payment_status?: ("unpaid" | "partially_paid" | "paid") | null;
+            /** Payments */
+            payments?: components["schemas"]["PaymentOut"][];
             /** Source Appointment Id */
             source_appointment_id?: string | null;
             /** Source Order Id */
@@ -6228,6 +6347,57 @@ export interface components {
         PauseOut: {
             /** Paused */
             paused: boolean;
+        };
+        /**
+         * PaymentIn
+         * @description `version` is the invoice version the staff member saw; the payment must fit the open balance.
+         */
+        PaymentIn: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Reference */
+            reference?: string | null;
+            /** Version */
+            version: number;
+        };
+        /** PaymentOut */
+        PaymentOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Reference */
+            reference: string | null;
+            /** Voided At */
+            voided_at: string | null;
         };
         /** PaymentReminderIn */
         PaymentReminderIn: {
@@ -20168,6 +20338,149 @@ export interface operations {
             };
         };
     };
+    record_payment_api_v1_sales_invoices__document_id__payments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    void_payment_api_v1_sales_invoices__document_id__payments__payment_id__void_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__sales__schemas__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     payment_reminder_api_v1_sales_invoices__document_id__reminders_post: {
         parameters: {
             query?: never;
@@ -21393,6 +21706,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    receivables_aging_api_v1_sales_receivables_aging_get: {
+        parameters: {
+            query?: {
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgingReport"];
                 };
             };
             /** @description Authentication required */

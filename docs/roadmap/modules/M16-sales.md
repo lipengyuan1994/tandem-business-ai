@@ -79,3 +79,31 @@ Commercial documents: quote → sales order → invoice. **No payment processing
   currency. They no longer show "Total (minor units)". `sales.send_payment_reminder` already showed "Amount due".
 - The text comes from `app.platform.money.money_text` / `minor_text`, which moved from `sales.service_creation` to the
   platform so purchasing can use the same helper. No table, route or payload changed.
+
+## As built — partial payments and receivables aging (2026-11-24)
+
+- New table `invoice_payments` (business RLS, composite FK to `invoices`): amount (> 0, minor units), `paid_on` date,
+  method (`cash`, `card`, `bank_transfer`, `check`, `other`), optional reference, `voided_at`. `invoices` gains
+  `amount_paid_minor` (0 ≤ paid ≤ total, database check), always the sum of the invoice's non-voided payments.
+  Migration `20261124_1200_invoice_payments` backfills one `other` payment per existing paid invoice, dated on the
+  business-local day it was marked paid, so history, balances and aging agree.
+- `POST /sales/invoices/{id}/payments {version, amount_minor, paid_on, method, reference?}` (`sales.invoice.mark_paid`,
+  so operators can record money received) applies a full or partial payment to an issued ordinary invoice. Payments
+  larger than the open balance are refused with 409 `sales.overpayment` (the body carries `balance_minor`); customer
+  credit balances are not built. Future payment dates (business-local) are refused with 422. When the payments reach
+  the total the invoice becomes `paid`; document status otherwise stays `issued`, so overdue lists and reminders keep
+  working for partly paid invoices. `DocumentOut` adds `amount_paid_minor`, `balance_minor`, `payment_status`
+  (`unpaid` / `partially_paid` / `paid`) and `payments` for ordinary invoices.
+- `POST /invoices/{id}/mark-paid` now records the open balance as one `other` payment dated today.
+- `POST /sales/invoices/{id}/payments/{payment_id}/void {version}` (`sales.invoice.credit`, admin/owner) voids a payment
+  entered in error and reopens a paid invoice. Payments are never deleted. Invoices with payments cannot be credited
+  (409 `sales.invoice_has_payments`); void the payments first. Refunds and partial credit notes are not built.
+- Reminders (manual and AI-proposed) state the open balance as the amount due, not the original total.
+- `GET /sales/receivables/aging?as_of=YYYY-MM-DD` (`sales.document.read`, default business-local today): open balances
+  of issued ordinary invoices by customer and currency in the buckets not yet due, 1–30, 31–60, 61–90 and over 90 days
+  past due, with per-currency totals. Days count from the due date, or the issue date when there is none. It is point in
+  time: invoices issued after `as_of` and payments dated after it are left out. Credited (void) invoices are excluded.
+- UI: invoice pages show Paid and Balance due, a payment history and a **Record payment** dialog; admins can void a
+  payment. Invoice lists show Balance due and a Partially paid badge. **Sales → Receivables** shows the aging report.
+- Not built: customer credit balances and refunds, partial credit notes, payment fields in the accounting CSV export,
+  aging CSV export and drill-down from aging to invoices.

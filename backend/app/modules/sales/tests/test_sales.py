@@ -254,6 +254,7 @@ def test_rls_denies_cross_business_and_export_covers_all_tables(
         "sales_order_lines",
         "invoices",
         "invoice_lines",
+        "invoice_payments",
     }
     assert len(exported["invoices"]) == 1 and len(exported["invoice_lines"]) == 2
 

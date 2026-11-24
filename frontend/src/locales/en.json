@@ -61,7 +61,8 @@
     "inactive": "Inactive",
     "invited": "Invited",
     "responded": "Responded",
-    "archived": "Archived"
+    "archived": "Archived",
+    "partially_paid": "Partially paid"
   },
   "common": {
     "close": "Close",
@@ -175,7 +176,11 @@
     "knowledge.invalid_multipart": "Choose one PDF and try again.",
     "knowledge.single_pdf_required": "Upload one PDF at a time.",
     "scheduling.invalid_rule": "Each end time must be after its start time.",
-    "scheduling.invalid_window": "The end must be after the start."
+    "scheduling.invalid_window": "The end must be after the start.",
+    "sales.overpayment": "The payment is more than the invoice's open balance.",
+    "sales.payment_date_in_future": "The payment date cannot be in the future.",
+    "sales.invoice_has_payments": "This invoice has payments. Void them before creating a credit note.",
+    "sales.payment_already_voided": "This payment was already voided."
   },
   "identity": {
     "selectBusiness": {
@@ -981,7 +986,8 @@
     "tabs": {
       "quotes": "Quotes",
       "orders": "Orders",
-      "invoices": "Invoices"
+      "invoices": "Invoices",
+      "receivables": "Receivables"
     },
     "documentTypes": {
       "quotes": "Quote",
@@ -1012,7 +1018,9 @@
       "dueDate": "Due date",
       "paidAt": "Paid at",
       "notes": "Notes",
-      "address": "Bill-to address (optional)"
+      "address": "Bill-to address (optional)",
+      "amountPaid": "Paid",
+      "balanceDue": "Balance due"
     },
     "allStatuses": "All statuses",
     "empty": "No documents found.",
@@ -1062,7 +1070,7 @@
       "cancel": "Cancel order",
       "invoice": "Create invoice",
       "issue": "Issue invoice",
-      "mark-paid": "Mark as paid (record only)",
+      "mark-paid": "Mark fully paid",
       "credit": "Create credit note"
     },
     "confirm": {
@@ -1085,7 +1093,55 @@
     "toDate": "To date",
     "invalidRange": "Choose an end date on or after the start date.",
     "appointmentHint": "The draft includes the {{appointment}} {{service}} only. Add any parts before issuing.",
-    "useFreeText": "Use your own item"
+    "useFreeText": "Use your own item",
+    "payments": {
+      "title": "Payments",
+      "record": "Record payment",
+      "hint": "Record money received for invoice {{number}}. Open balance: {{balance}}. Part payments are fine.",
+      "amount": "Amount ({{currency}})",
+      "amountShort": "Amount",
+      "date": "Payment date",
+      "method": "Method",
+      "reference": "Reference (optional)",
+      "actions": "Actions",
+      "methods": {
+        "cash": "Cash",
+        "card": "Card",
+        "bank_transfer": "Bank transfer",
+        "check": "Check",
+        "other": "Other"
+      },
+      "errors": {
+        "zero": "Enter an amount above zero.",
+        "overBalance": "The amount is more than the open balance of {{balance}}.",
+        "date": "Choose a payment date.",
+        "future": "The payment date cannot be in the future."
+      },
+      "recorded": "Payment recorded.",
+      "void": "Void payment",
+      "voided": "Voided",
+      "voidDone": "Payment voided.",
+      "confirmVoid": {
+        "title": "Void this payment?",
+        "text": "Use this for a payment entered in error. The amount goes back on the invoice balance, and the payment stays in the history as voided."
+      }
+    },
+    "aging": {
+      "title": "Receivables aging",
+      "asOf": "As of date",
+      "hint": "Open invoice balances on {{date}}, by days past due. Invoices without a due date count from their issue date.",
+      "caption": "Amounts owed in {{currency}}",
+      "invoices": "Open invoices",
+      "total": "Total",
+      "empty": "No open invoice balances.",
+      "buckets": {
+        "current_minor": "Not yet due",
+        "days_1_30_minor": "1–30 days",
+        "days_31_60_minor": "31–60 days",
+        "days_61_90_minor": "61–90 days",
+        "days_over_90_minor": "Over 90 days"
+      }
+    }
   },
   "purchasing": {
     "noAccess": "You do not have access to purchasing.",

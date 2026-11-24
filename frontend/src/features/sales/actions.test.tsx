@@ -19,7 +19,7 @@ const CASES: [DocumentFamily, string, string, string, string][] = [
   ["orders", "confirmed", "Create invoice", "invoice", "draft"],
   ["orders", "fulfilled", "Create invoice", "invoice", "draft"],
   ["invoices", "draft", "Issue invoice", "issue", "issued"],
-  ["invoices", "issued", "Mark as paid (record only)", "mark-paid", "paid"],
+  ["invoices", "issued", "Mark fully paid", "mark-paid", "paid"],
   ["invoices", "issued", "Create credit note", "credit", "issued"],
 ]
 describe("sales actions", () => {
@@ -91,7 +91,7 @@ describe("sales actions", () => {
     mockMe(meWith("sales.document.read", "sales.document.write", "sales.invoice.mark_paid"))
     mockDocument(doc({ status: "issued" }))
     renderApp(`/sales/invoices/${ID}`)
-    expect(await screen.findByRole("button", { name: "Mark as paid (record only)" })).toBeInTheDocument()
+    expect(await screen.findByRole("button", { name: "Mark fully paid" })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Create credit note" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Issue invoice" })).not.toBeInTheDocument()
   })
@@ -100,6 +100,6 @@ describe("sales actions", () => {
     renderApp(`/sales/invoices/${ID}`)
     await screen.findByRole("button", { name: "Print" })
     expect(screen.queryByRole("button", { name: "Create credit note" })).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Mark as paid (record only)" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Mark fully paid" })).not.toBeInTheDocument()
   })
 })

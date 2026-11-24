@@ -10,6 +10,7 @@ from sqlalchemy import (
     BigInteger,
     CheckConstraint,
     ForeignKeyConstraint,
+    Index,
     Integer,
     Numeric,
     String,
@@ -92,8 +93,10 @@ class Invoice(Document):
     source_quote_id: Mapped[uuid.UUID | None]
     paid_at: Mapped[datetime | None]
     last_reminder_at: Mapped[datetime | None]
+    amount_paid_minor: Mapped[int] = mapped_column(BigInteger, default=0)
     __table_args__ = (
         *document_args("'draft','issued','paid','void'"),
+        CheckConstraint("amount_paid_minor >= 0 and amount_paid_minor <= total_minor", name="amount_paid"),
         reference("credit_of_invoice_id", "invoices"),
         reference("source_appointment_id", "appointments"),
         reference("source_order_id", "sales_orders"),
@@ -106,6 +109,27 @@ class Invoice(Document):
             "(kind = 'credit_note' and credit_of_invoice_id is not null and status = 'issued')",
             name="kind",
         ),
+    )
+
+
+PAYMENT_METHODS = ("cash", "card", "bank_transfer", "check", "other")
+
+
+class InvoicePayment(BusinessScopedBase):
+    """Money received against an ordinary invoice. Corrections void the row instead of deleting it."""
+
+    __tablename__ = "invoice_payments"
+    invoice_id: Mapped[uuid.UUID]
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    paid_on: Mapped[date]
+    method: Mapped[str] = mapped_column(String(16))
+    reference: Mapped[str | None] = mapped_column(String(200))
+    voided_at: Mapped[datetime | None]
+    __table_args__ = scoped_table_args(
+        ForeignKeyConstraint(["business_id", "invoice_id"], ["invoices.business_id", "invoices.id"]),
+        Index("ix_invoice_payments_invoice", "business_id", "invoice_id"),
+        CheckConstraint("amount_minor > 0", name="amount"),
+        CheckConstraint(f"method in ({','.join(repr(m) for m in PAYMENT_METHODS)})", name="method"),
     )
 
 

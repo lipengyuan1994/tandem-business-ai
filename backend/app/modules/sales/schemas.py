@@ -105,6 +105,37 @@ class CreateQuotePayload(DocumentCreate):
     pricing: QuotePricing | None = None
 
 
+PaymentMethod = Literal["cash", "card", "bank_transfer", "check", "other"]
+PaymentStatus = Literal["unpaid", "partially_paid", "paid"]
+
+
+class PaymentIn(VersionIn):
+    """`version` is the invoice version the staff member saw; the payment must fit the open balance."""
+
+    amount_minor: int = Field(gt=0, le=10**14, strict=True)
+    paid_on: date
+    method: PaymentMethod
+    reference: str | None = Field(default=None, max_length=200)
+
+    @field_validator("reference")
+    @classmethod
+    def blank_reference(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value.strip() or None
+
+
+class PaymentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    amount_minor: int
+    paid_on: date
+    method: PaymentMethod
+    reference: str | None
+    voided_at: datetime | None
+    created_at: datetime
+
+
 class DocumentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
@@ -128,9 +159,13 @@ class DocumentOut(BaseModel):
     source_quote_id: uuid.UUID | None = None
     paid_at: datetime | None = None
     last_reminder_at: datetime | None = None
+    amount_paid_minor: int | None = None
+    balance_minor: int | None = None
+    payment_status: PaymentStatus | None = None
     version: int
     created_at: datetime
     lines: list[LineOut] = Field(default_factory=list)
+    payments: list[PaymentOut] = Field(default_factory=list)
 
 
 class ConfirmOrderPayload(VersionIn):
@@ -147,6 +182,7 @@ class OverdueInvoice(BaseModel):
     due_date: date
     days_overdue: int
     total_minor: int
+    balance_minor: int
     currency: str
     version: int
     last_reminder_at: datetime | None
@@ -168,3 +204,32 @@ class ReminderProposalOut(BaseModel):
     id: uuid.UUID
     status: str
     current_revision_id: uuid.UUID | None
+
+
+class AgingBuckets(BaseModel):
+    current_minor: int
+    days_1_30_minor: int
+    days_31_60_minor: int
+    days_61_90_minor: int
+    days_over_90_minor: int
+    total_minor: int
+
+
+class AgingCustomer(AgingBuckets):
+    customer_id: uuid.UUID
+    customer_name: str
+    currency: str
+    invoice_count: int
+
+
+class AgingTotal(AgingBuckets):
+    currency: str
+    invoice_count: int
+
+
+class AgingReport(BaseModel):
+    """Open balances of issued invoices on `as_of`, bucketed by days past due (issue date when no due date)."""
+
+    as_of: date
+    customers: list[AgingCustomer]
+    totals: list[AgingTotal]
