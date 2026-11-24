@@ -6902,6 +6902,11 @@ export interface components {
             note: string | null;
             /** Status */
             status: string;
+            /**
+             * Version
+             * @description Send back when converting the draft into a purchase order
+             */
+            version: number;
         };
         /** ReorderRuleIn */
         ReorderRuleIn: {

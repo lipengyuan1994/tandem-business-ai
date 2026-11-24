@@ -572,6 +572,42 @@
       "createAll": "Create reorder draft",
       "created": "Reorder draft created",
       "line": "order {{n}} (available {{available}})"
+    },
+    "count": {
+      "open": "Count stock",
+      "title": "Count stock: {{name}}",
+      "hint": "Enter how many are on the shelf now. The system has {{onHand}}; any difference is recorded as a count correction.",
+      "counted": "Counted on the shelf",
+      "submit": "Record count",
+      "invalid": "Enter the number you counted (0 or more).",
+      "matched": "Count matches; nothing changed",
+      "corrected": "Count recorded: {{change}}"
+    },
+    "ruleForm": {
+      "set": "Set rule",
+      "edit": "Edit",
+      "none": "No reorder rule yet. Without one this item never shows in reorder suggestions.",
+      "point": "Reorder at",
+      "target": "Order up to",
+      "leadTime": "Lead time (days)",
+      "supplierHint": "Usual supplier (optional)",
+      "supplierLine": "Usual supplier: {{supplier}}",
+      "invalid": "Reorder at must be 0 or more, order up to above 0, and lead time a whole number of days up to 365.",
+      "targetAbovePoint": "Order up to must be higher than reorder at.",
+      "saved": "Reorder rule saved"
+    },
+    "drafts": {
+      "title": "Reorder drafts",
+      "hint": "Pick a supplier to turn a draft into a purchase order. Nothing is ordered until you send the order.",
+      "label_one": "Draft with {{count}} item",
+      "label_other": "Draft with {{count}} items",
+      "unknownItem": "Item",
+      "supplier": "Supplier",
+      "chooseSupplier": "Choose a supplier",
+      "convert": "Create purchase order",
+      "converted": "Purchase order created from the draft",
+      "noSuppliers": "Add a supplier before turning drafts into orders.",
+      "addSupplier": "Add a supplier"
     }
   },
   "schedule": {

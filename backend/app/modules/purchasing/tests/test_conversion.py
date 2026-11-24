@@ -155,3 +155,18 @@ def test_executor_checks_actual_creation_values_after_snapshot(
     assert shop["client"].get(BASE + "/purchase-orders").json()["items"] == []
     with transaction(ctx) as db:
         assert inventory.read_reorder_draft(db, ctx, uuid.UUID(d["id"])).status == "draft"
+
+
+def test_draft_list_carries_the_version_the_conversion_needs(shop: Any) -> None:
+    d = draft(shop)
+    assert d["version"] == 1 and d["status"] == "draft"
+    listed = next(x for x in shop["client"].get("/api/v1/inventory/reorder-drafts").json() if x["id"] == d["id"])
+    assert listed["version"] == 1
+    po = shop["client"].post(
+        BASE + "/purchase-orders/from-draft",
+        json={"draft_id": d["id"], "supplier_id": shop["supplier"]["id"], "version": listed["version"]},
+    )
+    assert po.status_code == 201, po.text
+    assert po.json()["source_draft_id"] == d["id"]
+    after = shop["client"].get(f"/api/v1/inventory/reorder-drafts/{d['id']}").json()
+    assert after["status"] == "sent_to_purchasing" and after["version"] == 2

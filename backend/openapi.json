@@ -10160,6 +10160,11 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "version": {
+            "description": "Send back when converting the draft into a purchase order",
+            "title": "Version",
+            "type": "integer"
           }
         },
         "required": [
@@ -10167,7 +10172,8 @@
           "status",
           "note",
           "created_at",
-          "lines"
+          "lines",
+          "version"
         ],
         "title": "ReorderDraftOut",
         "type": "object"

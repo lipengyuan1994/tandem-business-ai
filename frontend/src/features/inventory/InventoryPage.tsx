@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/common/PageHeader"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { DraftsPanel } from "./components/DraftsPanel"
 import { SuggestionsPanel } from "./components/SuggestionsPanel"
 import { useLevels, useSuggestions } from "./hooks"
 
@@ -22,6 +23,7 @@ export function InventoryPage() {
   const [belowOnly, setBelowOnly] = useState(false)
   const levels = useLevels(belowOnly)
   const suggestions = useSuggestions(permissions.has("inventory.reorder.read"))
+  const names = useMemo(() => new Map((levels.data ?? []).map((l) => [l.item_id, l.item_name])), [levels.data])
 
   const columns = useMemo<ColumnDef<StockLevel, unknown>[]>(() => [
     { header: t("inventory.fields.item"), cell: ({ row }) => <span className="font-medium">{row.original.item_name}</span> },
@@ -47,7 +49,11 @@ export function InventoryPage() {
           <DataTable columns={columns} data={levels.data} isLoading={levels.isPending} error={levels.error} onRetry={() => levels.refetch()}
             rowHref={(l) => `/inventory/${l.item_id}`} onRowClick={(l) => void navigate({ to: "/inventory/$itemId", params: { itemId: l.item_id } })} caption={t("nav.inventory")} />
         </div>
-        <aside>{suggestions.error ? <QueryError error={suggestions.error} onRetry={() => suggestions.refetch()} /> : null}<SuggestionsPanel suggestions={suggestions.data} /></aside>
+        <aside className="space-y-4">
+          {suggestions.error ? <QueryError error={suggestions.error} onRetry={() => suggestions.refetch()} /> : null}
+          <SuggestionsPanel suggestions={suggestions.data} />
+          <DraftsPanel names={names} />
+        </aside>
       </div>
     </>
   )

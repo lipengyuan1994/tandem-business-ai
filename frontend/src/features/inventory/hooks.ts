@@ -7,6 +7,7 @@ export const inventoryKeys = {
   levels: (belowOnly: boolean) => ["inventory", "levels", belowOnly] as const,
   item: (id: string) => ["inventory", "item", id] as const,
   suggestions: ["inventory", "suggestions"] as const,
+  drafts: ["inventory", "drafts"] as const,
 }
 
 export function useLevels(belowOnly = false) {
@@ -27,9 +28,34 @@ export function useSuggestions(enabled = true) {
   return useQuery({ queryKey: inventoryKeys.suggestions, enabled, queryFn: async () => unwrap(await api.GET("/api/v1/inventory/reorder-suggestions")) })
 }
 
+export function useReorderDrafts(enabled = true) {
+  return useQuery({ queryKey: inventoryKeys.drafts, enabled, queryFn: async () => unwrap(await api.GET("/api/v1/inventory/reorder-drafts")) })
+}
+
 function useInventoryMutation<TVars, TOut>(fn: (vars: TVars) => Promise<TOut>) {
   const qc = useQueryClient()
   return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: inventoryKeys.all }) })
+}
+
+/** A stock count: the server records the difference as a count correction, or nothing when the count matches. */
+export function useCountStock() {
+  return useInventoryMutation(async (v: { item_id: string; counted: string; note: string | null }) =>
+    unwrap(await api.POST("/api/v1/inventory/counts", { body: v })))
+}
+
+export function useSaveReorderRule(itemId: string) {
+  return useInventoryMutation(async (body: { reorder_point: string; target_level: string; lead_time_days: number; supplier_hint: string | null }) =>
+    unwrap(await api.PUT("/api/v1/inventory/reorder-rules/{item_id}", { params: { path: { item_id: itemId } }, body })))
+}
+
+/** Turns a reorder draft into a purchase order for one supplier; the draft is then marked sent to purchasing. */
+export function useConvertDraft() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (v: { draft_id: string; supplier_id: string; version: number }) =>
+      unwrap(await api.POST("/api/v1/purchasing/purchase-orders/from-draft", { body: v })),
+    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: inventoryKeys.all }), qc.invalidateQueries({ queryKey: ["purchasing"] })]),
+  })
 }
 
 export type AdjustReason = "adjustment_gain" | "adjustment_loss" | "count_correction" | "receipt" | "return"
