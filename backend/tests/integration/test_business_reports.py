@@ -72,7 +72,12 @@ class History:
         self.at(10, 1)
         po2 = self.order(1300)
         self.at(10, 2)
-        ok(self.owner.post("/api/v1/inventory/movements", json={"item_id": self.chain, "quantity": "4", "reason": "receipt"}), 201)
+        ok(
+            self.owner.post(
+                "/api/v1/inventory/movements", json={"item_id": self.chain, "quantity": "4", "reason": "receipt"}
+            ),
+            201,
+        )
         self.at(10, 5)
         self.receive(po2, "5")
         self.at(10, 20)

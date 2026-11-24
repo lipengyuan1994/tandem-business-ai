@@ -20,11 +20,11 @@ def test_date_range_defaults_and_rejections() -> None:
     assert date_range(None, None, today) == DateRange(date(2026, 11, 1), today)
     assert date_range(None, date(2026, 3, 9), today) == DateRange(date(2026, 3, 1), date(2026, 3, 9))
     assert date_range(date(2026, 5, 5), None, today) == DateRange(date(2026, 5, 5), today)
-    with pytest.raises(Invalid, match="reports.invalid_range"):
+    with pytest.raises(Invalid, match=r"reports\.invalid_range"):
         date_range(date(2026, 5, 2), date(2026, 5, 1), today)
     start = date(2023, 1, 1)
     assert date_range(start, date.fromordinal(start.toordinal() + MAX_RANGE_DAYS - 1), today).date_from == start
-    with pytest.raises(Invalid, match="reports.range_too_long"):
+    with pytest.raises(Invalid, match=r"reports\.range_too_long"):
         date_range(start, date.fromordinal(start.toordinal() + MAX_RANGE_DAYS), today)
 
 
