@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -146,3 +146,35 @@ class AdjustStockPayload(BaseModel):
 
 class ReorderDraftRead(ReorderDraftOut):
     version: int
+
+
+class StockValueRow(BaseModel):
+    """One item (with its unit and average cost) or one stock location (with counts of items in it)."""
+
+    key: str
+    label: str
+    sku: str | None = None
+    unit: str | None = None
+    quantity: Decimal | None = None
+    unit_cost_minor: int | None = None
+    value_minor: int
+    item_count: int
+    uncosted_item_count: int
+
+
+class StockValueTotals(BaseModel):
+    value_minor: int
+    item_count: int
+    uncosted_item_count: int
+
+
+class StockValueReport(BaseModel):
+    """On hand at the end of `as_of`, valued at weighted average purchase cost. Items with no recorded cost are
+    counted in `uncosted_item_count` and add nothing to `value_minor`."""
+
+    as_of: date
+    group_by: Literal["item", "location"]
+    currency: str
+    cost_basis: Literal["average_purchase_cost"] = "average_purchase_cost"
+    rows: list[StockValueRow]
+    totals: StockValueTotals

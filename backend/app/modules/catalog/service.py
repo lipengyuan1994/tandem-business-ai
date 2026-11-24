@@ -169,6 +169,21 @@ def get_parts(db: Session, ctx: Context, service_id: uuid.UUID) -> list[ServiceP
     return [ServicePartOut(item_id=i, item_name=n, quantity=q) for i, n, q in rows]
 
 
+def parts_by_service(db: Session, ctx: Context, service_ids: set[uuid.UUID]) -> dict[uuid.UUID, list[ServicePartOut]]:
+    if not service_ids:
+        return {}
+    rows = db.execute(
+        select(ServicePart.service_id, ServicePart.item_id, CatalogItem.name, ServicePart.quantity)
+        .join(CatalogItem, CatalogItem.id == ServicePart.item_id)
+        .where(ServicePart.business_id == ctx.business_id, ServicePart.service_id.in_(service_ids))
+        .order_by(CatalogItem.name)
+    )
+    out: dict[uuid.UUID, list[ServicePartOut]] = {}
+    for service_id, item_id, name, quantity in rows:
+        out.setdefault(service_id, []).append(ServicePartOut(item_id=item_id, item_name=name, quantity=quantity))
+    return out
+
+
 def replace_parts(db: Session, ctx: Context, service_id: uuid.UUID, parts: list[ServicePartIn]) -> list[ServicePartOut]:
     ctx.require(P.ITEM_WRITE)
     service = _item(db, ctx, service_id, for_update=True)

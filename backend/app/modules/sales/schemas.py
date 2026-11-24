@@ -233,3 +233,71 @@ class AgingReport(BaseModel):
     as_of: date
     customers: list[AgingCustomer]
     totals: list[AgingTotal]
+
+
+class SalesAmounts(BaseModel):
+    """Net of credit notes: invoices add, credit notes subtract. `net` excludes tax; `total` includes it."""
+
+    currency: str
+    invoice_count: int
+    credit_note_count: int
+    net_minor: int
+    tax_minor: int
+    total_minor: int
+
+
+class SalesRow(SalesAmounts):
+    """`key` is the period's first day, a customer id, a catalog item id, or `free_text` for typed-in lines."""
+
+    key: str
+    label: str
+    quantity: Decimal | None = None
+
+
+class SalesTotal(SalesAmounts):
+    pass
+
+
+class SalesReport(BaseModel):
+    """Invoices count on their issue date (also when later credited); credit notes subtract on theirs."""
+
+    date_from: date
+    date_to: date
+    group_by: Literal["period", "customer", "item"]
+    period: Literal["day", "week", "month"]
+    rows: list[SalesRow]
+    totals: list[SalesTotal]
+
+
+class MarginTotals(BaseModel):
+    """Margin is over `costed_revenue_minor` only; revenue without a known cost is reported separately."""
+
+    revenue_minor: int
+    costed_revenue_minor: int
+    uncosted_revenue_minor: int
+    cost_minor: int | None
+    margin_minor: int | None
+    margin_basis_points: int | None = Field(description="Margin as a share of costed revenue; 2550 = 25.50%")
+
+
+class MarginRow(MarginTotals):
+    """`key` is a catalog item id or `free_text` (by item), or `product`, `service`, `free_text` (by kind)."""
+
+    key: str
+    label: str
+    kind: Literal["product", "service", "free_text"] | None = None
+    quantity: Decimal | None = None
+
+
+class MarginReport(BaseModel):
+    """Gross margin on net sales in the business currency at weighted average purchase cost as of `date_to`.
+    Services cost their current parts (materials only). Documents in other currencies are left out and counted."""
+
+    date_from: date
+    date_to: date
+    group_by: Literal["item", "kind"]
+    currency: str
+    cost_basis: Literal["average_purchase_cost"] = "average_purchase_cost"
+    rows: list[MarginRow]
+    totals: MarginTotals
+    other_currency_document_count: int

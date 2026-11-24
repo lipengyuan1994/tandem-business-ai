@@ -40,6 +40,13 @@ def list_stock_tracked(db: Session, ctx: Context) -> list[CatalogItemOut]:
     return [CatalogItemOut.model_validate(r) for r in rows]
 
 
+def get_parts_by_service(
+    db: Session, ctx: Context, service_ids: set[uuid.UUID]
+) -> dict[uuid.UUID, list[ServicePartOut]]:
+    """Internal batch read of current parts per service (archived ones too); no permission check of its own."""
+    return service.parts_by_service(db, ctx, service_ids)
+
+
 def search_items(
     db: Session, ctx: Context, query: str | None, kind: str | None, limit: int = 20
 ) -> list[CatalogItemOut]:
@@ -80,6 +87,7 @@ __all__ = [
     "get_default_currency",
     "get_item",
     "get_items",
+    "get_parts_by_service",
     "get_service_requirements",
     "list_active_service_requirements",
     "search_items",

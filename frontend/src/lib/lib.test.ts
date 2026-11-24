@@ -42,4 +42,8 @@ describe("permissions", () => {
     expect(hasPermission(new Set(["crm.customer.read"]), "crm.customer.read")).toBe(true)
     expect(hasPermission(new Set(), "crm.customer.read")).toBe(false)
   })
+  it("accepts any one of a list", () => {
+    expect(hasPermission(new Set(["purchasing.po.read"]), ["sales.document.read", "purchasing.po.read"])).toBe(true)
+    expect(hasPermission(new Set(["crm.customer.read"]), ["sales.document.read", "purchasing.po.read"])).toBe(false)
+  })
 })

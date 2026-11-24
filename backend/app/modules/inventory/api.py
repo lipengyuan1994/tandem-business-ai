@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date
+from typing import Literal
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -13,7 +15,7 @@ from app.platform.errors import error_responses
 from app.platform.permissions import require
 
 from . import permissions as P
-from . import public, service
+from . import public, reports, service
 from .models import ReorderDraft, StockMovement, StockReservation
 from .schemas import (
     AvailabilityOut,
@@ -28,6 +30,7 @@ from .schemas import (
     ReorderRuleOut,
     ReorderSuggestion,
     ReservationOut,
+    StockValueReport,
 )
 
 router = APIRouter()
@@ -50,6 +53,21 @@ def levels(
         if q:
             rows = [r for r in rows if q.lower() in r.item_name.lower() or (r.sku or "").lower() == q.lower()]
         return rows
+
+
+@router.get(
+    "/reports/stock-value",
+    response_model=StockValueReport,
+    summary="Stock value at average purchase cost, by item or location (needs purchasing read for costs)",
+    responses=ERRORS,
+)
+def stock_value_report(
+    as_of: date | None = None,
+    group_by: Literal["item", "location"] = "item",
+    ctx: Context = Depends(require(P.STOCK_READ)),
+) -> StockValueReport:
+    with transaction(ctx) as db:
+        return reports.stock_value(db, ctx, as_of or reports.business_today(db, ctx), group_by)
 
 
 @router.get(

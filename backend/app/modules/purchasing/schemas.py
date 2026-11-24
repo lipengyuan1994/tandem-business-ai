@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import (
     BaseModel,
@@ -218,3 +218,33 @@ class CreateFromDraftPayload(DraftConversion):
 
 class ApprovePOPayload(VersionIn):
     purchase_order_id: uuid.UUID
+
+
+class SpendAmounts(BaseModel):
+    """`ordered` is approved purchase orders by approval date; `received` is goods received at PO unit cost."""
+
+    currency: str
+    order_count: int
+    ordered_minor: int
+    receipt_count: int
+    received_minor: int
+
+
+class SpendRow(SpendAmounts):
+    """`key` is a supplier id or the first day of a period."""
+
+    key: str
+    label: str
+
+
+class SpendTotal(SpendAmounts):
+    pass
+
+
+class SpendReport(BaseModel):
+    date_from: date
+    date_to: date
+    group_by: Literal["supplier", "period"]
+    period: Literal["day", "week", "month"]
+    rows: list[SpendRow]
+    totals: list[SpendTotal]

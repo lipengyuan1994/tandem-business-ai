@@ -713,3 +713,18 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   had a pending supplier invitation; the live unavailable-link state was verified.
 - After browser verification, the Vultr API confirmed zero SSH rules and port 22 was unreachable over both
   IPv4 and IPv6. The existing public web addresses continue to serve the demo.
+
+## 2026-11-24 — Reports: sales, gross margin, stock value and spend
+
+- Added four read-only reports, each in the module that owns its data: sales and gross margin (`sales/reports.py`),
+  stock value and average purchase cost (`inventory/reports.py`), and spend (`purchasing/reports.py`), with shared
+  date-range and period helpers in `app/platform/reporting.py`. No new module, table, migration or permission.
+- The repo had no costing method. Margin and stock value use the weighted average price of costed stock receipts;
+  services cost their current parts. Anything without a known cost is reported separately, not estimated. Gaps
+  recorded in M07, M16 and M17: no catalog categories, no labour cost, no FIFO or standard cost, no supplier bills.
+- UI: a Reports page with Sales, Gross margin, Stock value and Spend tabs shown by permission, date ranges, totals
+  per currency and CSV download. Navigation entries can now require any one of several permissions.
+- Verification: new backend integration and platform tests, architecture tests, backend and frontend lint and
+  types, and all 638 frontend tests passed locally. The full local backend suite was too slow on the 4-CPU cloud
+  machine and was not finished there; the complete backend suite passed in CI on all four shards (PR #5).
+  Not run: browser or end-to-end checks against a running app.

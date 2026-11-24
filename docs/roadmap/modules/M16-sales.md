@@ -107,3 +107,26 @@ Commercial documents: quote → sales order → invoice. **No payment processing
   payment. Invoice lists show Balance due and a Partially paid badge. **Sales → Receivables** shows the aging report.
 - Not built: customer credit balances and refunds, partial credit notes, payment fields in the accounting CSV export,
   aging CSV export and drill-down from aging to invoices.
+
+## As built — sales and gross margin reports (2026-11-24)
+
+- `GET /sales/reports/sales?date_from&date_to&group_by=period|customer|item&period=day|week|month`
+  (`sales.document.read`): net sales, tax and total with invoice and credit-note counts, per row and per currency.
+  Issued, paid and later-credited invoices count on their issue date; credit notes are subtracted on their own issue
+  date, so a past period keeps its totals. Drafts never count. Dates are business-local days; the default range is the
+  first of the current month through today; reversed ranges (`reports.invalid_range`) and ranges of three years or more
+  (`reports.range_too_long`) are refused with 422. Weeks start on Monday. Hand-typed lines group as `free_text`.
+- `GET /sales/reports/margin?date_from&date_to&group_by=item|kind` (`sales.document.read` and `purchasing.po.read`,
+  because costs are purchase prices): gross margin on net sales in the business currency. Cost is the weighted average
+  purchase cost (see M07) as of the end of the range; a service costs its current parts (materials only, no labour).
+  Lines with no known cost (free text, products never received at a price, services without priced parts) are shown as
+  `uncosted_revenue_minor` and left out of margin rather than estimated. Invoices in other currencies are counted in
+  `other_currency_document_count` and left out. The catalog has no categories, so "kind" (product, service, free text)
+  is the only grouping above items.
+- Shared helpers live in `app/platform/reporting.py` (date range, period buckets, basis points). The receivables aging
+  report is unchanged and stays on Sales → Receivables.
+- UI: **Reports** in the navigation (any of `sales.document.read`, `purchasing.po.read`) with Sales, Gross margin, Stock
+  value and Spend tabs, each shown only to people who can read its data. Each has a date range (or as-of date),
+  grouping, totals per currency and a CSV download.
+- Not built: catalog categories, labour cost on services, FIFO or standard costing, report scheduling or email,
+  comparison with a previous period, and drill-down from a report row to its documents.

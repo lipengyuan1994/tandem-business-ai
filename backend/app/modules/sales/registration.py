@@ -1,12 +1,13 @@
 from app.platform.registry import Registry
 
-from . import api, executors, lifecycle
+from . import api, api_reports, executors, lifecycle
 from . import permissions as P
 
 
 def register(reg: Registry) -> None:
     reg.add_permissions(P.ALL)
     reg.add_router(api.router, "/sales", ["sales"])
+    reg.add_router(api_reports.router, "/sales", ["sales"])
     reg.add_executor(executors.CREATE_QUOTE)
     reg.add_executor(executors.CONFIRM_ORDER)
     reg.add_executor(executors.SEND_PAYMENT_REMINDER)
