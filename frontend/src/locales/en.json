@@ -138,6 +138,7 @@
     "approvals.not_pending": "This proposal has already been decided.",
     "approvals.invalid_payload": "Some values are invalid.",
     "crm.customer_version_conflict": "This {{customer}} changed since you opened it.",
+    "crm.contact_point_in_use": "Another {{customer}} already has this email or phone.",
     "scheduling.slot_unavailable": "That time was just taken. Pick another slot.",
     "inventory.insufficient_stock": "Not enough stock available.",
     "catalog.item_in_use": "An active {{service}} still uses this product as a part. Remove it from that {{service}}'s parts first.",
@@ -466,6 +467,35 @@
       "proactiveAllowed": "Allows proactive service messages",
       "proactiveNotAllowed": "Does not authorize proactive service messages",
       "proactiveHelp": "Proactive service messages need current service-update consent recorded by staff or import. A chat checkbox covers this request only. Review requests also need marketing consent. Contact preferences and open complaints still apply."
+    },
+    "contacts": {
+      "title": "Contact details",
+      "none": "No email or phone yet.",
+      "primary": "Primary",
+      "remove": "Remove",
+      "removeFor": "Remove {{value}}",
+      "removed": "Contact removed",
+      "add": "Add email or phone",
+      "type": "Type",
+      "value": "Email or phone",
+      "makePrimary": "Make primary",
+      "added": "Contact added",
+      "invalid": "Enter a valid email, or a phone number of at least 3 characters."
+    },
+    "tags": {
+      "none": "No tags.",
+      "add": "New tag",
+      "placeholder": "e.g. vip",
+      "addButton": "Add tag",
+      "removeFor": "Remove tag {{tag}}"
+    },
+    "archive": {
+      "open": "Archive",
+      "title": "Archive {{name}}?",
+      "hint": "They drop out of the {{customer}} list and searches. History, invoices and consent records stay.",
+      "confirm": "Archive",
+      "done": "{{name}} archived",
+      "notice": "This {{customer}} is archived."
     },
     "erase": {
       "open": "Erase personal data…",

@@ -2,7 +2,10 @@ import { QueryError } from "@/components/common/QueryError"
 import { useParams } from "@tanstack/react-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 import { useSession } from "@/app/session-context"
+import { ConfirmDialog } from "@/components/common/ConfirmDialog"
+import { ConflictDialog } from "@/components/common/ConflictDialog"
 import { EmptyState } from "@/components/common/EmptyState"
 import { LocalTime } from "@/components/common/LocalTime"
 import { PageHeader } from "@/components/common/PageHeader"
@@ -16,9 +19,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { toastError } from "@/lib/errors"
 import { ConsentPanel } from "../components/ConsentPanel"
+import { ContactsCard } from "../components/ContactsCard"
 import { CustomerDialog } from "../components/CustomerDialog"
 import { EraseDialog } from "../components/EraseDialog"
-import { useAddNote, useCustomer, useNotes, useTimeline } from "../hooks"
+import { useAddNote, useArchiveCustomer, useCustomer, useNotes, useTimeline } from "../hooks"
 
 export function CustomerDetailPage() {
   const { t } = useTranslation()
@@ -28,6 +32,9 @@ export function CustomerDetailPage() {
   const customer = useCustomer(customerId)
   const [editing, setEditing] = useState(false)
   const [erasing, setErasing] = useState(false)
+  const [archiving, setArchiving] = useState(false)
+  const [conflict, setConflict] = useState(false)
+  const archive = useArchiveCustomer(customerId)
   const c = customer.data
 
   if (customer.error) return <QueryError error={customer.error} onRetry={() => customer.refetch()} notFound={t("crm.notFound")} />
@@ -42,12 +49,14 @@ export function CustomerDetailPage() {
         actions={
           <div className="flex gap-2">
             <PermissionGate permission="crm.customer.write"><Button variant="outline" onClick={() => setEditing(true)}>{t("crm.edit")}</Button></PermissionGate>
+            {c.status === "active" ? <PermissionGate permission="crm.customer.write"><Button variant="ghost" onClick={() => setArchiving(true)}>{t("crm.archive.open")}</Button></PermissionGate> : null}
             <PermissionGate permission="admin_ops.data.manage"><Button variant="ghost" onClick={() => setErasing(true)}>{t("crm.erase.open")}</Button></PermissionGate>
           </div>
         }
       />
+      {c.status === "archived" ? <p className="mb-4"><Badge variant="secondary">{t("status.archived")}</Badge> <span className="text-sm text-muted-foreground">{t("crm.archive.notice")}</span></p> : null}
       <p className="mb-4 text-sm">{t("crm.preferredContact")}: {t(`crm.contactChannels.${c.preferred_contact_channel ?? "email"}`)}</p>
-      {c.tags.length ? <p className="mb-4 flex gap-1">{c.tags.map((tag) => <Badge key={tag} variant="outline">{tag}</Badge>)}</p> : null}
+      <div className="mb-6"><ContactsCard customer={c} canEdit={permissions.has("crm.customer.write") && c.status === "active"} /></div>
       <Tabs defaultValue="timeline">
         <TabsList>
           <TabsTrigger value="timeline">{t("crm.tabs.timeline")}</TabsTrigger>
@@ -58,6 +67,13 @@ export function CustomerDetailPage() {
         <TabsContent value="notes" className="pt-4"><Notes customerId={customerId} timeZone={businessTimeZone} /></TabsContent>
         {canSeeConsent ? <TabsContent value="consent" className="pt-4"><ConsentPanel customerId={customerId} /></TabsContent> : null}
       </Tabs>
+      <ConfirmDialog open={archiving} onOpenChange={setArchiving} destructive pending={archive.isPending} title={t("crm.archive.title", { name: c.display_name })}
+        description={t("crm.archive.hint")} confirmLabel={t("crm.archive.confirm")}
+        onConfirm={() => archive.mutate(c.version, {
+          onSuccess: () => { setArchiving(false); toast.success(t("crm.archive.done", { name: c.display_name })) },
+          onError: (e) => { setArchiving(false); toastError(e, () => setConflict(true)) },
+        })} />
+      <ConflictDialog open={conflict} onOpenChange={setConflict} onReload={() => { setConflict(false); void customer.refetch() }} />
       {erasing ? <EraseDialog customer={c} onOpenChange={setErasing} /> : null}
       {editing ? <CustomerDialog open onOpenChange={setEditing} customer={c} onReload={() => void customer.refetch()} /> : null}
     </>
