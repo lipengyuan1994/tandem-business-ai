@@ -182,12 +182,50 @@ describe("settings → resources", () => {
     await waitFor(() => expect(added).toEqual({ kind: "closed", resource_id: null, reason: "Holidays", starts_at: "2099-12-24T07:00:00.000Z", ends_at: "2099-12-27T07:00:00.000Z" }))
   })
 
+  it("asks who an extra opening is for, since one for everyone would open no slots", async () => {
+    mockMe(meWith(...WRITE))
+    mockSetup([SAM])
+    let sent: unknown = null
+    server.use(http.post("*/api/v1/scheduling/exceptions", async ({ request }) => { sent = await request.json(); return HttpResponse.json({ id: "x1", ...(sent as object) }, { status: 201 }) }))
+    renderApp("/settings/resources")
+    const form = await screen.findByRole("form", { name: "Add closure or opening" })
+    await userEvent.selectOptions(within(form).getByLabelText("Type"), "extra_open")
+    expect(within(form).getByRole("alert")).toHaveTextContent("Choose who the extra opening is for.")
+    expect(within(form).getByRole("button", { name: "Add closure or opening" })).toBeDisabled()
+    await userEvent.selectOptions(within(form).getByLabelText("Applies to"), "Sam Example")
+    expect(within(form).queryByRole("alert")).not.toBeInTheDocument()
+    await userEvent.click(within(form).getByRole("button", { name: "Add closure or opening" }))
+    await waitFor(() => expect(sent).toMatchObject({ kind: "extra_open", resource_id: "r1" }))
+  })
+
+  it("says what nothing ticked means and never sends links to archived services", async () => {
+    mockMe(meWith(...WRITE))
+    const NEW: Resource = { ...SAM, id: "r3", name: "Alex Example", service_ids: [] }
+    mockSetup([{ ...SAM, service_ids: ["s1", "gone"] }, NEW])
+    let saved: unknown = null
+    server.use(http.put("*/api/v1/scheduling/resources/r1/services", async ({ request }) => { saved = await request.json(); return HttpResponse.json(SAM) }))
+    renderApp("/settings/resources")
+    await userEvent.click(await screen.findByRole("button", { name: /Alex Example/ }))
+    expect(await screen.findByText("Nothing is ticked, so this resource can be booked for any service it fits.")).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole("button", { name: /Sam Example/ }))
+    await waitFor(() => expect(screen.queryByText(/Nothing is ticked/)).not.toBeInTheDocument())
+    const fieldset = screen.getByRole("group", { name: /Tick the services/ })
+    expect(within(fieldset).getByText("Bike fitting").parentElement).toHaveTextContent("nobody is ticked for this, so anyone who fits can do it")
+    expect(within(fieldset).getByText("Brake service").parentElement).not.toHaveTextContent("nobody is ticked")
+    expect(screen.getByRole("button", { name: "Save services" })).toBeDisabled()
+    await userEvent.click(within(fieldset).getByRole("checkbox", { name: /Bike fitting/ }))
+    await userEvent.click(screen.getByRole("button", { name: "Save services" }))
+    await waitFor(() => expect(saved).toEqual(["s1", "s2"]))
+  })
+
   it("refuses a timed opening that ends before it starts", async () => {
     mockMe(meWith(...WRITE))
     mockSetup([SAM])
     renderApp("/settings/resources")
     const form = await screen.findByRole("form", { name: "Add closure or opening" })
     await userEvent.selectOptions(within(form).getByLabelText("Type"), "extra_open")
+    await userEvent.selectOptions(within(form).getByLabelText("Applies to"), "Sam Example")
     await userEvent.click(within(form).getByLabelText("Whole days"))
     const endTime = within(form).getByLabelText("End time")
     await userEvent.clear(endTime)

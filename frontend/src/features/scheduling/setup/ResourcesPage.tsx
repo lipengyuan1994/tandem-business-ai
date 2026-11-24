@@ -137,7 +137,7 @@ export function ResourcesPage() {
             </Card>
             <Card>
               <CardHeader><CardTitle className="text-base">{t("resources.services.title")}</CardTitle></CardHeader>
-              <CardContent><ResourceServices key={`${current.id}-${current.service_ids.join(",")}`} resource={current} canEdit={canEdit} /></CardContent>
+              <CardContent><ResourceServices key={`${current.id}-${current.service_ids.join(",")}`} resource={current} others={list} canEdit={canEdit} /></CardContent>
             </Card>
           </div>
         ) : null}

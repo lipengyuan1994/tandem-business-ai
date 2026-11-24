@@ -41,12 +41,14 @@ function AddClosureForm({ resources, timeZone }: { resources: Resource[]; timeZo
     window = null
   }
   const invalid = !window || window.ends_at <= window.starts_at
+  // The slot finder only applies an extra opening to the resource it names, so one for everyone would do nothing.
+  const needsResource = kind === "extra_open" && !resourceId
 
   return (
     <form className="grid gap-3 sm:grid-cols-2" aria-label={t("resources.closures.add")}
       onSubmit={(e) => {
         e.preventDefault()
-        if (!window || invalid) return
+        if (!window || invalid || needsResource) return
         add.mutate({ ...window, kind, resource_id: resourceId || null, reason: reason.trim() || null }, {
           onSuccess: () => { setReason(""); toast.success(t("resources.closures.added")) },
           onError: (err) => toastError(err),
@@ -62,7 +64,7 @@ function AddClosureForm({ resources, timeZone }: { resources: Resource[]; timeZo
       <div className="space-y-1">
         <Label htmlFor="closure-resource">{t("resources.closures.appliesTo")}</Label>
         <select id="closure-resource" className={SELECT} value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
-          <option value="">{t("resources.closures.everyone")}</option>
+          <option value="" disabled={kind === "extra_open"}>{kind === "extra_open" ? t("resources.closures.chooseResource") : t("resources.closures.everyone")}</option>
           {resources.filter((r) => r.status === "active").map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
       </div>
@@ -89,7 +91,8 @@ function AddClosureForm({ resources, timeZone }: { resources: Resource[]; timeZo
         <Input id="closure-reason" value={reason} maxLength={200} onChange={(e) => setReason(e.target.value)} />
       </div>
       {invalid ? <p role="alert" className="text-sm text-destructive sm:col-span-2">{t("resources.closures.endBeforeStart")}</p> : null}
-      <div className="sm:col-span-2"><Button type="submit" disabled={add.isPending || invalid}>{t("resources.closures.add")}</Button></div>
+      {needsResource ? <p role="alert" className="text-sm text-destructive sm:col-span-2">{t("resources.closures.extraNeedsResource")}</p> : null}
+      <div className="sm:col-span-2"><Button type="submit" disabled={add.isPending || invalid || needsResource}>{t("resources.closures.add")}</Button></div>
     </form>
   )
 }

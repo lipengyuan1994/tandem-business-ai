@@ -39,7 +39,7 @@ function useInventoryMutation<TVars, TOut>(fn: (vars: TVars) => Promise<TOut>) {
 
 /** A stock count: the server records the difference as a count correction, or nothing when the count matches. */
 export function useCountStock() {
-  return useInventoryMutation(async (v: { item_id: string; counted: string; note: string | null }) =>
+  return useInventoryMutation(async (v: { item_id: string; stock_location_id: string | null; counted: string; note: string | null }) =>
     unwrap(await api.POST("/api/v1/inventory/counts", { body: v })))
 }
 

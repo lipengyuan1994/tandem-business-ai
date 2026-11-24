@@ -79,7 +79,7 @@ export function InventoryItemPage() {
           <ReorderRuleCard itemId={itemId} rule={stock.data.rule} />
         </aside>
       </div>
-      {counting ? <CountDialog itemId={itemId} itemName={level.item_name} onHand={String(stock.data.levels.reduce((sum, l) => sum + Number(l.on_hand), 0))} onOpenChange={setCounting} /> : null}
+      {counting ? <CountDialog itemId={itemId} itemName={level.item_name} levels={stock.data.levels} onOpenChange={setCounting} /> : null}
       {adjusting ? <AdjustDialog itemId={itemId} itemName={level.item_name} onOpenChange={setAdjusting} /> : null}
     </>
   )

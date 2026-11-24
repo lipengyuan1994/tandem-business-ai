@@ -36,12 +36,34 @@ describe("inventory setup", () => {
     await userEvent.type(screen.getByLabelText("Note (optional)"), "shelf check")
     await userEvent.click(screen.getByRole("button", { name: "Record count" }))
     expect(await screen.findByText("Count recorded: -1")).toBeInTheDocument()
-    expect(sent).toEqual([{ item_id: PADS, counted: "2", note: "shelf check" }])
+    expect(sent).toEqual([{ item_id: PADS, stock_location_id: LOC, counted: "2", note: "shelf check" }])
 
     await userEvent.click(screen.getByRole("button", { name: "Count stock" }))
     await userEvent.type(screen.getByLabelText("Counted on the shelf"), "3")
     await userEvent.click(screen.getByRole("button", { name: "Record count" }))
     expect(await screen.findByText("Count matches; nothing changed")).toBeInTheDocument()
+  })
+
+  it("counts one stock location at a time when the item is stored in several", async () => {
+    mockMe(meWith(...STOCK))
+    const LOC2 = "00000000-0000-7000-8000-0000000000e2"
+    const sent: unknown[] = []
+    server.use(
+      http.get(`*/api/v1/inventory/items/${PADS}`, () => HttpResponse.json({ ...DETAIL, levels: [{ ...LEVEL, on_hand: "5.000", available: "5.000" }, { ...LEVEL, stock_location_id: LOC2 }] })),
+      http.post("*/api/v1/inventory/counts", async ({ request }) => {
+        sent.push(await request.json())
+        return HttpResponse.json(null)
+      }),
+    )
+    renderApp(`/inventory/${PADS}`)
+    await userEvent.click(await screen.findByRole("button", { name: "Count stock" }))
+    expect(screen.getByText(/The system has 5;/)).toBeInTheDocument()
+    await userEvent.selectOptions(screen.getByLabelText("Stock location"), "Location 2 (3 on hand)")
+    expect(screen.getByText(/The system has 3;/)).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText("Counted on the shelf"), "3")
+    await userEvent.click(screen.getByRole("button", { name: "Record count" }))
+    expect(await screen.findByText("Count matches; nothing changed")).toBeInTheDocument()
+    expect(sent).toEqual([{ item_id: PADS, stock_location_id: LOC2, counted: "3", note: null }])
   })
 
   it("hides the count button without the adjust permission", async () => {
