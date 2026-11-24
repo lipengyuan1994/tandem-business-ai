@@ -6,6 +6,7 @@ export function LoginFailedPage() {
   const { t } = useTranslation()
   return (
     <main className="mx-auto max-w-lg p-8">
+      <p className="mb-4 text-sm text-muted-foreground">{t("app.name")} · {t("app.byline")}</p>
       <EmptyState
         title={t("identity.loginFailed.title")}
         description={t("identity.loginFailed.help")}

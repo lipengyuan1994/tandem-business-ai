@@ -150,6 +150,10 @@
 # Keep these files outside /srv so the main app cannot serve the clinic through its own file_server.
 {$DEMO_SITE_DOMAIN:(demo_site_disabled)} {
 	root * /opt/demo-site/dental
+	@clinic_index path / /index.html
+	templates @clinic_index {
+		mime text/html
+	}
 	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000"

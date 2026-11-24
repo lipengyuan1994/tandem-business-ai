@@ -27,6 +27,7 @@ x-app-env: &app-env
   KEYCLOAK_ADMIN_CLIENT_ID: smb-admin
   KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?KEYCLOAK_ADMIN_CLIENT_SECRET is required}
   DATA_PROFILE: ${DATA_PROFILE:-standard}
+  DEMO_SITE_DOMAIN: ${DEMO_SITE_DOMAIN:-}
   # Hosting/backup attestations remain required; they never permit hosted AI under regulated (ADR-020).
   REGULATED_HOST_BAA: ${REGULATED_HOST_BAA:-}
   REGULATED_BACKUP_BAA: ${REGULATED_BACKUP_BAA:-}

@@ -2,6 +2,7 @@
 
 import base64
 import hashlib
+from html.parser import HTMLParser
 import json
 import os
 import re
@@ -12,6 +13,33 @@ import unittest
 from support import ROOT, OperationsCase
 
 CADDY = shutil.which("caddy")
+
+
+class ClinicLinks(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.urls = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag in {"a", "script"}:
+            self.urls.append(attrs.get("href") or attrs.get("src"))
+
+
+class ClinicContentTests(unittest.TestCase):
+    def test_cross_host_destinations_and_prospect_copy(self):
+        template = (ROOT / "deploy/demo-site/dental/index.html").read_text()
+        for domain in ("app.example.com", "workspace.example.org:8443"):
+            html = template.replace('{{env `DOMAIN`}}', domain)
+            parser = ClinicLinks()
+            parser.feed(html)
+            urls = set(parser.urls)
+            for path in ("/", "/embed.js", "/p/example-dental-clinic/request",
+                         "/p/example-dental-clinic/bookings", "/p/example-dental-clinic/chat"):
+                self.assertIn("https://" + domain + path, urls)
+            self.assertIn("https://bostonaiforward.com/inquiry.html", urls)
+            self.assertIn("A product of Boston AI Forward", html)
+            self.assertNotRegex(html.lower(), r"judge|open-?dl|hackathon|agent rush|lablab")
 
 
 @unittest.skipUnless(CADDY, "native Caddy unavailable; adaptation unverified")
@@ -46,6 +74,7 @@ class DemoClinicAdaptationTests(unittest.TestCase):
         route = next(r for r in routes if {"host": ["clinic.example.com"]} in r.get("match", []))
         encoded = json.dumps(route)
         self.assertIn("/opt/demo-site/dental", encoded)
+        self.assertIn('"handler": "templates"', encoded)
         self.assertNotIn("reverse_proxy", encoded)
         self.assertNotIn('"/srv"', encoded)
         self.assertNotIn("disable_certificates", json.dumps(config))

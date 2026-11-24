@@ -5,6 +5,7 @@ import type { PermissionSet } from "@/lib/permissions"
 export interface SessionState {
   status: "authenticated" | "anonymous"
   userId: string | null
+  email: string | null
   displayName: string | null
   businessId: string | null
   businessName: string | null
@@ -15,6 +16,7 @@ export interface SessionState {
 export const ANONYMOUS: SessionState = {
   status: "anonymous",
   userId: null,
+  email: null,
   displayName: null,
   businessId: null,
   businessName: null,

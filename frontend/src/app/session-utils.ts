@@ -7,6 +7,7 @@ export function toSession(me: Me): SessionState {
     status: "authenticated",
     userId: me.user.id,
     displayName: me.user.display_name,
+    email: me.email,
     businessId: me.active_business_id ?? null,
     businessName: active?.business_name ?? null,
     businessTimeZone: me.active_business_timezone ?? "UTC",

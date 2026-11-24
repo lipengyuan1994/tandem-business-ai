@@ -128,9 +128,8 @@ Default seed and demo-logins include all three businesses. The original AI test 
 the cycle/garden fixtures; dental has its own integration cases. The clinic supplier and four supply offers
 are stored in the portable fixture tables and created through the existing purchasing service.
 
-## Public judge account (P10-J)
+## Public demo guest
 
-`judge@example.com` (Demo Judge) has one active `demo_reviewer` membership in each of the three businesses.
-`seed` and `reset-demo` restore these memberships; reset preserves users and linked Keycloak subjects.
-Use `demo-logins --judge` to ensure this app user and all three memberships on an existing seeded install without
-resetting its demo state; normal staff mode deliberately excludes the judge.
+Demo Guest (`demo.guest@example.com`) has the limited `demo_reviewer` role in each synthetic business.
+For an existing demo, use `demo-logins --guest` to update its identity in place. Fresh installs receive
+the same memberships from the fixtures. The public guest is excluded from normal staff provisioning.

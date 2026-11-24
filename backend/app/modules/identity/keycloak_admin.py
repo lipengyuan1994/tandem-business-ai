@@ -164,6 +164,26 @@ def _judge_request(method: str, path: str, **kwargs: Any) -> httpx.Response:
     return response
 
 
+def is_legacy_demo_guest(user_id: str, email: str) -> bool:
+    """Confirm the original provisioned profile before claiming a never-used legacy login."""
+    profile = _judge_request("GET", f"/users/{user_id}").json()
+    return (profile.get("username"), profile.get("email"), profile.get("firstName"), profile.get("lastName")) == (
+        email,
+        email,
+        "Demo",
+        "Judge",
+    )
+
+
+def rename_public_guest(user_id: str, email: str) -> None:
+    """Both bundled realms use email as username. Update in place to retain credentials and subject."""
+    _judge_request(
+        "PUT",
+        f"/users/{user_id}",
+        json={"username": email, "email": email, "emailVerified": True, "firstName": "Demo", "lastName": "Guest"},
+    )
+
+
 def harden_judge_user(user_id: str) -> None:
     """Remove self-service authority and second factors from the shared, fixture-only public account.
 
@@ -193,7 +213,7 @@ def harden_judge_user(user_id: str) -> None:
             "emailVerified": True,
             "requiredActions": [],
             "firstName": "Demo",
-            "lastName": "Judge",
+            "lastName": "Guest",
         },
     )
     # Do not leave existing Keycloak account-console sessions with the old authority.

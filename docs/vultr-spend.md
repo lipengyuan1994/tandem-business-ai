@@ -63,3 +63,10 @@ Check the balance at any time: `GET https://api.vultr.com/v2/account` (`balance`
 At $42/month for the VM and storage, the remaining credit lasts about 4.5 months with today's eval-level AI use.
 Terraform state matches the VM (no pending changes, 2026-11-04 12:15). This VM predates the host-firewall hardening:
 its UFW still allows 22/tcp broadly, so the Vultr firewall group is the only SSH gate (see `docs/runbooks/access.md`).
+
+## 2026-11-24 — Boston AI Forward content release
+
+Built 0.1.20 API, web and backup images directly on the existing demo VM. No new instance, volume or registry
+publication. The owner approved temporary single-workstation SSH access. The IPv4 rule was removed after its
+connection timed out. The IPv6 rule allowed pinned-key SSH and was removed after staging. The Vultr API then
+reported zero TCP/22 rules. Only the individual temporary firewall rules were applied.

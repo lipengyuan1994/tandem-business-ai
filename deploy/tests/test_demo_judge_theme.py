@@ -18,19 +18,23 @@ class JudgeThemeTests(unittest.TestCase):
             subprocess.run(["bash", str(ROOT / "deploy/scripts/stage.sh"), str(dest)], check=True, capture_output=True)
             theme = dest / "themes/tandem-demo/login"
             self.assertIn("parent=keycloak.v2", (theme / "theme.properties").read_text())
-            asset = theme / "resources/js/demo-credentials.js"
+            asset = theme / "resources/js/guest-credentials.js"
             self.assertIn("= null;", asset.read_text())
             for file in (ROOT / "deploy/compose/realm-smb.prod.json", ROOT / "deploy/keycloak/realm-smb.dev.json"):
                 self.assertNotEqual(json.loads(file.read_text()).get("loginTheme"), "tandem-demo")
             self.assertIn("./themes:/opt/keycloak/themes:ro", (dest / "compose.yml").read_text())
             password = 'Public-"quoted"-\\-test-2026'
+            for stale in ("demo-credentials.js", "judge-login.js"):
+                (asset.parent / stale).write_text("// Earlier demo asset")
             env = {**os.environ, "DEMO_JUDGE_PASSWORD": password, "DATA_PROFILE": "standard"}
             run = subprocess.run([sys.executable, str(dest / "configure-demo-judge.py"), "--demo", "--compose-dir", str(dest)], env=env, capture_output=True, text=True)
             self.assertEqual(run.returncode, 0, run.stderr)
             self.assertNotIn(password, run.stdout + run.stderr)
+            self.assertFalse((asset.parent / "demo-credentials.js").exists())
+            self.assertFalse((asset.parent / "judge-login.js").exists())
             generated = asset.read_text()
             config = json.loads(generated.split(" = ", 1)[1].rstrip(";\n"))
-            self.assertEqual(config, {"email": "judge@example.com", "password": password})
+            self.assertEqual(config, {"email": "demo.guest@example.com", "password": password})
             self.assertEqual(asset.stat().st_mode & 0o777, 0o644)
             subprocess.run(["bash", str(ROOT / "deploy/scripts/stage.sh"), str(dest)], check=True, capture_output=True)
             self.assertEqual(asset.read_text(), generated)

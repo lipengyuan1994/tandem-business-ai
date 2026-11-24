@@ -23,6 +23,7 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel className="text-xs text-muted-foreground">{session.businessName}</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs font-normal">{session.email}</DropdownMenuLabel>
         <DropdownMenuItem onSelect={() => navigate({ to: "/select-business" })}>{t("identity.menu.switch")}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => logout.mutate()}>{t("identity.menu.logout")}</DropdownMenuItem>

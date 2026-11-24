@@ -144,7 +144,11 @@ def main(argv: list[str] | None = None) -> None:
         help="make Keycloak ask for a new password at first sign-in (default: no; a demo has no time for it)",
     )
     logins.add_argument(
-        "--judge", action="store_true", help="public judge only: env password, no TOTP; no --out needed"
+        "--guest",
+        "--judge",
+        dest="judge",
+        action="store_true",
+        help="public demo guest only: env password, no TOTP; no --out needed",
     )
     logins.set_defaults(func=cmd_demo_logins)
     dev = sub.add_parser("dev-account", help="dev/test only: fresh Keycloak login for an existing staff user")

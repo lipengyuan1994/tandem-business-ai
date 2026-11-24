@@ -25,19 +25,21 @@ def main() -> None:
             key, _, value = line.strip().partition("=")
             if key == "DATA_PROFILE" and value.strip("\"'") == "regulated":
                 raise SystemExit("refusing: DATA_PROFILE=regulated")
-    password = os.environ.get("DEMO_JUDGE_PASSWORD", "")
+    password = os.environ.get("DEMO_GUEST_PASSWORD") or os.environ.get("DEMO_JUDGE_PASSWORD", "")
     if len(password) < 12:
-        raise SystemExit("refusing: DEMO_JUDGE_PASSWORD must be set and at least 12 characters (realm policy)")
-    target = args.compose_dir / "themes/tandem-demo/login/resources/js/demo-credentials.js"
+        raise SystemExit("refusing: DEMO_GUEST_PASSWORD (previously DEMO_JUDGE_PASSWORD) must be set and at least 12 characters (realm policy)")
+    target = args.compose_dir / "themes/tandem-demo/login/resources/js/guest-credentials.js"
     if not target.is_file():
         raise SystemExit("stage the themes directory first")
-    body = "// Intentionally public synthetic judge credentials; never use a private password here.\n"
-    body += "window.tandemDemoCredentials = " + json.dumps({"email": "judge@example.com", "password": password}) + ";\n"
+    body = "// Intentionally public synthetic demo credentials; never use a private password here.\n"
+    body += "window.tandemDemoCredentials = " + json.dumps({"email": "demo.guest@example.com", "password": password}) + ";\n"
     temporary = target.with_suffix(".tmp")
     temporary.write_text(body, encoding="utf-8")
     temporary.chmod(0o644)  # Keycloak uid 1000 must be able to serve this public asset.
     temporary.replace(target)
-    print("Public judge credential asset rendered; enable tandem-demo only on a synthetic demo realm.")
+    target.with_name("demo-credentials.js").unlink(missing_ok=True)
+    target.with_name("judge-login.js").unlink(missing_ok=True)
+    print("Public guest credential asset rendered; enable tandem-demo only on a synthetic demo realm.")
 
 
 if __name__ == "__main__":

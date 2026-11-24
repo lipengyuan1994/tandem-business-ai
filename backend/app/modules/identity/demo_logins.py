@@ -11,15 +11,19 @@ Everything goes through `keycloak_admin`, the code `bootstrap-business` and invi
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Literal
+from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
+from app.platform.db import SET_TENANT
 
 from . import keycloak_admin, public, repository
 from .login import PENDING_PREFIX
+from .models import Membership
 
 State = Literal["created", "reset", "exists", "conflict"]
 
@@ -32,6 +36,7 @@ class StaffIdentity:
     display_name: str
     linked_subject: str | None
     active: bool
+    staging_email: str | None = None
 
 
 @dataclass(frozen=True)
@@ -58,6 +63,85 @@ def active_staff(db: Session, ctx: Context) -> dict[str, StaffIdentity]:
     }
 
 
+GUEST_EMAIL = "demo.guest@example.com"
+LEGACY_EMAIL = "judge@example.com"
+
+
+def prepare_public_guest(db: Session, business_ids: list[UUID]) -> StaffIdentity:
+    """Prepare all app records atomically. Preserve the same app ID and OIDC subject across upgrades."""
+    first = Context(request_id="cli", actor_kind="system", user_id=None, business_id=business_ids[0])
+    repository.lock_owner_changes(db, first)
+    previous = repository.get_user_by_email(db, LEGACY_EMAIL)
+    guest = repository.get_user_by_email(db, GUEST_EMAIL)
+    if previous is not None and guest is not None:
+        raise SystemExit("refusing: both demo addresses have app accounts")
+    if repository.pending_invitations_for_email(db, GUEST_EMAIL):
+        raise SystemExit("refusing: guest address has outstanding invitations")
+    user = previous or guest
+    if user is not None:
+        if user.status != "active":
+            raise SystemExit("refusing: guest user is disabled")
+        # Own-membership RLS exposes affiliations across tenants, including inactive ones.
+        db.execute(SET_TENANT, {"b": "", "u": str(user.id)})
+        affiliations = set(db.scalars(select(Membership.business_id).where(Membership.user_id == user.id)))
+        if affiliations.difference(business_ids):
+            raise SystemExit("refusing: guest has a membership outside the synthetic demo")
+        if not affiliations or user.display_name != ("Demo Judge" if previous else "Demo Guest"):
+            raise SystemExit("refusing: unrecognized demo identity")
+    if previous is not None:
+        if previous.oidc_subject.startswith(PENDING_PREFIX) and previous.oidc_subject != PENDING_PREFIX + LEGACY_EMAIL:
+            raise SystemExit("refusing: unrecognized legacy demo identity")
+        old_subject = keycloak_admin.find_user_id(LEGACY_EMAIL)
+        new_subject = keycloak_admin.find_user_id(GUEST_EMAIL)
+        if new_subject is not None or (
+            not previous.oidc_subject.startswith(PENDING_PREFIX) and previous.oidc_subject != old_subject
+        ):
+            raise SystemExit("refusing: conflicting Keycloak identity for the legacy demo account")
+        if old_subject and previous.oidc_subject.startswith(PENDING_PREFIX):
+            if not keycloak_admin.is_legacy_demo_guest(old_subject, LEGACY_EMAIL):
+                raise SystemExit("refusing: unrecognized legacy Keycloak profile")
+        previous.email = GUEST_EMAIL
+        previous.display_name = "Demo Guest"
+        previous.oidc_subject = old_subject or PENDING_PREFIX + GUEST_EMAIL
+        db.flush()
+
+    elif (guest is None or guest.oidc_subject.startswith(PENDING_PREFIX)) and (
+        keycloak_admin.find_user_id(GUEST_EMAIL) or keycloak_admin.find_user_id(LEGACY_EMAIL)
+    ):
+        raise SystemExit("refusing: a preexisting Keycloak account is not linked to this guest")
+
+    for business_id in business_ids:
+        ctx = Context(request_id="cli", actor_kind="system", user_id=None, business_id=business_id)
+        db.execute(SET_TENANT, {"b": str(business_id), "u": ""})
+        ensure_judge_membership(db, ctx, GUEST_EMAIL, "Demo Guest")
+    guest = repository.get_user_by_email(db, GUEST_EMAIL)
+    assert guest is not None
+    return replace(active_staff(db, ctx)[GUEST_EMAIL], staging_email=f"tandem-setup-{guest.id}@example.com")
+
+
+def bind_public_guest(db: Session, person: StaffIdentity, password: str) -> StaffIdentity:
+    """Commit the subject before making the public address usable. The reserved staging address survives retries."""
+    from .models import User
+
+    guest = db.scalar(select(User).where(User.email == GUEST_EMAIL).with_for_update())
+    assert guest is not None and person.staging_email == f"tandem-setup-{guest.id}@example.com"
+    if guest.oidc_subject == PENDING_PREFIX + GUEST_EMAIL:
+        if keycloak_admin.find_user_id(GUEST_EMAIL) or keycloak_admin.find_user_id(LEGACY_EMAIL):
+            raise SystemExit("refusing: public address already belongs to an unlinked identity")
+        subject = keycloak_admin.find_user_id(person.staging_email)
+        if subject is None:
+            subject = keycloak_admin.create_user(
+                person.staging_email,
+                person.display_name,
+                password,
+                temporary=False,
+                required_actions=[],
+                existing_ok=False,
+            )
+        guest.oidc_subject = subject
+    return replace(person, linked_subject=guest.oidc_subject)
+
+
 def ensure_judge_membership(db: Session, ctx: Context, email: str, display_name: str) -> None:
     """Add only the judge to an already validated seeded business; preserve every other member and demo record.
 
@@ -69,13 +153,16 @@ def ensure_judge_membership(db: Session, ctx: Context, email: str, display_name:
     user = repository.get_user(db, user_id)
     assert user is not None
     if user.status != "active":
-        raise SystemExit("refusing: judge user is disabled; no login provisioned")
+        raise SystemExit("refusing: guest user is disabled; no login provisioned")
     membership = repository.get_membership_for_user(db, ctx, user_id)
     if membership is not None and repository.membership_roles(db, ctx, membership.id) - {"demo_reviewer"}:
-        raise SystemExit("refusing: judge has unexpected roles; review its grants before making a public login")
-    public.ensure_membership(db, ctx, user_id, ["demo_reviewer"], "Demo reviewer")
+        raise SystemExit("refusing: guest has unexpected roles; review its grants before making a public login")
+    public.ensure_membership(db, ctx, user_id, ["demo_reviewer"], "Demo guest")
     membership = repository.get_membership_for_user(db, ctx, user_id)
     assert membership is not None
+    if membership.title == "Demo reviewer":
+        membership.title = "Demo guest"
+        membership.version += 1
     if membership.status != "active":
         membership.status = "active"
         membership.version += 1
@@ -119,22 +206,29 @@ def ensure_demo_login(person: StaffIdentity, *, reset_passwords: bool, temporary
 def ensure_judge_login(person: StaffIdentity, password: str, *, reset_password: bool) -> DemoLogin:
     """Same identity conflict rules as staff; fixed env password, no self-service or second factor."""
     existing = keycloak_admin.find_user_id(person.email)
-    if person.linked_subject is not None and existing != person.linked_subject:
-        return DemoLogin("conflict", reason="the Keycloak account is missing or differs from the linked identity")
+    legacy = keycloak_admin.find_user_id(LEGACY_EMAIL)
+    if legacy is not None:
+        if existing is not None or legacy != person.linked_subject:
+            return DemoLogin("conflict", reason="legacy Keycloak identity does not match the prepared guest")
+        # The app transaction already pinned this exact subject. A retry can find it at either address.
+        keycloak_admin.rename_public_guest(legacy, GUEST_EMAIL)
+        existing = keycloak_admin.find_user_id(person.email)
+        if existing != legacy:
+            return DemoLogin("conflict", reason="guest address was not applied to the original Keycloak user")
     state: State = "exists"
-    if existing is None:
-        existing = keycloak_admin.create_user(
-            person.email,
-            person.display_name,
-            password,
-            temporary=False,
-            required_actions=[],
-            existing_ok=False,
-        )
-        state = "created"
+    if existing is None and person.staging_email and person.linked_subject:
+        staging = keycloak_admin.find_user_id(person.staging_email)
+        if staging == person.linked_subject:
+            keycloak_admin.harden_judge_user(staging)
+            keycloak_admin.rename_public_guest(staging, person.email)
+            existing = keycloak_admin.find_user_id(person.email)
+            state = "created"
+    if existing is None or existing != person.linked_subject:
+        return DemoLogin("conflict", reason="the Keycloak account is missing or differs from the linked identity")
     # Strip account authority before resetting a password; retrying repairs a partially completed setup.
-    keycloak_admin.harden_judge_user(existing)
-    if state == "exists" and reset_password:
+    if state != "created":
+        keycloak_admin.harden_judge_user(existing)
+    if reset_password:
         keycloak_admin.reset_judge_password(existing, password)
         state = "reset"
     return DemoLogin(state)

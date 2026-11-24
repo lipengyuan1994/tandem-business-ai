@@ -15,7 +15,7 @@ from app.modules.identity.demo_logins import StaffIdentity, ensure_judge_login
 from .conftest import FakeKeycloak
 
 BASE = "http://keycloak.test/auth/admin/realms/smb/users/kc-judge"
-JUDGE = StaffIdentity("judge@example.com", "Demo Judge", None, True)
+JUDGE = StaffIdentity("demo.guest@example.com", "Demo Guest", "kc-judge", True)
 
 
 def test_hardening_clears_required_actions_otp_defaults_groups_and_direct_account_roles(keycloak: FakeKeycloak) -> None:
@@ -57,7 +57,7 @@ def test_hardening_clears_required_actions_otp_defaults_groups_and_direct_accoun
     assert json.loads(account_removal.calls.last.request.content) == account_roles
     user = keycloak.users["kc-judge"]
     assert user["requiredActions"] == [] and user["enabled"] and user["emailVerified"]
-    assert user["firstName"] == "Demo" and user["lastName"] == "Judge"
+    assert user["firstName"] == "Demo" and user["lastName"] == "Guest"
     assert keycloak.password_resets == []
 
 

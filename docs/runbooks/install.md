@@ -160,7 +160,7 @@ Used on 2026-11-07 to move the demo from `45-63-85-83.sslip.io` to `tandemai.ope
 
 1. Open `https://<domain>` and sign in. Username: the owner's email. Password: the temporary one printed by the installer.
 2. Keycloak requires a **new password** (at least 12 characters).
-3. Keycloak then shows a QR code: scan it with an authenticator app (any TOTP app) and enter the six-digit code. This second factor is mandatory for normal staff. The explicitly public synthetic judge account below is the demo-only exception.
+3. Keycloak then shows a QR code: scan it with an authenticator app (any TOTP app) and enter the six-digit code. This second factor is mandatory for normal staff. The explicitly public synthetic guest account below is the demo-only exception.
 4. The owner lands on the Today page of their business.
 
 **Inviting colleagues:** Settings → Staff → Invite. Two modes:
@@ -169,49 +169,34 @@ Used on 2026-11-07 to move the demo from `45-63-85-83.sslip.io` to `tandemai.ope
 - **With e-mail:** configure the shop's chosen provider in `SMTP_URL` (and optional `SMTP_FROM`) in both private `.env` copies, then configure the **same decoded values manually in Keycloak**. Follow [SMTP setup and Keycloak test steps](email.md). Use submission port 587 with STARTTLS (or 465 with implicit TLS); Vultr may block outgoing port 25. Realm imports do not update existing realms, so verify Keycloak mail settings on upgrades too. System → Send test e-mail tests application delivery; invitations and Forgot password must each be tested separately in Keycloak. **Production provider and Keycloak e-mail delivery have not been verified locally.**
 
 
-### Demo installs only: public judge login
+### Demo installs only: public guest login
 
-This is an explicitly public credential for synthetic data, not a customer account. After **0.1.16 is built and
-released through the normal operator process**, judges open <https://tandemai.open-dl.com>, choose Sign in, then click
-Sign in on the prefilled Keycloak form. The password is visible in a public JavaScript resource by design. Never use
-an owner, staff or customer password. Morgan/Riley can clear both fields and enter their own credentials; their TOTP
-setup remains mandatory. The notice explains that proposals requested by the judge need another staff member's
-approval (`allow_self_approval=false`) and that email is simulated.
+The public demo signs in as **Demo Guest** (`demo.guest@example.com`) and can switch among three synthetic businesses.
+Other staff replace both fields with their own credentials and complete their normal authenticator flow.
+Email is simulated and staff must review proposals requested by a different account.
 
-For the **existing demo VM**, in `/opt/smb`:
-
-1. Stage this release on the operator machine (`deploy/scripts/stage.sh /tmp/tandem-judge-stage`) and transfer the
-   updated `compose.yml`, `themes/`, and `configure-demo-judge.py` to `/opt/smb` through the normal approved release
-   procedure. Keep `.env` and `config/ai-routes.yaml`. Upgrade to the built 0.1.16 images with `./upgrade.sh 0.1.16`;
-   this applies `20261107_1700_demo_reviewer`. No image is published by this checkout change.
-2. Check that this is the synthetic demo with `DATA_PROFILE=standard`, `SMTP_URL` empty, Keycloak SMTP unconfigured,
-   and the existing AI budgets/rate limits enabled. The renderer refuses `regulated` from either the shell or `.env`;
-   the CLI also refuses non-demo slugs/IDs. Set the public password once in the current shell (at least 12 characters,
-   matching both shipped realms; Keycloak additionally validates the live policy on creation/reset):
+1. Back up the demo. Stage the release with `deploy/scripts/stage.sh` and upgrade the API and web images using
+   the existing release procedure. Keep the existing theme's public credential asset until the account update
+   succeeds. Deploy the new login script and theme properties together, removing the obsolete
+   `resources/js/judge-login.js` from the served theme directory.
+2. On the synthetic demo host, verify the standard data profile, simulated email, and configured AI budgets.
+   Run in `/opt/smb` with the same dedicated public demo password used by the existing theme. The older
+   `--judge` and `DEMO_JUDGE_PASSWORD` operator inputs are supported for compatibility.
 
    ```bash
-   read -rs DEMO_JUDGE_PASSWORD; echo
-   export DEMO_JUDGE_PASSWORD
-   python3 ./configure-demo-judge.py --demo --compose-dir /opt/smb
-   docker compose run --rm --no-deps -T -e DEMO_JUDGE_PASSWORD api \
-     python -m app.cli demo-logins --judge --reset-password
-   unset DEMO_JUDGE_PASSWORD
+   read -rs DEMO_GUEST_PASSWORD; echo
+   export DEMO_GUEST_PASSWORD
+   docker compose run --rm --no-deps -T -e DEMO_GUEST_PASSWORD api python -m app.cli demo-logins --guest &&
+     python3 ./configure-demo-judge.py --demo --compose-dir /opt/smb
+   unset DEMO_GUEST_PASSWORD
    ```
 
-   Use exactly the same environment value for both commands. No `--out` is needed and neither command prints the
-   password. `--judge` only touches `judge@example.com`, excludes normal staff, verifies seeded business identities,
-   creates the app user and missing `demo_reviewer` grants/memberships in **all three** seeded businesses, and
-   reactivates the judge's membership if needed. Existing linked user identities are retained; a disabled app user or
-   unexpected extra judge roles refuses for review. A second run leaves existing app rows unchanged.
-   **Do not run seed or reset-demo to add the judge to an existing VM.** This command preserves other members,
-   conversations, approvals, autonomy settings and the knowledge index. Even with a demo `--business` selector, the
-   judge receives all three memberships; a non-demo selector still refuses before anything is provisioned.
-   It then enables/verifies the Keycloak account, clears all required actions and non-password credentials, removes realm defaults,
-   direct client roles and groups (including inherited account authority), and logs out old Keycloak sessions.
-   Normal staff mode excludes the judge; `--email judge@example.com` without `--judge` refuses. A rerun preserves the password unless `--reset-password`
-   (alias `--reset-passwords`) is supplied. Explicit repair removes the old password/history first so the fixed public
-   value can be reapplied under `passwordHistory(3)`; if interrupted, repeat the repair command. Linked-identity
-   conflicts refuse rather than attaching a different Keycloak account.
+   For an existing demo, this renames the original application and Keycloak identity in place. A
+   fresh guest gets the same limited role. Conflicting identities, outstanding invitations, or non-demo
+   affiliations require operator review. Retry the same command after an interrupted update. Keep
+   business records, memberships and audit references in place. Seed only on a fresh install.
+   If the previous public password includes event branding, choose a fresh public demo password and add
+   `--reset-password` to the provisioning command. Render the theme asset with that same new value.
 3. Recreate Keycloak to add the read-only `./themes:/opt/keycloak/themes:ro` mount, then authenticate kcadm as the
    administrator (it prompts; never put the admin password in the command). Realm imports happen only once, so an
    updated import JSON alone will not activate a theme on an existing VM:
@@ -220,7 +205,8 @@ For the **existing demo VM**, in `/opt/smb`:
    docker compose up -d --force-recreate keycloak
    docker compose exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
      --server http://localhost:8080/auth --realm master --user admin
-   docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh update realms/smb -s loginTheme=tandem-demo
+   docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh update realms/smb -s loginTheme=tandem-demo \
+     -s 'displayName=Tandem Business AI · Boston AI Forward'
    ```
 
    Substitute the configured admin username if different. A fresh demo also uses this explicit step after seed;
@@ -232,23 +218,22 @@ For the **existing demo VM**, in `/opt/smb`:
    Try the account console, direct password/OTP action links, and password recovery as well: removing console roles
    alone is not live evidence that every Keycloak self-service entry point is blocked. Check effective account roles
    and credentials with kcadm. These live checks are required before calling the shared account lockout-safe.
-   Test Morgan/Riley sign-in after clearing both fields. No live Keycloak/browser verification was performed locally.
+   Test Morgan/Riley sign-in after clearing both fields. Record browser verification for each release.
 
-The generated file is `themes/tandem-demo/login/resources/js/demo-credentials.js`, mode 644 for Keycloak's uid 1000.
+The generated file is `themes/tandem-demo/login/resources/js/guest-credentials.js`, mode 644 for Keycloak's uid 1000.
 It contains only the intentionally public synthetic credential; gitleaks has a narrow, commented allowlist for this
 exact asset. The tracked template contains `null`, not a password. Staging in place preserves a rendered asset;
-when uploading a fresh stage over a VM, **rerender with the same public password after copying** (or preserve the
-existing rendered asset). Recreate Keycloak after changing an asset to clear its production theme cache. On subsequent
+after upgrading from the original login, **rerender with the current public password** so the asset uses the new guest address. Recreate Keycloak after changing an asset to clear its production theme cache. On subsequent
 upgrades keep the mount and selected demo theme. To withdraw public prefill, use kcadm:
 
 ```bash
 docker compose exec -T keycloak /opt/keycloak/bin/kcadm.sh update realms/smb -s loginTheme=keycloak.v2
 ```
 
-Disable the judge account separately if withdrawing public access. The limited role prevents configuration and
-identity damage, but judges share mutable synthetic operational records; this is not per-judge isolation. The
+Disable the guest account separately if withdrawing public access. The limited role prevents configuration and
+identity damage, and guests share synthetic operational records. The
 operator decides separately whether to reset data in a future rehearsal. Preserve the current video/demo state;
-judge login setup never requires a reset. Existing AI daily/monthly/token limits,
+guest login setup never requires a reset. Existing AI daily/monthly/token limits,
 concurrency and request rate limits cap consumption; public shared credentials do not bypass them. Real customer data
 and real SMTP delivery are prohibited for this public demo setup.
 
@@ -268,7 +253,7 @@ vm$ docker compose run --rm -T --user "$(id -u):$(id -g)" \
 It prints the path of the file and the e-mail addresses it made logins for, **never a password**. The file `/opt/smb/demo-logins/logins.txt` has mode 600 and belongs to you; each line is an e-mail address and a password. Read the passwords (`vm$ cat /opt/smb/demo-logins/logins.txt`), store them in your password manager and delete the file (`vm$ rm /opt/smb/demo-logins/logins.txt`). It is not part of the backups. On a laptop with `make dev` the same command is `make demo-logins` (the file is `.demo-logins/logins.txt`, ignored by git).
 
 - **Why the folder and `--user`:** the api container's file system is read-only and it runs as another user, so it writes into a folder mounted from the VM, as you. Without the mounted folder the command stops before it creates anything ("the folder ... does not exist").
-- **Who:** leave out the two `--email` options to create logins for all normal demo staff (the public judge uses `--judge`); `--business example-cycle-works` limits it to one business.
+- **Who:** leave out the two `--email` options to create logins for all normal demo staff (the public guest uses `--guest`); `--business example-cycle-works` limits it to one business.
 - **First sign-in:** open `https://<domain>`, enter the e-mail address and the password. The password is permanent: Keycloak does **not** ask for a new one (add `--temporary-password` if you want it to). It does ask for an authenticator app, as for other normal staff: scan the QR code once (one phone can hold both accounts). Use two browser profiles, or a private window for the second person, so both stay signed in.
 - **Safe to repeat:** an account that already exists is left alone ("already had a login") and the file is not touched. If a password is lost: `... demo-logins --out /opt/smb/demo-logins/logins.txt --email riley@example.com --reset-passwords` issues a new one, and the other lines of the file stay. The person's authenticator app is kept. `reset-demo` does not remove the logins (it recreates the businesses, not the users or the Keycloak accounts).
 - **What it refuses:** it creates accounts only for the demo staff listed in `data/fixtures.json` (example.com addresses), of the businesses `example-cycle-works`, `example-garden-store` and `example-dental-clinic` as the seed created them (matched by slug and by the id the seed gives them). Any other business name, any other person, a business that only borrows a demo name, and an installation with `DATA_PROFILE=regulated` are refused, so it cannot create a login for a customer's staff. Run `seed` first ("does not exist; run `seed` first").
@@ -277,31 +262,19 @@ It prints the path of the file and the e-mail addresses it made logins for, **ne
 ### Demo installs only: clinic website
 
 The synthetic Example Dental Clinic website is optional and uses the existing `smb-web` image and `caddy` service.
-Patient pages need no login; the banner links judges to the staff app with its existing prefilled demo login.
-Do not enable this on customer installations. The static page deliberately links to `https://tandemai.open-dl.com`.
+Patient pages need no login; the banner links visitors to the staff demo with its existing prefilled demo login.
+Enable the clinic only for a synthetic demo. The rendered HTML uses the configured app host for
+sign-in, the embed loader, chat, appointment requests and booking management.
 
-1. Create the DNS **A** record `tandemaidentaldemo.open-dl.com` pointing to the same Vultr demo VM's IPv4 address.
-   Keep ports 80/443 reachable for Let's Encrypt; remove a stale AAAA record or point it to this VM too.
-2. Build the updated web image as part of the approved release and stage the updated `compose.yml` (the production
-   Caddyfile and clinic files are baked into `smb-web`). On the VM, add
-   `DEMO_SITE_DOMAIN=tandemaidentaldemo.open-dl.com` to `/opt/smb/.env`; retain `DOMAIN=tandemai.open-dl.com`.
-   Recreate the existing web proxy; there is no additional `web` service:
-
-   ```bash
-   $ cd /opt/smb
-   $ docker compose -f compose.yml pull caddy
-   $ docker compose -f compose.yml up -d --no-deps --force-recreate caddy
-   $ ./smoke.sh https://tandemai.open-dl.com --compose-dir /opt/smb
-   ```
-
-3. In the staff app, select Example Dental Clinic → Settings → Website and allow
-   `https://tandemaidentaldemo.open-dl.com`. The owner reports this is already allowed on the demo VM. Fresh seeds
-   and explicit demo resets restore it from fixtures; do not reset an existing demo just to add an origin.
-4. Check `https://tandemaidentaldemo.open-dl.com/` returns 200 with HSTS, nosniff, no-referrer, CSP and no Server
-   header. Check the bottom-right widget opens, loads chat and can pass a synthetic message to the front desk;
-   check appointment requests, booking management and the judge link. Check at 375 px and with a keyboard.
-   From a workstation, `DEMO_SITE_DOMAIN=tandemaidentaldemo.open-dl.com deploy/scripts/smoke.sh https://tandemai.open-dl.com`
-   checks the clinic too; `--compose-dir` reads its value from Compose's resolved environment.
+1. Point the chosen clinic hostname at the demo VM and keep its HTTPS certificate current. The existing
+   deployment can keep both of its current hostnames.
+2. Set `DEMO_SITE_DOMAIN` to the clinic hostname and `DOMAIN` to the app hostname in the demo
+   deployment environment. Release the updated web image and Compose configuration.
+3. For an existing clinic, verify its exact HTTPS origin in **Settings → Website**. Fresh seeds and
+   explicit demo resets take the clinic origin from `DEMO_SITE_DOMAIN`; an upgrade preserves settings.
+4. Run `smoke.sh` against the app's public HTTPS URL with `--compose-dir /opt/smb`. From the clinic,
+   open embedded and full-page chat, submit a fictional appointment request, and check booking
+   management and the staff demo link on desktop and mobile.
 
 To disable, empty/remove `DEMO_SITE_DOMAIN` in `.env` and recreate `caddy`. Compose maps that value to the unused
 `(demo_site_disabled)` snippet; Caddy's direct unset default does the same. There is no clinic host route or ACME

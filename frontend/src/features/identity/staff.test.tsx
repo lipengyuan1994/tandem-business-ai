@@ -30,29 +30,29 @@ describe("staff page", () => {
   })
 })
 
-it("shows Demo reviewer and hides staff changes for the judge", async () => {
+it("shows Demo guest and hides staff changes for the guest", async () => {
   const { ME } = await import("@/test/app")
   mockMe({ ...ME, permissions: ["org.business.read", "identity.membership.read"] })
   server.use(http.get("*/api/v1/identity/members", () => HttpResponse.json([
-    { membership_id: "judge-m", user_id: "judge-u", display_name: "Demo Judge", email: "judge@example.com", title: "Demo reviewer", status: "active", roles: ["demo_reviewer"], version: 1 },
+    { membership_id: "judge-m", user_id: "judge-u", display_name: "Demo Guest", email: "demo.guest@example.com", title: "Demo guest", status: "active", roles: ["demo_reviewer"], version: 1 },
   ])))
   renderApp("/settings/staff")
-  expect(await screen.findByRole("cell", { name: "Demo reviewer" })).toBeInTheDocument()
+  expect(await screen.findByRole("cell", { name: "Demo guest" })).toBeInTheDocument()
   expect(screen.queryByRole("button", { name: "Invite staff" })).not.toBeInTheDocument()
   expect(screen.queryByRole("button", { name: "Edit roles" })).not.toBeInTheDocument()
   expect(screen.queryByRole("button", { name: "Suspend" })).not.toBeInTheDocument()
 })
 
-it("offers the Demo reviewer label in both role pickers", async () => {
+it("offers the Demo guest label in both role pickers", async () => {
   mockMe()
   server.use(http.get("*/api/v1/identity/members", () => HttpResponse.json([
-    { membership_id: "m1", user_id: "u1", display_name: "Demo Judge", email: "judge@example.com", status: "active", roles: ["demo_reviewer"], version: 1 },
+    { membership_id: "m1", user_id: "u1", display_name: "Demo Guest", email: "demo.guest@example.com", status: "active", roles: ["demo_reviewer"], version: 1 },
   ])))
   renderApp("/settings/staff")
-  await screen.findByRole("cell", { name: "Demo reviewer" })
+  await screen.findByRole("cell", { name: "Demo guest" })
   await userEvent.click(screen.getByRole("button", { name: "Edit roles" }))
-  expect(await screen.findByRole("checkbox", { name: "Demo reviewer" })).toBeChecked()
+  expect(await screen.findByRole("checkbox", { name: "Demo guest" })).toBeChecked()
   await userEvent.click(screen.getByRole("button", { name: "Cancel" }))
   await userEvent.click(screen.getByRole("button", { name: "Invite staff" }))
-  expect(await screen.findByRole("checkbox", { name: "Demo reviewer" })).toBeInTheDocument()
+  expect(await screen.findByRole("checkbox", { name: "Demo guest" })).toBeInTheDocument()
 })

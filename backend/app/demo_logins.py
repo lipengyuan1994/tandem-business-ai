@@ -38,7 +38,7 @@ from app.platform.ids import fixture_id
 from app.seed import DEFAULT_FIXTURES
 
 DEMO_DOMAIN = "@example.com"
-JUDGE_EMAIL = "judge@example.com"
+JUDGE_EMAIL = identity_logins.GUEST_EMAIL
 # Both bundled realms use length(12); Keycloak also enforces its active policy on create/reset.
 JUDGE_PASSWORD_MIN_LENGTH = 12
 FILE_HEADER = (
@@ -181,14 +181,16 @@ def _targets(
             ids[business.slug] = business_id
     if problems:
         raise SystemExit("refusing: " + "; ".join(problems) + ". Nothing was changed.")
+    if provision_judge:
+        ctx = Context(request_id="cli", actor_kind="system", user_id=None, business_id=None)
+        with transaction(ctx) as db:
+            guest = identity_logins.prepare_public_guest(db, list(ids.values()))
+        return [guest], {}
     targets: dict[str, StaffIdentity] = {}
     skipped: dict[str, str] = {}
     for business in chosen:
         ctx = Context(request_id="cli", actor_kind="system", user_id=None, business_id=ids[business.slug])
         with transaction(ctx) as db:
-            if provision_judge:
-                for person in business.staff:
-                    identity_logins.ensure_judge_membership(db, ctx, person.email, person.display_name)
             members = identity_logins.active_staff(db, ctx)
         for person in business.staff:
             member = members.get(person.email)
@@ -258,12 +260,12 @@ def run(
     if judge:
         if temporary_password or (emails and {e.lower() for e in emails} != {JUDGE_EMAIL}):
             raise SystemExit("refusing: --judge cannot use --temporary-password or select other staff")
-        password = os.environ.get("DEMO_JUDGE_PASSWORD", "")
+        password = os.environ.get("DEMO_GUEST_PASSWORD") or os.environ.get("DEMO_JUDGE_PASSWORD", "")
         if len(password) < JUDGE_PASSWORD_MIN_LENGTH:
-            raise SystemExit("refusing: DEMO_JUDGE_PASSWORD must be set and at least 12 characters (realm policy)")
+            raise SystemExit("DEMO_GUEST_PASSWORD (or DEMO_JUDGE_PASSWORD) must be at least 12 characters")
         emails = [JUDGE_EMAIL]
     elif emails and JUDGE_EMAIL in {e.lower() for e in emails}:
-        raise SystemExit("refusing: use --judge for the public judge account")
+        raise SystemExit("refusing: use --guest for the public demo account")
     catalog = load_demo_businesses(fixtures)
     chosen = choose(catalog, businesses, emails)
     if judge:
@@ -287,10 +289,13 @@ def run(
     if judge:
         if skipped or len(targets) != 1:
             raise SystemExit("refusing: judge must be an active member of the seeded demo businesses")
-        outcome = identity_logins.ensure_judge_login(targets[0], password, reset_password=reset_passwords)
+        ctx = Context(request_id="cli", actor_kind="system", user_id=None, business_id=None)
+        with transaction(ctx) as db:
+            guest = identity_logins.bind_public_guest(db, targets[0], password)
+        outcome = identity_logins.ensure_judge_login(guest, password, reset_password=reset_passwords)
         if outcome.state == "conflict":
             raise SystemExit(f"not usable: {JUDGE_EMAIL}: {outcome.reason}")
-        print(f"judge login: {JUDGE_EMAIL}: {outcome.state}; no TOTP or account-console roles")
+        print(f"guest login: {JUDGE_EMAIL}: {outcome.state}; no TOTP or account-console roles")
         return 0
 
     assert out is not None

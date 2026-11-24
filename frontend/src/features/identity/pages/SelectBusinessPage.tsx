@@ -25,8 +25,9 @@ export function SelectBusinessPage() {
   const memberships = me.data.memberships
   return (
     <main className="mx-auto max-w-lg p-8">
+      <p className="mb-4 text-sm text-muted-foreground">{t("app.name")} · {t("app.byline")}</p>
       <h1 className="mb-1 text-2xl font-semibold">{t("identity.selectBusiness.title")}</h1>
-      <p className="mb-6 text-sm text-muted-foreground">{t("identity.selectBusiness.subtitle", { name: me.data.user.display_name })}</p>
+      <p className="mb-6 text-sm text-muted-foreground">{t("identity.selectBusiness.subtitle", { name: me.data.user.display_name })} <span>{me.data.email}</span></p>
       {memberships.length === 0 ? (
         <EmptyState title={t("identity.selectBusiness.none")} description={t("identity.selectBusiness.noneHelp")}
           action={<Button variant="outline" onClick={() => logout.mutate()}>{t("identity.menu.logout")}</Button>} />
