@@ -18,7 +18,8 @@ import { BILL_PAYMENT_METHODS, type Bill } from "./billModel"
 export function BillPaymentDialog({ bill, onClose, onConflict }: { bill: Bill; onClose: () => void; onConflict: () => void }) {
   const { t } = useTranslation()
   const { businessTimeZone } = useSession()
-  const balance = bill.balance_minor
+  // Freeze what the dialog opened with, so a background refetch cannot pair the form with a newer version.
+  const [{ version, balance }] = useState(() => ({ version: bill.version, balance: bill.balance_minor }))
   const today = formatInZone(useNow(60_000).toISOString(), businessTimeZone, "yyyy-MM-dd")
   const [amount, setAmount] = useState(() => minorToDecimal(balance, bill.currency))
   const [paidOn, setPaidOn] = useState(today)
@@ -34,7 +35,7 @@ export function BillPaymentDialog({ bill, onClose, onConflict }: { bill: Bill; o
   const ready = parsed.ok && !amountError && !dateError && !record.isPending
   const submit = () => {
     if (!ready || !parsed.ok) return
-    record.mutateAsync({ version: bill.version, amount_minor: parsed.minor, paid_on: paidOn, method, reference: reference.trim() || null }).then(
+    record.mutateAsync({ version, amount_minor: parsed.minor, paid_on: paidOn, method, reference: reference.trim() || null }).then(
       () => { toast.success(t("bills.payments.recorded")); onClose() },
       (err: unknown) => { if (err instanceof ApiProblem && err.isConflict && err.code.endsWith("version_conflict")) { onClose(); onConflict() } },
     )

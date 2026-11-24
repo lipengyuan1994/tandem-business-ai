@@ -85,6 +85,32 @@ describe("supplier bills", () => {
     expect(screen.getByRole("button", { name: "Void payment" })).toBeInTheDocument()
   })
 
+  it("saves an edit with the version the form opened with, so a concurrent edit is not overwritten", async () => {
+    mocks(BILL_READ, BILL_WRITE)
+    const open = { ...bill, status: "open" as const, amount_paid_minor: 0, balance_minor: 10000, payments: [], version: 4 }
+    const bodies: unknown[] = []
+    server.use(
+      http.get(`${ROOT}/bills/bill-1`, () => HttpResponse.json(open)),
+      http.patch(`${ROOT}/bills/bill-1`, async ({ request }) => {
+        const body = (await request.json()) as { version: number }
+        bodies.push(body)
+        return body.version === 5 ? HttpResponse.json({ ...open, version: 6 }) : HttpResponse.json({ code: "purchasing.version_conflict", status: 409, title: "Conflict" }, { status: 409 })
+      }),
+    )
+    const { queryClient } = renderApp("/purchasing/bills/bill-1")
+    await userEvent.click(await screen.findByRole("button", { name: "Edit bill" }))
+    const dialog = screen.getByRole("dialog", { name: "Edit bill" })
+    // Someone else edits the bill (version 5) and the page refetches while this dialog is still open.
+    server.use(http.get(`${ROOT}/bills/bill-1`, () => HttpResponse.json({ ...open, total_minor: 12000, version: 5 })))
+    await queryClient.refetchQueries({ queryKey: ["purchasing", "bill", "bill-1"] })
+    await userEvent.clear(within(dialog).getByLabelText("Total (USD)")); await userEvent.type(within(dialog).getByLabelText("Total (USD)"), "90")
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }))
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0]).toMatchObject({ version: 4, total_minor: 9000 })
+    // The stale edit is refused and the reload prompt appears instead of a silent overwrite.
+    expect(await screen.findByRole("dialog", { name: "This record changed since you opened it" })).toBeInTheDocument()
+  })
+
   it("starts a bill from a received order at the value not yet billed", async () => {
     mocks(BILL_READ, BILL_WRITE)
     let body: unknown

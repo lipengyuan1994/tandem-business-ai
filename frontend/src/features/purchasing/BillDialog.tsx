@@ -41,6 +41,8 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
   const [billDate, setBillDate] = useState(bill?.bill_date ?? today)
   const [dueDate, setDueDate] = useState(bill?.due_date ?? "")
   const [notes, setNotes] = useState(bill?.notes ?? "")
+  // The version the form was filled from. A background refetch must not let a stale form overwrite someone else's edit.
+  const [version] = useState(bill?.version)
   const billing = usePOBilling(bill ? undefined : poId || undefined)
   // Minor units depend on the currency, so a new bill waits for the order's or the business's currency before saving.
   const knownCurrency = bill?.currency ?? (poId ? billing.data?.currency : pickers.data?.currency)
@@ -63,7 +65,7 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
   const submit = () => {
     if (!ready || !parsed.ok) return
     save.mutateAsync({
-      version: bill?.version, supplier_id: supplierId, purchase_order_id: poId || null, supplier_reference: reference.trim() || null,
+      version, supplier_id: supplierId, purchase_order_id: poId || null, supplier_reference: reference.trim() || null,
       bill_date: billDate, due_date: dueDate || null, total_minor: parsed.minor, notes: notes.trim() || null,
     }).then(
       (saved) => { toast.success(t(bill ? "common.saved" : "bills.recorded")); onClose(); onSaved?.(saved) },
