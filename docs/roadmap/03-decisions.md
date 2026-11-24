@@ -192,6 +192,13 @@ Public name: **Tandem Business AI by OpenDL**; GitHub repository `tandem-busines
 exception to the no-rewrite rule; see `EVENT_WORK.md`). Internal identifiers keep the `smb` prefix.
 
 
+### Product attribution and public demo (owner, 2026-11-24)
+
+Tandem Business AI is a product of Boston AI Forward. Boston AI Forward tailors the ERP to local
+business workflows. Use this attribution on current product surfaces. The synthetic demo remains public
+as Demo Guest, with the existing reviewer permissions in all three businesses. Existing hostnames
+continue to serve the demo in this content release. This supersedes the November 7 public byline.
+
 ### P10-G answer guardrail (owner scope, 2026-11-07)
 
 Public intake replies may use the existing live autonomy rule only after clean safety, non-critical care category,

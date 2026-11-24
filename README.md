@@ -1,10 +1,12 @@
 # Tandem Business AI
 
-*by OpenDL*
+*A product of Boston AI Forward*
 
 Tandem Business AI is an AI-assisted ERP for small and medium-sized businesses (SMBs). It brings customers, appointments, stock, messages, sales and purchasing into one app. A business can install it on its own Vultr account. The demo uses synthetic data for Example Cycle Works, Example Garden Store and Example Dental Clinic.
 
-**Demo:** https://tandemai.open-dl.com · [Hackathon entry with demo video](https://lablab.build/ai-hackathons/vultr-hackathon/boston-hacker/tandem-business-ai-by-opendl) · [Synthetic clinic website with embedded chat](https://tandemaidentaldemo.open-dl.com) (0.1.18) · Judge login (0.1.16, after demo setup): click **Sign in** with the prefilled public `judge@example.com` account; no authenticator code. Switch among the three synthetic businesses. Proposals you request need another staff member to approve. [Operator setup](docs/runbooks/install.md#demo-installs-only-public-judge-login).
+Boston AI Forward tailors Tandem to the way your business works, from the first customer inquiry to scheduling, inventory, and follow-up. [Discuss a custom build](https://bostonaiforward.com/inquiry.html).
+
+[Explore the staff demo](https://tandemai.open-dl.com) or [visit the fictional dental clinic](https://tandemaidentaldemo.open-dl.com). Sign in as **Demo Guest** with the prefilled account, then choose a sample business. Another staff member reviews proposals you request. [Operator setup](docs/runbooks/install.md#demo-installs-only-public-guest-login).
 
 ## What it does
 
@@ -69,10 +71,6 @@ These are measured synthetic-case results, not guarantees. Reports are in [backe
 
 The [0.1.10 release notes](CHANGELOG.md) record 2,398 backend tests at 96% coverage, 554 frontend tests and 35 end-to-end tests. A [demo VM performance run](docs/performance-local.md) with 20 staff over 5 minutes recorded 204 ms p95 and 0 errors in 5,251 requests. The [security review](docs/security/2026-11-event-review.md) recorded no high findings, one accepted medium CSP finding and an open egress hardening item.
 
-## What was built before and during the event
-
-The non-AI ERP, including sales, purchasing and procurement, was built before kickoff. No AI code, prompts, inference calls, agent loops or evals were built before kickoff. The AI design was documented in advance. All AI functionality was built after kickoff at **3 Nov 2026 15:00 UTC**, including the gateway, agents, prompts, tools, evaluations and voice dictation. The dated records are [PRE_EVENT_WORK.md](PRE_EVENT_WORK.md) and [EVENT_WORK.md](EVENT_WORK.md). Later non-AI features also appear in event work.
-
 ## Setup
 
 For local development, follow the repository prerequisites and run `make dev`. On a Claude cloud development machine, run `make cloud-dev` instead ([docs/CLOUD_DEV.md](docs/CLOUD_DEV.md)). To install on a Vultr account, follow the [install runbook](docs/runbooks/install.md), including `deploy/scripts/install.sh` and its dry run. These operations require the operator's own configuration and credentials.
@@ -84,7 +82,7 @@ For local development, follow the repository prerequisites and run `make dev`. O
 - Application-level outbound destinations are restricted, but raw container egress is open. An egress proxy is tracked as P8-09. The security review also accepts an inline-style CSP finding.
 - There is no payment processing or general ledger. Direct accounting integration and inbound email are not built. Backups retain erased data until expiry; six-hourly backups can lose changes since the last backup.
 - The local benchmark is on an M1 Pro workstation, not the demo VM or clinic hardware. Regulated use needs suitable locally controlled models, infrastructure, agreements and independent review.
-- Next: complete the egress proxy, compare recorded costs with the Vultr bill, rehearse and record the demo, and test a stronger local model against the same suites.
+- Next: complete the egress proxy, compare recorded costs with the Vultr bill, and test a stronger local model against the same suites.
 
 ## License
 

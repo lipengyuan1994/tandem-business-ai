@@ -2,6 +2,15 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## 0.1.20 (2026-11-24) — Boston AI Forward product branding
+
+- Tandem now credits Boston AI Forward. The staff demo opens as Demo Guest and the clinic links to the configured
+  app host. Both demo entry points link to the custom-build inquiry form.
+- On existing synthetic demos, upgrade the API and web images, migrate the original guest with
+  `demo-logins --guest`, rotate any event-branded public password with `--reset-password`, then render the new guest credential asset and reload
+  the Keycloak theme. The [guest setup](docs/runbooks/install.md#demo-installs-only-public-guest-login)
+  preserves the existing account and business records. No database schema or DNS changes are required.
+
 ## 0.1.19 (2026-11-08)
 
 - **Fix, System page:** the AI panel still said "The AI assistant is not installed" (a placeholder from before the AI

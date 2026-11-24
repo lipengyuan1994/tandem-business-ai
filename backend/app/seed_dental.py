@@ -24,6 +24,7 @@ from app.platform.context import Context
 
 def configure(db: Session, ctx: Context, business: dict[str, Any]) -> None:
     import json
+    import os
 
     if business.get("synthetic_demo"):
         if is_regulated():
@@ -33,12 +34,14 @@ def configure(db: Session, ctx: Context, business: dict[str, Any]) -> None:
         row.synthetic_demo = True
         row.public_profile = json.loads(business.get("public_profile_json", "{}"))
         settings, version = org.get_settings(db, ctx)
+        clinic_settings = json.loads(business.get("settings_json", "{}"))
+        clinic_domain = os.environ.get("DEMO_SITE_DOMAIN")
+        if business["slug"] == "example-dental-clinic" and clinic_domain:
+            clinic_settings["embed_allowed_origins"] = [f"https://{clinic_domain}"]
         org.update_settings(
             db,
             ctx,
-            BusinessSettings.model_validate(
-                {**settings.model_dump(), **json.loads(business.get("settings_json", "{}"))}
-            ),
+            BusinessSettings.model_validate({**settings.model_dump(), **clinic_settings}),
             version,
         )
         patch_settings(db, ctx, "customer_care", AgentPatch(version=0, enabled=True))

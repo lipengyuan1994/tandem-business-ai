@@ -40,7 +40,7 @@ def fixture_emails() -> dict[str, set[str]]:
     slugs = {b["id"]: b["slug"] for b in tables["businesses"]}
     staff: dict[str, set[str]] = {slug: set() for slug in slugs.values()}
     for m in tables["memberships"]:
-        if emails[m["user_id"]] != "judge@example.com":  # dedicated --judge path; never random staff passwords
+        if emails[m["user_id"]] != "demo.guest@example.com":  # dedicated --judge path; never random staff passwords
             staff[slugs[m["business_id"]]].add(emails[m["user_id"]])
     return staff
 
@@ -56,9 +56,15 @@ class FakeKeycloak:
         self.created: list[dict[str, Any]] = []
         self.resets: list[dict[str, Any]] = []
         self.fail_for: set[str] = set()
+        monkeypatch.setattr(keycloak_admin, "rename_public_guest", self.rename)
         monkeypatch.setattr(keycloak_admin, "find_user_id", self.find)
         monkeypatch.setattr(keycloak_admin, "create_user", self.create)
         monkeypatch.setattr(keycloak_admin, "set_password", self.set_password)
+
+    def rename(self, subject: str, email: str) -> None:
+        old = next(k for k, v in self.accounts.items() if v == subject)
+        del self.accounts[old]
+        self.accounts[email] = subject
 
     def find(self, email: str) -> str | None:
         return self.accounts.get(email)
@@ -463,10 +469,12 @@ def test_judge_uses_env_password_without_totp_and_rehardens_on_rerun(
         keycloak_admin, "reset_judge_password", lambda uid, pw: keycloak.set_password(uid, pw, temporary=False)
     )
     main(["demo-logins", "--judge"])
+    assert keycloak.created[0]["email"].startswith("tandem-setup-")
+    assert keycloak.accounts == {"demo.guest@example.com": "kc-1"}
     assert keycloak.created == [
         {
-            "email": "judge@example.com",
-            "name": "Demo Judge",
+            "email": keycloak.created[0]["email"],
+            "name": "Demo Guest",
             "password": password,
             "temporary": False,
             "required_actions": [],

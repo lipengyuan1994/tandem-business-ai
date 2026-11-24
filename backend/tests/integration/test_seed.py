@@ -459,7 +459,7 @@ def test_reset_restores_judge_membership_in_all_businesses_and_retains_linked_us
 
     seed()
     with owner_engine.begin() as db:
-        user_id = db.execute(text("select id from users where email='judge@example.com'")).scalar_one()
+        user_id = db.execute(text("select id from users where email='demo.guest@example.com'")).scalar_one()
         db.execute(text("update users set oidc_subject='kc-judge' where id=:id"), {"id": user_id})
         db.execute(text("update memberships set status='removed' where user_id=:id"), {"id": user_id})
     main(["reset-demo", "--yes"])
@@ -468,7 +468,7 @@ def test_reset_restores_judge_membership_in_all_businesses_and_retains_linked_us
             text(
                 "select u.id,u.oidc_subject,m.status,r.role,b.slug from users u "
                 "join memberships m on m.user_id=u.id join role_grants r on r.membership_id=m.id "
-                "join businesses b on b.id=m.business_id where u.email='judge@example.com'"
+                "join businesses b on b.id=m.business_id where u.email='demo.guest@example.com'"
             )
         ).all()
     assert len(rows) == 3

@@ -55,14 +55,15 @@ export function AppLayout() {
       <aside className="hidden w-56 shrink-0 border-r bg-card md:block">
         <div className="px-4 py-4">
           <p className="text-sm font-semibold">{t("app.name")}</p>
-          {session.businessName ? <p className="text-xs text-muted-foreground">{session.businessName}</p> : null}
+          <p className="text-xs text-muted-foreground">{t("app.byline")}</p>
+          {session.businessName ? <p className="mt-2 text-sm font-medium">{session.businessName}</p> : null}
         </div>
         {navigation()}
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-end gap-2 border-b px-4 py-2">
           <Button ref={menuButton} variant="outline" className="mr-auto md:hidden" aria-haspopup="dialog" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>{t("app.openMenu")}</Button>
-          {menuOpen ? <Suspense fallback={null}><MobileNavigation title={t("app.mainNav")} description={session.businessName ?? t("app.name")} onClose={() => setMenuOpen(false)} returnFocus={() => menuButton.current?.focus()}>{navigation(() => setMenuOpen(false))}</MobileNavigation></Suspense> : null}
+          {menuOpen ? <Suspense fallback={null}><MobileNavigation title={t("app.mainNav")} description={[session.businessName, t("app.name"), t("app.byline")].filter(Boolean).join(" · ")} onClose={() => setMenuOpen(false)} returnFocus={() => menuButton.current?.focus()}>{navigation(() => setMenuOpen(false))}</MobileNavigation></Suspense> : null}
           <AssistantLauncher />
           <NotificationBell />
           <UserMenu />

@@ -39,7 +39,8 @@ def clinic():
     return _ctx(fixture_id("biz-dental"))
 
 
-def test_reset_restores_clinic_website_origin(registry):
+def test_reset_restores_clinic_website_origin(registry, monkeypatch):
+    monkeypatch.setenv("DEMO_SITE_DOMAIN", "clinic.example.com")
     from app.seed import seed
 
     ctx = clinic()
@@ -49,7 +50,7 @@ def test_reset_restores_clinic_website_origin(registry):
     seed(do_reset=True)
     with transaction(ctx) as db:
         settings = db.scalar(select(BusinessSettingsRow))
-        assert settings.settings["embed_allowed_origins"] == ["https://tandemaidentaldemo.open-dl.com"]
+        assert settings.settings["embed_allowed_origins"] == ["https://clinic.example.com"]
 
 
 def test_clinic_recall_reuses_b2_consent_future_booking_and_minimal_templates(registry):

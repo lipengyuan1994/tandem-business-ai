@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Example Dental Clinic: a synthetic clinic demonstrating the Tandem Business AI front desk. No real patients.">
+  <meta name="description" content="Example Dental Clinic: a synthetic clinic demonstrating the Tandem Business AI front desk from Boston AI Forward. No real patients.">
   <title>Example Dental Clinic · Synthetic demo</title>
   <link rel="stylesheet" href="/clinic.css">
-  <script src="https://tandemai.open-dl.com/embed.js" data-business="example-dental-clinic" async></script>
+  <script src="https://{{env `DOMAIN`}}/embed.js" data-business="example-dental-clinic" async></script>
 </head>
 <body>
   <aside class="demo-banner" aria-label="Synthetic demo notice">
-    Synthetic demo clinic for the Vultr hackathon. No real patients.
+    Explore a fictional dental clinic running on Tandem Business AI. Please use invented details.
     Chat with the clinic's AI front desk (bottom right).
-    Judges: <a href="https://tandemai.open-dl.com/">open the staff app (demo login prefilled)</a>
+    <a href="https://{{env `DOMAIN`}}/">Explore the staff demo</a>
   </aside>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header wrap">
@@ -26,7 +26,7 @@
     <nav aria-label="Main navigation">
       <a href="#treatments">Treatments</a>
       <a href="#visit">Plan your visit</a>
-      <a href="https://tandemai.open-dl.com/p/example-dental-clinic/bookings">Manage my bookings</a>
+      <a href="https://{{env `DOMAIN`}}/p/example-dental-clinic/bookings">Manage my bookings</a>
     </nav>
   </header>
   <main id="main" tabindex="-1">
@@ -36,8 +36,8 @@
         <h1 id="welcome">A little more ease.<br>A brighter smile.</h1>
         <p class="intro">From your first visit to your regular exam and cleaning, our team is here to help you take the next step. Meet Ellery, our dentist, and Devon, our hygienist.</p>
         <div class="actions">
-          <a class="button" href="https://tandemai.open-dl.com/p/example-dental-clinic/request">Request an appointment <span aria-hidden="true">↗</span></a>
-          <a class="text-link" href="https://tandemai.open-dl.com/p/example-dental-clinic/bookings">Manage my bookings</a>
+          <a class="button" href="https://{{env `DOMAIN`}}/p/example-dental-clinic/request">Request an appointment <span aria-hidden="true">↗</span></a>
+          <a class="text-link" href="https://{{env `DOMAIN`}}/p/example-dental-clinic/bookings">Manage my bookings</a>
         </div>
         <p class="small">No patient login needed. Please use invented details in this demo.</p>
       </div>
@@ -51,7 +51,7 @@
         <p class="eyebrow">Your front desk, online</p>
         <h2>A question before you book?</h2>
         <p>Open the chat at the bottom right for help with treatments, opening hours and appointment requests. Our AI front desk can pass your question to the team.</p>
-        <a href="https://tandemai.open-dl.com/p/example-dental-clinic/chat">Open chat in a full page <span aria-hidden="true">↗</span></a>
+        <a href="https://{{env `DOMAIN`}}/p/example-dental-clinic/chat">Open chat in a full page <span aria-hidden="true">↗</span></a>
       </div>
     </section>
     <aside class="emergency wrap" aria-label="Emergency notice">
@@ -86,6 +86,8 @@
       </aside>
     </section>
   </main>
-  <footer class="wrap">Built with <a href="https://tandemai.open-dl.com/">Tandem Business AI by OpenDL</a> · synthetic data</footer>
+  <footer class="wrap"><strong>Tandem Business AI</strong> · A product of Boston AI Forward
+    <p>Boston AI Forward tailors Tandem to the way your business works, from the first customer inquiry to scheduling, inventory, and follow-up.</p>
+    <a href="https://bostonaiforward.com/inquiry.html">Discuss a custom build</a></footer>
 </body>
 </html>

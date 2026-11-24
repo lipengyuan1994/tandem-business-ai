@@ -9,6 +9,7 @@ export function renderWithSession(ui: ReactElement, permissions: string[] = []) 
     userId: "00000000-0000-7000-8000-000000000001",
     businessId: "00000000-0000-7000-8000-000000000002",
     displayName: "Morgan Example",
+    email: "morgan@example.com",
     businessName: "Example Cycle Works",
     businessTimeZone: "America/Denver",
     permissions: new Set(permissions),

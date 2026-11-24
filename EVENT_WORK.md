@@ -676,3 +676,40 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   tested restore, tests and load test). Claims checked against the repository (Terraform creates only the VM, firewall
   and SSH key, so the text says so). Updated on lablab ("Updated!"); public page shows the new long description.
 
+
+## 2026-11-24 — Boston AI Forward product attribution and demo guest
+
+- Rebranded staff sign-in, the workspace shell, the clinic demo and the public README. The two prospect entry
+  points link to Boston AI Forward's inquiry form. Example businesses keep their identities and privacy notices.
+- The original public account is upgraded in place. Fresh provisioning claims a reserved setup address before
+  activating the guest. The Caddy clinic page renders app links from DOMAIN; fresh clinic seeds use DEMO_SITE_DOMAIN.
+  The existing domains, database schema and permissions are retained.
+- Native ARM local Compose rehearsal with real PostgreSQL and Keycloak: fresh guest provision, repeat provision,
+  upgrade from the original linked account and repeat upgrade. Verified the app ID, OIDC subject, all three
+  membership IDs and role assignments. The upgrade ran without a seed or reset.
+- Local Chromium at 1280 and 375 px: prefilled login, guest name/email, all three business switches, staff
+  lists and permissions, desktop/mobile attribution. An ordinary synthetic staff member signed in and enrolled
+  an authenticator. On a separate clinic origin, verified embedded and full-page chat, synthetic and privacy
+  notices, a completed appointment request and receipt, booking management, staff login and both inquiry links.
+  Also opened the unsigned-in supplier quote form at 375 px. The built staff/widget bundles passed a legacy-copy scan.
+- Complete `make check` passed with native ARM toolchains. The backend ran in the project ARM Linux dev image
+  against its isolated PostgreSQL on loopback after Docker Desktop stopped during the first macOS run. 2,474
+  backend tests passed (96% coverage) and the one permission test skipped as root passed separately under UID
+  65534. All 585 frontend tests passed, along with deployment regressions, configuration validation, licenses and
+  secret scanning. A second reviewer checked identity collisions, retries, permissions and the theme upgrade.
+- Released 0.1.20 from commit `03d1f92` on the existing Vultr demo. All three images were built on the VM.
+  The pre-upgrade backup, migration, upgrade smoke and post-theme smoke passed. All six services were healthy.
+  The previous intentionally public demo password contained event wording; it was rotated during activation.
+- Fresh production Chromium sessions at 1280 and 375 px verified the guest prefill, account menu, staff listing,
+  business picker, all three workspace switches, attribution and limited permissions. Compared before/after
+  hashes of the app ID, OIDC subject, each membership and each role-grant ID. The old login is gone, and the
+  guest has no Keycloak groups or account-console roles. A regular synthetic staff member completed ordinary
+  sign-in and MFA. The test authenticator alone was removed; its previous password credential ID and required
+  actions were restored and verified, with zero remaining provider sessions.
+- From the live clinic, verified embedded and full-page chat, synthetic/privacy notices, an invented appointment
+  request and receipt, booking management, the staff demo, and both custom-build links. Public metadata, loader,
+  pages and new theme assets passed the legacy-copy scan after accounting for the existing hostnames. Both old
+  login assets are unavailable. A valid supplier form was checked locally. None of the three live businesses
+  had a pending supplier invitation; the live unavailable-link state was verified.
+- After browser verification, the Vultr API confirmed zero SSH rules and port 22 was unreachable over both
+  IPv4 and IPv6. The existing public web addresses continue to serve the demo.

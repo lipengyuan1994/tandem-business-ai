@@ -1,6 +1,7 @@
 {
   "app": {
     "name": "Tandem Business AI",
+    "byline": "A product of Boston AI Forward",
     "skipToContent": "Skip to content",
     "mainNav": "Main",
     "countLabel": "{{n}} waiting",
@@ -104,7 +105,7 @@
   "roles": {
     "owner": "Owner",
     "admin": "Admin",
-    "demo_reviewer": "Demo reviewer",
+    "demo_reviewer": "Demo guest",
     "operator": "Operator",
     "inventory_manager": "Inventory manager",
     "marketing_manager": "Marketing manager",
