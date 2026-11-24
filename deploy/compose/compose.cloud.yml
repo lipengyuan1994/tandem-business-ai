@@ -1,0 +1,18 @@
+# Overrides for Claude's cloud dev machines, layered on compose.dev.yml by scripts/cloud-dev-setup.sh.
+# Those machines re-sign outbound TLS with their own CA (CLOUD_CA_DIR, default /root/.ccr), so the backend image build
+# (PyPI) and the web container (npm) must trust it. Not used on laptops, CI or the demo VM.
+x-cloud-build: &cloud-build
+  build:
+    context: ../../backend
+    dockerfile: ../deploy/compose/backend.cloud.Dockerfile
+    additional_contexts:
+      cloudca: ${CLOUD_CA_DIR:-/root/.ccr}
+
+services:
+  api: *cloud-build
+  worker: *cloud-build
+  web:
+    environment:
+      NODE_EXTRA_CA_CERTS: /etc/cloud-ca/ca-bundle.crt
+    volumes:
+      - ${CLOUD_CA_DIR:-/root/.ccr}:/etc/cloud-ca:ro
