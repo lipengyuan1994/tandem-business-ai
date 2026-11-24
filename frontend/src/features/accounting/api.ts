@@ -15,14 +15,18 @@ export type SyncRecord = Schemas["SyncRecordOut"]
 export type RecordFilter = "all" | "failed" | "skipped"
 
 const KEY = ["accounting", "quickbooks"] as const
+let watchUntil = 0
+/** Keep refreshing the status for a while after asking for a sync, until the worker picks it up and finishes. */
+export function watchForSync(ms = 120_000) { watchUntil = Date.now() + ms }
 
 export function useConnection() {
   const { permissions } = useSession()
   return useQuery({
     queryKey: KEY, enabled: permissions.has(SYNC_READ),
     queryFn: async () => unwrap(await api.GET("/api/v1/accounting/quickbooks")),
-    // While a sync runs, refresh so the counts and the log catch up.
-    refetchInterval: (query) => (query.state.data && isRunning(query.state.data) ? 5000 : false),
+    // While a sync runs, or shortly after one was asked for (the worker may not have started it yet), refresh so the
+    // counts and the log catch up.
+    refetchInterval: (query) => (query.state.data && (isRunning(query.state.data) || Date.now() < watchUntil) ? 5000 : false),
   })
 }
 
@@ -57,8 +61,11 @@ export function useDisconnect() {
   return useAccountingMutation(async (version: number) => unwrap(await api.POST("/api/v1/accounting/quickbooks/disconnect", { body: { version } })))
 }
 export function useSyncNow() {
-  return useAccountingMutation(async () => unwrap(await api.POST("/api/v1/accounting/quickbooks/sync")))
+  return useAccountingMutation(async () => { watchForSync(); return unwrap(await api.POST("/api/v1/accounting/quickbooks/sync")) })
 }
 export function useRetryRecord() {
-  return useAccountingMutation(async (id: string) => unwrap(await api.POST("/api/v1/accounting/quickbooks/records/{record_id}/retry", { params: { path: { record_id: id } } })))
+  return useAccountingMutation(async (id: string) => {
+    watchForSync()
+    return unwrap(await api.POST("/api/v1/accounting/quickbooks/records/{record_id}/retry", { params: { path: { record_id: id } } }))
+  })
 }

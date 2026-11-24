@@ -557,20 +557,31 @@ class Engine:
         if missing:
             self.notes.append("Choose QuickBooks accounts for: " + ", ".join(missing))
         with transaction(self.ctx) as db:
-            invoice_due = [i for i, v in ledger_invoice_versions(db, self.ctx, since).items() if self._doc_due(i, v)]
+            invoice_window = ledger_invoice_versions(db, self.ctx, since)
+            bill_window = ledger_bill_versions(db, self.ctx, since)
+            invoice_due = [i for i, v in invoice_window.items() if self._doc_due(i, v)]
             payment_due = [
                 i
                 for i, v in ledger_payment_versions(db, self.ctx, since).items()
                 if self.due(("invoice_payment", str(i)), v)
             ]
-            bill_due = [
-                i for i, v in ledger_bill_versions(db, self.ctx, since).items() if self.due(("bill", str(i)), v)
-            ]
+            bill_due = [i for i, v in bill_window.items() if self.due(("bill", str(i)), v)]
             bill_payment_due = [
                 i
                 for i, v in ledger_bill_payment_versions(db, self.ctx, since).items()
                 if self.due(("bill_payment", str(i)), v)
             ]
+        # Older invoices and bills sent only because a newer payment needed them stay watched for voids and edits.
+        invoice_due += [
+            d.id
+            for d in self._exported_outside(("invoice", "credit_note"), invoice_window, ledger_invoices)
+            if self._doc_due(d.id, d.version)
+        ]
+        bill_due += [
+            b.id
+            for b in self._exported_outside(("bill",), bill_window, ledger_bills)
+            if self.due(("bill", str(b.id)), b.version)
+        ]
         if m.income_account_id:
             docs = self._load(invoice_due, ledger_invoices)
             invoices = sorted((d for d in docs if d.kind == "invoice"), key=lambda d: (d.issue_date, d.number))
@@ -594,6 +605,16 @@ class Engine:
         if m.expense_account_id and not self._each(bill_rows, self.bill):
             return True
         return False
+
+    def _exported_outside(
+        self, entities: tuple[str, ...], window: dict[uuid.UUID, int], loader: Callable[..., dict[uuid.UUID, T]]
+    ) -> list[T]:
+        ids = {
+            uuid.UUID(local)
+            for (entity, local), rec in self.recs.items()
+            if entity in entities and rec.remote_id is not None and uuid.UUID(local) not in window
+        }
+        return self._load(sorted(ids), loader)
 
     def _doc_due(self, doc_id: uuid.UUID, version: int) -> bool:
         local = str(doc_id)

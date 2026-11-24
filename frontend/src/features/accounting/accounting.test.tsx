@@ -107,4 +107,18 @@ describe("accounting settings", () => {
     await userEvent.click(within(dialog).getByRole("button", { name: "Disconnect" }))
     await waitFor(() => expect(version).toBe(4))
   })
+
+  it("keeps checking after Sync now until the run shows up", async () => {
+    mocks(connected, SYNC_RUN)
+    let posted = 0
+    const done = { ...connected, last_sync_started_at: "2026-10-28T12:05:00Z", last_sync_finished_at: "2026-10-28T12:05:30Z", counts: { synced: 9, failed: 0, skipped: 0 } }
+    server.use(
+      // The worker starts a moment after the request, so the refresh right after the click still shows the old run.
+      http.get(ROOT, () => HttpResponse.json(posted && Date.now() - posted > 1000 ? done : connected)),
+      http.post(`${ROOT}/sync`, () => { posted = Date.now(); return HttpResponse.json({ queued: true }, { status: 202 }) }),
+    )
+    renderApp("/settings/accounting")
+    await userEvent.click(await screen.findByRole("button", { name: "Sync now" }))
+    expect(await screen.findByText("9", {}, { timeout: 8000 })).toBeInTheDocument()
+  }, 12_000)
 })

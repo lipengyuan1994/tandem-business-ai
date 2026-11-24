@@ -447,3 +447,26 @@ def test_query_literals_and_faults() -> None:
         response.request = httpx.Request("GET", "https://sandbox-quickbooks.api.intuit.com/x")
         error = _fault(response)
         assert isinstance(error, LedgerError) and error.kind == kind
+
+
+def test_older_bill_sent_for_a_payment_stays_watched(books: Shop, intuit: FakeQuickBooks, registry: Registry) -> None:
+    bill = supplier_bill(books, bill_date="2026-10-01")  # before sync_from
+    r = books.owner.post(
+        f"/api/v1/purchasing/bills/{bill['id']}/payments",
+        json={"version": bill["version"], "amount_minor": 5000, "paid_on": "2026-10-28", "method": "bank_transfer"},
+    )
+    assert r.status_code == 201, r.text
+    sync(books, registry)
+    assert len(intuit.of("bill")) == 1 and len(intuit.of("billpayment")) == 1
+
+    paid = r.json()
+    r = books.owner.post(
+        f"/api/v1/purchasing/bills/{bill['id']}/payments/{paid['payments'][0]['id']}/void",
+        json={"version": paid["version"]},
+    )
+    assert r.status_code == 200, r.text
+    r = books.owner.post(f"/api/v1/purchasing/bills/{bill['id']}/void", json={"version": r.json()["version"]})
+    assert r.status_code == 200, r.text
+    sync(books, registry)
+    assert intuit.of("bill")[0].get("deleted") is True
+    assert intuit.of("billpayment")[0].get("voided") is True

@@ -1,6 +1,6 @@
 // /settings/accounting: connect QuickBooks Online, map its accounts, and watch what was sent and what failed.
 import { useNavigate, useRouterState } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { useSession } from "@/app/session-context"
@@ -233,6 +233,15 @@ function SyncLog() {
   const zone = useBusiness().data?.timezone ?? "UTC"
   const [filter, setFilter] = useState<RecordFilter>("all")
   const records = useRecords(filter, true)
+  const finished = useConnection().data?.last_sync_finished_at
+  const { refetch } = records
+  const seen = useRef(finished)
+  // A finished run changes the log: reload it when the status shows a new finish time.
+  useEffect(() => {
+    if (finished === seen.current) return
+    seen.current = finished
+    void refetch()
+  }, [finished, refetch])
   const retry = useRetryRecord()
   const rows = records.data?.pages.flatMap((p) => p.items) ?? []
 
