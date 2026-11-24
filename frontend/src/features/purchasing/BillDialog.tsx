@@ -42,7 +42,9 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
   const [dueDate, setDueDate] = useState(bill?.due_date ?? "")
   const [notes, setNotes] = useState(bill?.notes ?? "")
   const billing = usePOBilling(bill ? undefined : poId || undefined)
-  const currency = bill?.currency ?? billing.data?.currency ?? pickers.data?.currency ?? "USD"
+  // Minor units depend on the currency, so a new bill waits for the order's or the business's currency before saving.
+  const knownCurrency = bill?.currency ?? (poId ? billing.data?.currency : pickers.data?.currency)
+  const currency = knownCurrency ?? pickers.data?.currency ?? "USD"
   // Until the user types an amount, a new bill for an order starts at what was received and not yet billed.
   const [typed, setTyped] = useState<string | null>(bill ? minorToDecimal(bill.total_minor, bill.currency) : null)
   const unbilled = billing.data?.unbilled_received_minor ?? 0
@@ -57,7 +59,7 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
     : parsed.minor <= 0 ? t("bills.errors.zero") : parsed.minor > 10 ** 14 ? t("sales.priceErrors.tooLarge") : null
   const billDateError = !DATE.test(billDate) ? t("bills.errors.date") : billDate > today ? t("bills.errors.future") : null
   const dueDateError = dueDate && !DATE.test(dueDate) ? t("bills.errors.date") : dueDate && dueDate < billDate ? t("bills.errors.dueBeforeBill") : null
-  const ready = !!supplierId && parsed.ok && !amountError && !billDateError && !dueDateError && !save.isPending
+  const ready = !!supplierId && !!knownCurrency && parsed.ok && !amountError && !billDateError && !dueDateError && !save.isPending
   const submit = () => {
     if (!ready || !parsed.ok) return
     save.mutateAsync({
