@@ -2,13 +2,13 @@ import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
-import type { AgingReport, SalesDocument } from "@/api/types"
+import type { AgingReport, SalesDocument, SalesPayment } from "@/api/types"
 import { meWith, mockMe, renderApp } from "@/test/app"
 import { server } from "@/test/server"
 import { doc, ID, PERMS } from "./test-support"
 
-const ISSUED = { status: "issued", number: "INV-2026-0007", kind: "invoice", amount_paid_minor: 0, balance_minor: 9634, payment_status: "unpaid", payments: [] } as const
-const PAYMENT = { id: "pay1", amount_minor: 4000, paid_on: "2026-10-20", method: "card", reference: "AUTH-9", voided_at: null, created_at: "2026-10-20T15:00:00Z" } as const
+const ISSUED: Partial<SalesDocument> = { status: "issued", number: "INV-2026-0007", kind: "invoice", amount_paid_minor: 0, balance_minor: 9634, payment_status: "unpaid", payments: [] }
+const PAYMENT: SalesPayment = { id: "pay1", amount_minor: 4000, paid_on: "2026-10-20", method: "card", reference: "AUTH-9", voided_at: null, created_at: "2026-10-20T15:00:00Z" }
 
 function serve(initial: SalesDocument) {
   let current = initial
