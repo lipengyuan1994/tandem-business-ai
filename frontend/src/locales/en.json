@@ -140,6 +140,7 @@
     "crm.customer_version_conflict": "This {{customer}} changed since you opened it.",
     "scheduling.slot_unavailable": "That time was just taken. Pick another slot.",
     "inventory.insufficient_stock": "Not enough stock available.",
+    "catalog.item_in_use": "An active {{service}} still uses this product as a part. Remove it from that {{service}}'s parts first.",
     "conversations.public_chat_disabled": "Public chat is turned off.",
     "scheduling.outside_working_hours": "That time is outside working hours.",
     "scheduling.lead_time_violation": "That time is too soon to book.",
@@ -519,6 +520,33 @@
       "durationInput": "Duration (minutes)",
       "tracked": "Stock tracked",
       "status": "Status"
+    },
+    "editFor": "Edit {{name}}",
+    "parts": {
+      "open": "Parts",
+      "openFor": "Parts used by {{name}}",
+      "title": "Parts used by {{name}}",
+      "hint": "Stock this {{service}} uses up each time. Booking reserves it and completing the {{appointment}} takes it out of stock.",
+      "none": "No parts yet.",
+      "quantityFor": "Quantity of {{name}}",
+      "removeFor": "Remove {{name}}",
+      "remove": "Remove",
+      "add": "Add a product",
+      "choose": "Choose a product",
+      "noProducts": "No more stock-tracked products",
+      "addButton": "Add",
+      "invalidQuantity": "Each quantity must be above 0, with at most 3 decimals.",
+      "saved": "Parts saved"
+    },
+    "archive": {
+      "open": "Archive",
+      "title": "Archive {{name}}?",
+      "hint": {
+        "service": "It disappears from booking and new quotes. Past {{appointments}} and documents keep it.",
+        "product": "It disappears from new quotes, orders and parts lists. Past documents and stock history keep it."
+      },
+      "confirm": "Archive",
+      "done": "{{name}} archived"
     }
   },
   "inventory": {

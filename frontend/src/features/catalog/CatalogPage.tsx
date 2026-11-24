@@ -2,7 +2,9 @@ import { QueryError } from "@/components/common/QueryError"
 import type { ColumnDef } from "@tanstack/react-table"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 import type { CatalogItem, CatalogItemCreate } from "@/api/types"
+import { ConfirmDialog } from "@/components/common/ConfirmDialog"
 import { DataTable } from "@/components/common/DataTable"
 import { MoneyText } from "@/components/common/MoneyText"
 import { PageHeader } from "@/components/common/PageHeader"
@@ -17,7 +19,8 @@ import { useBusiness } from "@/features/org/hooks"
 import { minorToDecimal, parseMoneyInput } from "@/lib/money"
 import { toastError } from "@/lib/errors"
 import { ApiProblem } from "@/lib/problem"
-import { useCatalogItems, useCreateItem, useUpdateItem } from "./hooks"
+import { useArchiveItem, useCatalogItems, useCreateItem, useUpdateItem } from "./hooks"
+import { PartsDialog } from "./PartsDialog"
 
 type Kind = "service" | "product"
 
@@ -26,6 +29,7 @@ export function CatalogPage() {
   const [kind, setKind] = useState<Kind>("service")
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<CatalogItem | undefined>()
+  const [partsFor, setPartsFor] = useState<CatalogItem | undefined>()
   const items = useCatalogItems(kind)
 
   const columns = useMemo<ColumnDef<CatalogItem, unknown>[]>(() => [
@@ -36,7 +40,10 @@ export function CatalogPage() {
       ? { header: t("catalog.fields.duration"), cell: ({ row }) => t("catalog.minutes", { n: row.original.duration_minutes }) }
       : { header: t("catalog.fields.tracked"), cell: ({ row }) => (row.original.is_stock_tracked ? t("catalog.yes") : t("catalog.no")) },
     { header: t("catalog.fields.status"), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
-    { header: t("common.edit"), cell: ({ row }) => <PermissionGate permission="catalog.item.write"><Button variant="outline" size="sm" onClick={() => setEditing(row.original)}>{t("common.edit")}</Button></PermissionGate> },
+    { header: t("common.edit"), cell: ({ row }) => <PermissionGate permission="catalog.item.write"><div className="flex gap-2">
+      <Button variant="outline" size="sm" onClick={() => setEditing(row.original)} aria-label={t("catalog.editFor", { name: row.original.name })}>{t("common.edit")}</Button>
+      {row.original.kind === "service" ? <Button variant="outline" size="sm" onClick={() => setPartsFor(row.original)} aria-label={t("catalog.parts.openFor", { name: row.original.name })}>{t("catalog.parts.open")}</Button> : null}
+    </div></PermissionGate> },
     { header: t("catalog.fields.sku"), cell: ({ row }) => row.original.sku ?? "—" },
   ], [t, kind])
 
@@ -55,6 +62,7 @@ export function CatalogPage() {
       </Tabs>
       {editing ? <ItemDialog key={editing.id} kind={editing.kind} item={editing} onOpenChange={() => setEditing(undefined)} /> : null}
       {creating ? <ItemDialog kind={kind} onOpenChange={setCreating} /> : null}
+      {partsFor ? <PartsDialog key={partsFor.id} service={partsFor} onOpenChange={() => setPartsFor(undefined)} /> : null}
     </>
   )
 }
@@ -63,6 +71,8 @@ function ItemDialog({ kind, item, onOpenChange }: { kind: Kind; item?: CatalogIt
   const { t } = useTranslation()
   const create = useCreateItem()
   const update = useUpdateItem()
+  const archive = useArchiveItem()
+  const [confirmArchive, setConfirmArchive] = useState(false)
   const business = useBusiness()
   const [name, setName] = useState(item?.name ?? "")
   const [price, setPrice] = useState(item?.price_minor != null ? minorToDecimal(item.price_minor, item.currency) : "")
@@ -132,10 +142,17 @@ function ItemDialog({ kind, item, onOpenChange }: { kind: Kind; item?: CatalogIt
           ) : null}
         </form>
         <DialogFooter>
+          {item && item.status === "active" ? <Button variant="ghost" className="text-destructive sm:mr-auto" onClick={() => setConfirmArchive(true)}>{t("catalog.archive.open")}</Button> : null}
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button type="submit" form="item-form" disabled={create.isPending || update.isPending || !business.data}>{t("common.save")}</Button>
         </DialogFooter>
       </DialogContent>
+      {item ? <ConfirmDialog open={confirmArchive} onOpenChange={setConfirmArchive} destructive pending={archive.isPending}
+        title={t("catalog.archive.title", { name: item.name })} description={t(`catalog.archive.hint.${item.kind}`)} confirmLabel={t("catalog.archive.confirm")}
+        onConfirm={() => archive.mutate({ id: item.id, version: item.version }, {
+          onSuccess: () => { setConfirmArchive(false); onOpenChange(false); toast.success(t("catalog.archive.done", { name: item.name })) },
+          onError: (e) => { setConfirmArchive(false); toastError(e) },
+        })} /> : null}
     </Dialog>
   )
 }
