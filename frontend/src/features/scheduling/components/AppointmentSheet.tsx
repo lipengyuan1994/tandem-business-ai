@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { toastError } from "@/lib/errors"
 import { useInvoiceFromAppointment } from "@/features/sales/hooks"
 import { type AppointmentAction, useAppointmentAction } from "../hooks"
+import { RescheduleForm } from "./RescheduleForm"
 
 export function AppointmentSheet({ appointment, timeZone, onClose }: { appointment: Appointment | undefined; timeZone: string; onClose: () => void }) {
   const { t } = useTranslation()
@@ -57,6 +58,7 @@ export function AppointmentSheet({ appointment, timeZone, onClose }: { appointme
                       <Input id="cancel-reason" value={reason} onChange={(e) => setReason(e.target.value)} />
                     </div>
                     <Button variant="destructive" onClick={() => run("cancel")} disabled={act.isPending}>{t("schedule.actions.cancel")}</Button>
+                    <RescheduleForm key={`${a.id}-${a.version}`} appointment={a} timeZone={timeZone} onMoved={onClose} onConflict={() => setConflict(true)} />
                   </div>
                 </PermissionGate>
               ) : null}

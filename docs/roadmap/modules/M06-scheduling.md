@@ -99,6 +99,7 @@ def agenda_for_day(db, ctx, local_date) -> list[AppointmentDto]      # dashboard
 | GET / PUT | `/scheduling/resources/{id}/availability` | read / write | Replace weekly rules |
 | GET / PUT | `/scheduling/resources/{id}/services` | read / write | |
 | GET / POST | `/scheduling/exceptions` | read / write | |
+| DELETE | `/scheduling/exceptions/{id}` | write | Remove a closure or extra opening (added 2026-11-24 for the setup screen) |
 | GET | `/scheduling/slots` | `scheduling.appointment.read` | `?service_id&earliest&latest&resource_id` |
 | POST | `/scheduling/holds` | `scheduling.appointment.write` | Hold a slot while a booking proposal is reviewed (body: service, resource, customer, starts_at) |
 | POST | `/public/{slug}/appointment-requests` | public | Moved here from M04 (see M04 as-built note); rate limited |

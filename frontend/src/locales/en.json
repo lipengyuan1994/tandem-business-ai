@@ -60,7 +60,8 @@
     "active": "Active",
     "inactive": "Inactive",
     "invited": "Invited",
-    "responded": "Responded"
+    "responded": "Responded",
+    "archived": "Archived"
   },
   "common": {
     "close": "Close",
@@ -166,7 +167,9 @@
     "knowledge.pdf_resource_limit": "The PDF exceeded extraction limits. Try a smaller PDF.",
     "knowledge.pdf_no_text": "No selectable text was found. Scanned PDFs need text recognition before import.",
     "knowledge.invalid_multipart": "Choose one PDF and try again.",
-    "knowledge.single_pdf_required": "Upload one PDF at a time."
+    "knowledge.single_pdf_required": "Upload one PDF at a time.",
+    "scheduling.invalid_rule": "Each end time must be after its start time.",
+    "scheduling.invalid_window": "The end must be after the start."
   },
   "identity": {
     "selectBusiness": {
@@ -223,7 +226,8 @@
       "business": "Business",
       "locations": "Locations & hours",
       "policies": "Policies",
-      "staff": "Staff"
+      "staff": "Staff",
+      "resources": "Resources & availability"
     },
     "business": {
       "name": "Business name",
@@ -600,7 +604,12 @@
     "emptyDay": "No appointments on this day.",
     "currentTime": "Current time",
     "scrollHint": "Scroll for more resources → and hours ↕",
-    "timetable": "Appointment timetable: scroll for resources and hours"
+    "timetable": "Appointment timetable: scroll for resources and hours",
+    "moved": "Moved to {{when}}",
+    "reschedule": {
+      "title": "Move to another time",
+      "date": "New date"
+    }
   },
   "inbox": {
     "contactConsent": "Visitor agreed to be contacted about this request",
@@ -1920,6 +1929,79 @@
       "cancelled": "Cancelled",
       "completed": "Completed",
       "no_show": "Missed"
+    }
+  },
+  "resources": {
+    "intro": "People, rooms and equipment that can be booked. Free slots need three things: the location's opening hours, this resource's weekly hours, and the {{services}} it can do.",
+    "list": "Resources",
+    "none": "No resources yet",
+    "new": "New resource",
+    "name": "Name",
+    "kind": "Type",
+    "kinds": {
+      "staff": "Staff member",
+      "room": "Room",
+      "equipment": "Equipment"
+    },
+    "location": "Location",
+    "defaultLocation": "Default location",
+    "add": "Add resource",
+    "created": "Added {{name}}",
+    "rename": "Rename",
+    "archive": "Archive",
+    "restore": "Restore",
+    "archived": "{{name}} archived",
+    "restored": "{{name}} restored",
+    "archivedHint": "archived: not offered for new bookings",
+    "hours": {
+      "title": "Weekly hours",
+      "hint": "When this resource can be booked. Add a second time range for a break.",
+      "notBookable": "Not bookable",
+      "startFor": "Start time {{n}} on {{day}}",
+      "endFor": "End time {{n}} on {{day}}",
+      "removeFor": "Remove time range {{n}} on {{day}}",
+      "remove": "Remove",
+      "addFor": "Add hours on {{day}}",
+      "add": "Add hours",
+      "save": "Save weekly hours",
+      "saved": "Weekly hours saved",
+      "copyMonday": "Copy Monday to Tuesday–Friday",
+      "endBeforeStart": "On {{day}}, each end time must be after its start time.",
+      "overlap": "On {{day}}, two time ranges overlap."
+    },
+    "services": {
+      "title": "{{Services}} it can do",
+      "hint": "Tick the {{services}} this resource can be booked for.",
+      "none": "No active {{services}} yet. Add them in the catalog first.",
+      "needs": "needs: {{kinds}}",
+      "save": "Save {{services}}",
+      "saved": "{{Services}} saved"
+    },
+    "closures": {
+      "title": "Closures and extra openings",
+      "hint": "Holidays, sick days or one-off extra hours, for everyone or one resource. Times are in {{zone}}.",
+      "none": "No upcoming closures or extra openings.",
+      "upcoming": "Upcoming closures and extra openings",
+      "kind": "Type",
+      "kinds": {
+        "closed": "Closed",
+        "extra_open": "Extra opening"
+      },
+      "appliesTo": "Applies to",
+      "everyone": "Everyone",
+      "unknownResource": "Removed resource",
+      "allDay": "Whole days",
+      "from": "From",
+      "to": "To",
+      "fromTime": "Start time",
+      "toTime": "End time",
+      "reason": "Reason (optional)",
+      "endBeforeStart": "The end must be after the start.",
+      "add": "Add closure or opening",
+      "added": "Added",
+      "remove": "Remove",
+      "removeFor": "Remove the one starting {{when}}",
+      "removed": "Removed"
     }
   }
 }

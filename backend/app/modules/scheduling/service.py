@@ -42,6 +42,7 @@ from .resources import _resource as _resource
 from .resources import add_exception as add_exception
 from .resources import create_resource as create_resource
 from .resources import list_resources as list_resources
+from .resources import remove_exception as remove_exception
 from .resources import replace_rules as replace_rules
 from .resources import replace_services as replace_services
 from .resources import rules_of as rules_of

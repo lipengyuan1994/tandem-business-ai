@@ -169,4 +169,20 @@ def add_exception(db: Session, ctx: Context, data: ExceptionIn) -> AvailabilityE
     return row
 
 
+def remove_exception(db: Session, ctx: Context, exception_id: uuid.UUID) -> None:
+    """Delete a closure or extra opening entered by mistake (appointments are not touched)."""
+    ctx.require(P.RESOURCE_WRITE)
+    row = crud.require_scoped(db, ctx, AvailabilityException, exception_id, "scheduling.exception_not_found")
+    db.delete(row)
+    db.flush()
+    audit.record(
+        db,
+        ctx,
+        action="scheduling.exception.removed",
+        target_type="resource",
+        target_id=row.resource_id,
+        summary=f"{row.kind} {row.reason or ''}".strip(),
+    )
+
+
 # ------------------------------------------------------------------------------------------- holds and bookings
