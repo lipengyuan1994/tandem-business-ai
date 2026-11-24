@@ -7,13 +7,16 @@ Spec: [M17](../../../../docs/roadmap/modules/M17-purchasing.md),
 
 Tables: `suppliers`, `supplier_items`, `purchase_order_sequences`, `purchase_orders`,
 `purchase_order_lines`, `goods_receipts`, `goods_receipt_lines`, `quote_requests`,
-`quote_request_lines`, `quote_request_suppliers`, `supplier_quotes`, `supplier_quote_lines`.
+`quote_request_lines`, `quote_request_suppliers`, `supplier_quotes`, `supplier_quote_lines`,
+`supplier_bills`, `supplier_bill_payments`.
 Forced business RLS and composite tenant references throughout; receipts are append-only.
 Exports omit capability hashes/URLs. Erasure links procurement records and their outbound copies,
 redacts customer-bearing text and blocks further delivery; supplier master contacts remain.
 
-Permissions: `purchasing.po.read|write|approve|receive`, `purchasing.receipt.override`.
-Owner/admin have all; inventory manager read/write/receive; operator read/receive; auditor read.
+Permissions: `purchasing.po.read|write|approve|receive`, `purchasing.receipt.override`,
+`purchasing.bill.read|write|pay|void`.
+Owner/admin have all; inventory manager read/write/receive and bill read/write; operator read/receive
+(no bills); auditor read, bills included.
 Supplier writes, manual send/cancel and follow-up approval use `.write`; PO decisions use `.approve`.
 Suppliers have `active=true` by default, editable through the existing versioned supplier API.
 
@@ -78,3 +81,14 @@ Late means date < business-local today; absent date is unknown. Receipts require
 received; >110% needs owner/admin override reason. Cancellation preserves receipts/numbering.
 
 Absent requested_lines stays absent on serialization, preserving legacy pending proposal hashes.  P10-D: public.dictation_names(db, ctx, entity_ids) returns bounded permission/business-scoped names only.
+
+Supplier bills (`bills.py`, `payables.py`, `api_bills.py`): a bill is header-level (supplier, optional
+PO of the same supplier in approved/sent/partially_received/received, supplier's bill number, bill and
+due dates, total, notes) in the PO's currency or the business currency. One live bill per supplier
+bill number (case-insensitive). Payments are partial or full, never above the balance, dated no later
+than business today; status is open, partially_paid, paid or void, derived from live payments. Only an
+open bill can be edited (`.write`); voiding a bill needs no live payments and `.void`, as does voiding a
+payment, which reopens the balance. `GET purchase-orders/{id}/billing` compares received value
+(received quantity × unit cost) with what is billed. `GET payables/aging?as_of=` buckets unpaid
+balances by days past due (due date, else bill date), per supplier and currency, like receivables.
+Bill creation and payments take Idempotency-Key. Export includes both tables; erasure redacts bill notes.

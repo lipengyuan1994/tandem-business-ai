@@ -2,12 +2,14 @@ from app.platform.registry import Registry
 
 from . import api, api_public_quotes, api_quotes, delivery, executors, lifecycle, quote_executors, quote_service
 from . import permissions as P
+from .api_bills import router as bills_router
 
 
 def register(reg: Registry) -> None:
     reg.add_permissions(P.ALL)
     reg.add_router(api.router, "/purchasing", ["purchasing"])
     reg.add_router(api_quotes.router, "/purchasing", ["purchasing"])
+    reg.add_router(bills_router, "/purchasing", ["purchasing"])
     reg.add_router(api_public_quotes.router, "/public/quotes", ["public-quotes"])
     for spec in quote_executors.ALL:
         reg.add_executor(spec)

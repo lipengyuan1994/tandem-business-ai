@@ -2218,6 +2218,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/purchasing/bills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List supplier bills */
+        get: operations["list_bills_api_v1_purchasing_bills_get"];
+        put?: never;
+        /** Record a bill from a supplier */
+        post: operations["create_bill_api_v1_purchasing_bills_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchasing/bills/{bill_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a supplier bill and its payments */
+        get: operations["get_bill_api_v1_purchasing_bills__bill_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit an open supplier bill with no payments */
+        patch: operations["update_bill_api_v1_purchasing_bills__bill_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/purchasing/bills/{bill_id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a full or partial payment to a supplier against a bill */
+        post: operations["record_bill_payment_api_v1_purchasing_bills__bill_id__payments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchasing/bills/{bill_id}/payments/{payment_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void a bill payment recorded in error and reopen the bill balance */
+        post: operations["void_bill_payment_api_v1_purchasing_bills__bill_id__payments__payment_id__void_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchasing/bills/{bill_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void a supplier bill with no payments */
+        post: operations["void_bill_api_v1_purchasing_bills__bill_id__void_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/purchasing/items/{item_id}/suppliers": {
         parameters: {
             query?: never;
@@ -2244,6 +2331,23 @@ export interface paths {
         };
         /** List late purchase orders */
         get: operations["late_orders_api_v1_purchasing_late_purchase_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchasing/payables/aging": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Accounts payable aging by supplier (defaults to today in the business timezone) */
+        get: operations["payables_aging_api_v1_purchasing_payables_aging_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2333,6 +2437,23 @@ export interface paths {
         put?: never;
         /** Approve purchase order */
         post: operations["purchasing_po_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchasing/purchase-orders/{purchase_order_id}/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Received and billed amounts of a purchase order */
+        get: operations["purchase_order_billing_api_v1_purchasing_purchase_orders__purchase_order_id__billing_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3850,6 +3971,165 @@ export interface components {
             result: string | null;
             /** Snapshot Id */
             snapshot_id: string | null;
+        };
+        /**
+         * BillIn
+         * @description A bill from a supplier, optionally linked to one of its purchase orders (same supplier, approved or later).
+         */
+        BillIn: {
+            /**
+             * Bill Date
+             * Format: date
+             */
+            bill_date: string;
+            /** Due Date */
+            due_date?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Purchase Order Id */
+            purchase_order_id?: string | null;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Supplier Reference */
+            supplier_reference?: string | null;
+            /** Total Minor */
+            total_minor: number;
+        };
+        /** BillOut */
+        BillOut: {
+            /** Amount Paid Minor */
+            amount_paid_minor: number;
+            /**
+             * Balance Minor
+             * @default 0
+             */
+            balance_minor: number;
+            /**
+             * Bill Date
+             * Format: date
+             */
+            bill_date: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Due Date */
+            due_date: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes: string | null;
+            /** Payments */
+            payments?: components["schemas"]["BillPaymentOut"][];
+            /** Purchase Order Id */
+            purchase_order_id: string | null;
+            /** Purchase Order Number */
+            purchase_order_number?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "partially_paid" | "paid" | "void";
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Supplier Name */
+            supplier_name: string;
+            /** Supplier Reference */
+            supplier_reference: string | null;
+            /** Total Minor */
+            total_minor: number;
+            /** Version */
+            version: number;
+            /** Voided At */
+            voided_at: string | null;
+        };
+        /**
+         * BillPaymentIn
+         * @description `version` is the bill version the staff member saw; the payment must fit the open balance.
+         */
+        BillPaymentIn: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Reference */
+            reference?: string | null;
+            /** Version */
+            version: number;
+        };
+        /** BillPaymentOut */
+        BillPaymentOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Reference */
+            reference: string | null;
+            /** Voided At */
+            voided_at: string | null;
+        };
+        /**
+         * BillUpdate
+         * @description Edits an open bill with no payments. Omitted fields stay as they are.
+         */
+        BillUpdate: {
+            /** Bill Date */
+            bill_date?: string | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Supplier Reference */
+            supplier_reference?: string | null;
+            /** Total Minor */
+            total_minor?: number | null;
+            /** Version */
+            version: number;
+        };
+        /** BillVoidIn */
+        BillVoidIn: {
+            /** Reason */
+            reason?: string | null;
+            /** Version */
+            version: number;
         };
         /** Body_one_click_unsubscribe_api_v1_public__business_slug__unsubscribe_post */
         Body_one_click_unsubscribe_api_v1_public__business_slug__unsubscribe_post: {
@@ -6308,6 +6588,13 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** Page[BillOut] */
+        Page_BillOut_: {
+            /** Items */
+            items: components["schemas"]["BillOut"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
         /** Page[DocumentOut] */
         Page_DocumentOut_: {
             /** Items */
@@ -6347,6 +6634,66 @@ export interface components {
         PauseOut: {
             /** Paused */
             paused: boolean;
+        };
+        /**
+         * PayablesAgingReport
+         * @description Open balances of supplier bills on `as_of`, bucketed by days past due (bill date when no due date).
+         */
+        PayablesAgingReport: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Suppliers */
+            suppliers: components["schemas"]["PayablesSupplier"][];
+            /** Totals */
+            totals: components["schemas"]["PayablesTotal"][];
+        };
+        /** PayablesSupplier */
+        PayablesSupplier: {
+            /** Bill Count */
+            bill_count: number;
+            /** Currency */
+            currency: string;
+            /** Current Minor */
+            current_minor: number;
+            /** Days 1 30 Minor */
+            days_1_30_minor: number;
+            /** Days 31 60 Minor */
+            days_31_60_minor: number;
+            /** Days 61 90 Minor */
+            days_61_90_minor: number;
+            /** Days Over 90 Minor */
+            days_over_90_minor: number;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Supplier Name */
+            supplier_name: string;
+            /** Total Minor */
+            total_minor: number;
+        };
+        /** PayablesTotal */
+        PayablesTotal: {
+            /** Bill Count */
+            bill_count: number;
+            /** Currency */
+            currency: string;
+            /** Current Minor */
+            current_minor: number;
+            /** Days 1 30 Minor */
+            days_1_30_minor: number;
+            /** Days 31 60 Minor */
+            days_31_60_minor: number;
+            /** Days 61 90 Minor */
+            days_61_90_minor: number;
+            /** Days Over 90 Minor */
+            days_over_90_minor: number;
+            /** Total Minor */
+            total_minor: number;
         };
         /**
          * PaymentIn
@@ -6772,6 +7119,27 @@ export interface components {
             messages: components["schemas"]["PublicMessageOut"][];
             /** Next Cursor */
             next_cursor?: string | null;
+        };
+        /**
+         * PurchaseOrderBilling
+         * @description How much of a purchase order has been received and billed, to prefill and check a new bill.
+         */
+        PurchaseOrderBilling: {
+            /** Billed Minor */
+            billed_minor: number;
+            /** Currency */
+            currency: string;
+            /** Ordered Minor */
+            ordered_minor: number;
+            /**
+             * Purchase Order Id
+             * Format: uuid
+             */
+            purchase_order_id: string;
+            /** Received Minor */
+            received_minor: number;
+            /** Unbilled Received Minor */
+            unbilled_received_minor: number;
         };
         /** PurchasingSuggestion */
         PurchasingSuggestion: {
@@ -18018,6 +18386,502 @@ export interface operations {
             };
         };
     };
+    list_bills_api_v1_purchasing_bills_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                status?: ("open" | "partially_paid" | "paid" | "void")[] | null;
+                supplier_id?: string | null;
+                purchase_order_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_BillOut_"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    create_bill_api_v1_purchasing_bills_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    get_bill_api_v1_purchasing_bills__bill_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    update_bill_api_v1_purchasing_bills__bill_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    record_bill_payment_api_v1_purchasing_bills__bill_id__payments_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillPaymentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    void_bill_payment_api_v1_purchasing_bills__bill_id__payments__payment_id__void_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__purchasing__schemas__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    void_bill_api_v1_purchasing_bills__bill_id__void_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillVoidIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     item_suppliers_api_v1_purchasing_items__item_id__suppliers_get: {
         parameters: {
             query?: never;
@@ -18103,6 +18967,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LatePO"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    payables_aging_api_v1_purchasing_payables_aging_get: {
+        parameters: {
+            query?: {
+                as_of?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayablesAgingReport"];
                 };
             };
             /** @description Authentication required */
@@ -18594,6 +19525,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["POOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    purchase_order_billing_api_v1_purchasing_purchase_orders__purchase_order_id__billing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseOrderBilling"];
                 };
             };
             /** @description Authentication required */

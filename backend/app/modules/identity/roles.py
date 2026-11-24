@@ -5,7 +5,7 @@ Permission strings for modules that are not built yet are listed here so the mat
 
 from __future__ import annotations
 
-POLICY_VERSION = "2026-11-07.1"
+POLICY_VERSION = "2026-11-24.1"
 
 ROLE_NAMES = ("owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor")
 
@@ -33,6 +33,9 @@ SALES_ADMIN = {"sales.invoice.credit", "sales.proposal.approve"}
 PURCH_READ = {"purchasing.po.read"}
 PURCH_WRITE = {"purchasing.po.write", "purchasing.po.receive"}
 PURCH_ADMIN = {"purchasing.po.approve", "purchasing.receipt.override"}
+BILLS_READ = {"purchasing.bill.read"}
+BILLS_WRITE = {"purchasing.bill.write"}
+BILLS_ADMIN = {"purchasing.bill.pay", "purchasing.bill.void"}
 AI_USE = {"ai.assistant.use"}
 
 APPROVE = {
@@ -66,6 +69,9 @@ _ADMIN = (
     | PURCH_READ
     | PURCH_WRITE
     | PURCH_ADMIN
+    | BILLS_READ
+    | BILLS_WRITE
+    | BILLS_ADMIN
     | SALES_ADMIN
     | APPROVALS
     | AUDIT_READ
@@ -110,6 +116,8 @@ ROLES: dict[str, frozenset[str]] = {
         | INV_READ
         | PURCH_READ
         | PURCH_WRITE
+        | BILLS_READ
+        | BILLS_WRITE
         | INV_WRITE
         | APPROVALS
         | AI_USE
@@ -137,6 +145,7 @@ ROLES: dict[str, frozenset[str]] = {
         | MKT_READ
         | SALES_READ
         | PURCH_READ
+        | BILLS_READ
         | {"approvals.proposal.read"}
         | AUDIT_READ
         | {"audit.export", "ai.settings.read"}

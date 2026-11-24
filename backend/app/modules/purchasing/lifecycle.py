@@ -22,6 +22,8 @@ from .models import (
     QuoteRequestLine,
     QuoteRequestSupplier,
     Supplier,
+    SupplierBill,
+    SupplierBillPayment,
     SupplierItem,
     SupplierQuote,
     SupplierQuoteLine,
@@ -40,6 +42,8 @@ TABLES = [
     QuoteRequestSupplier,
     SupplierQuote,
     SupplierQuoteLine,
+    SupplierBill,
+    SupplierBillPayment,
 ]
 
 
@@ -63,6 +67,7 @@ def links(db: Session, ctx: Context, target: ErasureTarget) -> set[uuid.UUID]:
         (QuoteRequest, QuoteRequest.message),
         (SupplierQuote, SupplierQuote.notes),
         (PurchaseOrder, PurchaseOrder.notes),
+        (SupplierBill, SupplierBill.notes),
     ):
         match = or_(model.id.in_(target.linked_ids), field.is_distinct_from(func.redact_text(field, target.needles)))
         if model is SupplierQuote:
@@ -84,6 +89,7 @@ def erase(db: Session, ctx: Context, target: ErasureTarget) -> dict[str, int]:
         (QuoteRequest, QuoteRequest.message, 2000),
         (SupplierQuote, SupplierQuote.notes, 500),
         (PurchaseOrder, PurchaseOrder.notes, None),
+        (SupplierBill, SupplierBill.notes, None),
     ):
         redacted = func.redact_text(field, target.needles)
         if limit is not None:

@@ -15,7 +15,7 @@ import { scheduleRoute } from "@/features/scheduling/routes"
 import { todayRoute } from "@/features/dashboard/routes"
 import { loginFailedRoute, selectBusinessRoute } from "@/features/identity/routes"
 import { settingsTree } from "@/features/org/routes"
-import { purchasingRoute, purchaseOrderRoute, quoteRequestRoute } from "@/features/purchasing/routes"
+import { billRoute, purchasingRoute, purchaseOrderRoute, quoteRequestRoute } from "@/features/purchasing/routes"
 import { knowledgeRoute, knowledgeNewRoute, knowledgeArticleRoute } from "@/features/knowledge/routes"
 import { appRoute, rootRoute } from "./routes-base"
 
@@ -34,7 +34,7 @@ export const routeTree = rootRoute.addChildren([
   loginFailedRoute,
   appRoute.addChildren([
     indexRoute, teamRoute, teamDetailRoute, chainRoute, knowledgeRoute, knowledgeNewRoute, knowledgeArticleRoute, autonomyRoute, activityRoute, workQueueRoute, exceptionsRoute, todayRoute, inboxRoute, inboxThreadRoute, approvalsRoute, approvalDetailRoute, customersRoute, customerDetailRoute,
-    scheduleRoute, inventoryRoute, inventoryItemRoute, catalogRoute, marketingRoute, campaignRoute, salesRoute, quoteRoute, orderRoute, invoiceRoute, purchasingRoute, purchaseOrderRoute, quoteRequestRoute, auditRoute, systemRoute, settingsTree,
+    scheduleRoute, inventoryRoute, inventoryItemRoute, catalogRoute, marketingRoute, campaignRoute, salesRoute, quoteRoute, orderRoute, invoiceRoute, purchasingRoute, purchaseOrderRoute, quoteRequestRoute, billRoute, auditRoute, systemRoute, settingsTree,
   ]),
 ])
 

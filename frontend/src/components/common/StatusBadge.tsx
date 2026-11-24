@@ -11,7 +11,7 @@ const TONES: Record<string, Tone> = {
   failed: "failed", rejected: "failed", unknown: "neutral", active: "success", inactive: "neutral", no_show: "failed",
   expired: "neutral", cancelled: "neutral", closed: "neutral",
   draft: "neutral", in_review: "pending", sending: "approved", sent: "success",
-  accepted: "success", declined: "failed", fulfilled: "success", issued: "approved", paid: "success", void: "neutral",
+  accepted: "success", declined: "failed", fulfilled: "success", issued: "approved", paid: "success", void: "neutral", partially_paid: "pending",
 }
 
 

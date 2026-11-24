@@ -11,6 +11,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     ForeignKeyConstraint,
+    Index,
     Integer,
     Numeric,
     String,
@@ -217,4 +218,61 @@ class SupplierQuoteLine(BusinessScopedBase):
         CheckConstraint(
             "unit_price_minor >= 0 and (quantity_available is null or quantity_available >= 0)", name="values"
         ),
+    )
+
+
+BILL_PAYMENT_METHODS = ("cash", "card", "bank_transfer", "check", "other")
+BILL_STATUSES = ("open", "partially_paid", "paid", "void")
+
+
+class SupplierBill(BusinessScopedBase):
+    """A supplier's invoice to the business (accounts payable). Corrections void the bill instead of deleting it.
+
+    `amount_paid_minor` always equals the sum of the bill's non-voided payments, and `status` follows it:
+    open (nothing paid), partially_paid, paid (sum reaches the total), or void (cancelled, never paid).
+    """
+
+    __tablename__ = "supplier_bills"
+    supplier_id: Mapped[uuid.UUID]
+    supplier_name: Mapped[str] = mapped_column(String(200))
+    purchase_order_id: Mapped[uuid.UUID | None]
+    supplier_reference: Mapped[str | None] = mapped_column(String(100))
+    bill_date: Mapped[date]
+    due_date: Mapped[date | None]
+    currency: Mapped[str] = mapped_column(String(3))
+    total_minor: Mapped[int] = mapped_column(BigInteger)
+    amount_paid_minor: Mapped[int] = mapped_column(BigInteger, default=0)
+    status: Mapped[str] = mapped_column(String(16), default="open")
+    notes: Mapped[str | None] = mapped_column(Text)
+    voided_at: Mapped[datetime | None]
+    created_by: Mapped[uuid.UUID | None]
+    __table_args__ = scoped_table_args(
+        reference("supplier_id", "suppliers"),
+        reference("purchase_order_id", "purchase_orders"),
+        Index("ix_supplier_bills_supplier", "business_id", "supplier_id"),
+        Index("ix_supplier_bills_purchase_order", "business_id", "purchase_order_id"),
+        CheckConstraint(f"status in ({','.join(repr(s) for s in BILL_STATUSES)})", name="status"),
+        CheckConstraint(
+            "total_minor > 0 and amount_paid_minor >= 0 and amount_paid_minor <= total_minor", name="amounts"
+        ),
+        CheckConstraint("due_date is null or due_date >= bill_date", name="dates"),
+    )
+
+
+class SupplierBillPayment(BusinessScopedBase):
+    """Money paid to a supplier against one bill. Corrections void the row instead of deleting it."""
+
+    __tablename__ = "supplier_bill_payments"
+    bill_id: Mapped[uuid.UUID]
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    paid_on: Mapped[date]
+    method: Mapped[str] = mapped_column(String(16))
+    reference: Mapped[str | None] = mapped_column(String(200))
+    voided_at: Mapped[datetime | None]
+    __table_args__ = scoped_table_args(
+        # `reference` is a column here, so the composite key is spelled out.
+        ForeignKeyConstraint(["business_id", "bill_id"], ["supplier_bills.business_id", "supplier_bills.id"]),
+        Index("ix_supplier_bill_payments_bill", "business_id", "bill_id"),
+        CheckConstraint("amount_minor > 0", name="amount"),
+        CheckConstraint(f"method in ({','.join(repr(m) for m in BILL_PAYMENT_METHODS)})", name="method"),
     )

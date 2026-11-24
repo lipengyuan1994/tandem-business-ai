@@ -10,8 +10,16 @@ Release notes for operators. Each release lists database migrations and any manu
 - **Receivables aging:** Sales → Receivables lists what each customer owes, by days past due (not yet due, 1–30,
   31–60, 61–90, over 90), for any date.
 - Payment reminders now state the open balance instead of the original invoice total.
+- **Supplier bills:** Purchasing → Supplier bills records bills from suppliers, linked to a purchase order or not, and
+  full or partial payments against them. Each bill shows what's paid and the balance due, and moves from open to
+  partially paid to paid. A purchase order shows what was received but not billed yet.
+- **Payables aging:** Purchasing → Payables aging lists what the business owes each supplier, by days past due, for any
+  date.
+- New permissions `purchasing.bill.read|write|pay|void` (policy 2026-11-24.1): owner, admin and demo reviewer have all;
+  inventory managers can read and record bills; auditors can read. Operators don't see bills.
 - **Migration:** `20261124_1200_invoice_payments` adds `invoice_payments` and `invoices.amount_paid_minor`, and records
   one payment for each invoice already marked paid. No manual steps.
+- **Migration:** `20261124_1800_supplier_bills` adds `supplier_bills` and `supplier_bill_payments`. No manual steps.
 
 ## 0.1.20 (2026-11-24) — Boston AI Forward product branding
 

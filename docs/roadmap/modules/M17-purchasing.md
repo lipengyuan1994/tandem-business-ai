@@ -180,3 +180,25 @@ showcase"); `docs/roadmap/ai/integration-map.md` §G lists the facts the AI eval
   clipboard and toasts; only if the browser refuses does a dialog show the link for copying by hand.
 - Spec change: one staff route and one audit action were added; no table or migration. The OpenAPI contract and
   `schema.d.ts` were regenerated (`make gen-api`).
+
+## As built — supplier bills and payables aging (2026-11-24)
+
+- **Bills.** `supplier_bills` records what a supplier billed: supplier, optional purchase order (same supplier, approved
+  or later and not cancelled), the supplier's bill number, bill date, optional due date, total and notes. Bills are
+  header-level, with no lines. One live bill per supplier bill number; a void bill frees the number. An open bill can be
+  edited until a payment is recorded.
+- **Payments.** `supplier_bill_payments` holds full or partial payments (amount, date, method, reference). A payment may
+  not exceed the balance or be dated after business today. The bill becomes partially paid, then paid. Voiding a payment
+  (`purchasing.bill.void`) reopens the balance; a bill can be voided only with no live payments.
+- **Purchase order billing.** `GET /purchasing/purchase-orders/{id}/billing` returns ordered, received (received
+  quantity × unit cost) and billed value, and what was received but not billed. The PO page shows it and starts a new
+  bill at the unbilled amount.
+- **Payables aging.** `GET /purchasing/payables/aging?as_of=` mirrors receivables aging: unpaid balances by supplier and
+  currency, in the buckets not yet due, 1–30, 31–60, 61–90 and over 90 days, counted from the due date or the bill date.
+- **Permissions** (policy 2026-11-24.1): `purchasing.bill.read|write|pay|void`. Owner, admin and demo reviewer have all;
+  inventory manager read and write; auditor read; operator none.
+- **UI:** Purchasing → Supplier bills (unpaid by default) and Payables aging tabs, a bill page with payments, and a
+  billing section on each billable purchase order.
+- Migration `20261124_1800_supplier_bills`. The OpenAPI contract and `schema.d.ts` were regenerated (`make gen-api`).
+- Not built yet: bill lines and three-way matching per line, supplier credits, and accounting sync.
+
