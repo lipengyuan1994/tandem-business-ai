@@ -24,7 +24,7 @@ export function ArticleEditor({ article, suggestion, citedVersion, onSaved, onRe
   const [body, setBody] = useState(latest?.body_markdown ?? "")
   const [tags, setTags] = useState(latest?.tags.join(", ") ?? "")
   const [visibility, setVisibility] = useState<ArticleInput["visibility"]>(article?.visibility === "internal" ? "internal" : "public")
-  const [confirm, setConfirm] = useState<"publish" | "archive" | null>(null)
+  const [confirm, setConfirm] = useState<"publish" | "unpublish" | "archive" | null>(null)
   const [conflict, setConflict] = useState(false)
   const save = useSaveArticle(article, suggestion)
   const status = useArticleStatus(article?.id ?? "")
@@ -53,11 +53,12 @@ export function ArticleEditor({ article, suggestion, citedVersion, onSaved, onRe
     <section aria-label={t("knowledge.preview")} className="space-y-2 rounded-md border p-4"><h2 className="font-semibold">{t("knowledge.preview")}</h2><p className="text-sm text-muted-foreground">{t("knowledge.previewHelp")}</p><MarkdownPreview body={body} /></section>
     {article ? <PermissionGate permission="org.settings.write"><div className="flex flex-wrap gap-2">
       <Button disabled={pending || conflict || !!dirty || article.status === "archived"} onClick={() => setConfirm("publish")}>{t("knowledge.publish")}</Button>
+      {article.status === "published" ? <Button variant="outline" disabled={pending || conflict || !!dirty} onClick={() => setConfirm("unpublish")}>{t("knowledge.unpublish")}</Button> : null}
       <Button variant="outline" disabled={pending || conflict || !!dirty || article.status === "archived"} onClick={() => setConfirm("archive")}>{t("knowledge.archive")}</Button>
       {dirty ? <p className="text-sm">{t("knowledge.saveFirst")}</p> : null}
     </div></PermissionGate> : null}
     {article ? <VersionHistory article={article} citedVersion={citedVersion} /> : null}
-    <ConfirmDialog open={!!confirm} onOpenChange={(open) => { if (!open) setConfirm(null) }} title={t(confirm === "archive" ? "knowledge.archiveTitle" : "knowledge.publishTitle")} description={t(confirm === "archive" ? "knowledge.archiveHelp" : "knowledge.publishHelp")} confirmLabel={t(confirm === "archive" ? "knowledge.archiveTitle" : "knowledge.publishTitle")} destructive={confirm === "archive"} pending={pending} onConfirm={() => { if (confirm && article) status.mutate({ action: confirm, version: article.version }, { onSuccess: (saved) => { setConfirm(null); onSaved(saved) }, onError: (e) => { setConfirm(null); onError(e) } }) }} />
+    <ConfirmDialog open={!!confirm} onOpenChange={(open) => { if (!open) setConfirm(null) }} title={t(`knowledge.${confirm ?? "publish"}Title`)} description={t(`knowledge.${confirm ?? "publish"}Help`)} confirmLabel={t(`knowledge.${confirm ?? "publish"}Title`)} destructive={confirm === "archive"} pending={pending} onConfirm={() => { if (confirm && article) status.mutate({ action: confirm, version: article.version }, { onSuccess: (saved) => { setConfirm(null); onSaved(saved) }, onError: (e) => { setConfirm(null); onError(e) } }) }} />
     <ConflictDialog open={conflict} onOpenChange={setConflict} onReload={onReload} />
   </div>
 }

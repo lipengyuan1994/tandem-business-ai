@@ -27,8 +27,9 @@ export function useSaveArticle(article?: Article, suggestion?: Suggestion) {
 }
 export function useArticleStatus(id: string) {
   const qc = useQueryClient()
-  return useMutation({ mutationFn: async ({ action, version }: { action: "publish" | "archive"; version: number }) => {
+  return useMutation({ mutationFn: async ({ action, version }: { action: "publish" | "unpublish" | "archive"; version: number }) => {
     const params = { path: { article_id: id } }
+    if (action === "unpublish") return unwrap(await api.POST("/api/v1/knowledge/articles/{article_id}/unpublish", { params, body: { version } }))
     return action === "publish" ? unwrap(await api.POST("/api/v1/knowledge/articles/{article_id}/publish", { params, body: { version } })) : unwrap(await api.POST("/api/v1/knowledge/articles/{article_id}/archive", { params, body: { version } }))
   }, onSuccess: (saved) => { qc.setQueryData(knowledgeKeys.article(id), saved); void qc.invalidateQueries({ queryKey: knowledgeKeys.all }) } })
 }

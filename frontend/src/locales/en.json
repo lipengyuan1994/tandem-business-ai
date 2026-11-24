@@ -128,9 +128,13 @@
     "identity.owner_grant_forbidden": "Only an owner can grant or remove the owner role.",
     "identity.invitation_exists": "There is already a pending invitation for this email.",
     "identity.already_member": "This person is already a member of this business.",
+    "notifications.not_unknown_state": "This delivery is no longer uncertain. Reload to see where it stands.",
+    "notifications.delivery_blocked": "This {{customer}}'s data is restricted, so the message can't be sent again.",
+    "identity.invitation_not_pending": "This invitation was already accepted or revoked.",
     "identity.keycloak_unavailable": "The sign-in {{service}} is unavailable. Try again shortly.",
     "org.invalid_hours": "Opening hours are invalid or overlap.",
     "org.default_location_required": "Choose another default location first.",
+    "org.location_version_conflict": "This location changed since you opened it.",
     "approvals.revision_changed": "This proposal was edited since you opened it. The latest version is now shown.",
     "approvals.self_approval_forbidden": "You can't approve your own proposal (see Settings → Policies).",
     "approvals.not_authorized_to_approve": "Your role can't approve this type of change.",
@@ -206,6 +210,15 @@
       "suspendTitle": "Suspend {{name}}?",
       "suspendHelp": "They lose access immediately. You can restore access later."
     },
+    "invitations": {
+      "title": "Pending invitations",
+      "expires": "expires",
+      "revoke": "Revoke",
+      "revokeFor": "Revoke the invitation for {{name}}",
+      "revokeTitle": "Revoke the invitation for {{name}}?",
+      "revokeHelp": "They won't be able to join this business with it. You can invite them again later.",
+      "revoked": "Invitation for {{name}} revoked"
+    },
     "invite": {
       "title": "Invite a staff member",
       "description": "They get an account with multi-factor sign-in.",
@@ -246,7 +259,14 @@
     },
     "locations": {
       "default": "Default",
-      "new": "New location name"
+      "new": "New location name",
+      "details": "Location details",
+      "name": "Name",
+      "timezone": "Time zone",
+      "address": "Address",
+      "addressHint": "Printed as the delivery address on purchase orders.",
+      "makeDefault": "Make default",
+      "madeDefault": "{{name}} is now the default location"
     },
     "hours": {
       "title": "Opening hours",
@@ -323,6 +343,16 @@
     "failed": "Execution failed: {{code}}. Nothing was changed.",
     "deliveries": "Messages",
     "uncertain": "Delivery uncertain — check with the {{customer}}",
+    "resolve": {
+      "delivered": "It arrived",
+      "deliveredTitle": "Mark as delivered?",
+      "deliveredHelp": "Use this once you know the {{customer}} got the message. Nothing is sent.",
+      "deliveredDone": "Marked as delivered",
+      "retry": "Send again",
+      "retryTitle": "Send this message again?",
+      "retryHelp": "It goes back in the queue and is sent again. If the first one did arrive, the {{customer}} gets it twice.",
+      "retryDone": "Queued to send again"
+    },
     "channels": {
       "web_chat": "Web chat",
       "email": "Email",
@@ -1925,6 +1955,9 @@
     "archiveTitle": "Archive article",
     "publishHelp": "Publish the saved version for answers. Public articles become available to the AI assistant; internal articles stay staff-only.",
     "archiveHelp": "Remove this article from answer searches. Its version history is kept.",
+    "unpublish": "Unpublish",
+    "unpublishTitle": "Unpublish article",
+    "unpublishHelp": "Take this article out of answers and back to draft. You can publish it again later.",
     "saveFirst": "Save your changes as a new version before publishing or archiving.",
     "history": "Version history",
     "earlierVersion": "Earlier version",

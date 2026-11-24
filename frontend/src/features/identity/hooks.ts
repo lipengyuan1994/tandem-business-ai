@@ -52,12 +52,26 @@ export function useMembers() {
   return useQuery({ queryKey: membersKey, queryFn: async () => unwrap(await api.GET("/api/v1/identity/members")) })
 }
 
+const invitationsKey = ["identity", "invitations"] as const
+
+export function usePendingInvitations(enabled: boolean) {
+  return useQuery({ queryKey: invitationsKey, enabled, queryFn: async () => unwrap(await api.GET("/api/v1/identity/invitations")) })
+}
+
+export function useRevokeInvitation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => unwrap(await api.POST("/api/v1/identity/invitations/{invitation_id}/revoke", { params: { path: { invitation_id: id } } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: invitationsKey }),
+  })
+}
+
 export function useInvite() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (body: { email: string; display_name: string; roles: Role[] }) =>
       unwrap(await api.POST("/api/v1/identity/invitations", { body })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: membersKey }),
+    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: membersKey }), qc.invalidateQueries({ queryKey: invitationsKey })]),
   })
 }
 

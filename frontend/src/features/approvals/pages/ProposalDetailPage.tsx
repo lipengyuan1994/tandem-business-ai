@@ -22,13 +22,14 @@ import { toastError } from "@/lib/errors"
 import { EvidenceList } from "../components/EvidenceList"
 import { PreviewDiff } from "../components/PreviewDiff"
 import { ACTION_FORMS } from "../components/forms"
+import { ResolveDelivery } from "../components/ResolveDelivery"
 import { RevisionEditor } from "../components/RevisionEditor"
 import { useActionTypes, useCancel, useDecide, useProposal, useProposalOutbox, useRevise } from "../hooks"
 
 export function ProposalDetailPage() {
   const { t } = useTranslation()
   const { proposalId } = useParams({ from: "/app/approvals/$proposalId" })
-  const { businessTimeZone, userId } = useSession()
+  const { businessTimeZone, userId, permissions } = useSession()
   const proposal = useProposal(proposalId)
   const types = useActionTypes()
   const decide = useDecide(proposalId)
@@ -119,6 +120,7 @@ export function ProposalDetailPage() {
                     {m.status === "pending" ? <ScheduledMail id={m.id} sendAt={m.not_before} /> : null}
                     <span>{t(`approvals.channels.${m.channel}`)}</span>
                     {m.status === "unknown" ? <span className="text-destructive">{t("approvals.uncertain")}</span> : null}
+                    {m.status === "unknown" && permissions.has("notifications.outbox.resolve") ? <ResolveDelivery proposalId={proposalId} outboxId={m.id} /> : null}
                   </li>
                 ))}
               </ul>

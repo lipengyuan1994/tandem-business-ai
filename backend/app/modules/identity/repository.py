@@ -212,6 +212,15 @@ def get_invitation(db: Session, ctx: Context, invitation_id: uuid.UUID) -> Invit
     )
 
 
+def list_pending_invitations(db: Session, ctx: Context, now: datetime) -> list[Invitation]:
+    stmt = (
+        select(Invitation)
+        .where(Invitation.business_id == ctx.business_id, Invitation.status == "pending", Invitation.expires_at > now)
+        .order_by(Invitation.expires_at)
+    )
+    return list(db.scalars(stmt))
+
+
 def pending_invitation_exists(db: Session, ctx: Context, email: str) -> bool:
     stmt = select(Invitation.id).where(
         Invitation.business_id == ctx.business_id,

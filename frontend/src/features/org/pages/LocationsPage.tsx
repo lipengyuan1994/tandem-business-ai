@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toastError } from "@/lib/errors"
 import { useCreateLocation, useLocations, useOpeningHours, useReplaceHours } from "../hooks"
+import { LocationDetails } from "./LocationDetails"
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6] as const
 const hhmm = (v: string) => v.slice(0, 5)
@@ -85,6 +86,7 @@ export function LocationsPage() {
   const [newName, setNewName] = useState("")
   const canEdit = permissions.has("org.location.write")
   const current = selected ?? locations.data?.find((l) => l.is_default)?.id
+  const currentLocation = locations.data?.find((l) => l.id === current)
 
   if (locations.error) return <QueryError error={locations.error} onRetry={() => locations.refetch()} />
   if (locations.isPending) return <Skeleton className="h-64 w-full" />
@@ -109,11 +111,17 @@ export function LocationsPage() {
           </form>
         ) : null}
       </div>
-      {current ? (
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t("settings.hours.title")}</CardTitle></CardHeader>
-          <CardContent><HoursEditor locationId={current} canEdit={canEdit} /></CardContent>
-        </Card>
+      {current && currentLocation ? (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle className="text-base">{t("settings.locations.details")}</CardTitle></CardHeader>
+            <CardContent><LocationDetails key={`${currentLocation.id}-${currentLocation.version}`} location={currentLocation} canEdit={canEdit} onReload={() => void locations.refetch()} /></CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle className="text-base">{t("settings.hours.title")}</CardTitle></CardHeader>
+            <CardContent><HoursEditor locationId={current} canEdit={canEdit} /></CardContent>
+          </Card>
+        </div>
       ) : null}
     </div>
   )

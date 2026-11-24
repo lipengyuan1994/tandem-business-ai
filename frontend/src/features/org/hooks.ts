@@ -62,3 +62,11 @@ export function useUpdateSettings() {
     onSuccess: (s) => qc.setQueryData(orgKeys.settings, s),
   })
 }
+
+export function useUpdateLocation(id: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (body: Schemas["LocationUpdate"]) => unwrap(await api.PATCH("/api/v1/org/locations/{location_id}", { params: { path: { location_id: id } }, body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: orgKeys.locations }),
+  })
+}
