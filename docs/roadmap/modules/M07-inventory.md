@@ -101,3 +101,13 @@ Batches/lots, serial numbers, expiry dates, valuation methods (FIFO/average) (v1
 Multi-item stock locks use item UUID then stock-location UUID order, including reservation release/consumption.
 Consumption measures available stock before changing either reserved or on-hand quantities; consuming promised
 stock leaves availability unchanged and cannot itself create a new below-reorder crossing.
+
+## As built — stock value report (2026-11-24)
+
+- `GET /inventory/reports/stock-value?as_of=YYYY-MM-DD&group_by=item|location` (`inventory.stock.read` and
+  `purchasing.po.read`): on-hand quantity at the end of the business-local day, summed from the stock ledger, valued at
+  the weighted average cost of costed inbound movements up to then (goods receipts carry the purchase-order price;
+  manual receipts may carry a cost; transfers are skipped). Items with no costed receipt are counted as
+  `uncosted_item_count` and not valued. Default `as_of` is business-local today.
+- `inventory.public.average_unit_costs` exposes the same average cost to the margin report (M16).
+- Not built: FIFO or standard cost layers, landed costs, and a cost on the seeded opening stock.

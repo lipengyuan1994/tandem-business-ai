@@ -9,6 +9,11 @@ Release notes for operators. Each release lists database migrations and any manu
   a payment entered in error. "Mark fully paid" now records the open balance as a payment.
 - **Receivables aging:** Sales → Receivables lists what each customer owes, by days past due (not yet due, 1–30,
   31–60, 61–90, over 90), for any date.
+- **Reports:** a new Reports page shows sales by period, customer or item; gross margin by item or item type; stock
+  value by item or location on any date; and purchasing spend (ordered and received) by supplier or period. Each has a
+  date range, totals and a CSV download, and shows only to people who can read the data behind it. Margin and stock
+  value use the average purchase price of goods received; items with no known cost are listed separately, not guessed.
+  No migrations.
 - Payment reminders now state the open balance instead of the original invoice total.
 - **Supplier bills:** Purchasing → Supplier bills records bills from suppliers, linked to a purchase order or not, and
   full or partial payments against them. Each bill shows what's paid and the balance due, and moves from open to

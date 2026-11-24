@@ -181,6 +181,15 @@ showcase"); `docs/roadmap/ai/integration-map.md` §G lists the facts the AI eval
 - Spec change: one staff route and one audit action were added; no table or migration. The OpenAPI contract and
   `schema.d.ts` were regenerated (`make gen-api`).
 
+## As built — spend report (2026-11-24)
+
+- `GET /purchasing/reports/spend?date_from&date_to&group_by=supplier|period&period=day|week|month`
+  (`purchasing.po.read`): per supplier or period and currency, *ordered* is the total of purchase orders approved in
+  the range (drafts and cancelled orders excluded) and *received* is goods received in the range at the purchase-order
+  price, bucketed by the business-local day of receipt. Supplier names are the latest name on their orders.
+- Spend is commitments and receipts, not billed or paid amounts; supplier bills (below) are not part of it yet.
+- Shown on the **Reports** page (Spend tab); see M16 for the page.
+
 ## As built — supplier bills and payables aging (2026-11-24)
 
 - **Bills.** `supplier_bills` records what a supplier billed: supplier, optional purchase order (same supplier, approved
@@ -201,4 +210,3 @@ showcase"); `docs/roadmap/ai/integration-map.md` §G lists the facts the AI eval
   billing section on each billable purchase order.
 - Migration `20261124_1800_supplier_bills`. The OpenAPI contract and `schema.d.ts` were regenerated (`make gen-api`).
 - Not built yet: bill lines and three-way matching per line, supplier credits, and accounting sync.
-

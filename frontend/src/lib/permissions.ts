@@ -1,14 +1,17 @@
 // Navigation and permission helpers. Permission strings come from /auth/me (06-security-and-privacy.md).
 export type PermissionSet = ReadonlySet<string>
 
-export function hasPermission(permissions: PermissionSet, permission: string | undefined): boolean {
-  return permission === undefined || permissions.has(permission)
+/** A list means any one of them is enough. */
+export function hasPermission(permissions: PermissionSet, permission: string | readonly string[] | undefined): boolean {
+  if (permission === undefined) return true
+  return typeof permission === "string" ? permissions.has(permission) : permission.some((p) => permissions.has(p))
 }
 
 export interface NavItem {
   to: string
   labelKey: string
-  permission?: string
+  /** Any one of a list is enough. */
+  permission?: string | readonly string[]
   group?: "ai"
   /** Key in /api/v1/dashboard/counters shown as a badge. */
   counter?: "inbox_waiting_on_staff" | "approvals_i_can_decide"
@@ -26,6 +29,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/marketing", labelKey: "nav.marketing", permission: "marketing.campaign.read" },
   { to: "/purchasing", labelKey: "nav.purchasing", permission: "purchasing.po.read" },
   { to: "/sales", labelKey: "nav.sales", permission: "sales.document.read" },
+  { to: "/reports", labelKey: "nav.reports", permission: ["sales.document.read", "purchasing.po.read"] },
   { to: "/audit", labelKey: "nav.audit", permission: "audit.event.read" },
   { to: "/system", labelKey: "nav.system", permission: "admin_ops.system.read" },
   { to: "/ai/team", labelKey: "ai.team.nav", permission: "approvals.proposal.read", group: "ai" },

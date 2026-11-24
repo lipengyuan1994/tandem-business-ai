@@ -7554,6 +7554,223 @@
         "title": "LocationUpdate",
         "type": "object"
       },
+      "MarginReport": {
+        "description": "Gross margin on net sales in the business currency at weighted average purchase cost as of `date_to`.\nServices cost their current parts (materials only). Documents in other currencies are left out and counted.",
+        "properties": {
+          "cost_basis": {
+            "const": "average_purchase_cost",
+            "default": "average_purchase_cost",
+            "title": "Cost Basis",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "date_from": {
+            "format": "date",
+            "title": "Date From",
+            "type": "string"
+          },
+          "date_to": {
+            "format": "date",
+            "title": "Date To",
+            "type": "string"
+          },
+          "group_by": {
+            "enum": [
+              "item",
+              "kind"
+            ],
+            "title": "Group By",
+            "type": "string"
+          },
+          "other_currency_document_count": {
+            "title": "Other Currency Document Count",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/MarginRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/MarginTotals"
+          }
+        },
+        "required": [
+          "date_from",
+          "date_to",
+          "group_by",
+          "currency",
+          "rows",
+          "totals",
+          "other_currency_document_count"
+        ],
+        "title": "MarginReport",
+        "type": "object"
+      },
+      "MarginRow": {
+        "description": "`key` is a catalog item id or `free_text` (by item), or `product`, `service`, `free_text` (by kind).",
+        "properties": {
+          "cost_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Minor"
+          },
+          "costed_revenue_minor": {
+            "title": "Costed Revenue Minor",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "product",
+                  "service",
+                  "free_text"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "margin_basis_points": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Margin as a share of costed revenue; 2550 = 25.50%",
+            "title": "Margin Basis Points"
+          },
+          "margin_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin Minor"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "revenue_minor": {
+            "title": "Revenue Minor",
+            "type": "integer"
+          },
+          "uncosted_revenue_minor": {
+            "title": "Uncosted Revenue Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revenue_minor",
+          "costed_revenue_minor",
+          "uncosted_revenue_minor",
+          "cost_minor",
+          "margin_minor",
+          "margin_basis_points",
+          "key",
+          "label"
+        ],
+        "title": "MarginRow",
+        "type": "object"
+      },
+      "MarginTotals": {
+        "description": "Margin is over `costed_revenue_minor` only; revenue without a known cost is reported separately.",
+        "properties": {
+          "cost_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Minor"
+          },
+          "costed_revenue_minor": {
+            "title": "Costed Revenue Minor",
+            "type": "integer"
+          },
+          "margin_basis_points": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Margin as a share of costed revenue; 2550 = 25.50%",
+            "title": "Margin Basis Points"
+          },
+          "margin_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin Minor"
+          },
+          "revenue_minor": {
+            "title": "Revenue Minor",
+            "type": "integer"
+          },
+          "uncosted_revenue_minor": {
+            "title": "Uncosted Revenue Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revenue_minor",
+          "costed_revenue_minor",
+          "uncosted_revenue_minor",
+          "cost_minor",
+          "margin_minor",
+          "margin_basis_points"
+        ],
+        "title": "MarginTotals",
+        "type": "object"
+      },
       "MeOut": {
         "properties": {
           "active_business_id": {
@@ -12134,6 +12351,161 @@
         "title": "RunOut",
         "type": "object"
       },
+      "SalesReport": {
+        "description": "Invoices count on their issue date (also when later credited); credit notes subtract on theirs.",
+        "properties": {
+          "date_from": {
+            "format": "date",
+            "title": "Date From",
+            "type": "string"
+          },
+          "date_to": {
+            "format": "date",
+            "title": "Date To",
+            "type": "string"
+          },
+          "group_by": {
+            "enum": [
+              "period",
+              "customer",
+              "item"
+            ],
+            "title": "Group By",
+            "type": "string"
+          },
+          "period": {
+            "enum": [
+              "day",
+              "week",
+              "month"
+            ],
+            "title": "Period",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SalesRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/SalesTotal"
+            },
+            "title": "Totals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "date_from",
+          "date_to",
+          "group_by",
+          "period",
+          "rows",
+          "totals"
+        ],
+        "title": "SalesReport",
+        "type": "object"
+      },
+      "SalesRow": {
+        "description": "`key` is the period's first day, a customer id, a catalog item id, or `free_text` for typed-in lines.",
+        "properties": {
+          "credit_note_count": {
+            "title": "Credit Note Count",
+            "type": "integer"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "invoice_count": {
+            "title": "Invoice Count",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "net_minor": {
+            "title": "Net Minor",
+            "type": "integer"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "tax_minor": {
+            "title": "Tax Minor",
+            "type": "integer"
+          },
+          "total_minor": {
+            "title": "Total Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "currency",
+          "invoice_count",
+          "credit_note_count",
+          "net_minor",
+          "tax_minor",
+          "total_minor",
+          "key",
+          "label"
+        ],
+        "title": "SalesRow",
+        "type": "object"
+      },
+      "SalesTotal": {
+        "properties": {
+          "credit_note_count": {
+            "title": "Credit Note Count",
+            "type": "integer"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "invoice_count": {
+            "title": "Invoice Count",
+            "type": "integer"
+          },
+          "net_minor": {
+            "title": "Net Minor",
+            "type": "integer"
+          },
+          "tax_minor": {
+            "title": "Tax Minor",
+            "type": "integer"
+          },
+          "total_minor": {
+            "title": "Total Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "currency",
+          "invoice_count",
+          "credit_note_count",
+          "net_minor",
+          "tax_minor",
+          "total_minor"
+        ],
+        "title": "SalesTotal",
+        "type": "object"
+      },
       "SegmentDefinition": {
         "additionalProperties": false,
         "description": "All clauses must match (AND). At least one is required, so nothing targets 'everyone' by accident.",
@@ -12529,6 +12901,138 @@
         "title": "SnapshotOut",
         "type": "object"
       },
+      "SpendReport": {
+        "properties": {
+          "date_from": {
+            "format": "date",
+            "title": "Date From",
+            "type": "string"
+          },
+          "date_to": {
+            "format": "date",
+            "title": "Date To",
+            "type": "string"
+          },
+          "group_by": {
+            "enum": [
+              "supplier",
+              "period"
+            ],
+            "title": "Group By",
+            "type": "string"
+          },
+          "period": {
+            "enum": [
+              "day",
+              "week",
+              "month"
+            ],
+            "title": "Period",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SpendRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/SpendTotal"
+            },
+            "title": "Totals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "date_from",
+          "date_to",
+          "group_by",
+          "period",
+          "rows",
+          "totals"
+        ],
+        "title": "SpendReport",
+        "type": "object"
+      },
+      "SpendRow": {
+        "description": "`key` is a supplier id or the first day of a period.",
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "order_count": {
+            "title": "Order Count",
+            "type": "integer"
+          },
+          "ordered_minor": {
+            "title": "Ordered Minor",
+            "type": "integer"
+          },
+          "receipt_count": {
+            "title": "Receipt Count",
+            "type": "integer"
+          },
+          "received_minor": {
+            "title": "Received Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "currency",
+          "order_count",
+          "ordered_minor",
+          "receipt_count",
+          "received_minor",
+          "key",
+          "label"
+        ],
+        "title": "SpendRow",
+        "type": "object"
+      },
+      "SpendTotal": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "order_count": {
+            "title": "Order Count",
+            "type": "integer"
+          },
+          "ordered_minor": {
+            "title": "Ordered Minor",
+            "type": "integer"
+          },
+          "receipt_count": {
+            "title": "Receipt Count",
+            "type": "integer"
+          },
+          "received_minor": {
+            "title": "Received Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "currency",
+          "order_count",
+          "ordered_minor",
+          "receipt_count",
+          "received_minor"
+        ],
+        "title": "SpendTotal",
+        "type": "object"
+      },
       "StaffMessageIn": {
         "additionalProperties": false,
         "properties": {
@@ -12584,6 +13088,154 @@
           "current_revision_id"
         ],
         "title": "StaffProposalOut",
+        "type": "object"
+      },
+      "StockValueReport": {
+        "description": "On hand at the end of `as_of`, valued at weighted average purchase cost. Items with no recorded cost are\ncounted in `uncosted_item_count` and add nothing to `value_minor`.",
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "cost_basis": {
+            "const": "average_purchase_cost",
+            "default": "average_purchase_cost",
+            "title": "Cost Basis",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "group_by": {
+            "enum": [
+              "item",
+              "location"
+            ],
+            "title": "Group By",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/StockValueRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/StockValueTotals"
+          }
+        },
+        "required": [
+          "as_of",
+          "group_by",
+          "currency",
+          "rows",
+          "totals"
+        ],
+        "title": "StockValueReport",
+        "type": "object"
+      },
+      "StockValueRow": {
+        "description": "One item (with its unit and average cost) or one stock location (with counts of items in it).",
+        "properties": {
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku"
+          },
+          "uncosted_item_count": {
+            "title": "Uncosted Item Count",
+            "type": "integer"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "unit_cost_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost Minor"
+          },
+          "value_minor": {
+            "title": "Value Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "value_minor",
+          "item_count",
+          "uncosted_item_count"
+        ],
+        "title": "StockValueRow",
+        "type": "object"
+      },
+      "StockValueTotals": {
+        "properties": {
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "uncosted_item_count": {
+            "title": "Uncosted Item Count",
+            "type": "integer"
+          },
+          "value_minor": {
+            "title": "Value Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value_minor",
+          "item_count",
+          "uncosted_item_count"
+        ],
+        "title": "StockValueTotals",
         "type": "object"
       },
       "SuggestionOut": {
@@ -21157,6 +21809,90 @@
         ]
       }
     },
+    "/api/v1/inventory/reports/stock-value": {
+      "get": {
+        "operationId": "stock_value_report_api_v1_inventory_reports_stock_value_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "item",
+              "enum": [
+                "item",
+                "location"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockValueReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Stock value at average purchase cost, by item or location (needs purchasing read for costs)",
+        "tags": [
+          "inventory"
+        ]
+      }
+    },
     "/api/v1/knowledge/articles": {
       "get": {
         "operationId": "articles_api_v1_knowledge_articles_get",
@@ -27330,6 +28066,110 @@
         ]
       }
     },
+    "/api/v1/purchasing/reports/spend": {
+      "get": {
+        "operationId": "spend_report_api_v1_purchasing_reports_spend_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "supplier",
+              "enum": [
+                "supplier",
+                "period"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "default": "month",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "title": "Period",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpendReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Ordered and received spend by supplier or period (defaults to this month in the business timezone)",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
     "/api/v1/purchasing/supplier-followups": {
       "post": {
         "operationId": "followup_api_v1_purchasing_supplier_followups_post",
@@ -30095,6 +30935,200 @@
           }
         },
         "summary": "Accounts receivable aging by customer (defaults to today in the business timezone)",
+        "tags": [
+          "sales"
+        ]
+      }
+    },
+    "/api/v1/sales/reports/margin": {
+      "get": {
+        "operationId": "margin_report_api_v1_sales_reports_margin_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "item",
+              "enum": [
+                "item",
+                "kind"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarginReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Gross margin by item or kind at average purchase cost (needs purchasing read for costs)",
+        "tags": [
+          "sales"
+        ]
+      }
+    },
+    "/api/v1/sales/reports/sales": {
+      "get": {
+        "operationId": "sales_report_api_v1_sales_reports_sales_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "period",
+              "enum": [
+                "period",
+                "customer",
+                "item"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "default": "month",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "title": "Period",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Net sales by period, customer or item (defaults to this month in the business timezone)",
         "tags": [
           "sales"
         ]

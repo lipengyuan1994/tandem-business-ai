@@ -21,7 +21,8 @@
     "system": "System",
     "sales": "Sales",
     "purchasing": "Purchasing",
-    "knowledge": "Knowledge"
+    "knowledge": "Knowledge",
+    "reports": "Reports"
   },
   "status": {
     "pending_review": "Pending review",
@@ -180,7 +181,9 @@
     "sales.overpayment": "The payment is more than the invoice's open balance.",
     "sales.payment_date_in_future": "The payment date cannot be in the future.",
     "sales.invoice_has_payments": "This invoice has payments. Void them before creating a credit note.",
-    "sales.payment_already_voided": "This payment was already voided."
+    "sales.payment_already_voided": "This payment was already voided.",
+    "reports.invalid_range": "The start date must be on or before the end date.",
+    "reports.range_too_long": "Choose a date range of up to three years."
   },
   "identity": {
     "selectBusiness": {
@@ -2280,5 +2283,89 @@
     "caption": "Amounts owed in {{currency}}",
     "bills": "Unpaid bills",
     "empty": "Nothing owed to suppliers."
+  },
+  "reports": {
+    "title": "Reports",
+    "description": "Sales, gross margin, stock value and purchasing spend for the dates you choose.",
+    "noAccess": "You don't have access to any reports.",
+    "tabs": {
+      "sales": "Sales",
+      "margin": "Gross margin",
+      "stock": "Stock value",
+      "spend": "Spend"
+    },
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "asOf": "As of",
+      "groupBy": "Group by",
+      "period": "Period",
+      "hint": "Leave the dates empty for this month so far."
+    },
+    "periods": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "groups": {
+      "period": "Period",
+      "customer": "{{Customer}}",
+      "item": "Item",
+      "kind": "Item type",
+      "supplier": "Supplier",
+      "location": "Location"
+    },
+    "kinds": {
+      "product": "Products",
+      "service": "Services",
+      "free_text": "Free-text lines"
+    },
+    "freeText": "Free-text lines",
+    "unnamed": "Unnamed",
+    "weekOf": "Week of {{date}}",
+    "range": "{{from}} to {{to}}",
+    "invalidRange": "The start date must be on or before the end date.",
+    "download": "Download CSV",
+    "total": "Total",
+    "empty": "Nothing in this period.",
+    "caption": "{{report}} in {{currency}}",
+    "columns": {
+      "quantity": "Quantity",
+      "invoices": "Invoices",
+      "creditNotes": "Credit notes",
+      "net": "Net sales",
+      "tax": "Tax",
+      "total": "Total",
+      "revenue": "Net sales",
+      "cost": "Cost",
+      "margin": "Gross margin",
+      "marginPercent": "Margin %",
+      "uncostedRevenue": "Sales without a cost",
+      "sku": "SKU",
+      "onHand": "On hand",
+      "unitCost": "Average cost",
+      "value": "Value",
+      "items": "Items",
+      "uncostedItems": "Items without a cost",
+      "orders": "Orders",
+      "ordered": "Ordered",
+      "receipts": "Receipts",
+      "received": "Received",
+      "currency": "Currency",
+      "unit": "Unit"
+    },
+    "notes": {
+      "sales": "Issued invoices count on their issue date and credit notes are subtracted on theirs. Amounts are before tax unless marked otherwise.",
+      "receivables": "Unpaid balances by age are on the Receivables tab in Sales.",
+      "openReceivables": "Open receivables",
+      "margin": "Cost is the average purchase price of goods received up to the end of the range. A service costs its parts (materials only, no labour).",
+      "uncosted": "{{amount}} of sales has no known cost (free-text lines, products never received at a price, or services without priced parts) and is left out of the margin.",
+      "otherCurrency_one": "{{count}} invoice in another currency is not included.",
+      "otherCurrency_other": "{{count}} invoices in other currencies are not included.",
+      "stock": "Quantities on hand at the end of the day, valued at the average purchase price of goods received by then.",
+      "uncostedItems_one": "{{count}} item on hand has no purchase price yet, so it is not valued.",
+      "uncostedItems_other": "{{count}} items on hand have no purchase price yet, so they are not valued.",
+      "spend": "Ordered counts approved purchase orders on their approval date. Received counts goods received, at the purchase order price, on the day they arrived. Supplier bills are not tracked yet."
+    }
   }
 }

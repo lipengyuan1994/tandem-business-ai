@@ -1379,6 +1379,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inventory/reports/stock-value": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stock value at average purchase cost, by item or location (needs purchasing read for costs) */
+        get: operations["stock_value_report_api_v1_inventory_reports_stock_value_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/knowledge/articles": {
         parameters: {
             query?: never;
@@ -2614,6 +2631,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/purchasing/reports/spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ordered and received spend by supplier or period (defaults to this month in the business timezone) */
+        get: operations["spend_report_api_v1_purchasing_reports_spend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/purchasing/supplier-followups": {
         parameters: {
             query?: never;
@@ -3090,6 +3124,40 @@ export interface paths {
         };
         /** Accounts receivable aging by customer (defaults to today in the business timezone) */
         get: operations["receivables_aging_api_v1_sales_receivables_aging_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sales/reports/margin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gross margin by item or kind at average purchase cost (needs purchasing read for costs) */
+        get: operations["margin_report_api_v1_sales_reports_margin_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sales/reports/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Net sales by period, customer or item (defaults to this month in the business timezone) */
+        get: operations["sales_report_api_v1_sales_reports_sales_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6132,6 +6200,91 @@ export interface components {
             /** Version */
             version: number;
         };
+        /**
+         * MarginReport
+         * @description Gross margin on net sales in the business currency at weighted average purchase cost as of `date_to`.
+         *     Services cost their current parts (materials only). Documents in other currencies are left out and counted.
+         */
+        MarginReport: {
+            /**
+             * Cost Basis
+             * @default average_purchase_cost
+             * @constant
+             */
+            cost_basis: "average_purchase_cost";
+            /** Currency */
+            currency: string;
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /**
+             * Group By
+             * @enum {string}
+             */
+            group_by: "item" | "kind";
+            /** Other Currency Document Count */
+            other_currency_document_count: number;
+            /** Rows */
+            rows: components["schemas"]["MarginRow"][];
+            totals: components["schemas"]["MarginTotals"];
+        };
+        /**
+         * MarginRow
+         * @description `key` is a catalog item id or `free_text` (by item), or `product`, `service`, `free_text` (by kind).
+         */
+        MarginRow: {
+            /** Cost Minor */
+            cost_minor: number | null;
+            /** Costed Revenue Minor */
+            costed_revenue_minor: number;
+            /** Key */
+            key: string;
+            /** Kind */
+            kind?: ("product" | "service" | "free_text") | null;
+            /** Label */
+            label: string;
+            /**
+             * Margin Basis Points
+             * @description Margin as a share of costed revenue; 2550 = 25.50%
+             */
+            margin_basis_points: number | null;
+            /** Margin Minor */
+            margin_minor: number | null;
+            /** Quantity */
+            quantity?: string | null;
+            /** Revenue Minor */
+            revenue_minor: number;
+            /** Uncosted Revenue Minor */
+            uncosted_revenue_minor: number;
+        };
+        /**
+         * MarginTotals
+         * @description Margin is over `costed_revenue_minor` only; revenue without a known cost is reported separately.
+         */
+        MarginTotals: {
+            /** Cost Minor */
+            cost_minor: number | null;
+            /** Costed Revenue Minor */
+            costed_revenue_minor: number;
+            /**
+             * Margin Basis Points
+             * @description Margin as a share of costed revenue; 2550 = 25.50%
+             */
+            margin_basis_points: number | null;
+            /** Margin Minor */
+            margin_minor: number | null;
+            /** Revenue Minor */
+            revenue_minor: number;
+            /** Uncosted Revenue Minor */
+            uncosted_revenue_minor: number;
+        };
         /** MeOut */
         MeOut: {
             /** Active Business Id */
@@ -7838,6 +7991,75 @@ export interface components {
             use_case: string;
         };
         /**
+         * SalesReport
+         * @description Invoices count on their issue date (also when later credited); credit notes subtract on theirs.
+         */
+        SalesReport: {
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /**
+             * Group By
+             * @enum {string}
+             */
+            group_by: "period" | "customer" | "item";
+            /**
+             * Period
+             * @enum {string}
+             */
+            period: "day" | "week" | "month";
+            /** Rows */
+            rows: components["schemas"]["SalesRow"][];
+            /** Totals */
+            totals: components["schemas"]["SalesTotal"][];
+        };
+        /**
+         * SalesRow
+         * @description `key` is the period's first day, a customer id, a catalog item id, or `free_text` for typed-in lines.
+         */
+        SalesRow: {
+            /** Credit Note Count */
+            credit_note_count: number;
+            /** Currency */
+            currency: string;
+            /** Invoice Count */
+            invoice_count: number;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Net Minor */
+            net_minor: number;
+            /** Quantity */
+            quantity?: string | null;
+            /** Tax Minor */
+            tax_minor: number;
+            /** Total Minor */
+            total_minor: number;
+        };
+        /** SalesTotal */
+        SalesTotal: {
+            /** Credit Note Count */
+            credit_note_count: number;
+            /** Currency */
+            currency: string;
+            /** Invoice Count */
+            invoice_count: number;
+            /** Net Minor */
+            net_minor: number;
+            /** Tax Minor */
+            tax_minor: number;
+            /** Total Minor */
+            total_minor: number;
+        };
+        /**
          * SegmentDefinition
          * @description All clauses must match (AND). At least one is required, so nothing targets 'everyone' by accident.
          */
@@ -8013,6 +8235,66 @@ export interface components {
              */
             id: string;
         };
+        /** SpendReport */
+        SpendReport: {
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /**
+             * Group By
+             * @enum {string}
+             */
+            group_by: "supplier" | "period";
+            /**
+             * Period
+             * @enum {string}
+             */
+            period: "day" | "week" | "month";
+            /** Rows */
+            rows: components["schemas"]["SpendRow"][];
+            /** Totals */
+            totals: components["schemas"]["SpendTotal"][];
+        };
+        /**
+         * SpendRow
+         * @description `key` is a supplier id or the first day of a period.
+         */
+        SpendRow: {
+            /** Currency */
+            currency: string;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Order Count */
+            order_count: number;
+            /** Ordered Minor */
+            ordered_minor: number;
+            /** Receipt Count */
+            receipt_count: number;
+            /** Received Minor */
+            received_minor: number;
+        };
+        /** SpendTotal */
+        SpendTotal: {
+            /** Currency */
+            currency: string;
+            /** Order Count */
+            order_count: number;
+            /** Ordered Minor */
+            ordered_minor: number;
+            /** Receipt Count */
+            receipt_count: number;
+            /** Received Minor */
+            received_minor: number;
+        };
         /** StaffMessageIn */
         StaffMessageIn: {
             /** Body */
@@ -8034,6 +8316,67 @@ export interface components {
             id: string;
             /** Status */
             status: string;
+        };
+        /**
+         * StockValueReport
+         * @description On hand at the end of `as_of`, valued at weighted average purchase cost. Items with no recorded cost are
+         *     counted in `uncosted_item_count` and add nothing to `value_minor`.
+         */
+        StockValueReport: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /**
+             * Cost Basis
+             * @default average_purchase_cost
+             * @constant
+             */
+            cost_basis: "average_purchase_cost";
+            /** Currency */
+            currency: string;
+            /**
+             * Group By
+             * @enum {string}
+             */
+            group_by: "item" | "location";
+            /** Rows */
+            rows: components["schemas"]["StockValueRow"][];
+            totals: components["schemas"]["StockValueTotals"];
+        };
+        /**
+         * StockValueRow
+         * @description One item (with its unit and average cost) or one stock location (with counts of items in it).
+         */
+        StockValueRow: {
+            /** Item Count */
+            item_count: number;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Quantity */
+            quantity?: string | null;
+            /** Sku */
+            sku?: string | null;
+            /** Uncosted Item Count */
+            uncosted_item_count: number;
+            /** Unit */
+            unit?: string | null;
+            /** Unit Cost Minor */
+            unit_cost_minor?: number | null;
+            /** Value Minor */
+            value_minor: number;
+        };
+        /** StockValueTotals */
+        StockValueTotals: {
+            /** Item Count */
+            item_count: number;
+            /** Uncosted Item Count */
+            uncosted_item_count: number;
+            /** Value Minor */
+            value_minor: number;
         };
         /** SuggestionOut */
         SuggestionOut: {
@@ -14729,6 +15072,74 @@ export interface operations {
             };
         };
     };
+    stock_value_report_api_v1_inventory_reports_stock_value_get: {
+        parameters: {
+            query?: {
+                as_of?: string | null;
+                group_by?: "item" | "location";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockValueReport"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     articles_api_v1_knowledge_articles_get: {
         parameters: {
             query?: {
@@ -20336,6 +20747,58 @@ export interface operations {
             };
         };
     };
+    spend_report_api_v1_purchasing_reports_spend_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                group_by?: "supplier" | "period";
+                period?: "day" | "week" | "month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpendReport"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     followup_api_v1_purchasing_supplier_followups_post: {
         parameters: {
             query?: never;
@@ -22802,6 +23265,109 @@ export interface operations {
             };
             /** @description Conflict (version mismatch or business rule) */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    margin_report_api_v1_sales_reports_margin_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                group_by?: "item" | "kind";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarginReport"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    sales_report_api_v1_sales_reports_sales_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+                group_by?: "period" | "customer" | "item";
+                period?: "day" | "week" | "month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesReport"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

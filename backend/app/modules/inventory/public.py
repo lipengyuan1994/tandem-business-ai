@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -10,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.platform.context import Context
 
-from . import service
+from . import reports, service
 from .schemas import AvailabilityOut, MovementIn, ReorderDraftRead, ReorderSuggestion
 from .service import StockAdjusted, StockBelowReorderLevel
 
@@ -44,17 +45,30 @@ def record_movement(db: Session, ctx: Context, m: MovementIn) -> uuid.UUID:
     return service.record_movement(db, ctx, m).id
 
 
+def average_unit_costs(
+    db: Session, ctx: Context, item_ids: set[uuid.UUID] | None, before: datetime
+) -> dict[uuid.UUID, Decimal]:
+    """Weighted average purchase cost per item (exact minor units) from costed inbound stock movements before
+    `before`. Items without a recorded cost are absent. No permission check: callers gate access to costs."""
+    return reports.average_unit_costs(db, ctx, item_ids, before)
+
+
+COST_PERMISSION = reports.COST_PERMISSION
+
+
 def list_below_reorder(db: Session, ctx: Context) -> list[ReorderSuggestion]:
     return service.suggestions(db, ctx)
 
 
 __all__ = [
+    "COST_PERMISSION",
     "AvailabilityOut",
     "MovementIn",
     "ReorderDraftRead",
     "ReorderSuggestion",
     "StockAdjusted",
     "StockBelowReorderLevel",
+    "average_unit_costs",
     "consume_reservations",
     "get_availability",
     "has_open_reorder_draft",
