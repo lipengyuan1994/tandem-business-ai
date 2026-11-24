@@ -1,4 +1,4 @@
-# Overrides for Claude's cloud dev machines, layered on compose.dev.yml by scripts/cloud-dev-setup.sh.
+# Overrides for Claude's cloud dev machines, layered on compose.dev.yml by the Makefile and deploy/scripts/cloud-dev-setup.sh.
 # Those machines re-sign outbound TLS with their own CA (CLOUD_CA_DIR, default /root/.ccr), so the backend image build
 # (PyPI) and the web container (npm) must trust it. Not used on laptops, CI or the demo VM.
 x-cloud-build: &cloud-build

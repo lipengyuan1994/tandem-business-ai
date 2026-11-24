@@ -1,4 +1,4 @@
-# Cloud dev variant of backend/Dockerfile.dev (scripts/cloud-dev-setup.sh, docs/CLOUD_DEV.md).
+# Cloud dev variant of backend/Dockerfile.dev (deploy/scripts/cloud-dev-setup.sh, docs/CLOUD_DEV.md).
 # Claude's cloud machines re-sign outbound TLS with their own CA, so `uv sync` must trust it. The CA comes in through
 # the `cloudca` build context; nothing secret is baked in (it is a public CA certificate bundle).
 FROM python:3.13-slim
