@@ -1,0 +1,92 @@
+# Lint, type checks and tests on every pull request and every push to main.
+# Same commands as `make lint`, `make typecheck`, `make backend-test` and `make frontend-test`.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  backend-checks:
+    name: Backend lint and types
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --frozen
+      - name: Ruff
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Mypy
+        run: uv run mypy
+
+  backend-tests:
+    name: Backend tests (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install dependencies
+        working-directory: backend
+        run: uv sync --frozen
+      # The throwaway Postgres from compose.dev.yml (pgvector, roles from postgres-init.sh) on localhost:5433,
+      # exactly as `make test-db` starts it locally.
+      - name: Start test database
+        run: make test-db
+      # Each shard runs every fourth test file (sorted by path), against its own database.
+      - name: Run tests
+        working-directory: backend
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mapfile -t files < <(find app tests -name 'test_*.py' | sort | awk -v n=4 -v i="$SHARD" '(NR - 1) % n == i - 1')
+          echo "Shard $SHARD: ${#files[@]} test files"
+          uv run pytest -q "${files[@]}"
+
+  frontend:
+    name: Frontend lint, types and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      # Node 24 is what the app is built with (deploy/docker/web.Dockerfile); the dictation tests fail on Node 22.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Type check
+        run: pnpm typecheck
+      - name: Tests
+        run: pnpm test
