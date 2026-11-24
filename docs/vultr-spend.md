@@ -70,3 +70,7 @@ Built 0.1.20 API, web and backup images directly on the existing demo VM. No new
 publication. The owner approved temporary single-workstation SSH access. The IPv4 rule was removed after its
 connection timed out. The IPv6 rule allowed pinned-key SSH and was removed after staging. The Vultr API then
 reported zero TCP/22 rules. Only the individual temporary firewall rules were applied.
+The same single-workstation IPv6 rule was reopened for the 0.1.19 → 0.1.20 upgrade. The pre-upgrade
+backup and both smoke checks passed. All six services were healthy. The rule and SSH session were closed;
+Vultr returned zero port-22 rules and external IPv4/IPv6 SSH checks both failed to connect. Images for this
+release are VM-local. Rebuild them from product commit `03d1f92` for a new host using the existing Makefile.
