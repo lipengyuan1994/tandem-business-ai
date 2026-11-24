@@ -73,7 +73,7 @@ The [0.1.10 release notes](CHANGELOG.md) record 2,398 backend tests at 96% cover
 
 ## Setup
 
-For local development, follow the repository prerequisites and run `make dev`. To install on a Vultr account, follow the [install runbook](docs/runbooks/install.md), including `deploy/scripts/install.sh` and its dry run. These operations require the operator's own configuration and credentials.
+For local development, follow the repository prerequisites and run `make dev`. On a Claude cloud development machine, run `make cloud-dev` instead ([docs/CLOUD_DEV.md](docs/CLOUD_DEV.md)). To install on a Vultr account, follow the [install runbook](docs/runbooks/install.md), including `deploy/scripts/install.sh` and its dry run. These operations require the operator's own configuration and credentials.
 
 ## Limitations and next steps
 

@@ -2,7 +2,10 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-COMPOSE_DEV := docker compose -p smb -f deploy/compose/compose.dev.yml --env-file .env
+# On Claude cloud machines (CA bundle present) the cloud override lets builds trust the network's TLS CA (docs/CLOUD_DEV.md).
+CLOUD_CA_DIR ?= /root/.ccr
+export CLOUD_CA_DIR
+COMPOSE_DEV := docker compose -p smb -f deploy/compose/compose.dev.yml $(if $(wildcard $(CLOUD_CA_DIR)/ca-bundle.crt),-f deploy/compose/compose.cloud.yml) --env-file .env
 BACKEND := cd backend &&
 FRONTEND := cd frontend &&
 
@@ -14,10 +17,13 @@ help: ## List targets
 	cp .env.example .env
 
 # ---------------------------------------------------------------- development stack
-.PHONY: dev dev-down dev-logs dev-ps test-db test-db-new test-db-drop
+.PHONY: dev cloud-dev dev-down dev-logs dev-ps test-db test-db-new test-db-drop
 dev: .env ## Start the dev stack (postgres, keycloak, api, worker, web, caddy) on https://localhost:8443
 	$(COMPOSE_DEV) up -d --build
 	@echo "App: https://localhost:8443   Keycloak: https://localhost:8443/auth"
+
+cloud-dev: ## Claude cloud machine: start Docker, install dependencies, start the dev stack, seed (docs/CLOUD_DEV.md)
+	deploy/scripts/cloud-dev-setup.sh $(args)
 
 dev-down: ## Stop the dev stack (keeps data volumes)
 	$(COMPOSE_DEV) down
