@@ -97,17 +97,6 @@ def _frozen_clock_reset() -> Iterator[None]:
     clock.reset_clock()
 
 
-@pytest.fixture(autouse=True)
-def _ai_router_reset() -> Iterator[None]:
-    # Many AI tests install a fake router with set_router_for_tests() and never clear it; a leftover one made later
-    # tests see AI as configured (test_ai_module's not-configured checks fail when they run after test_ai_team).
-    from app.modules.ai.gateway.router import reset_router_cache, set_router_for_tests
-
-    yield
-    set_router_for_tests(None)
-    reset_router_cache()
-
-
 @pytest.fixture
 def freeze_time() -> Any:
     """freeze_time(datetime) pins platform.clock.now() for the rest of the test."""
