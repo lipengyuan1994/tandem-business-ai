@@ -4,6 +4,142 @@
  */
 
 export interface paths {
+    "/api/v1/accounting/quickbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** QuickBooks connection and sync status */
+        get: operations["status_api_v1_accounting_quickbooks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounting/quickbooks/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active accounts in the connected QuickBooks company */
+        get: operations["accounts_api_v1_accounting_quickbooks_accounts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounting/quickbooks/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start connecting QuickBooks Online (returns Intuit's sign-in URL) */
+        post: operations["connect_api_v1_accounting_quickbooks_connect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounting/quickbooks/disconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Disconnect QuickBooks (records already sent stay there) */
+        post: operations["disconnect_api_v1_accounting_quickbooks_disconnect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounting/quickbooks/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sync log: what was sent to QuickBooks, failed or skipped */
+        get: operations["records_api_v1_accounting_quickbooks_records_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounting/quickbooks/records/{record_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Try a failed or skipped record again on the next sync (which starts now) */
+        post: operations["retry_api_v1_accounting_quickbooks_records__record_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounting/quickbooks/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set the QuickBooks account mapping, sync start date and automatic sync */
+        put: operations["update_settings_api_v1_accounting_quickbooks_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounting/quickbooks/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sync with QuickBooks now */
+        post: operations["sync_now_api_v1_accounting_quickbooks_sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/erasures": {
         parameters: {
             query?: never;
@@ -3428,6 +3564,37 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountMapping
+         * @description QuickBooks account ids. Income, expense and bank are needed; the rest fall back to QuickBooks defaults.
+         */
+        AccountMapping: {
+            /** Bank Account Id */
+            bank_account_id?: string | null;
+            /** Deposit Account Id */
+            deposit_account_id?: string | null;
+            /** Expense Account Id */
+            expense_account_id?: string | null;
+            /** Income Account Id */
+            income_account_id?: string | null;
+            /** Payable Account Id */
+            payable_account_id?: string | null;
+            /** Receivable Account Id */
+            receivable_account_id?: string | null;
+            /** Tax Account Id */
+            tax_account_id?: string | null;
+        };
+        /** AccountOut */
+        AccountOut: {
+            /** Account Type */
+            account_type: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Sub Type */
+            sub_type?: string | null;
+        };
         /** ActionTypeOut */
         ActionTypeOut: {
             /** Action Type */
@@ -4975,6 +5142,61 @@ export interface components {
             op: "has" | "older_than_days" | "newer_than_days" | "eq";
             /** Value */
             value: string | number;
+        };
+        /** ConnectStartOut */
+        ConnectStartOut: {
+            /** Authorize Url */
+            authorize_url: string;
+        };
+        /** ConnectionOut */
+        ConnectionOut: {
+            /**
+             * Auto Sync
+             * @default true
+             */
+            auto_sync: boolean;
+            /** Business Currency */
+            business_currency: string;
+            /** Company Name */
+            company_name?: string | null;
+            /** Configured */
+            configured: boolean;
+            /** Connected At */
+            connected_at?: string | null;
+            /** Country */
+            country?: string | null;
+            counts?: components["schemas"]["SyncCounts"];
+            /**
+             * Environment
+             * @enum {string}
+             */
+            environment: "sandbox" | "production";
+            /** Home Currency */
+            home_currency?: string | null;
+            /** Last Sync Error */
+            last_sync_error?: string | null;
+            /** Last Sync Finished At */
+            last_sync_finished_at?: string | null;
+            /** Last Sync Started At */
+            last_sync_started_at?: string | null;
+            mapping?: components["schemas"]["AccountMapping"];
+            /** Missing Mapping */
+            missing_mapping?: string[];
+            /**
+             * Provider
+             * @default quickbooks
+             * @constant
+             */
+            provider: "quickbooks";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_connected" | "pending" | "connected" | "needs_reconnect" | "disconnected";
+            /** Sync From */
+            sync_from?: string | null;
+            /** Version */
+            version?: number | null;
         };
         /** ConsentIn */
         ConsentIn: {
@@ -6783,6 +7005,13 @@ export interface components {
             /** Next Cursor */
             next_cursor?: string | null;
         };
+        /** Page[SyncRecordOut] */
+        Page_SyncRecordOut_: {
+            /** Items */
+            items: components["schemas"]["SyncRecordOut"][];
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
         /** PauseOut */
         PauseOut: {
             /** Paused */
@@ -8135,6 +8364,35 @@ export interface components {
             /** Quantity */
             quantity: string;
         };
+        /** SettingsIn */
+        SettingsIn: {
+            /**
+             * Auto Sync
+             * @default true
+             */
+            auto_sync: boolean;
+            /** Bank Account Id */
+            bank_account_id?: string | null;
+            /** Deposit Account Id */
+            deposit_account_id?: string | null;
+            /** Expense Account Id */
+            expense_account_id?: string | null;
+            /** Income Account Id */
+            income_account_id?: string | null;
+            /** Payable Account Id */
+            payable_account_id?: string | null;
+            /** Receivable Account Id */
+            receivable_account_id?: string | null;
+            /**
+             * Sync From
+             * Format: date
+             */
+            sync_from: string;
+            /** Tax Account Id */
+            tax_account_id?: string | null;
+            /** Version */
+            version: number;
+        };
         /** SettingsOut */
         SettingsOut: {
             settings: components["schemas"]["BusinessSettings-Output"];
@@ -8638,6 +8896,70 @@ export interface components {
              */
             business_id: string;
         };
+        /** SyncCounts */
+        SyncCounts: {
+            /**
+             * Failed
+             * @default 0
+             */
+            failed: number;
+            /**
+             * Skipped
+             * @default 0
+             */
+            skipped: number;
+            /**
+             * Synced
+             * @default 0
+             */
+            synced: number;
+        };
+        /** SyncQueuedOut */
+        SyncQueuedOut: {
+            /** Queued */
+            queued: boolean;
+        };
+        /** SyncRecordOut */
+        SyncRecordOut: {
+            /** Attempts */
+            attempts: number;
+            /**
+             * Entity Type
+             * @enum {string}
+             */
+            entity_type: "customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "invoice_payment" | "bill" | "bill_payment" | "item";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Last Attempt At */
+            last_attempt_at: string | null;
+            /** Last Error */
+            last_error: string | null;
+            /** Local Id */
+            local_id: string;
+            /** Next Attempt At */
+            next_attempt_at: string | null;
+            /** Remote Id */
+            remote_id: string | null;
+            /** Remote State */
+            remote_state: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "synced" | "failed" | "skipped";
+            /** Synced At */
+            synced_at: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** SystemStatus */
         SystemStatus: {
             /** Ai Usage Today */
@@ -9078,6 +9400,11 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** VersionIn */
+        app__modules__accounting__schemas__VersionIn: {
+            /** Version */
+            version: number;
+        };
         /** ResolveIn */
         app__modules__ai__customer_care__api__ResolveIn: {
             /** Version */
@@ -9130,6 +9457,613 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    status_api_v1_accounting_quickbooks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    accounts_api_v1_accounting_quickbooks_accounts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"][];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    connect_api_v1_accounting_quickbooks_connect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectStartOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    disconnect_api_v1_accounting_quickbooks_disconnect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__accounting__schemas__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    records_api_v1_accounting_quickbooks_records_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                status?: ("synced" | "failed" | "skipped")[] | null;
+                entity_type?: ("customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "invoice_payment" | "bill" | "bill_payment" | "item")[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_SyncRecordOut_"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    retry_api_v1_accounting_quickbooks_records__record_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncRecordOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    update_settings_api_v1_accounting_quickbooks_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    sync_now_api_v1_accounting_quickbooks_sync_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncQueuedOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     erasures_api_v1_admin_erasures_get: {
         parameters: {
             query?: never;

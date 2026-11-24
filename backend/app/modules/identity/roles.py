@@ -5,7 +5,7 @@ Permission strings for modules that are not built yet are listed here so the mat
 
 from __future__ import annotations
 
-POLICY_VERSION = "2026-11-24.1"
+POLICY_VERSION = "2026-11-24.2"
 
 ROLE_NAMES = ("owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor")
 
@@ -37,6 +37,10 @@ BILLS_READ = {"purchasing.bill.read"}
 BILLS_WRITE = {"purchasing.bill.write"}
 BILLS_ADMIN = {"purchasing.bill.pay", "purchasing.bill.void"}
 AI_USE = {"ai.assistant.use"}
+ACCOUNTING_READ = {"accounting.sync.read"}
+ACCOUNTING_RUN = {"accounting.sync.run"}
+# Linking the books to QuickBooks hands Intuit a sign-in to the business: owner only.
+ACCOUNTING_CONNECT = {"accounting.connection.manage"}
 
 APPROVE = {
     "crm": "crm.proposal.approve",
@@ -73,6 +77,8 @@ _ADMIN = (
     | BILLS_WRITE
     | BILLS_ADMIN
     | SALES_ADMIN
+    | ACCOUNTING_READ
+    | ACCOUNTING_RUN
     | APPROVALS
     | AUDIT_READ
     | OUTBOX
@@ -85,6 +91,7 @@ ROLES: dict[str, frozenset[str]] = {
     "owner": frozenset(
         _ADMIN
         | {"org.business.admin", "identity.owner.grant", "audit.export", "ai.settings.write", "admin_ops.data.manage"}
+        | ACCOUNTING_CONNECT
     ),
     "admin": frozenset(_ADMIN),
     "demo_reviewer": frozenset(_ADMIN - ORG_WRITE - {"identity.membership.write"}),
@@ -146,6 +153,7 @@ ROLES: dict[str, frozenset[str]] = {
         | SALES_READ
         | PURCH_READ
         | BILLS_READ
+        | ACCOUNTING_READ
         | {"approvals.proposal.read"}
         | AUDIT_READ
         | {"audit.export", "ai.settings.read"}

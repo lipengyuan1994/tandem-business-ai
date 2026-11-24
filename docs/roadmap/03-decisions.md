@@ -210,3 +210,18 @@ proposals to staff and cancel withheld replies at publication. Human approval re
 Autonomy evaluation history stays append-only; execution fallback is an audit event/failure code surfaced in Activity.
 Cycle Works seed explicitly opts into live guarded replies with a 15-second delay; Garden stays shadow and Dental
 stays ask. The new recorded `reply_guardrail` use-case requires one constraint migration after self-service.
+
+## ADR-021 Accounting sync: QuickBooks Online first, push only
+- **Status:** ACCEPTED 2026-11-24 (owner, in chat: "QuickBooks first", answering whether to start accounting sync
+  with QuickBooks Online or Xero).
+- **Decision 1:** new module `accounting` ([M20](modules/M20-accounting.md)) depending on org, sales and purchasing.
+  It pushes customers, invoices, credit notes, customer payments, suppliers, supplier bills and bill payments to
+  QuickBooks Online. It does not read QuickBooks back into Tandem.
+- **Decision 2:** per-business OAuth 2.0 (authorization code), tokens sealed with the existing `joserfc` JWE helper.
+  Outbound calls go through `app.platform.http` and need the Intuit hosts in `EGRESS_ALLOWLIST`. No new dependency.
+- **Decision 3:** the QuickBooks client sits behind `LedgerAuth`/`LedgerApi` protocols so Xero can follow without
+  changing the sync engine. Tests use an in-memory QuickBooks over `respx`; field names were checked against Intuit's
+  public API reference second hand and still need a sandbox run.
+- **Decision 4:** connecting is refused under `DATA_PROFILE=regulated` (customer names and amounts would leave the
+  deployment for Intuit).
+

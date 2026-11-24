@@ -183,7 +183,20 @@
     "sales.invoice_has_payments": "This invoice has payments. Void them before creating a credit note.",
     "sales.payment_already_voided": "This payment was already voided.",
     "reports.invalid_range": "The start date must be on or before the end date.",
-    "reports.range_too_long": "Choose a date range of up to three years."
+    "reports.range_too_long": "Choose a date range of up to three years.",
+    "accounting.not_configured": "QuickBooks isn't set up on this server yet.",
+    "accounting.regulated_profile": "This business keeps regulated data, so it can't send records to QuickBooks.",
+    "accounting.not_connected": "Connect QuickBooks first.",
+    "accounting.version_conflict": "These QuickBooks settings changed since you opened them.",
+    "accounting.record_already_synced": "This record already reached QuickBooks.",
+    "accounting.record_not_found": "That sync record no longer exists.",
+    "accounting.oauth_declined": "The QuickBooks sign-in was cancelled.",
+    "accounting.oauth_state_invalid": "The sign-in link expired or was already used. Start again.",
+    "accounting.oauth_response_invalid": "QuickBooks sent back an incomplete answer. Start again.",
+    "accounting.quickbooks_auth": "QuickBooks didn't accept the sign-in. Start again.",
+    "accounting.quickbooks_unavailable": "QuickBooks didn't answer. Try again shortly.",
+    "accounting.quickbooks_throttled": "QuickBooks is busy. Try again in a minute.",
+    "accounting.quickbooks_config": "The QuickBooks app keys on this server look wrong."
   },
   "identity": {
     "selectBusiness": {
@@ -250,7 +263,8 @@
       "locations": "Locations & hours",
       "policies": "Policies",
       "staff": "Staff",
-      "resources": "Resources & availability"
+      "resources": "Resources & availability",
+      "accounting": "Accounting"
     },
     "business": {
       "name": "Business name",
@@ -2367,5 +2381,84 @@
       "uncostedItems_other": "{{count}} items on hand have no purchase price yet, so they are not valued.",
       "spend": "Ordered counts approved purchase orders on their approval date. Received counts goods received, at the purchase order price, on the day they arrived. Supplier bills are not tracked yet."
     }
+  },
+  "accounting": {
+    "title": "Accounting",
+    "intro": "Send invoices, payments and supplier bills to QuickBooks Online. You keep working in Tandem; QuickBooks gets a copy for your books.",
+    "noAccess": "You don't have access to accounting settings.",
+    "quickbooks": "QuickBooks Online",
+    "sandbox": "Sandbox company",
+    "status": {
+      "not_connected": "Not connected",
+      "pending": "Not connected",
+      "connected": "Connected",
+      "needs_reconnect": "Needs reconnecting",
+      "disconnected": "Disconnected"
+    },
+    "company": "Company: {{name}} ({{currency}})",
+    "notConfigured": "QuickBooks isn't set up on this server yet. Whoever runs Tandem needs to add the QuickBooks app keys first.",
+    "needsReconnect": "QuickBooks stopped accepting Tandem's sign-in. Reconnect to keep syncing; nothing is lost meanwhile.",
+    "currencyMismatch": "Your business uses {{business}} but the QuickBooks company uses {{books}}. Records in {{business}} are skipped.",
+    "mappingNeeded": "Choose the income, expense and bank accounts before the first sync.",
+    "mappingByOwner": "An owner needs to choose the QuickBooks accounts before syncing starts.",
+    "syncingFrom": "Records dated {{date}} or later are sent.",
+    "counts": {
+      "synced": "Sent",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "running": "Syncing now…",
+    "lastSync": "Last sync:",
+    "connect": "Connect QuickBooks",
+    "reconnect": "Reconnect QuickBooks",
+    "connectedNow": "QuickBooks is connected. Choose the accounts below, then the first sync starts.",
+    "connectFailed": "QuickBooks wasn't connected.",
+    "connectFailedGeneric": "Please try again.",
+    "syncNow": "Sync now",
+    "syncQueued": "Sync started.",
+    "syncWaiting": "A sync is already waiting to run.",
+    "disconnect": "Disconnect",
+    "disconnectTitle": "Disconnect QuickBooks?",
+    "disconnectBody": "Tandem stops sending records and signs out of QuickBooks. Everything already in QuickBooks stays there, and the sync log is kept.",
+    "mappingTitle": "QuickBooks accounts",
+    "mappingHelp": "Sales post to the income account, supplier bills to the expense account, and bill payments come out of the bank account. Optional ones use your QuickBooks defaults.",
+    "mapping": {
+      "income_account_id": "Income (sales)",
+      "deposit_account_id": "Deposit customer payments to",
+      "receivable_account_id": "Accounts receivable",
+      "tax_account_id": "Sales tax collected",
+      "expense_account_id": "Expense (supplier bills)",
+      "payable_account_id": "Accounts payable",
+      "bank_account_id": "Pay supplier bills from"
+    },
+    "chooseAccount": "Choose an account",
+    "quickbooksDefault": "QuickBooks default",
+    "unknownAccount": "Account {{id}} (not listed)",
+    "syncFrom": "Send records dated from",
+    "syncFromHelp": "Earlier invoices, payments and bills stay out, so books you already keep aren't doubled.",
+    "autoSync": "Sync automatically every 15 minutes",
+    "save": "Save QuickBooks settings",
+    "saved": "QuickBooks settings saved.",
+    "logTitle": "Sync log",
+    "logFilter": "Show records",
+    "filter": {
+      "all": "All",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "logEmpty": "Nothing here yet.",
+    "recordStatus": {
+      "synced": "Sent",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "remoteState": {
+      "voided": "voided",
+      "deleted": "deleted"
+    },
+    "nextTry": "Tries again",
+    "retry": "Retry",
+    "retryLabel": "Retry {{label}}",
+    "retryQueued": "Queued to try again."
   }
 }

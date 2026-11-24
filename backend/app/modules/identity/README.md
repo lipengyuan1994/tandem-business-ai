@@ -19,6 +19,8 @@ P10-D: public.dictation_names(db, ctx, entity_ids) returns bounded permission/bu
 P10-J: `demo_reviewer` = admin minus org writes and membership writes; policy 2026-11-07.1.
 Supplier bills: `purchasing.bill.read|write|pay|void`; owner/admin/demo_reviewer all, inventory manager
 read/write, auditor read; policy 2026-11-24.1.
+QuickBooks sync: `accounting.sync.read|run` for owner/admin/demo_reviewer (auditor read);
+`accounting.connection.manage` owner only; policy 2026-11-24.2.
 `demo-logins --guest` prepares the public Demo Guest across the three validated synthetic businesses.
 It preserves the original app and Keycloak identities on upgrade. Fresh accounts acquire a Keycloak
 subject through a reserved setup address before the public address is activated. Repeat provisioning

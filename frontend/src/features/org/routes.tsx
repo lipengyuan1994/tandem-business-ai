@@ -12,5 +12,6 @@ export const settingsTree = settingsRoute.addChildren([
   createRoute({ getParentRoute: () => settingsRoute, path: "/resources", component: lazyRouteComponent(() => import("@/features/scheduling/setup/ResourcesPage"), "ResourcesPage") }),
   createRoute({ getParentRoute: () => settingsRoute, path: "/policies", component: lazyRouteComponent(() => import("./pages/PoliciesPage"), "PoliciesPage") }),
   createRoute({ getParentRoute: () => settingsRoute, path: "/ai", component: lazyRouteComponent(() => import("@/features/ai/AiSettingsPage"), "AiSettingsPage") }),
+  createRoute({ getParentRoute: () => settingsRoute, path: "/accounting", component: lazyRouteComponent(() => import("@/features/accounting/AccountingSettingsPage"), "AccountingSettingsPage") }),
   createRoute({ getParentRoute: () => settingsRoute, path: "/staff", component: lazyRouteComponent(() => import("@/features/identity/pages/StaffPage"), "StaffPage") }),
 ])
