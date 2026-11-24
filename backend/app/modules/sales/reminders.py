@@ -54,6 +54,7 @@ def list_overdue_invoices(
             due_date=row.due_date,
             days_overdue=(today - row.due_date).days,
             total_minor=row.total_minor,
+            balance_minor=row.total_minor - row.amount_paid_minor,
             currency=row.currency,
             version=row.version,
             last_reminder_at=row.last_reminder_at,
@@ -90,7 +91,7 @@ def describe_reminder(db: Session, ctx: Context, p: PaymentReminderPayload) -> l
         PreviewLine("Invoice", None, row.number),
         PreviewLine("Recipient", None, row.bill_to_email),
         PreviewLine("Message", None, p.body),
-        PreviewLine("Amount due", None, money_text(row.total_minor, row.currency)),
+        PreviewLine("Amount due", None, money_text(row.total_minor - row.amount_paid_minor, row.currency)),
         PreviewLine("Due date", None, str(row.due_date)),
     ]
 
@@ -106,7 +107,7 @@ def run_reminder(db: Session, ctx: Context, p: PaymentReminderPayload, meta: Exe
         variables={
             "number": row.number,
             "body": p.body,
-            "amount": minor_text(row.total_minor, row.currency),
+            "amount": minor_text(row.total_minor - row.amount_paid_minor, row.currency),
             "currency": row.currency,
             "due_date": str(row.due_date),
         },

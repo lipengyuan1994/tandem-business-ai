@@ -23,12 +23,15 @@ from . import permissions as P
 from . import repository as repo
 from . import service
 from . import service_creation as creation
+from .receivables import aging
 from .reminders import business_today
 from .schemas import (
+    AgingReport,
     DocumentCreate,
     DocumentOut,
     DocumentType,
     DocumentUpdate,
+    PaymentIn,
     PaymentReminderIn,
     PaymentReminderPayload,
     ReminderProposalOut,
@@ -62,6 +65,44 @@ def payment_reminder(
             title="Send invoice payment reminder",
         )
         return ReminderProposalOut.model_validate(proposal)
+
+
+@router.post(
+    "/invoices/{document_id}/payments",
+    response_model=DocumentOut,
+    status_code=201,
+    summary="Record a full or partial payment against an issued invoice",
+    responses=ERRORS,
+)
+def record_payment(
+    document_id: uuid.UUID, body: PaymentIn, ctx: Context = Depends(require(P.MARK_PAID))
+) -> DocumentOut:
+    with transaction(ctx) as db:
+        return service.detail(db, ctx, "invoice", service.record_payment(db, ctx, document_id, body))
+
+
+@router.post(
+    "/invoices/{document_id}/payments/{payment_id}/void",
+    response_model=DocumentOut,
+    summary="Void a payment recorded in error and reopen the invoice balance",
+    responses=ERRORS,
+)
+def void_payment(
+    document_id: uuid.UUID, payment_id: uuid.UUID, body: VersionIn, ctx: Context = Depends(require(P.CREDIT))
+) -> DocumentOut:
+    with transaction(ctx) as db:
+        return service.detail(db, ctx, "invoice", service.void_payment(db, ctx, document_id, payment_id, body.version))
+
+
+@router.get(
+    "/receivables/aging",
+    response_model=AgingReport,
+    summary="Accounts receivable aging by customer (defaults to today in the business timezone)",
+    responses=ERRORS,
+)
+def receivables_aging(as_of: date | None = None, ctx: Context = Depends(require(P.DOCUMENT_READ))) -> AgingReport:
+    with transaction(ctx) as db:
+        return aging(db, ctx, as_of if as_of is not None else business_today(db, ctx))
 
 
 def creating_response(

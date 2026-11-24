@@ -63,7 +63,7 @@ def _validate(value: PaymentReminderDraft, invoice: sales.OverdueInvoice) -> Non
     # The model can omit amounts/dates; any included values must use these exact, unambiguous formats.
     rest = value.text
     allowed = [
-        money_text(invoice.total_minor, invoice.currency),
+        money_text(invoice.balance_minor, invoice.currency),  # the open balance, never the original total
         invoice.due_date.isoformat(),
         invoice.number,
         f"{invoice.days_overdue} days overdue",
@@ -128,7 +128,7 @@ def run_invoice(invoice_id: uuid.UUID, business_id: uuid.UUID, *, router: Router
     data = {
         "number": invoice.number,
         "bill_to_name": redact_contacts(invoice.bill_to_name),
-        "total": money_text(invoice.total_minor, invoice.currency),
+        "amount_due": money_text(invoice.balance_minor, invoice.currency),
         "due_date": invoice.due_date.isoformat(),
         "days_overdue": invoice.days_overdue,
     }

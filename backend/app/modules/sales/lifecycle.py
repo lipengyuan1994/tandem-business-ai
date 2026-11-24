@@ -16,9 +16,18 @@ from app.platform.crud import rows_affected
 from app.platform.export import ExportTables, export_tables, stream_models
 from app.platform.registry import ErasureTarget
 
-from .models import DocumentSequence, Invoice, InvoiceLine, Quote, QuoteLine, SalesOrder, SalesOrderLine
+from .models import (
+    DocumentSequence,
+    Invoice,
+    InvoiceLine,
+    InvoicePayment,
+    Quote,
+    QuoteLine,
+    SalesOrder,
+    SalesOrderLine,
+)
 
-TABLES = [DocumentSequence, Quote, QuoteLine, SalesOrder, SalesOrderLine, Invoice, InvoiceLine]
+TABLES = [DocumentSequence, Quote, QuoteLine, SalesOrder, SalesOrderLine, Invoice, InvoiceLine, InvoicePayment]
 
 
 def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:

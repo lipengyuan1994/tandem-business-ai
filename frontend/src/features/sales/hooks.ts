@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, unwrap } from "@/api/client"
-import type { SalesDocument, SalesDocumentCreate, SalesDocumentUpdate } from "@/api/types"
+import type { SalesDocument, SalesDocumentCreate, SalesDocumentUpdate, SalesPaymentInput } from "@/api/types"
 import { useSession } from "@/app/session-context"
 import { destination, READ, WRITE, type DocumentFamily, type SalesAction } from "./model"
 
@@ -18,6 +18,7 @@ export const salesKeys = {
   all: ["sales"] as const,
   list: (family: DocumentFamily, status: string) => ["sales", family, "list", status] as const,
   detail: (family: DocumentFamily, id: string) => ["sales", family, "document", id] as const,
+  aging: (asOf: string) => ["sales", "receivables", "aging", asOf] as const,
 }
 export function useSalesDocuments(family: DocumentFamily, status: string) {
   const { permissions } = useSession()
@@ -76,5 +77,18 @@ export function useConversionTarget(family: DocumentFamily, d: SalesDocument) {
       } while (cursor)
       return null
     },
+  })
+}
+export function useRecordPayment(id: string) {
+  return useSalesMutation("invoices", async (body: SalesPaymentInput) => unwrap(await api.POST("/api/v1/sales/invoices/{document_id}/payments", { params: { path: { document_id: id } }, body })))
+}
+export function useVoidPayment(id: string) {
+  return useSalesMutation("invoices", async ({ paymentId, version }: { paymentId: string; version: number }) => unwrap(await api.POST("/api/v1/sales/invoices/{document_id}/payments/{payment_id}/void", { params: { path: { document_id: id, payment_id: paymentId } }, body: { version } })))
+}
+/** Empty `asOf` asks the server for today in the business time zone. */
+export function useReceivablesAging(asOf: string) {
+  const { permissions } = useSession()
+  return useQuery({ queryKey: salesKeys.aging(asOf), enabled: permissions.has(READ),
+    queryFn: async () => unwrap(await api.GET("/api/v1/sales/receivables/aging", { params: { query: { as_of: asOf || undefined } } })),
   })
 }

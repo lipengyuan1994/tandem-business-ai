@@ -91,6 +91,21 @@ def test_payment_followup_repairs_wrong_amount(registry, owner_engine):
     assert len(gw.calls) == 2
 
 
+def test_payment_followup_asks_only_for_the_open_balance(registry, owner_engine):
+    demo = seed_demo(owner_engine)
+    with owner_engine.begin() as conn:  # 40.00 of the 190.00 invoice already received
+        conn.execute(text("update invoices set amount_paid_minor = 4000 where business_id = :b and status = 'issued'"),
+                     {"b": demo.business})  # fmt: skip
+    partial = GOOD.replace("190.00 USD", "150.00 USD")
+    gw = FakeGateway([json.dumps({"text": GOOD}), json.dumps({"text": partial})])
+    assert len(payment_followup.run(demo.business, router=fake_router_by_class(writer=gw))) == 1
+    assert len(gw.calls) == 2  # the full original total is rejected and repaired
+    facts = gw.calls[0].messages[1].content
+    assert "150.00 USD" in facts and "190.00 USD" not in facts
+    [p] = proposals(owner_engine, demo.business)
+    assert p.payload["body"] == partial
+
+
 def test_payment_followup_skips_without_email(registry, owner_engine):
     demo = seed_demo(owner_engine)
     with owner_engine.begin() as conn:

@@ -2,6 +2,17 @@
 
 Release notes for operators. Each release lists database migrations and any manual step (with "before" or "after" the upgrade). The upgrade runbook is `docs/runbooks/upgrade.md`.
 
+## Unreleased
+
+- **Partial payments:** record full or part payments (amount, date, method, reference) against issued invoices. The
+  invoice shows what was paid and the balance due, and becomes paid when the payments reach its total. Admins can void
+  a payment entered in error. "Mark fully paid" now records the open balance as a payment.
+- **Receivables aging:** Sales → Receivables lists what each customer owes, by days past due (not yet due, 1–30,
+  31–60, 61–90, over 90), for any date.
+- Payment reminders now state the open balance instead of the original invoice total.
+- **Migration:** `20261124_1200_invoice_payments` adds `invoice_payments` and `invoices.amount_paid_minor`, and records
+  one payment for each invoice already marked paid. No manual steps.
+
 ## 0.1.20 (2026-11-24) — Boston AI Forward product branding
 
 - Tandem now credits Boston AI Forward. The staff demo opens as Demo Guest and the clinic links to the configured

@@ -8,6 +8,10 @@ export const STATUSES: Record<DocumentFamily, string[]> = {
   invoices: ["draft", "issued", "paid", "void"],
 }
 export const DOCUMENT_ROUTES = { quotes: "/sales/quotes/$id", orders: "/sales/orders/$id", invoices: "/sales/invoices/$id" } as const
+export const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "check", "other"] as const
+export const RECORD_PAYMENT = "sales.invoice.mark_paid"
+export const VOID_PAYMENT = "sales.invoice.credit"
+export const AGING_BUCKETS = ["current_minor", "days_1_30_minor", "days_31_60_minor", "days_61_90_minor", "days_over_90_minor"] as const
 export const READ = "sales.document.read"
 export const WRITE = "sales.document.write"
 export type SalesAction = "send" | "accept" | "decline" | "expire" | "convert" | "confirm" | "fulfil" | "cancel" | "invoice" | "issue" | "mark-paid" | "credit"

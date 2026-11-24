@@ -2,7 +2,9 @@
 
 Commercial documents with snapshots, integer-minor-unit totals and transactional numbering. No payment processing, general ledger, external delivery or AI code.
 
-Tables: document_sequences, quotes, quote_lines, sales_orders, sales_order_lines, invoices (invoice / credit_note), invoice_lines. Every table has business RLS and composite FKs.
+Tables: document_sequences, quotes, quote_lines, sales_orders, sales_order_lines, invoices (invoice / credit_note), invoice_lines, invoice_payments. Every table has business RLS and composite FKs.
+
+Payments (2026-11-24): `POST /invoices/{id}/payments {version, amount_minor, paid_on, method, reference?}` (mark_paid permission) records a full or partial payment on an issued ordinary invoice; overpayment is 409 `sales.overpayment`, future dates 422. `invoices.amount_paid_minor` is the sum of non-voided payments; the invoice turns `paid` when it reaches the total and otherwise stays `issued`. `mark-paid` records the open balance as one `other` payment. `POST /invoices/{id}/payments/{payment_id}/void {version}` (credit permission) voids a payment and reopens the invoice. Invoices with payments cannot be credited. `GET /receivables/aging?as_of=` returns point-in-time open balances by customer and currency in current / 1-30 / 31-60 / 61-90 / 90+ day buckets. Service code: `payments.py` (ledger), `receivables.py` (aging), `service.record_payment` / `service.void_payment`.
 
 Public API (`db, ctx` first; caller owns the transaction):
 - `create(db, ctx, family, DocumentCreate) -> Document`

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AgingReport } from "./components/AgingReport"
 import { CreateDocumentDialog } from "./components/CreateDocumentDialog"
 import { ReminderDialog } from "./components/ReminderDialog"
 import { useSalesDocuments } from "./hooks"
@@ -28,8 +29,9 @@ export function SalesPage() {
       <Button onClick={() => setCreating("quotes")}>{t("sales.new.quotes")}</Button><Button variant="outline" onClick={() => setCreating("invoices")}>{t("sales.new.invoices")}</Button>
     </PermissionGate>} />
     <Tabs defaultValue="quotes">
-      <TabsList aria-label={t("sales.documentTabs")}>{FAMILIES.map((f) => <TabsTrigger key={f} value={f}>{t(`sales.tabs.${f}`)}</TabsTrigger>)}</TabsList>
+      <TabsList aria-label={t("sales.documentTabs")}>{FAMILIES.map((f) => <TabsTrigger key={f} value={f}>{t(`sales.tabs.${f}`)}</TabsTrigger>)}<TabsTrigger value="receivables">{t("sales.tabs.receivables")}</TabsTrigger></TabsList>
       {FAMILIES.map((f) => <TabsContent key={f} value={f} className="space-y-4 pt-4"><DocumentList family={f} />{f === "invoices" ? <InvoiceExport /> : null}</TabsContent>)}
+      <TabsContent value="receivables" className="space-y-4 pt-4"><AgingReport /></TabsContent>
     </Tabs>
     {creating ? <PermissionGate permission={WRITE}><CreateDocumentDialog family={creating} onOpenChange={(open) => { if (!open) setCreating(null) }} /></PermissionGate> : null}
   </PermissionGate>
@@ -44,8 +46,9 @@ function DocumentList({ family }: { family: DocumentFamily }) {
     { header: t("sales.fields.number"), cell: ({ row: { original: d } }) => <Link className="record-link" to={DOCUMENT_ROUTES[family]} params={{ id: d.id }}>{d.number ?? t("status.draft")}</Link> },
     { header: t("sales.fields.customer"), accessorKey: "bill_to_name" },
     { header: t("sales.fields.date"), cell: ({ row: { original: d } }) => d.issue_date ?? <LocalTime iso={d.created_at} timeZone={businessTimeZone} pattern="d MMM yyyy" /> },
-    { header: t("sales.fields.status"), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+    { header: t("sales.fields.status"), cell: ({ row: { original: d } }) => <><StatusBadge status={d.status} />{d.payment_status === "partially_paid" ? <StatusBadge status="partially_paid" className="ml-1" /> : null}</> },
     { header: t("sales.fields.total"), cell: ({ row }) => <MoneyText value={{ amount_minor: row.original.total_minor, currency: row.original.currency }} /> },
+    ...(family === "invoices" ? [{ header: t("sales.fields.balanceDue"), cell: ({ row: { original: d } }: { row: { original: SalesDocument } }) => d.balance_minor != null ? <MoneyText value={{ amount_minor: d.balance_minor, currency: d.currency }} /> : "—" }] : []),
     ...(family === "invoices" && status === "overdue" ? [{ header: t("sales.reminder.title"), cell: ({ row }: { row: { original: SalesDocument } }) => <PermissionGate permission={WRITE}><Button variant="outline" disabled={!row.original.bill_to_email} onClick={() => setReminding(row.original)}>{t("sales.reminder.title")}</Button></PermissionGate> }] : []),
   ], [t, family, businessTimeZone, status])
   return <>

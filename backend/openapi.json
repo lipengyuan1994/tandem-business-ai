@@ -435,6 +435,144 @@
         "title": "AgentsOut",
         "type": "object"
       },
+      "AgingCustomer": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "current_minor": {
+            "title": "Current Minor",
+            "type": "integer"
+          },
+          "customer_id": {
+            "format": "uuid",
+            "title": "Customer Id",
+            "type": "string"
+          },
+          "customer_name": {
+            "title": "Customer Name",
+            "type": "string"
+          },
+          "days_1_30_minor": {
+            "title": "Days 1 30 Minor",
+            "type": "integer"
+          },
+          "days_31_60_minor": {
+            "title": "Days 31 60 Minor",
+            "type": "integer"
+          },
+          "days_61_90_minor": {
+            "title": "Days 61 90 Minor",
+            "type": "integer"
+          },
+          "days_over_90_minor": {
+            "title": "Days Over 90 Minor",
+            "type": "integer"
+          },
+          "invoice_count": {
+            "title": "Invoice Count",
+            "type": "integer"
+          },
+          "total_minor": {
+            "title": "Total Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "current_minor",
+          "days_1_30_minor",
+          "days_31_60_minor",
+          "days_61_90_minor",
+          "days_over_90_minor",
+          "total_minor",
+          "customer_id",
+          "customer_name",
+          "currency",
+          "invoice_count"
+        ],
+        "title": "AgingCustomer",
+        "type": "object"
+      },
+      "AgingReport": {
+        "description": "Open balances of issued invoices on `as_of`, bucketed by days past due (issue date when no due date).",
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "customers": {
+            "items": {
+              "$ref": "#/components/schemas/AgingCustomer"
+            },
+            "title": "Customers",
+            "type": "array"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/AgingTotal"
+            },
+            "title": "Totals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "customers",
+          "totals"
+        ],
+        "title": "AgingReport",
+        "type": "object"
+      },
+      "AgingTotal": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "current_minor": {
+            "title": "Current Minor",
+            "type": "integer"
+          },
+          "days_1_30_minor": {
+            "title": "Days 1 30 Minor",
+            "type": "integer"
+          },
+          "days_31_60_minor": {
+            "title": "Days 31 60 Minor",
+            "type": "integer"
+          },
+          "days_61_90_minor": {
+            "title": "Days 61 90 Minor",
+            "type": "integer"
+          },
+          "days_over_90_minor": {
+            "title": "Days Over 90 Minor",
+            "type": "integer"
+          },
+          "invoice_count": {
+            "title": "Invoice Count",
+            "type": "integer"
+          },
+          "total_minor": {
+            "title": "Total Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "current_minor",
+          "days_1_30_minor",
+          "days_31_60_minor",
+          "days_61_90_minor",
+          "days_over_90_minor",
+          "total_minor",
+          "currency",
+          "invoice_count"
+        ],
+        "title": "AgingTotal",
+        "type": "object"
+      },
       "AiStatus": {
         "properties": {
           "budget_percent": {
@@ -5439,6 +5577,28 @@
       },
       "DocumentOut": {
         "properties": {
+          "amount_paid_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Paid Minor"
+          },
+          "balance_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Balance Minor"
+          },
           "bill_to_address": {
             "anyOf": [
               {
@@ -5587,6 +5747,29 @@
               }
             ],
             "title": "Paid At"
+          },
+          "payment_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "unpaid",
+                  "partially_paid",
+                  "paid"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Status"
+          },
+          "payments": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentOut"
+            },
+            "title": "Payments",
+            "type": "array"
           },
           "source_appointment_id": {
             "anyOf": [
@@ -8451,6 +8634,127 @@
           "paused"
         ],
         "title": "PauseOut",
+        "type": "object"
+      },
+      "PaymentIn": {
+        "additionalProperties": false,
+        "description": "`version` is the invoice version the staff member saw; the payment must fit the open balance.",
+        "properties": {
+          "amount_minor": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 100000000000000.0,
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "method": {
+            "enum": [
+              "cash",
+              "card",
+              "bank_transfer",
+              "check",
+              "other"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "amount_minor",
+          "paid_on",
+          "method"
+        ],
+        "title": "PaymentIn",
+        "type": "object"
+      },
+      "PaymentOut": {
+        "properties": {
+          "amount_minor": {
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "cash",
+              "card",
+              "bank_transfer",
+              "check",
+              "other"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          }
+        },
+        "required": [
+          "id",
+          "amount_minor",
+          "paid_on",
+          "method",
+          "reference",
+          "voided_at",
+          "created_at"
+        ],
+        "title": "PaymentOut",
         "type": "object"
       },
       "PaymentReminderIn": {
@@ -26748,6 +27052,162 @@
         ]
       }
     },
+    "/api/v1/sales/invoices/{document_id}/payments": {
+      "post": {
+        "operationId": "record_payment_api_v1_sales_invoices__document_id__payments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Record a full or partial payment against an issued invoice",
+        "tags": [
+          "sales"
+        ]
+      }
+    },
+    "/api/v1/sales/invoices/{document_id}/payments/{payment_id}/void": {
+      "post": {
+        "operationId": "void_payment_api_v1_sales_invoices__document_id__payments__payment_id__void_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__sales__schemas__VersionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Void a payment recorded in error and reopen the invoice balance",
+        "tags": [
+          "sales"
+        ]
+      }
+    },
     "/api/v1/sales/invoices/{document_id}/reminders": {
       "post": {
         "operationId": "payment_reminder_api_v1_sales_invoices__document_id__reminders_post",
@@ -28175,6 +28635,76 @@
           }
         },
         "summary": "Send quote",
+        "tags": [
+          "sales"
+        ]
+      }
+    },
+    "/api/v1/sales/receivables/aging": {
+      "get": {
+        "operationId": "receivables_aging_api_v1_sales_receivables_aging_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "as_of",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "As Of"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgingReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Accounts receivable aging by customer (defaults to today in the business timezone)",
         "tags": [
           "sales"
         ]
