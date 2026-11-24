@@ -1219,7 +1219,9 @@
       "orders": "Purchase orders",
       "suppliers": "Suppliers",
       "suggestions": "Reorder suggestions",
-      "quotes": "Quote requests"
+      "quotes": "Quote requests",
+      "bills": "Supplier bills",
+      "payables": "Payables aging"
     },
     "edit": "Edit",
     "invalidField": "Check this value.",
@@ -2197,6 +2199,90 @@
       "removeFor": "Remove the one starting {{when}}",
       "removed": "Removed"
     }
+  },
+  "bills": {
+    "tab": "Supplier bills",
+    "title": "Supplier bill",
+    "titleWithReference": "Bill {{reference}}",
+    "new": "Record bill",
+    "edit": "Edit bill",
+    "record": "Record bill",
+    "recorded": "Bill recorded",
+    "newHint": "Enter a bill you received from a supplier. Link it to a purchase order to compare it with what arrived.",
+    "editHint": "You can change a bill until a payment is recorded against it.",
+    "chooseSupplier": "Choose a supplier",
+    "purchaseOrder": "Purchase order",
+    "noPurchaseOrder": "No purchase order",
+    "poBillingHint": "Received so far {{received}}, already billed {{billed}}, ordered {{ordered}}.",
+    "reference": "Supplier's bill number",
+    "noReference": "No bill number",
+    "billDate": "Bill date",
+    "dueDate": "Due date",
+    "noDueDate": "No due date",
+    "total": "Total ({{currency}})",
+    "totalShort": "Total",
+    "paid": "Paid",
+    "balance": "Balance due",
+    "notes": "Notes",
+    "show": "Show",
+    "empty": "No bills to show.",
+    "noAccess": "You don't have access to supplier bills.",
+    "notFound": "This bill doesn't exist or was removed.",
+    "back": "Back to supplier bills",
+    "void": "Void bill",
+    "voidDone": "Bill voided",
+    "confirmVoid": {
+      "title": "Void this bill?",
+      "text": "A void bill no longer counts as owed. This can't be undone."
+    },
+    "filters": {
+      "unpaid": "Unpaid",
+      "all": "All bills",
+      "open": "Open",
+      "partially_paid": "Partially paid",
+      "paid": "Paid",
+      "void": "Void"
+    },
+    "forOrder": "Supplier bills",
+    "received": "Received",
+    "billed": "Billed",
+    "unbilled": "Received, not billed",
+    "noneForOrder": "No bills recorded for this order yet.",
+    "errors": {
+      "zero": "Enter an amount above zero.",
+      "date": "Enter a date.",
+      "future": "The bill date can't be in the future.",
+      "futurePayment": "The payment date can't be in the future.",
+      "dueBeforeBill": "The due date can't be before the bill date.",
+      "overBalance": "The payment can't be more than the balance due, {{balance}}."
+    },
+    "payments": {
+      "title": "Payments",
+      "record": "Record payment",
+      "recorded": "Payment recorded",
+      "hint": "Pay {{supplier}}. Balance due {{balance}}.",
+      "amount": "Amount ({{currency}})",
+      "amountShort": "Amount",
+      "date": "Paid on",
+      "method": "Method",
+      "reference": "Reference (optional)",
+      "referenceShort": "Reference",
+      "none": "No payments recorded yet.",
+      "void": "Void payment",
+      "voided": "Voided",
+      "voidDone": "Payment voided",
+      "confirmVoid": {
+        "title": "Void this payment?",
+        "text": "The amount goes back onto the bill's balance due."
+      }
+    }
+  },
+  "payables": {
+    "title": "Payables aging",
+    "hint": "Unpaid bill balances on {{date}}, by days past due. Bills without a due date count from their bill date.",
+    "caption": "Amounts owed in {{currency}}",
+    "bills": "Unpaid bills",
+    "empty": "Nothing owed to suppliers."
   },
   "reports": {
     "title": "Reports",

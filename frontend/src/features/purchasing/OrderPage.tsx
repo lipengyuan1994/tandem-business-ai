@@ -17,6 +17,7 @@ import { StatusBadge } from "@/components/common/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toastError } from "@/lib/errors"
+import { OrderBilling } from "./OrderBilling"
 import { OrderDialog } from "./OrderDialog"
 import { ReceiveDialog } from "./ReceiveDialog"
 import { useOrder, useOrderAction } from "./hooks"
@@ -60,6 +61,7 @@ function OrderDetail({ id }: { id: string }) {
           {r.override_reason ? <p>{t("purchasing.overrideNote", { reason: r.override_reason })}</p> : null}
         </div>)}
       </section>
+      <OrderBilling order={d} />
       {confirm ? <ConfirmDialog open onOpenChange={(open) => { if (!open) setConfirm(null) }} title={t(`purchasing.confirm.${confirm}`)} description={t(`purchasing.confirmHint.${confirm}`)} confirmLabel={t(`purchasing.action.${confirm}`)} pending={action.isPending} destructive={confirm === "cancel"} onConfirm={() => action.mutate({ action: confirm, version: d.version }, { onSuccess: () => { toast.success(t("common.saved")); setConfirm(null) }, onError: (e) => { setConfirm(null); toastError(e, () => setConflict(true)) } })} /> : null}
       {editing ? <PermissionGate permission={WRITE}><OrderDialog order={d} onClose={() => setEditing(false)} reload={reload} /></PermissionGate> : null}
       {receiving ? <PermissionGate permission={RECEIVE}><ReceiveDialog order={d} onClose={() => setReceiving(false)} reload={reload} /></PermissionGate> : null}

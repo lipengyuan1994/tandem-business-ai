@@ -13,6 +13,10 @@ import { StatusBadge } from "@/components/common/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { minorToDecimal } from "@/lib/money"
+import { useSession } from "@/app/session-context"
+import { hasPermission } from "@/lib/permissions"
+import { Bills, PayablesAging } from "./Bills"
+import { BILL_READ } from "./billModel"
 import { QuoteRequests } from "./QuoteRequests"
 import { LateOrders } from "./LateOrders"
 import { OrderDialog } from "./OrderDialog"
@@ -20,20 +24,28 @@ import { SupplierDialog } from "./SupplierDialog"
 import { useOrders, usePurchasingPickers, useSuggestions, useSuppliers } from "./hooks"
 import { READ, WRITE, type LineDraft, type PO, type Suggestion, type Supplier } from "./model"
 
+const BASE_TABS = ["orders", "quotes", "suppliers", "suggestions"] as const
+const BILL_TABS = ["bills", "payables"] as const
+
 export function PurchasingPage() {
   const { t } = useTranslation()
   const search = useSearch({ from: "/app/purchasing" })
   const navigate = useNavigate()
   const [creating, setCreating] = useState(false)
+  const { permissions } = useSession()
+  const canBills = hasPermission(permissions, BILL_READ)
+  const tabs = canBills ? [...BASE_TABS, ...BILL_TABS] : [...BASE_TABS]
   return <PermissionGate permission={READ} fallback={<EmptyState title={t("purchasing.noAccess")} />}>
     <PageHeader title={t("nav.purchasing")} description={t("purchasing.description")} actions={<PermissionGate permission={WRITE}><Button onClick={() => setCreating(true)}>{t("purchasing.newPO")}</Button></PermissionGate>} />
-    <Tabs value={search.tab ?? "orders"} onValueChange={(tab) => { if (tab === "orders" || tab === "quotes" || tab === "suppliers" || tab === "suggestions") void navigate({ to: "/purchasing", search: { ...search, tab }, replace: true }) }}><TabsList aria-label={t("nav.purchasing")}>
-      {(["orders", "quotes", "suppliers", "suggestions"] as const).map((tab) => <TabsTrigger key={tab} value={tab}>{t(`purchasing.tabs.${tab}`)}</TabsTrigger>)}
+    <Tabs value={tabs.includes(search.tab ?? "orders") ? search.tab ?? "orders" : "orders"} onValueChange={(tab) => { const next = tabs.find((x) => x === tab); if (next) void navigate({ to: "/purchasing", search: { ...search, tab: next }, replace: true }) }}><TabsList aria-label={t("nav.purchasing")}>
+      {tabs.map((tab) => <TabsTrigger key={tab} value={tab}>{t(`purchasing.tabs.${tab}`)}</TabsTrigger>)}
     </TabsList>
       <TabsContent value="quotes" className="pt-4"><QuoteRequests /></TabsContent>
       <TabsContent value="orders" className="pt-4"><Orders /></TabsContent>
       <TabsContent value="suppliers" className="space-y-4 pt-4"><Suppliers /></TabsContent>
       <TabsContent value="suggestions" className="pt-4"><Suggestions /></TabsContent>
+      {canBills ? <><TabsContent value="bills" className="pt-4"><Bills /></TabsContent>
+        <TabsContent value="payables" className="pt-4"><PayablesAging /></TabsContent></> : null}
     </Tabs>
     {creating ? <PermissionGate permission={WRITE}><OrderDialog onClose={() => setCreating(false)} /></PermissionGate> : null}
   </PermissionGate>

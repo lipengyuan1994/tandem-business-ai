@@ -2,6 +2,7 @@ from app.platform.registry import Registry
 
 from . import (
     api,
+    api_bills,
     api_public_quotes,
     api_quotes,
     api_reports,
@@ -19,6 +20,7 @@ def register(reg: Registry) -> None:
     reg.add_router(api.router, "/purchasing", ["purchasing"])
     reg.add_router(api_quotes.router, "/purchasing", ["purchasing"])
     reg.add_router(api_reports.router, "/purchasing", ["purchasing"])
+    reg.add_router(api_bills.router, "/purchasing", ["purchasing"])
     reg.add_router(api_public_quotes.router, "/public/quotes", ["public-quotes"])
     for spec in quote_executors.ALL:
         reg.add_executor(spec)
