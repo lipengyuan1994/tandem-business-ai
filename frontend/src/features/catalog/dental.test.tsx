@@ -36,7 +36,7 @@ it("edits a treatment's required resources and recall interval", async () => {
     http.patch("*/api/v1/catalog/items/cleaning", async ({ request }) => { sent = await request.json(); return HttpResponse.json({ id: "cleaning" }) }),
   )
   renderApp("/catalog")
-  await userEvent.click(await screen.findByRole("button", { name: "Edit" }))
+  await userEvent.click(await screen.findByRole("button", { name: "Edit Exam and cleaning" }))
   await userEvent.click(screen.getByRole("checkbox", { name: "Chair (room)" }))
   await userEvent.type(screen.getByLabelText(/Recall interval/), "6")
   await userEvent.click(screen.getByRole("button", { name: "Save" }))

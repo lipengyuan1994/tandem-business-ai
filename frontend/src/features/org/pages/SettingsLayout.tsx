@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/common/PageHeader"
 const TABS = [
   { to: "/settings/business", key: "settings.tabs.business", permission: "org.business.read" },
   { to: "/settings/locations", key: "settings.tabs.locations", permission: "org.location.read" },
+  { to: "/settings/resources", key: "settings.tabs.resources", permission: "scheduling.resource.read" },
   { to: "/settings/policies", key: "settings.tabs.policies", permission: "org.settings.read" },
   { to: "/settings/staff", key: "settings.tabs.staff", permission: "identity.membership.read" },
   { to: "/settings/ai", key: "ai.settings.tab", permission: "ai.settings.read" },

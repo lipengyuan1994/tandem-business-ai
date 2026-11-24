@@ -123,6 +123,7 @@ class ReorderDraftOut(BaseModel):
     note: str | None
     created_at: datetime
     lines: list[DraftLineIn]
+    version: int = Field(description="Send back when converting the draft into a purchase order")
 
 
 class ItemStockDetail(BaseModel):

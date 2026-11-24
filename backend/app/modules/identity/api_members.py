@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.platform import clock
 from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import error_responses
@@ -50,6 +51,27 @@ def set_roles(
     with transaction(ctx) as db:
         service.set_roles(db, ctx, membership_id, set(body.roles))
         return _member(db, ctx, membership_id)
+
+
+@router.get(
+    "/invitations",
+    response_model=list[InvitationOut],
+    summary="Pending invitations, soonest to expire first",
+    responses=ERRORS,
+)
+def list_invitations(ctx: Context = Depends(require(P.MEMBERSHIP_READ))) -> list[InvitationOut]:
+    with transaction(ctx) as db:
+        return [
+            InvitationOut(
+                id=i.id,
+                email=i.email,
+                display_name=i.display_name,
+                roles=i.roles,
+                status=i.status,
+                expires_at=i.expires_at,
+            )
+            for i in repository.list_pending_invitations(db, ctx, clock.now())
+        ]
 
 
 @router.post(

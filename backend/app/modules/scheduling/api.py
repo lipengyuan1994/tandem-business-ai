@@ -134,6 +134,14 @@ def list_exceptions(ctx: Context = Depends(require(P.RESOURCE_READ))) -> list[Ex
         return [ExceptionOut.model_validate(r) for r in rows]
 
 
+@router.delete(
+    "/exceptions/{exception_id}", status_code=204, summary="Remove a closure or extra opening", responses=ERRORS
+)
+def remove_exception(exception_id: uuid.UUID, ctx: Context = Depends(require(P.RESOURCE_WRITE))) -> None:
+    with transaction(ctx) as db:
+        service.remove_exception(db, ctx, exception_id)
+
+
 @router.get(
     "/slots", response_model=list[SlotOut], summary="Free slots for a service (deterministic)", responses=ERRORS
 )

@@ -75,6 +75,7 @@ ROLES: dict[str, frozenset[str]]; POLICY_VERSION: str
 | POST | `/auth/active-business` | session | `{business_id}`; rotates session |
 | GET | `/identity/members` | `identity.membership.read` | List staff with roles |
 | POST | `/identity/invitations` | `identity.membership.write` | `{email, display_name, roles[]}`; returns a temporary password **only if SMTP is not configured** |
+| GET | `/identity/invitations` | `identity.membership.read` | Pending, unexpired invitations; no temporary passwords |
 | POST | `/identity/invitations/{id}/revoke` | `identity.membership.write` | |
 | PATCH | `/identity/members/{membership_id}` | `identity.membership.write` | Title, status (`active`/`suspended`/`removed`), version |
 | PUT | `/identity/members/{membership_id}/roles` | `identity.membership.write` | Full role set; owner rule applies |

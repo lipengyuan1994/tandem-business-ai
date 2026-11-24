@@ -29,3 +29,29 @@ export function useUpdateItem() {
     onSuccess: () => qc.invalidateQueries({ queryKey: catalogKeys.all }),
   })
 }
+
+export function useServiceParts(serviceId: string) {
+  return useQuery({
+    queryKey: ["catalog", "parts", serviceId],
+    queryFn: async () => unwrap(await api.GET("/api/v1/catalog/items/{item_id}/parts", { params: { path: { item_id: serviceId } } })),
+  })
+}
+
+/** Replaces the whole list of stock items a service uses up; completing an appointment consumes them. */
+export function useReplaceParts(serviceId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (parts: { item_id: string; quantity: string }[]) =>
+      unwrap(await api.PUT("/api/v1/catalog/items/{item_id}/parts", { params: { path: { item_id: serviceId } }, body: parts })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: catalogKeys.all }),
+  })
+}
+
+export function useArchiveItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, version }: { id: string; version: number }) =>
+      unwrap(await api.POST("/api/v1/catalog/items/{item_id}/archive", { params: { path: { item_id: id } }, body: { version } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: catalogKeys.all }),
+  })
+}

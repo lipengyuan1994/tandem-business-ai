@@ -10160,6 +10160,11 @@
           "status": {
             "title": "Status",
             "type": "string"
+          },
+          "version": {
+            "description": "Send back when converting the draft into a purchase order",
+            "title": "Version",
+            "type": "integer"
           }
         },
         "required": [
@@ -10167,7 +10172,8 @@
           "status",
           "note",
           "created_at",
-          "lines"
+          "lines",
+          "version"
         ],
         "title": "ReorderDraftOut",
         "type": "object"
@@ -19235,6 +19241,59 @@
       }
     },
     "/api/v1/identity/invitations": {
+      "get": {
+        "operationId": "list_invitations_api_v1_identity_invitations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InvitationOut"
+                  },
+                  "title": "Response List Invitations Api V1 Identity Invitations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Pending invitations, soonest to expire first",
+        "tags": [
+          "identity"
+        ]
+      },
       "post": {
         "operationId": "invite_api_v1_identity_invitations_post",
         "requestBody": {
@@ -28771,6 +28830,62 @@
           }
         },
         "summary": "Closure or extra opening",
+        "tags": [
+          "scheduling"
+        ]
+      }
+    },
+    "/api/v1/scheduling/exceptions/{exception_id}": {
+      "delete": {
+        "operationId": "remove_exception_api_v1_scheduling_exceptions__exception_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exception_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Exception Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Remove a closure or extra opening",
         "tags": [
           "scheduling"
         ]

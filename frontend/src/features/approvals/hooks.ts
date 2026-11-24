@@ -72,3 +72,13 @@ export function useCancel(id: string) {
   return useDetailMutation(id, async () =>
     unwrap(await api.POST("/api/v1/approvals/proposals/{proposal_id}/cancel", { params: { path: { proposal_id: id } } })))
 }
+
+/** An "unknown" delivery (the provider never confirmed): staff either confirm it arrived or queue it again. */
+export function useResolveDelivery(proposalId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, resolution }: { id: string; resolution: "delivered" | "retry" }) =>
+      unwrap(await api.POST("/api/v1/notifications/outbox/{outbox_id}/resolve", { params: { path: { outbox_id: id } }, body: { resolution } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: approvalKeys.outbox(proposalId) }),
+  })
+}

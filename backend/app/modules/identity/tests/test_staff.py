@@ -154,3 +154,23 @@ def test_demo_reviewer_cannot_mutate_business_ai_or_autonomy_settings(app: Any) 
     assert judge.put("/api/v1/ai/autonomy/rules", json={}).status_code == 403
     assert judge.post("/api/v1/ai/autonomy/pause").status_code == 403
     assert judge.post("/api/v1/ai/autonomy/resume").status_code == 403
+
+
+def test_pending_invitations_are_listed_and_can_be_revoked(app: Any, keycloak: FakeKeycloak) -> None:
+    cycle, garden = make_business("example-cycle-works"), make_business("example-garden-store")
+    owner = login_as(app, cycle, ["owner"])
+    created = owner.post(
+        "/api/v1/identity/invitations", json={"email": "Nia@Example.com", "display_name": "Nia", "roles": ["operator"]}
+    ).json()
+    listed = owner.get("/api/v1/identity/invitations").json()
+    assert [(i["id"], i["email"], i["roles"]) for i in listed] == [(created["id"], "nia@example.com", ["operator"])]
+    assert all(i["temporary_password"] is None for i in listed)
+    assert login_as(app, garden, ["owner"]).get("/api/v1/identity/invitations").json() == []
+    assert login_as(app, cycle, ["operator"]).get("/api/v1/identity/invitations").status_code == 403
+    assert (
+        login_as(app, cycle, ["auditor"]).post(f"/api/v1/identity/invitations/{created['id']}/revoke").status_code
+        == 403
+    )
+    assert owner.post(f"/api/v1/identity/invitations/{created['id']}/revoke").status_code == 204
+    assert owner.get("/api/v1/identity/invitations").json() == []
+    assert owner.post(f"/api/v1/identity/invitations/{created['id']}/revoke").status_code == 409

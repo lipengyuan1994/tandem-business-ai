@@ -73,3 +73,21 @@ export function useAddNote(id: string) {
   return useCrmMutation(async (body: { body: string; pinned: boolean }) =>
     unwrap(await api.POST("/api/v1/crm/customers/{customer_id}/notes", { ...path(id), body })))
 }
+
+export function useAddContactPoint(id: string) {
+  return useCrmMutation(async (body: { type: "email" | "phone"; value: string; is_primary: boolean }) =>
+    unwrap(await api.POST("/api/v1/crm/customers/{customer_id}/contact-points", { ...path(id), body })))
+}
+
+export function useRemoveContactPoint() {
+  return useCrmMutation(async (contactPointId: string) =>
+    unwrap(await api.DELETE("/api/v1/crm/contact-points/{contact_point_id}", { params: { path: { contact_point_id: contactPointId } } })))
+}
+
+export function useSetTags(id: string) {
+  return useCrmMutation(async (tags: string[]) => unwrap(await api.PUT("/api/v1/crm/customers/{customer_id}/tags", { ...path(id), body: { tags } })))
+}
+
+export function useArchiveCustomer(id: string) {
+  return useCrmMutation(async (version: number) => unwrap(await api.POST("/api/v1/crm/customers/{customer_id}/archive", { ...path(id), body: { version } })))
+}

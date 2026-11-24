@@ -147,6 +147,34 @@ def test_find_slots_respects_hours_rules_exceptions_buffer_and_lead_time(shop: S
     assert today[0]["starts_at"] >= "2026-11-05T18:30:00"  # 60 min lead time from 10:30 local
 
 
+def test_removing_a_closure_reopens_the_slots(shop: Shop) -> None:
+    before = [s["starts_at"] for s in shop.slots(shop.brake, f"{TUE}T19:00:00Z", f"{TUE}T23:59:00Z", limit=50)]
+    closure = shop.owner.post(
+        "/api/v1/scheduling/exceptions",
+        json={
+            "starts_at": f"{TUE}T00:00:00Z",
+            "ends_at": "2026-11-11T07:00:00Z",
+            "kind": "closed",
+            "reason": "holiday",
+        },
+    )
+    assert closure.status_code == 201
+    assert shop.slots(shop.brake, f"{TUE}T19:00:00Z", f"{TUE}T23:59:00Z", limit=50) == []
+    exception_id = closure.json()["id"]
+    assert (
+        login_as(shop.app, shop.business, ["auditor"])
+        .delete(f"/api/v1/scheduling/exceptions/{exception_id}")
+        .status_code
+        == 403
+    )
+    other = login_as(shop.app, make_business("example-garden-store"), ["owner"])
+    assert other.delete(f"/api/v1/scheduling/exceptions/{exception_id}").status_code == 404
+    assert shop.owner.delete(f"/api/v1/scheduling/exceptions/{exception_id}").status_code == 204
+    assert [s["starts_at"] for s in shop.slots(shop.brake, f"{TUE}T19:00:00Z", f"{TUE}T23:59:00Z", limit=50)] == before
+    assert exception_id not in [x["id"] for x in shop.owner.get("/api/v1/scheduling/exceptions").json()]
+    assert shop.owner.delete(f"/api/v1/scheduling/exceptions/{exception_id}").status_code == 404
+
+
 def test_find_slots_dst_transition_america_denver(shop: Shop) -> None:
     clock.set_clock(lambda: datetime(2026, 10, 27, 12, tzinfo=UTC))
     fri = shop.slots(shop.brake, "2026-10-30T06:00:00Z", "2026-10-31T06:00:00Z")  # Friday, still MDT (UTC−6)

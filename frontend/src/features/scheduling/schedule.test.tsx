@@ -92,4 +92,32 @@ describe("schedule page", () => {
     await waitFor(() => expect(booked).toMatchObject({ customer_id: "c1", service_id: "s1", resource_id: "r1", starts_at: "2026-11-10T19:00:00Z", override_hours: false }))
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
   })
+
+  it("moves a confirmed appointment to another free slot", async () => {
+    mockMe(meWith(...PERMS))
+    mockDay([appt({})])
+    let moved: unknown = null
+    const asked: string[] = []
+    server.use(
+      http.get("*/api/v1/scheduling/slots", ({ request }) => {
+        asked.push(new URL(request.url).searchParams.get("service_id") ?? "")
+        return HttpResponse.json([
+          { starts_at: "2026-11-10T18:45:00Z", ends_at: "2026-11-10T20:15:00Z", resource_id: "r1", resource_name: RES.name, local_label: "Tue 10 Nov 11:45 MST" },
+          { starts_at: "2026-11-10T21:00:00Z", ends_at: "2026-11-10T22:30:00Z", resource_id: "r1", resource_name: RES.name, local_label: "Tue 10 Nov 14:00 MST" },
+        ])
+      }),
+      http.post("*/api/v1/scheduling/appointments/a1/reschedule", async ({ request }) => { moved = await request.json(); return HttpResponse.json(appt({ starts_at: "2026-11-10T21:00:00Z", version: 2 })) }),
+    )
+    renderApp("/schedule?date=2026-11-10")
+    const column = await screen.findByRole("region", { name: "Sam (technician)" })
+    await userEvent.click(within(column).getByRole("button", { name: /Brake service, Ada Example/ }))
+    const sheet = await screen.findByRole("dialog")
+    expect(within(sheet).getByLabelText("New date")).toHaveValue("2026-11-10")
+    const slots = await within(sheet).findByRole("list", { name: "Free slots" })
+    expect(within(slots).getAllByRole("button").map((b) => b.textContent)).toEqual(["Tue 10 Nov 14:00 MST · Sam (technician)"]) // its own slot is left out
+    expect(asked).toContain("s1")
+    await userEvent.click(within(slots).getByRole("button"))
+    await waitFor(() => expect(moved).toEqual({ version: 1, starts_at: "2026-11-10T21:00:00Z", resource_id: "r1", override_hours: false }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+  })
 })

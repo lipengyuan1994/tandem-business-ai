@@ -151,6 +151,7 @@ def list_drafts(ctx: Context = Depends(require(P.REORDER_READ))) -> list[Reorder
                 status=d.status,
                 note=d.note,
                 created_at=d.created_at,
+                version=d.version,
                 lines=[
                     DraftLineIn(item_id=ln.item_id, quantity=ln.quantity, reason_text=ln.reason_text)
                     for ln in lines.get(d.id, [])
@@ -170,7 +171,9 @@ def list_drafts(ctx: Context = Depends(require(P.REORDER_READ))) -> list[Reorder
 def create_draft(body: ReorderDraftIn, ctx: Context = Depends(require(P.REORDER_WRITE))) -> ReorderDraftOut:
     with transaction(ctx) as db:
         d = service.create_draft(db, ctx, body.lines, body.note)
-        return ReorderDraftOut(id=d.id, status=d.status, note=d.note, created_at=d.created_at, lines=body.lines)
+        return ReorderDraftOut(
+            id=d.id, status=d.status, note=d.note, created_at=d.created_at, version=d.version, lines=body.lines
+        )
 
 
 @router.get(
@@ -182,4 +185,4 @@ def create_draft(body: ReorderDraftIn, ctx: Context = Depends(require(P.REORDER_
 def get_draft(draft_id: uuid.UUID, ctx: Context = Depends(require(P.REORDER_READ))) -> ReorderDraftOut:
     with transaction(ctx) as db:
         draft = public.read_reorder_draft(db, ctx, draft_id)
-        return ReorderDraftOut(**draft.model_dump(exclude={"version"}))
+        return ReorderDraftOut(**draft.model_dump())

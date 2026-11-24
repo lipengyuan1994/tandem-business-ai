@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/common/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { toastError } from "@/lib/errors"
 import { InviteDialog } from "../components/InviteDialog"
+import { PendingInvitations } from "../components/PendingInvitations"
 import { RolesDialog } from "../components/RolesDialog"
 import { useMembers, useUpdateMember } from "../hooks"
 
@@ -50,6 +51,7 @@ export function StaffPage() {
         actions={<PermissionGate permission="identity.membership.write"><Button onClick={() => setInviting(true)}>{t("identity.staff.invite")}</Button></PermissionGate>}
       />
       <DataTable columns={columns} data={members.data} isLoading={members.isPending} error={members.error} onRetry={() => members.refetch()} caption={t("identity.staff.title")} />
+      <PendingInvitations />
       <InviteDialog open={inviting} onOpenChange={setInviting} />
       <RolesDialog member={editing} onClose={() => setEditing(null)} />
       <ConfirmDialog

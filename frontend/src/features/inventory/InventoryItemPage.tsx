@@ -14,6 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AskAiQuotesButton } from "@/features/ai/AskAiQuotesButton"
 import { AdjustDialog } from "./components/AdjustDialog"
+import { CountDialog } from "./components/CountDialog"
+import { ReorderRuleCard } from "./components/ReorderRuleCard"
 import { useItemStock, withRunningBalance } from "./hooks"
 
 
@@ -23,6 +25,7 @@ export function InventoryItemPage() {
   const { businessTimeZone } = useSession()
   const stock = useItemStock(itemId)
   const [adjusting, setAdjusting] = useState(false)
+  const [counting, setCounting] = useState(false)
 
   if (stock.error) return <QueryError error={stock.error} onRetry={() => stock.refetch()} notFound={t("inventory.notFound")} />
   if (stock.isPending) return <Skeleton className="h-64 w-full" />
@@ -34,7 +37,7 @@ export function InventoryItemPage() {
   return (
     <>
       <PageHeader title={level.item_name} description={t("inventory.itemSummary", { onHand: qty(level.on_hand), reserved: qty(level.reserved), available: qty(level.available) })}
-        actions={<PermissionGate permission="inventory.stock.adjust"><Button onClick={() => setAdjusting(true)}>{t("inventory.adjust.open")}</Button></PermissionGate>} />
+        actions={<PermissionGate permission="inventory.stock.adjust"><div className="flex gap-2"><Button variant="outline" onClick={() => setCounting(true)}>{t("inventory.count.open")}</Button><Button onClick={() => setAdjusting(true)}>{t("inventory.adjust.open")}</Button></div></PermissionGate>} />
       {stock.data.rule && Number(level.available) <= Number(stock.data.rule.reorder_point) ? <div className="mb-6"><AskAiQuotesButton itemId={itemId} /></div> : null}
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <section aria-labelledby="ledger-h" className="space-y-2">
@@ -73,14 +76,10 @@ export function InventoryItemPage() {
               )}
             </CardContent>
           </Card>
-          {stock.data.rule ? (
-            <Card>
-              <CardHeader><CardTitle className="text-sm">{t("inventory.rule")}</CardTitle></CardHeader>
-              <CardContent className="text-sm">{t("inventory.ruleLine", { point: qty(stock.data.rule.reorder_point), target: qty(stock.data.rule.target_level), days: stock.data.rule.lead_time_days })}</CardContent>
-            </Card>
-          ) : null}
+          <ReorderRuleCard itemId={itemId} rule={stock.data.rule} />
         </aside>
       </div>
+      {counting ? <CountDialog itemId={itemId} itemName={level.item_name} levels={stock.data.levels} onOpenChange={setCounting} /> : null}
       {adjusting ? <AdjustDialog itemId={itemId} itemName={level.item_name} onOpenChange={setAdjusting} /> : null}
     </>
   )
