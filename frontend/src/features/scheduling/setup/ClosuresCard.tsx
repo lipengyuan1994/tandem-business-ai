@@ -13,18 +13,24 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { formatInZone, localToUtcIso } from "@/lib/dates"
 import { toastError } from "@/lib/errors"
 import { useNow } from "@/lib/use-now"
+import { useLocations } from "@/features/org/hooks"
 import { addDays, localToday } from "../grid"
 import { useAddException, useDeleteException, useExceptions } from "../hooks"
 
 type Kind = Schemas["ExceptionIn"]["kind"]
 const SELECT = "h-9 w-full rounded-md border bg-background px-3 text-sm"
 
-function AddClosureForm({ resources, timeZone }: { resources: Resource[]; timeZone: string }) {
+/**
+ * Times are entered in the zone of the location the closure lands at: the resource's location, or the default
+ * location for "everyone", which is where the server files a closure with no resource.
+ */
+function AddClosureForm({ resources, zoneFor, everyoneLabel, businessZone }: { resources: Resource[]; zoneFor: (resourceId: string | null) => string; everyoneLabel: string; businessZone: string }) {
   const { t } = useTranslation()
   const add = useAddException()
-  const today = localToday(timeZone, useNow())
   const [kind, setKind] = useState<Kind>("closed")
   const [resourceId, setResourceId] = useState("")
+  const timeZone = zoneFor(resourceId || null)
+  const today = localToday(timeZone, useNow())
   const [allDay, setAllDay] = useState(true)
   const [fromDate, setFromDate] = useState(today)
   const [toDate, setToDate] = useState(today)
@@ -64,10 +70,11 @@ function AddClosureForm({ resources, timeZone }: { resources: Resource[]; timeZo
       <div className="space-y-1">
         <Label htmlFor="closure-resource">{t("resources.closures.appliesTo")}</Label>
         <select id="closure-resource" className={SELECT} value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
-          <option value="" disabled={kind === "extra_open"}>{kind === "extra_open" ? t("resources.closures.chooseResource") : t("resources.closures.everyone")}</option>
+          <option value="" disabled={kind === "extra_open"}>{kind === "extra_open" ? t("resources.closures.chooseResource") : everyoneLabel}</option>
           {resources.filter((r) => r.status === "active").map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
       </div>
+      {timeZone !== businessZone ? <p className="text-sm text-muted-foreground sm:col-span-2">{t("resources.closures.zoneNote", { zone: timeZone })}</p> : null}
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input type="checkbox" className="size-4" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
         {t("resources.closures.allDay")}
@@ -100,12 +107,20 @@ function AddClosureForm({ resources, timeZone }: { resources: Resource[]; timeZo
 /** Closures (holidays, sick days) and extra openings, for the whole business or one resource. */
 export function ClosuresCard({ resources, canEdit }: { resources: Resource[]; canEdit: boolean }) {
   const { t } = useTranslation()
-  const { businessTimeZone: tz } = useSession()
+  const { businessTimeZone: tz, permissions } = useSession()
   const exceptions = useExceptions()
   const remove = useDeleteException()
+  const locations = useLocations()
   const now = useNow()
   const names = new Map(resources.map((r) => [r.id, r.name]))
-  const when = (iso: string) => formatInZone(iso, tz, "EEE d MMM yyyy, HH:mm")
+  const locs = permissions.has("org.location.read") ? locations.data ?? [] : []
+  const defaultLoc = locs.find((l) => l.is_default)
+  const zoneFor = (resourceId: string | null) => {
+    const locationId = resourceId ? resources.find((r) => r.id === resourceId)?.location_id : defaultLoc?.id
+    return locs.find((l) => l.id === locationId)?.timezone ?? tz
+  }
+  const everyoneLabel = locs.length > 1 && defaultLoc ? t("resources.closures.everyoneAt", { location: defaultLoc.name }) : t("resources.closures.everyone")
+  const when = (iso: string, resourceId: string | null) => formatInZone(iso, zoneFor(resourceId), "EEE d MMM yyyy, HH:mm")
   const upcoming = (exceptions.data ?? []).filter((x) => new Date(x.ends_at) > now).sort((a, b) => a.starts_at.localeCompare(b.starts_at))
 
   return (
@@ -121,17 +136,17 @@ export function ClosuresCard({ resources, canEdit }: { resources: Resource[]; ca
               {upcoming.map((x) => (
                 <li key={x.id} className="flex flex-wrap items-center gap-2 p-2 text-sm">
                   <Badge variant={x.kind === "closed" ? "secondary" : "outline"}>{t(`resources.closures.kinds.${x.kind}`)}</Badge>
-                  <span>{when(x.starts_at)} – {when(x.ends_at)}</span>
-                  <span className="text-muted-foreground">{x.resource_id ? names.get(x.resource_id) ?? t("resources.closures.unknownResource") : t("resources.closures.everyone")}</span>
+                  <span>{when(x.starts_at, x.resource_id ?? null)} – {when(x.ends_at, x.resource_id ?? null)}</span>
+                  <span className="text-muted-foreground">{x.resource_id ? names.get(x.resource_id) ?? t("resources.closures.unknownResource") : everyoneLabel}</span>
                   {x.reason ? <span className="text-muted-foreground">· {x.reason}</span> : null}
                   {canEdit ? <Button size="sm" variant="ghost" className="ml-auto" disabled={remove.isPending}
-                    aria-label={t("resources.closures.removeFor", { when: when(x.starts_at) })}
+                    aria-label={t("resources.closures.removeFor", { when: when(x.starts_at, x.resource_id ?? null) })}
                     onClick={() => remove.mutate(x.id, { onSuccess: () => toast.success(t("resources.closures.removed")), onError: (e) => toastError(e) })}>{t("resources.closures.remove")}</Button> : null}
                 </li>
               ))}
             </ul>
           )}
-        {canEdit ? <AddClosureForm resources={resources} timeZone={tz} /> : null}
+        {canEdit ? <AddClosureForm resources={resources} zoneFor={zoneFor} everyoneLabel={everyoneLabel} businessZone={tz} /> : null}
       </CardContent>
     </Card>
   )

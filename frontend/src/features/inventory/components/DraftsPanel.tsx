@@ -28,7 +28,7 @@ function DraftRow({ draft, names, suppliers, canConvert }: { draft: Draft; names
         {draft.lines.map((l) => <li key={l.item_id}><span className="font-medium">{names.get(l.item_id) ?? t("inventory.drafts.unknownItem")}</span>: {qty(l.quantity)}</li>)}
       </ul>
       {canConvert ? (
-        suppliers.length === 0 ? <p className="text-sm text-muted-foreground">{t("inventory.drafts.noSuppliers")} <Link className="underline" to="/purchasing" search={{ tab: "suppliers" }}>{t("inventory.drafts.addSupplier")}</Link></p> : (
+        suppliers.every((s) => !s.active) ? <p className="text-sm text-muted-foreground">{t("inventory.drafts.noSuppliers")} <Link className="underline" to="/purchasing" search={{ tab: "suppliers" }}>{t("inventory.drafts.addSupplier")}</Link></p> : (
           <form className="flex flex-wrap items-end gap-2" aria-label={label} onSubmit={(e) => {
             e.preventDefault()
             if (!supplierId) return

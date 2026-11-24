@@ -32,6 +32,11 @@ describe("inventory setup", () => {
     expect(screen.getByText(/The system has 3/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: "Record count" }))
     expect(await screen.findByText("Enter the number you counted (0 or more).")).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText("Counted on the shelf"), "2.5555")
+    await userEvent.click(screen.getByRole("button", { name: "Record count" }))
+    expect(await screen.findByText("Enter the number you counted (0 or more).")).toBeInTheDocument()
+    expect(sent).toEqual([])
+    await userEvent.clear(screen.getByLabelText("Counted on the shelf"))
     await userEvent.type(screen.getByLabelText("Counted on the shelf"), "2")
     await userEvent.type(screen.getByLabelText("Note (optional)"), "shelf check")
     await userEvent.click(screen.getByRole("button", { name: "Record count" }))
@@ -149,6 +154,19 @@ describe("inventory setup", () => {
     )
     renderApp("/inventory")
     expect(await screen.findByRole("link", { name: "Add a supplier" })).toHaveAttribute("href", "/purchasing?tab=suppliers")
+  })
+
+  it("keeps item names on drafts when only items below their reorder point are listed", async () => {
+    mockMe(meWith(...STOCK))
+    server.use(
+      http.get("*/api/v1/inventory/levels", ({ request }) => HttpResponse.json(new URL(request.url).searchParams.get("below_reorder") ? [] : [LEVEL])),
+      http.get("*/api/v1/inventory/reorder-suggestions", () => HttpResponse.json([])),
+      http.get("*/api/v1/inventory/reorder-drafts", () => HttpResponse.json([{ id: "d1", status: "draft", version: 1, note: null, created_at: "2026-11-20T10:00:00Z", lines: [{ item_id: PADS, quantity: "5.000", reason_text: null }] }])),
+    )
+    renderApp("/inventory")
+    await userEvent.click(await screen.findByLabelText(/below/i))
+    const drafts = within(await screen.findByRole("list", { name: "Reorder drafts" }))
+    expect(await drafts.findByText("Brake pads (pair)")).toBeInTheDocument()
   })
 
   it("shows drafts without a convert form when the user cannot create purchase orders", async () => {

@@ -25,7 +25,10 @@ export function WeeklyHours({ resource, canEdit }: { resource: Resource; canEdit
   const remove = (index: number) => setDraft(draft.filter((_, i) => i !== index))
   const add = (weekday: number) => {
     const last = draft.filter((r) => r.weekday === weekday).sort(byDayAndTime).at(-1)
-    setDraft([...draft, last ? { weekday, start_time: hhmm(last.end_time), end_time: "18:00" } : { weekday, start_time: "09:00", end_time: "17:00" }])
+    const start = last ? hhmm(last.end_time) : "09:00"
+    const hour = Math.min(Number(start.slice(0, 2)) + 1, 23)
+    const end = last ? (start < "17:00" ? "18:00" : hour === 23 ? "23:59" : `${String(hour).padStart(2, "0")}${start.slice(2)}`) : "17:00"
+    setDraft([...draft, { weekday, start_time: start, end_time: end }])
   }
   const copyMondayToWeekdays = () => {
     const monday = draft.filter((r) => r.weekday === 0)

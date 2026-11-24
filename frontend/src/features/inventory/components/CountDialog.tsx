@@ -25,8 +25,7 @@ export function CountDialog({ itemId, itemName, levels, onOpenChange }: { itemId
   const [error, setError] = useState<string | null>(null)
 
   const submit = () => {
-    const n = Number(counted)
-    if (counted.trim() === "" || !Number.isFinite(n) || n < 0) return setError(t("inventory.count.invalid"))
+    if (!/^\d+(?:\.\d{1,3})?$/.test(counted.trim())) return setError(t("inventory.count.invalid"))
     count.mutate({ item_id: itemId, stock_location_id: locationId || null, counted: counted.trim(), note: note.trim() || null }, {
       onSuccess: (movement) => {
         toast.success(movement ? t("inventory.count.corrected", { change: `${Number(movement.quantity) > 0 ? "+" : ""}${qty(movement.quantity)}` }) : t("inventory.count.matched"))

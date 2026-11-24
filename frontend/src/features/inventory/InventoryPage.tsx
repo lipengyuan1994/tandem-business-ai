@@ -23,7 +23,9 @@ export function InventoryPage() {
   const [belowOnly, setBelowOnly] = useState(false)
   const levels = useLevels(belowOnly)
   const suggestions = useSuggestions(permissions.has("inventory.reorder.read"))
-  const names = useMemo(() => new Map((levels.data ?? []).map((l) => [l.item_id, l.item_name])), [levels.data])
+  // Drafts can hold items that are not below their reorder point, so name them from the unfiltered list.
+  const allLevels = useLevels(false)
+  const names = useMemo(() => new Map((allLevels.data ?? []).map((l) => [l.item_id, l.item_name])), [allLevels.data])
 
   const columns = useMemo<ColumnDef<StockLevel, unknown>[]>(() => [
     { header: t("inventory.fields.item"), cell: ({ row }) => <span className="font-medium">{row.original.item_name}</span> },

@@ -35,6 +35,16 @@ describe("weekly hours checks", () => {
     expect(rulesProblem([{ weekday: 0, start_time: "09:00", end_time: "12:00" }, { weekday: 0, start_time: "13:00", end_time: "17:00" }])).toBeNull()
     expect(rulesProblem([{ weekday: 2, start_time: "17:00", end_time: "09:00" }])).toEqual({ key: "resources.hours.endBeforeStart", day: 2 })
     expect(rulesProblem([{ weekday: 1, start_time: "09:00", end_time: "13:00" }, { weekday: 1, start_time: "12:00", end_time: "17:00" }])).toEqual({ key: "resources.hours.overlap", day: 1 })
+
+    // Different seasons never apply on the same date, so they may overlap in time.
+    expect(rulesProblem([
+      { weekday: 0, start_time: "09:00", end_time: "17:00", valid_from: "2027-01-01", valid_to: "2027-06-30" },
+      { weekday: 0, start_time: "10:00", end_time: "18:00", valid_from: "2027-07-01" },
+    ])).toBeNull()
+    expect(rulesProblem([
+      { weekday: 0, start_time: "09:00", end_time: "17:00", valid_to: "2027-07-15" },
+      { weekday: 0, start_time: "10:00", end_time: "18:00", valid_from: "2027-07-01" },
+    ])).toEqual({ key: "resources.hours.overlap", day: 0 })
   })
 })
 
@@ -99,6 +109,16 @@ describe("settings → resources", () => {
       { weekday: 0, start_time: "13:00", end_time: "18:00" },
       { weekday: 2, start_time: "09:00", end_time: "17:00" },
     ]))
+  })
+
+  it("adds a valid interval after a day that already runs past six", async () => {
+    mockMe(meWith(...WRITE))
+    mockSetup([{ ...SAM, rules: [{ weekday: 0, start_time: "09:00:00", end_time: "19:00:00" }] }])
+    renderApp("/settings/resources")
+    await userEvent.click(await screen.findByRole("button", { name: "Add hours on Monday" }))
+    expect(screen.getByLabelText("Start time 2 on Monday")).toHaveValue("19:00")
+    expect(screen.getByLabelText("End time 2 on Monday")).toHaveValue("20:00")
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
   })
 
   it("copies Monday's hours to the other weekdays", async () => {
@@ -180,6 +200,32 @@ describe("settings → resources", () => {
     await userEvent.click(within(form).getByRole("button", { name: "Add closure or opening" }))
     // Denver is UTC−7 in December: midnight on the 24th to midnight after the 26th.
     await waitFor(() => expect(added).toEqual({ kind: "closed", resource_id: null, reason: "Holidays", starts_at: "2099-12-24T07:00:00.000Z", ends_at: "2099-12-27T07:00:00.000Z" }))
+  })
+
+  it("enters a closure in the time zone of the resource's location and names the location everyone means", async () => {
+    mockMe(meWith(...WRITE))
+    mockSetup([{ ...SAM, location_id: "l2" }])
+    server.use(http.get("*/api/v1/org/locations", () => HttpResponse.json([
+      { id: "l1", name: "Main shop", is_default: true, timezone: "America/Denver", address: {}, version: 1 },
+      { id: "l2", name: "East shop", is_default: false, timezone: "America/New_York", address: {}, version: 1 },
+    ])))
+    let added: unknown = null
+    server.use(http.post("*/api/v1/scheduling/exceptions", async ({ request }) => { added = await request.json(); return HttpResponse.json({ id: "x2", ...(added as object) }, { status: 201 }) }))
+    renderApp("/settings/resources")
+    const form = await screen.findByRole("form", { name: "Add closure or opening" })
+    expect(await within(form).findByRole("option", { name: "Everyone at Main shop" })).toBeInTheDocument()
+    expect(within(form).queryByText(/Times for this one are in/)).not.toBeInTheDocument()
+    await userEvent.selectOptions(within(form).getByLabelText("Applies to"), "Sam Example")
+    expect(within(form).getByText("Times for this one are in America/New_York, the time zone of its location.")).toBeInTheDocument()
+    const from = within(form).getByLabelText("From")
+    await userEvent.clear(from)
+    await userEvent.type(from, "2099-12-24")
+    const to = within(form).getByLabelText("To")
+    await userEvent.clear(to)
+    await userEvent.type(to, "2099-12-24")
+    await userEvent.click(within(form).getByRole("button", { name: "Add closure or opening" }))
+    // New York is UTC−5 in December.
+    await waitFor(() => expect(added).toMatchObject({ resource_id: "r1", starts_at: "2099-12-24T05:00:00.000Z", ends_at: "2099-12-25T05:00:00.000Z" }))
   })
 
   it("asks who an extra opening is for, since one for everyone would open no slots", async () => {

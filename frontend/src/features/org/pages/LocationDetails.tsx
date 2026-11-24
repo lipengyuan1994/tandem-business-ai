@@ -22,7 +22,7 @@ export function LocationDetails({ location, canEdit, onReload }: { location: Loc
   const [line, setLine] = useState(typeof address.line === "string" ? address.line : "")
   const [timezone, setTimezone] = useState(location.timezone)
   const [conflict, setConflict] = useState(false)
-  const zones = Intl.supportedValuesOf("timeZone")
+  const zones = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [location.timezone]
   const changed = name.trim() !== location.name || timezone !== location.timezone || (simpleAddress && line.trim() !== (address.line ?? ""))
 
   const save = (patch: Omit<Schemas["LocationUpdate"], "version">, done: string) =>

@@ -2120,6 +2120,8 @@
       },
       "appliesTo": "Applies to",
       "everyone": "Everyone",
+      "everyoneAt": "Everyone at {{location}}",
+      "zoneNote": "Times for this one are in {{zone}}, the time zone of its location.",
       "chooseResource": "Choose who",
       "extraNeedsResource": "Choose who the extra opening is for. Extra openings apply to one resource at a time.",
       "unknownResource": "Removed resource",
