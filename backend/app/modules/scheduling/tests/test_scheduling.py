@@ -921,3 +921,52 @@ def test_appointment_cancellation_locks_customer_before_stock(shop: Shop, owner_
     finally:
         thread.join(5)
         event.remove(engine, "before_cursor_execute", before_execute)
+
+
+def test_closure_for_one_location_or_all_locations(shop: Shop) -> None:
+    """A closure for everyone used to cover only the default location, so a second shop stayed bookable."""
+    o = shop.owner
+    north = o.post("/api/v1/org/locations", json={"name": "North shop", "timezone": "America/Denver"})
+    assert north.status_code == 201, north.text
+    north_id = north.json()["id"]
+    o.put(f"/api/v1/org/locations/{north_id}/opening-hours", json={"items": WEEK})
+    riley = o.post("/api/v1/scheduling/resources", json={"name": "Riley", "location_id": north_id}).json()["id"]
+    o.put(
+        f"/api/v1/scheduling/resources/{riley}/availability",
+        json=[{"weekday": d, "start_time": "09:00", "end_time": "17:00"} for d in range(1, 6)],
+    )
+    o.put(f"/api/v1/scheduling/resources/{riley}/services", json=[shop.brake])
+    window = (f"{TUE}T16:00:00Z", f"{TUE}T23:59:00Z")
+
+    def open_at_north() -> int:
+        return len(shop.slots(shop.brake, *window, location_id=north_id, limit=50))
+
+    assert open_at_north() > 0
+    day = {"starts_at": f"{TUE}T07:00:00Z", "ends_at": "2026-11-11T07:00:00Z", "kind": "closed"}
+    # the default location's closure leaves North open
+    main = o.post("/api/v1/scheduling/exceptions", json={**day, "reason": "main shop stocktake"})
+    assert main.status_code == 201 and main.json()["location_id"] != north_id
+    assert open_at_north() > 0
+    assert shop.slots(shop.brake, *window, resource_id=shop.jordan, limit=50) == []
+    o.delete(f"/api/v1/scheduling/exceptions/{main.json()['id']}")
+    # a closure naming North closes North only
+    only_north = o.post("/api/v1/scheduling/exceptions", json={**day, "location_id": north_id})
+    assert only_north.status_code == 201 and only_north.json()["location_id"] == north_id
+    assert open_at_north() == 0
+    assert shop.slots(shop.brake, *window, resource_id=shop.jordan, limit=50) != []
+    o.delete(f"/api/v1/scheduling/exceptions/{only_north.json()['id']}")
+    # all locations
+    everywhere = o.post("/api/v1/scheduling/exceptions", json={**day, "all_locations": True, "reason": "holiday"})
+    assert everywhere.status_code == 201, everywhere.text
+    assert everywhere.json()["location_id"] is None
+    assert open_at_north() == 0
+    assert shop.slots(shop.brake, *window, resource_id=shop.jordan, limit=50) == []
+    assert everywhere.json()["id"] in [x["id"] for x in o.get("/api/v1/scheduling/exceptions").json()]
+    # an extra opening or a resource can't be "everywhere"; a resource can't be at another location
+    bad = [
+        {**day, "all_locations": True, "kind": "extra_open"},
+        {**day, "all_locations": True, "resource_id": riley},
+        {**day, "resource_id": shop.jordan, "location_id": north_id},
+    ]
+    for body in bad:
+        assert o.post("/api/v1/scheduling/exceptions", json=body).status_code == 422, body

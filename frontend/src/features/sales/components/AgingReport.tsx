@@ -2,13 +2,15 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { AgingReport as Report } from "@/api/types"
 import { QueryError } from "@/components/common/QueryError"
+import { Button } from "@/components/ui/button"
 import { MoneyText } from "@/components/common/MoneyText"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useReceivablesAging } from "../hooks"
-import { AGING_BUCKETS } from "../model"
+import { downloadCsv } from "@/lib/csv"
+import { AGING_BUCKETS, receivablesCsv } from "../model"
 
 type Row = Report["customers"][number]
 type Total = Report["totals"][number]
@@ -25,6 +27,9 @@ export function AgingReport() {
       <div className="space-y-1"><Label htmlFor="aging-as-of">{t("sales.aging.asOf")}</Label>
         <Input id="aging-as-of" type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} /></div>
       {report ? <p className="text-sm text-muted-foreground">{t("sales.aging.hint", { date: report.as_of })}</p> : null}
+      {report && report.totals.length ? <Button type="button" variant="outline" className="ml-auto"
+        onClick={() => downloadCsv(`receivables-aging-${report.as_of}.csv`, receivablesCsv(report, t))}>
+        {t("sales.aging.download")}</Button> : null}
     </div>
     {query.isPending ? <Skeleton className="h-40 w-full" /> : query.error ? <QueryError error={query.error} onRetry={() => void query.refetch()} />
       : report && report.totals.length ? report.totals.map((total) => <CurrencyTable key={total.currency} total={total} rows={report.customers.filter((c) => c.currency === total.currency)} />)

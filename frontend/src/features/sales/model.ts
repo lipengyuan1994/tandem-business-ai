@@ -1,3 +1,6 @@
+import type { TFunction } from "i18next"
+import type { AgingReport } from "@/api/types"
+import { decimalAmount, type CsvCell } from "@/lib/csv"
 import type { SalesDocument } from "@/api/types"
 
 export type DocumentFamily = "quotes" | "orders" | "invoices"
@@ -41,4 +44,17 @@ export function actionPermission(action: SalesAction): string {
 }
 export function destination(family: DocumentFamily, action: SalesAction): DocumentFamily {
   return action === "convert" ? "orders" : action === "invoice" || action === "credit" ? "invoices" : family
+}
+
+/** One row per customer and currency, then a total row per currency; amounts as exact decimals. */
+export function receivablesCsv(report: AgingReport, t: TFunction): CsvCell[][] {
+  type Row = AgingReport["customers"][number] | AgingReport["totals"][number]
+  const amounts = (row: Row, currency: string) => [...AGING_BUCKETS.map((b) => decimalAmount(row[b], currency)), decimalAmount(row.total_minor, currency)]
+  return [
+    [t("sales.aging.currency"), t("sales.fields.customer"), t("sales.aging.invoices"), ...AGING_BUCKETS.map((b) => t(`sales.aging.buckets.${b}`)), t("sales.aging.total")],
+    ...report.totals.flatMap((total) => [
+      ...report.customers.filter((c) => c.currency === total.currency).map((c) => [c.currency, c.customer_name, c.invoice_count, ...amounts(c, c.currency)]),
+      [total.currency, t("sales.aging.total"), total.invoice_count, ...amounts(total, total.currency)],
+    ]),
+  ]
 }

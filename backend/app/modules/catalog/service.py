@@ -161,6 +161,46 @@ def archive_item(db: Session, ctx: Context, item_id: uuid.UUID, version: int) ->
     return after
 
 
+def restore_item(db: Session, ctx: Context, item_id: uuid.UUID, version: int) -> CatalogItem:
+    """Bring an archived item back. A service comes back only when every part it uses up is active again."""
+    ctx.require(P.ITEM_WRITE)
+    item = _item(db, ctx, item_id, for_update=True)
+    if item.status != "archived":
+        raise Conflict("catalog.item_not_archived")
+    if item.kind == "service":
+        # FOR SHARE, as in replace_parts(): a concurrent archive of one of the parts either finishes first (and is
+        # seen here) or waits for this restore and then sees an active service that needs the part.
+        parts = db.scalars(
+            select(CatalogItem)
+            .where(
+                CatalogItem.business_id == ctx.business_id,
+                CatalogItem.id.in_(
+                    select(ServicePart.item_id).where(
+                        ServicePart.business_id == ctx.business_id, ServicePart.service_id == item_id
+                    )
+                ),
+            )
+            .order_by(CatalogItem.id)
+            .with_for_update(read=True)
+            .execution_options(populate_existing=True)
+        ).all()
+        archived = sorted(p.name for p in parts if p.status != "active")
+        if archived:
+            raise Conflict("catalog.part_archived", detail=f"restore or remove part '{archived[0]}' first")
+    after = crud.update_versioned(
+        db, ctx, CatalogItem, item_id, version, {"status": "active"}, "catalog.item_version_conflict"
+    )
+    audit.record(
+        db,
+        ctx,
+        action="catalog.item.restored",
+        target_type="catalog_item",
+        target_id=item_id,
+        summary=f"'{after.name}' restored",
+    )
+    return after
+
+
 def get_parts(db: Session, ctx: Context, service_id: uuid.UUID) -> list[ServicePartOut]:
     rows = db.execute(
         select(ServicePart.item_id, CatalogItem.name, ServicePart.quantity)

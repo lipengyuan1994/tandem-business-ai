@@ -56,8 +56,16 @@ class RuleIn(BaseModel):
 
 
 class ExceptionIn(BaseModel):
+    """A closure or extra opening.
+
+    For one resource name `resource_id`. A closure for everyone at one location names `location_id` (the default
+    location when neither is given), or sets `all_locations` to close every location, including ones added later.
+    """
+
     model_config = ConfigDict(extra="forbid")
     resource_id: uuid.UUID | None = None
+    location_id: uuid.UUID | None = None
+    all_locations: bool = False
     starts_at: datetime
     ends_at: datetime
     kind: Literal["closed", "extra_open"]
@@ -69,9 +77,15 @@ class ExceptionIn(BaseModel):
         return _aware(v)
 
 
-class ExceptionOut(ExceptionIn):
+class ExceptionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
+    resource_id: uuid.UUID | None = None
+    location_id: uuid.UUID | None = Field(default=None, description="null: a closure for every location")
+    starts_at: datetime
+    ends_at: datetime
+    kind: Literal["closed", "extra_open"]
+    reason: str | None = None
 
 
 class SlotQuery(BaseModel):

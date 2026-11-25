@@ -233,8 +233,12 @@ def archive_customer(db: Session, ctx: Context, customer_id: uuid.UUID, version:
     )
     db.execute(
         update(ContactPoint)
-        .where(ContactPoint.business_id == ctx.business_id, ContactPoint.customer_id == customer_id)
-        .values(is_active=False)
+        .where(
+            ContactPoint.business_id == ctx.business_id,
+            ContactPoint.customer_id == customer_id,
+            ContactPoint.is_active.is_(True),
+        )
+        .values(is_active=False, archived_with_customer=True)
     )
     audit.record(
         db,
@@ -243,6 +247,69 @@ def archive_customer(db: Session, ctx: Context, customer_id: uuid.UUID, version:
         target_type="customer",
         target_id=customer_id,
         summary="Customer archived",
+    )
+    return after
+
+
+def restore_customer(db: Session, ctx: Context, customer_id: uuid.UUID, version: int) -> Customer:
+    """Bring an archived customer back with the contact points they had when archived.
+
+    A contact point someone else has taken in the meantime (the same email or phone on another active customer)
+    stays off, since one address belongs to one customer. One primary per type is kept, as adding a contact does.
+    """
+    ctx.require(P.CUSTOMER_WRITE)
+    from .booking import lock_customers
+
+    customer = _customer(db, ctx, customer_id)
+    lock_customers(db, ctx, {customer_id})
+    if customer.status != "archived":
+        raise Conflict("crm.customer_not_archived")
+    after = crud.update_versioned(
+        db, ctx, Customer, customer_id, version, {"status": "active"}, "crm.customer_version_conflict"
+    )
+    points = db.scalars(
+        select(ContactPoint)
+        .where(
+            ContactPoint.business_id == ctx.business_id,
+            ContactPoint.customer_id == customer_id,
+            ContactPoint.archived_with_customer.is_(True),
+        )
+        .order_by(ContactPoint.created_at, ContactPoint.id)
+    ).all()
+    kept_off = 0
+    for cp in points:
+        cp.archived_with_customer = False
+        taken = db.scalar(
+            select(ContactPoint.id).where(
+                ContactPoint.business_id == ctx.business_id,
+                ContactPoint.type == cp.type,
+                ContactPoint.value_normalized == cp.value_normalized,
+                ContactPoint.is_active.is_(True),
+            )
+        )
+        if taken is not None:
+            cp.is_primary = False
+            kept_off += 1
+            continue
+        cp.is_active = True
+        db.flush()
+    active = [cp for cp in points if cp.is_active]
+    for kind in sorted({cp.type for cp in active}):
+        of_kind = [cp for cp in active if cp.type == kind]
+        primary = next((cp for cp in of_kind if cp.is_primary), of_kind[0])
+        for cp in of_kind:
+            cp.is_primary = cp is primary
+    db.flush()
+    summary = "Customer restored"
+    if kept_off:
+        summary += f" ({kept_off} contact point(s) now belong to another customer and stay off)"
+    audit.record(
+        db,
+        ctx,
+        action="crm.customer.restored",
+        target_type="customer",
+        target_id=customer_id,
+        summary=summary,
     )
     return after
 

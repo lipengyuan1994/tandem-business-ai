@@ -5,6 +5,9 @@ import { describe, expect, it } from "vitest"
 import type { AgingReport, SalesDocument, SalesPayment } from "@/api/types"
 import { meWith, mockMe, renderApp } from "@/test/app"
 import { server } from "@/test/server"
+import i18n from "@/app/i18n"
+import { toCsv } from "@/lib/csv"
+import { receivablesCsv } from "./model"
 import { doc, ID, PERMS } from "./test-support"
 
 const ISSUED: Partial<SalesDocument> = { status: "issued", number: "INV-2026-0007", kind: "invoice", amount_paid_minor: 0, balance_minor: 9634, payment_status: "unpaid", payments: [] }
@@ -139,6 +142,37 @@ describe("receivables aging", () => {
     const asOf = screen.getByLabelText("As of date")
     await userEvent.type(asOf, "2026-09-30")
     await waitFor(() => expect(asked).toContain("2026-09-30"))
+  })
+
+  it("offers the aging as CSV: one row per customer, a total per currency, exact amounts", async () => {
+    const report: AgingReport = {
+      as_of: "2026-10-28",
+      customers: [
+        { customer_id: "c1", customer_name: "=Ada, Example", currency: "USD", invoice_count: 2, current_minor: 1000, days_1_30_minor: 0, days_31_60_minor: 2500, days_61_90_minor: 0, days_over_90_minor: 0, total_minor: 3500 },
+        { customer_id: "c2", customer_name: "Ben", currency: "JPY", invoice_count: 1, current_minor: 0, days_1_30_minor: 0, days_31_60_minor: 0, days_61_90_minor: 0, days_over_90_minor: 1500, total_minor: 1500 },
+      ],
+      totals: [
+        { currency: "JPY", invoice_count: 1, current_minor: 0, days_1_30_minor: 0, days_31_60_minor: 0, days_61_90_minor: 0, days_over_90_minor: 1500, total_minor: 1500 },
+        { currency: "USD", invoice_count: 2, current_minor: 1000, days_1_30_minor: 0, days_31_60_minor: 2500, days_61_90_minor: 0, days_over_90_minor: 0, total_minor: 3500 },
+      ],
+    }
+    expect(toCsv(receivablesCsv(report, i18n.t)).split("\r\n")).toEqual([
+      "Currency,Customer,Open invoices,Not yet due,1–30 days,31–60 days,61–90 days,Over 90 days,Total",
+      "JPY,Ben,1,0,0,0,0,1500,1500",
+      "JPY,Total,1,0,0,0,0,1500,1500",
+      `USD,"'=Ada, Example",2,10.00,0.00,25.00,0.00,0.00,35.00`,
+      "USD,Total,2,10.00,0.00,25.00,0.00,0.00,35.00",
+      "",
+    ])
+
+    mockMe(meWith("sales.document.read"))
+    server.use(
+      http.get("*/api/v1/sales/receivables/aging", () => HttpResponse.json(report)),
+      http.get("*/api/v1/sales/:family", () => HttpResponse.json({ items: [], next_cursor: null })),
+    )
+    renderApp("/sales")
+    await userEvent.click(await screen.findByRole("tab", { name: "Receivables" }))
+    expect(await screen.findByRole("button", { name: "Download CSV" })).toBeInTheDocument()
   })
 
   it("says when nothing is owed", async () => {

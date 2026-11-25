@@ -137,7 +137,7 @@ def find_slots(
         db.scalars(
             select(AvailabilityException).where(
                 AvailabilityException.business_id == ctx.business_id,
-                AvailabilityException.location_id == location.id,
+                or_(AvailabilityException.location_id == location.id, AvailabilityException.location_id.is_(None)),
                 AvailabilityException.starts_at < q.latest + timedelta(days=1),
                 AvailabilityException.ends_at > q.earliest - timedelta(days=1),
             )

@@ -21,7 +21,8 @@ export function CustomersPage() {
   const navigate = useNavigate()
   const [q, setQ] = useState("")
   const [creating, setCreating] = useState(false)
-  const customers = useCustomers(q)
+  const [showArchived, setShowArchived] = useState(false)
+  const customers = useCustomers(q, showArchived ? "archived" : "active")
   const rows = customers.data?.pages.flatMap((p) => p.items)
   const open = (id: string) => void navigate({ to: "/customers/$customerId", params: { customerId: id } })
 
@@ -39,6 +40,7 @@ export function CustomersPage() {
       <div className="mb-4 max-w-sm space-y-1">
         <Label htmlFor="customer-search">{t("crm.search")}</Label>
         <Input id="customer-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("crm.searchHint")} />
+        <label className="flex items-center gap-2 pt-1 text-sm"><input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />{t("crm.restore.showArchivedOnly")}</label>
       </div>
       <DataTable columns={columns} data={rows} isLoading={customers.isPending} error={customers.error} onRetry={() => customers.refetch()}
         hasMore={customers.hasNextPage} onLoadMore={() => customers.fetchNextPage()} rowHref={(c) => `/customers/${c.id}`} onRowClick={(c) => open(c.id)}

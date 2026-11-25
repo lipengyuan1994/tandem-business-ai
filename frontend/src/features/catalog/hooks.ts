@@ -7,10 +7,10 @@ export const catalogKeys = {
   items: (kind: string, q: string) => ["catalog", "items", kind, q] as const,
 }
 
-export function useCatalogItems(kind: "service" | "product" | undefined, q = "") {
+export function useCatalogItems(kind: "service" | "product" | undefined, q = "", includeArchived = false) {
   return useQuery({
-    queryKey: catalogKeys.items(kind ?? "all", q),
-    queryFn: async () => unwrap(await api.GET("/api/v1/catalog/items", { params: { query: { kind, q: q || undefined, limit: 100 } } })),
+    queryKey: [...catalogKeys.items(kind ?? "all", q), includeArchived ? "with-archived" : "active"],
+    queryFn: async () => unwrap(await api.GET("/api/v1/catalog/items", { params: { query: { kind, q: q || undefined, limit: 100, include_archived: includeArchived || undefined } } })),
   })
 }
 
@@ -52,6 +52,15 @@ export function useArchiveItem() {
   return useMutation({
     mutationFn: async ({ id, version }: { id: string; version: number }) =>
       unwrap(await api.POST("/api/v1/catalog/items/{item_id}/archive", { params: { path: { item_id: id } }, body: { version } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: catalogKeys.all }),
+  })
+}
+
+export function useRestoreItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, version }: { id: string; version: number }) =>
+      unwrap(await api.POST("/api/v1/catalog/items/{item_id}/restore", { params: { path: { item_id: id } }, body: { version } })),
     onSuccess: () => qc.invalidateQueries({ queryKey: catalogKeys.all }),
   })
 }

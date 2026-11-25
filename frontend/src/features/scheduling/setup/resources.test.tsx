@@ -199,7 +199,7 @@ describe("settings → resources", () => {
     await userEvent.type(within(form).getByLabelText("Reason (optional)"), "Holidays")
     await userEvent.click(within(form).getByRole("button", { name: "Add closure or opening" }))
     // Denver is UTC−7 in December: midnight on the 24th to midnight after the 26th.
-    await waitFor(() => expect(added).toEqual({ kind: "closed", resource_id: null, reason: "Holidays", starts_at: "2099-12-24T07:00:00.000Z", ends_at: "2099-12-27T07:00:00.000Z" }))
+    await waitFor(() => expect(added).toEqual({ kind: "closed", resource_id: null, all_locations: false, reason: "Holidays", starts_at: "2099-12-24T07:00:00.000Z", ends_at: "2099-12-27T07:00:00.000Z" }))
   })
 
   it("enters a closure in the time zone of the resource's location and names the location everyone means", async () => {
@@ -226,6 +226,32 @@ describe("settings → resources", () => {
     await userEvent.click(within(form).getByRole("button", { name: "Add closure or opening" }))
     // New York is UTC−5 in December.
     await waitFor(() => expect(added).toMatchObject({ resource_id: "r1", starts_at: "2099-12-24T05:00:00.000Z", ends_at: "2099-12-25T05:00:00.000Z" }))
+  })
+
+  it("closes every location at once, or everyone at one location, and lists them by where they apply", async () => {
+    mockMe(meWith(...WRITE))
+    const everywhere = { id: "x1", resource_id: null, location_id: null, kind: "closed" as const, reason: "Holiday", starts_at: "2099-01-05T07:00:00Z", ends_at: "2099-01-06T07:00:00Z" }
+    const east = { ...everywhere, id: "x2", location_id: "l2", reason: "Stocktake" }
+    mockSetup([SAM], [everywhere, east])
+    server.use(http.get("*/api/v1/org/locations", () => HttpResponse.json([
+      { id: "l1", name: "Main shop", is_default: true, timezone: "America/Denver", address: {}, version: 1 },
+      { id: "l2", name: "East shop", is_default: false, timezone: "America/New_York", address: {}, version: 1 },
+    ])))
+    const sent: unknown[] = []
+    server.use(http.post("*/api/v1/scheduling/exceptions", async ({ request }) => { const body = await request.json(); sent.push(body); return HttpResponse.json({ id: "x3", ...(body as object) }, { status: 201 }) }))
+    renderApp("/settings/resources")
+    const list = await screen.findByRole("list", { name: "Upcoming closures and extra openings" })
+    expect(await within(list).findByText("Every location")).toBeInTheDocument()
+    expect(within(list).getByText("Everyone at East shop")).toBeInTheDocument()
+    const form = screen.getByRole("form", { name: "Add closure or opening" })
+    const appliesTo = within(form).getByLabelText("Applies to")
+    await userEvent.selectOptions(appliesTo, "Every location")
+    await userEvent.click(within(form).getByRole("button", { name: "Add closure or opening" }))
+    await waitFor(() => expect(sent[0]).toMatchObject({ kind: "closed", resource_id: null, all_locations: true }))
+    await userEvent.selectOptions(appliesTo, "Everyone at East shop")
+    expect(within(form).getByText("Times for this one are in America/New_York, the time zone of its location.")).toBeInTheDocument()
+    await userEvent.click(within(form).getByRole("button", { name: "Add closure or opening" }))
+    await waitFor(() => expect(sent[1]).toMatchObject({ kind: "closed", resource_id: null, location_id: "l2" }))
   })
 
   it("asks who an extra opening is for, since one for everyone would open no slots", async () => {

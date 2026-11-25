@@ -22,7 +22,7 @@ import { ConsentPanel } from "../components/ConsentPanel"
 import { ContactsCard } from "../components/ContactsCard"
 import { CustomerDialog } from "../components/CustomerDialog"
 import { EraseDialog } from "../components/EraseDialog"
-import { useAddNote, useArchiveCustomer, useCustomer, useNotes, useTimeline } from "../hooks"
+import { useAddNote, useArchiveCustomer, useCustomer, useNotes, useRestoreCustomer, useTimeline } from "../hooks"
 
 export function CustomerDetailPage() {
   const { t } = useTranslation()
@@ -35,6 +35,7 @@ export function CustomerDetailPage() {
   const [archiving, setArchiving] = useState(false)
   const [conflict, setConflict] = useState(false)
   const archive = useArchiveCustomer(customerId)
+  const restore = useRestoreCustomer(customerId)
   const c = customer.data
 
   if (customer.error) return <QueryError error={customer.error} onRetry={() => customer.refetch()} notFound={t("crm.notFound")} />
@@ -50,6 +51,11 @@ export function CustomerDetailPage() {
           <div className="flex gap-2">
             <PermissionGate permission="crm.customer.write"><Button variant="outline" onClick={() => setEditing(true)}>{t("crm.edit")}</Button></PermissionGate>
             {c.status === "active" ? <PermissionGate permission="crm.customer.write"><Button variant="ghost" onClick={() => setArchiving(true)}>{t("crm.archive.open")}</Button></PermissionGate> : null}
+            {c.status === "archived" ? <PermissionGate permission="crm.customer.write"><Button variant="outline" disabled={restore.isPending}
+              onClick={() => restore.mutate(c.version, {
+                onSuccess: () => toast.success(t("crm.restore.done", { name: c.display_name })),
+                onError: (e) => toastError(e, () => setConflict(true)),
+              })}>{t("crm.restore.open")}</Button></PermissionGate> : null}
             <PermissionGate permission="admin_ops.data.manage"><Button variant="ghost" onClick={() => setErasing(true)}>{t("crm.erase.open")}</Button></PermissionGate>
           </div>
         }

@@ -12,12 +12,12 @@ export const crmKeys = {
   match: (name: string) => ["crm", "match", name] as const,
 }
 
-export function useCustomers(q: string) {
+export function useCustomers(q: string, status: "active" | "archived" = "active") {
   return useInfiniteQuery({
-    queryKey: crmKeys.list(q),
+    queryKey: [...crmKeys.list(q), status],
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) =>
-      unwrap(await api.GET("/api/v1/crm/customers", { params: { query: { q: q || undefined, cursor: pageParam, limit: 50 } } })),
+      unwrap(await api.GET("/api/v1/crm/customers", { params: { query: { q: q || undefined, cursor: pageParam, limit: 50, status } } })),
     getNextPageParam: (last) => last.next_cursor ?? undefined,
   })
 }
@@ -86,6 +86,10 @@ export function useRemoveContactPoint() {
 
 export function useSetTags(id: string) {
   return useCrmMutation(async (tags: string[]) => unwrap(await api.PUT("/api/v1/crm/customers/{customer_id}/tags", { ...path(id), body: { tags } })))
+}
+
+export function useRestoreCustomer(id: string) {
+  return useCrmMutation(async (version: number) => unwrap(await api.POST("/api/v1/crm/customers/{customer_id}/restore", { ...path(id), body: { version } })))
 }
 
 export function useArchiveCustomer(id: string) {

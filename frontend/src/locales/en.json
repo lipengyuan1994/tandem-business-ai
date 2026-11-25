@@ -198,7 +198,11 @@
     "accounting.quickbooks_auth": "QuickBooks didn't accept the sign-in. Start again.",
     "accounting.quickbooks_unavailable": "QuickBooks didn't answer. Try again shortly.",
     "accounting.quickbooks_throttled": "QuickBooks is busy. Try again in a minute.",
-    "accounting.quickbooks_config": "The QuickBooks app keys on this server look wrong."
+    "accounting.quickbooks_config": "The QuickBooks app keys on this server look wrong.",
+    "catalog.part_archived": "This {{service}} uses up an archived product. Restore that product, or take it off the parts list, first.",
+    "catalog.item_not_archived": "This item isn't archived.",
+    "crm.customer_not_archived": "This {{customer}} isn't archived.",
+    "scheduling.invalid_exception": "That closure doesn't fit: a closure for every location can't also name one resource or location."
   },
   "identity": {
     "selectBusiness": {
@@ -578,6 +582,11 @@
       "email": "E-mail",
       "web_chat": "Web chat",
       "none": "Don't contact"
+    },
+    "restore": {
+      "open": "Restore",
+      "done": "{{name}} restored",
+      "showArchivedOnly": "Show archived {{customers}} only"
     }
   },
   "catalog": {
@@ -631,6 +640,12 @@
       },
       "confirm": "Archive",
       "done": "{{name}} archived"
+    },
+    "restore": {
+      "open": "Restore",
+      "done": "{{name}} restored",
+      "showArchived": "Show archived",
+      "openFor": "Restore {{name}}"
     }
   },
   "inventory": {
@@ -1159,7 +1174,9 @@
         "days_31_60_minor": "31–60 days",
         "days_61_90_minor": "61–90 days",
         "days_over_90_minor": "Over 90 days"
-      }
+      },
+      "download": "Download CSV",
+      "currency": "Currency"
     }
   },
   "purchasing": {
@@ -2213,7 +2230,8 @@
       "added": "Added",
       "remove": "Remove",
       "removeFor": "Remove the one starting {{when}}",
-      "removed": "Removed"
+      "removed": "Removed",
+      "allLocations": "Every location"
     }
   },
   "bills": {

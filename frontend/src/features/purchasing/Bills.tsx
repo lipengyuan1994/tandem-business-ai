@@ -12,9 +12,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { downloadCsv } from "@/lib/csv"
 import { BillDialog } from "./BillDialog"
 import { useBills, usePayablesAging } from "./billHooks"
-import { BILL_FILTERS, BILL_WRITE, PAYABLES_BUCKETS, type Bill, type BillFilter, type PayablesReport } from "./billModel"
+import { BILL_FILTERS, BILL_WRITE, PAYABLES_BUCKETS, payablesCsv, type Bill, type BillFilter, type PayablesReport } from "./billModel"
 
 /** Supplier bills, unpaid first by default, with a button to record a new one. */
 export function Bills() {
@@ -63,6 +64,8 @@ export function PayablesAging() {
       <div className="space-y-1"><Label htmlFor="payables-as-of">{t("sales.aging.asOf")}</Label>
         <Input id="payables-as-of" type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} /></div>
       {report ? <p className="text-sm text-muted-foreground">{t("payables.hint", { date: report.as_of })}</p> : null}
+      {report && report.totals.length ? <Button type="button" variant="outline" className="ml-auto"
+        onClick={() => downloadCsv(`payables-aging-${report.as_of}.csv`, payablesCsv(report, t))}>{t("sales.aging.download")}</Button> : null}
     </div>
     {query.isPending ? <Skeleton className="h-40 w-full" /> : query.error ? <QueryError error={query.error} onRetry={() => void query.refetch()} />
       : report && report.totals.length ? report.totals.map((total) => <CurrencyTable key={total.currency} total={total} rows={report.suppliers.filter((s) => s.currency === total.currency)} />)

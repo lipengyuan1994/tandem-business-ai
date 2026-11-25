@@ -44,6 +44,9 @@ class ContactPoint(BusinessScopedBase):
     value_normalized: Mapped[str] = mapped_column(String(320))
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Set when archiving the customer switched this contact point off, so restoring the customer brings back exactly
+    # the contact points that were in use then (not ones removed earlier by hand).
+    archived_with_customer: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
     verified_at: Mapped[datetime | None]
     __table_args__ = scoped_table_args(
         _fk("customer_id"),

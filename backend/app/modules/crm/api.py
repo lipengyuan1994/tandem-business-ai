@@ -157,6 +157,17 @@ def archive(customer_id: uuid.UUID, body: VersionIn, ctx: Context = Depends(requ
 
 
 @router.post(
+    "/customers/{customer_id}/restore",
+    response_model=CustomerOut,
+    summary="Restore an archived customer",
+    responses=ERRORS,
+)
+def restore(customer_id: uuid.UUID, body: VersionIn, ctx: Context = Depends(require(P.CUSTOMER_WRITE))) -> CustomerOut:
+    with transaction(ctx) as db:
+        return CustomerOut.model_validate(service.restore_customer(db, ctx, customer_id, body.version))
+
+
+@router.post(
     "/customers/{customer_id}/contact-points",
     response_model=ContactPointOut,
     status_code=201,

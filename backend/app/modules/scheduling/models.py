@@ -71,7 +71,8 @@ class AvailabilityRule(BusinessScopedBase):
 class AvailabilityException(BusinessScopedBase):
     __tablename__ = "availability_exceptions"
     resource_id: Mapped[uuid.UUID | None]
-    location_id: Mapped[uuid.UUID]
+    # null: a closure for everyone at every location (including locations added later)
+    location_id: Mapped[uuid.UUID | None]
     starts_at: Mapped[datetime]
     ends_at: Mapped[datetime]
     kind: Mapped[str] = mapped_column(String(12))
@@ -81,6 +82,9 @@ class AvailabilityException(BusinessScopedBase):
         _fk("location_id", "locations"),
         CheckConstraint("kind in ('closed','extra_open')", name="kind"),
         CheckConstraint("ends_at > starts_at", name="times"),
+        CheckConstraint(
+            "location_id is not null or (resource_id is null and kind = 'closed')", name="all_locations_closure"
+        ),
     )
 
 

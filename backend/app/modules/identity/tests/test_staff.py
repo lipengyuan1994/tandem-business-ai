@@ -221,3 +221,22 @@ def test_removed_member_can_be_invited_again(app: Any, keycloak: FakeKeycloak) -
     assert back["membership_id"] == str(membership)
     assert back["status"] == "active" and back["roles"] == ["operator"]
     assert owner.post("/api/v1/identity/invitations", json=body).json()["code"] == "identity.already_member"
+
+
+def test_reinvited_member_does_not_keep_old_job_title(app: Any, keycloak: FakeKeycloak) -> None:
+    """A returning staff member used to come back with the job title they had before the removal."""
+    business = make_business("example-cycle-works")
+    owner = login_as(app, business, ["owner"])
+    membership = add_member(make_user("casey@example.com"), business, ["admin"])
+    me = _members(owner)["casey@example.com"]
+    titled = owner.patch(f"/api/v1/identity/members/{membership}", json={"version": me["version"], "title": "Manager"})
+    assert titled.status_code == 200, titled.text
+    removed = owner.patch(
+        f"/api/v1/identity/members/{membership}", json={"version": titled.json()["version"], "status": "removed"}
+    )
+    assert removed.status_code == 200, removed.text
+
+    body = {"email": "casey@example.com", "display_name": "Casey", "roles": ["operator"]}
+    assert owner.post("/api/v1/identity/invitations", json=body).status_code == 201
+    back = _members(owner)["casey@example.com"]
+    assert back["status"] == "active" and back["title"] is None

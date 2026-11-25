@@ -83,6 +83,14 @@ def archive_item(item_id: uuid.UUID, body: VersionIn, ctx: Context = Depends(req
         return CatalogItemOut.model_validate(service.archive_item(db, ctx, item_id, body.version))
 
 
+@router.post(
+    "/items/{item_id}/restore", response_model=CatalogItemOut, summary="Restore an archived item", responses=ERRORS
+)
+def restore_item(item_id: uuid.UUID, body: VersionIn, ctx: Context = Depends(require(P.ITEM_WRITE))) -> CatalogItemOut:
+    with transaction(ctx) as db:
+        return CatalogItemOut.model_validate(service.restore_item(db, ctx, item_id, body.version))
+
+
 @router.get(
     "/items/{item_id}/parts", response_model=list[ServicePartOut], summary="Parts a service consumes", responses=ERRORS
 )
