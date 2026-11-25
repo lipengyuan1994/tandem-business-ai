@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.platform.context import Context
 
 from . import permissions as P
-from .models import Invoice, InvoiceLine, InvoicePayment
+from .models import Invoice, InvoiceLine, InvoicePayment, InvoiceRefund
 
 MAX_IDS = 500
 
@@ -47,6 +47,10 @@ class LedgerInvoice(BaseModel):
     tax_minor: int
     total_minor: int
     credit_of_invoice_id: uuid.UUID | None
+    refund_minor: int = 0
+    """On a credit note: the part paid back to the customer rather than taken off what the invoice still owed."""
+    refund_paid_on: date | None = None
+    refund_method: str | None = None
     lines: list[LedgerLine]
 
 
@@ -101,6 +105,18 @@ def invoices(db: Session, ctx: Context, ids: set[uuid.UUID]) -> dict[uuid.UUID, 
                     tax_minor=line.line_tax_minor,
                 )
             )
+    refunds = (
+        {
+            r.credit_note_id: r
+            for r in db.scalars(
+                select(InvoiceRefund).where(
+                    InvoiceRefund.business_id == ctx.business_id, InvoiceRefund.credit_note_id.in_(list(lines))
+                )
+            )
+        }
+        if rows
+        else {}
+    )
     out: dict[uuid.UUID, LedgerInvoice] = {}
     for row in rows:
         if row.number is None or row.issue_date is None:
@@ -121,6 +137,9 @@ def invoices(db: Session, ctx: Context, ids: set[uuid.UUID]) -> dict[uuid.UUID, 
             tax_minor=row.tax_minor,
             total_minor=row.total_minor,
             credit_of_invoice_id=row.credit_of_invoice_id,
+            refund_minor=refunds[row.id].amount_minor if row.id in refunds else 0,
+            refund_paid_on=refunds[row.id].paid_on if row.id in refunds else None,
+            refund_method=refunds[row.id].method if row.id in refunds else None,
             lines=lines[row.id],
         )
     return out

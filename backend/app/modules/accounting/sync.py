@@ -44,6 +44,7 @@ from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import Conflict
 from app.platform.models import Job
+from app.platform.money import minor_text
 
 from . import connection
 from . import payloads as build
@@ -447,6 +448,22 @@ class Engine:
         memo_id = self.sales_doc(doc)
         if doc.credit_of_invoice_id is None:
             return
+        if doc.refund_minor:
+            # QuickBooks has no refund linked to a credit memo that the API can create safely, so the refunded part
+            # stays as an open credit on the credit memo there and the bookkeeper records the refund by hand.
+            refund_key = ("customer_refund", str(doc.id))
+            refund_label = f"Refund with credit note {doc.number}"
+            if self.due(refund_key, doc.version):
+                self._skipped(
+                    refund_key,
+                    refund_label,
+                    doc.version,
+                    f"Record this refund of {minor_text(doc.refund_minor, doc.currency)} {doc.currency} "
+                    f"({doc.refund_method}, {doc.refund_paid_on}) against credit memo {doc.number} in QuickBooks",
+                )
+        applied = doc.total_minor - doc.refund_minor
+        if applied <= 0:
+            return
         key = ("credit_application", str(doc.id))
         label = f"Credit note {doc.number} applied to its invoice"
         rec = self.recs.get(key)
@@ -462,7 +479,7 @@ class Engine:
         customer = self.recs[("customer", str(doc.customer_id))].remote_id
         assert customer is not None
         body = build.credit_application(
-            customer, invoice_id, memo_id, doc.total_minor, doc.currency, doc.issue_date.isoformat()
+            customer, invoice_id, memo_id, applied, doc.currency, doc.issue_date.isoformat()
         )
         self.push(key, "payment", label, doc.version, body)
 

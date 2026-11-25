@@ -90,6 +90,11 @@ class PricedLine(BaseModel):
 
 class LineOut(PricedLine):
     id: uuid.UUID
+    credited_line_id: uuid.UUID | None = None
+    credited_quantity: Decimal | None = None
+    """On an issued invoice: how much of this line its credit notes have credited so far, and for how much."""
+    credited_subtotal_minor: int | None = None
+    credited_tax_minor: int | None = None
 
 
 class QuotePricing(BaseModel):
@@ -123,6 +128,59 @@ class PaymentIn(VersionIn):
         if value is None:
             return None
         return value.strip() or None
+
+
+class RefundIn(BaseModel):
+    """How the money is paid back. The amount is not given: it is whatever the credit exceeds the open balance by."""
+
+    model_config = ConfigDict(extra="forbid")
+    paid_on: date
+    method: PaymentMethod
+    reference: str | None = Field(default=None, max_length=200)
+
+    @field_validator("reference")
+    @classmethod
+    def blank_reference(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value.strip() or None
+
+
+class CreditLineIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    line_id: uuid.UUID
+    quantity: Decimal = Field(gt=0, max_digits=14, decimal_places=3)
+
+
+class CreditIn(VersionIn):
+    """Credit some or all of an issued or paid invoice.
+
+    Without `lines`, everything not yet credited is credited. When the credit is larger than what the customer still
+    owes, `refund` says how the difference is paid back; the request is refused without it.
+    """
+
+    lines: list[CreditLineIn] | None = Field(default=None, min_length=1, max_length=500)
+    refund: RefundIn | None = None
+    notes: str | None = Field(default=None, max_length=4000)
+
+
+class RefundOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    credit_note_id: uuid.UUID
+    amount_minor: int
+    paid_on: date
+    method: PaymentMethod
+    reference: str | None
+    created_at: datetime
+
+
+class CreditNoteRef(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    number: str | None
+    issue_date: date | None
+    total_minor: int
 
 
 class PaymentOut(BaseModel):
@@ -160,12 +218,16 @@ class DocumentOut(BaseModel):
     paid_at: datetime | None = None
     last_reminder_at: datetime | None = None
     amount_paid_minor: int | None = None
+    amount_credited_minor: int | None = None
+    amount_refunded_minor: int | None = None
     balance_minor: int | None = None
     payment_status: PaymentStatus | None = None
     version: int
     created_at: datetime
     lines: list[LineOut] = Field(default_factory=list)
     payments: list[PaymentOut] = Field(default_factory=list)
+    credit_notes: list[CreditNoteRef] = Field(default_factory=list)
+    refunds: list[RefundOut] = Field(default_factory=list)
 
 
 class ConfirmOrderPayload(VersionIn):

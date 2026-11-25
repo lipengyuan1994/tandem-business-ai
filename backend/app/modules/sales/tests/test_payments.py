@@ -105,10 +105,115 @@ def test_operator_records_payments_auditor_cannot(shop: Shop) -> None:
     assert operator.post(f"{BASE}/invoices/{doc['id']}/payments", json=body).status_code == 201
 
 
-def test_invoices_with_payments_cannot_be_credited(shop: Shop) -> None:
-    doc = pay(shop, issued(shop), 100).json()
-    r = shop.owner.post(f"{BASE}/invoices/{doc['id']}/credit", json={"version": doc["version"]})
-    assert r.status_code == 409 and r.json()["code"] == "sales.invoice_has_payments"
+def credit(shop: Shop, doc: dict[str, Any], **body: Any) -> Any:
+    return shop.owner.post(f"{BASE}/invoices/{doc['id']}/credit", json={"version": doc["version"], **body})
+
+
+def get_invoice(shop: Shop, doc_id: str) -> dict[str, Any]:
+    r = shop.owner.get(f"{BASE}/invoices/{doc_id}")
+    assert r.status_code == 200, r.text
+    return dict(r.json())
+
+
+REFUND = {"paid_on": "2026-10-28", "method": "card", "reference": " R-1 "}
+
+
+def test_crediting_a_paid_invoice_in_full_refunds_what_was_paid(shop: Shop) -> None:
+    doc = pay(shop, issued(shop), 1000).json()
+    r = credit(shop, doc)
+    assert r.status_code == 409 and r.json()["code"] == "sales.refund_required"
+    assert r.json()["refund_minor"] == 1000
+    note = credit(shop, doc, refund=REFUND)
+    assert note.status_code == 201, note.text
+    assert note.json()["kind"] == "credit_note" and note.json()["total_minor"] == TOTAL
+    inv = get_invoice(shop, doc["id"])
+    assert inv["status"] == "void" and inv["balance_minor"] is None
+    assert (inv["amount_paid_minor"], inv["amount_credited_minor"], inv["amount_refunded_minor"]) == (1000, TOTAL, 1000)
+    [refund] = inv["refunds"]
+    assert (refund["amount_minor"], refund["method"], refund["reference"]) == (1000, "card", "R-1")
+    assert refund["credit_note_id"] == note.json()["id"]
+    assert [c["id"] for c in inv["credit_notes"]] == [note.json()["id"]]
+    # The refunded payment can no longer be voided: the money already went back to the customer.
+    void = shop.owner.post(
+        f"{BASE}/invoices/{doc['id']}/payments/{inv['payments'][0]['id']}/void", json={"version": inv["version"]}
+    )
+    assert void.status_code == 409
+
+
+def test_partial_credits_by_line_until_everything_is_credited(shop: Shop) -> None:
+    doc = issued(shop)
+    service, part = doc["lines"]
+    # 45.00 of the brake service while nothing is paid: no refund, the balance drops.
+    first = credit(shop, doc, lines=[{"line_id": service["id"], "quantity": "1"}], notes="Goodwill")
+    assert first.status_code == 201, first.text
+    assert first.json()["total_minor"] == 4500 and first.json()["notes"] == "Goodwill"
+    assert first.json()["lines"][0]["credited_line_id"] == service["id"]
+    inv = get_invoice(shop, doc["id"])
+    assert (inv["status"], inv["balance_minor"], inv["payment_status"]) == ("issued", TOTAL - 4500, "unpaid")
+    assert [line["credited_quantity"] for line in inv["lines"]] == ["1.000", "0.000"]
+    # The same line cannot be credited again; an unknown line is refused.
+    again = credit(shop, inv, lines=[{"line_id": service["id"], "quantity": "1"}])
+    assert again.status_code == 409 and again.json()["code"] == "sales.credit_exceeds_line"
+    unknown = credit(shop, inv, lines=[{"line_id": str(uuid.uuid4()), "quantity": "1"}])
+    assert unknown.status_code == 422
+    # Pay what is left, then credit the pads: the customer is owed 18.00 back.
+    inv = pay(shop, inv, TOTAL - 4500).json()
+    assert inv["status"] == "paid"
+    no_refund = credit(shop, inv, lines=[{"line_id": part["id"], "quantity": "1"}])
+    assert no_refund.status_code == 409 and no_refund.json()["refund_minor"] == 1800
+    second = credit(shop, inv, lines=[{"line_id": part["id"], "quantity": "1"}], refund=REFUND)
+    assert second.status_code == 201, second.text
+    inv = get_invoice(shop, doc["id"])
+    assert inv["status"] == "void" and inv["amount_credited_minor"] == TOTAL and inv["amount_refunded_minor"] == 1800
+    assert len(inv["credit_notes"]) == 2
+    nothing = credit(shop, inv)
+    assert nothing.status_code == 409
+
+
+def test_partial_credit_of_a_paid_invoice_keeps_it_paid(shop: Shop) -> None:
+    doc = pay(shop, issued(shop), TOTAL).json()
+    part = doc["lines"][1]
+    r = credit(shop, doc, lines=[{"line_id": part["id"], "quantity": "1"}], refund=REFUND)
+    assert r.status_code == 201, r.text
+    inv = get_invoice(shop, doc["id"])
+    assert (inv["status"], inv["balance_minor"], inv["amount_refunded_minor"]) == ("paid", 0, 1800)
+
+
+def test_part_paid_invoice_credit_takes_the_open_balance_first(shop: Shop) -> None:
+    doc = pay(shop, issued(shop), 5000).json()  # 13.00 still owed
+    service = doc["lines"][0]
+    # 45.00 credit: 13.00 clears the balance, 32.00 goes back to the customer.
+    r = credit(shop, doc, lines=[{"line_id": service["id"], "quantity": "1"}], refund=REFUND)
+    assert r.status_code == 201, r.text
+    inv = get_invoice(shop, doc["id"])
+    assert (inv["status"], inv["balance_minor"], inv["amount_refunded_minor"]) == ("paid", 0, 3200)
+    # A refund is refused when the credit fits what is still owed.
+    fresh = issued(shop)
+    fits = credit(shop, fresh, lines=[{"line_id": fresh["lines"][1]["id"], "quantity": "1"}], refund=REFUND)
+    assert fits.status_code == 422 and fits.json()["code"] == "sales.refund_not_needed"
+
+
+def test_fractional_credit_never_exceeds_the_line(shop: Shop) -> None:
+    # 3 x 3.33 = 9.99; credited 1 + 1 + 1 the last part takes exactly what is left.
+    lines = [{"name": "Wipers", "quantity": "3", "unit_price_minor": 333, "tax_rate": "0.0725"}]
+    doc = shop.action("invoices", shop.create(lines=lines), "issue")
+    line = doc["lines"][0]
+    totals = []
+    for _ in range(3):
+        doc = get_invoice(shop, doc["id"])
+        r = credit(shop, doc, lines=[{"line_id": line["id"], "quantity": "1"}])
+        assert r.status_code == 201, r.text
+        totals.append(r.json()["total_minor"])
+    assert sum(totals) == doc["total_minor"]
+    assert get_invoice(shop, doc["id"])["status"] == "void"
+
+
+def test_aging_counts_credits_and_refunds_by_date(shop: Shop) -> None:
+    doc = issued(shop, "2026-11-30")
+    r = credit(shop, doc, lines=[{"line_id": doc["lines"][1]["id"], "quantity": "1"}])
+    assert r.status_code == 201, r.text
+    assert aging(shop)["totals"][0]["current_minor"] == TOTAL - 1800
+    assert aging(shop, "2026-10-27")["customers"] == []  # issued on the 28th
 
 
 def test_payments_are_tenant_scoped(shop: Shop) -> None:

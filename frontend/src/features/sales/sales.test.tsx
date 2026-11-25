@@ -73,7 +73,7 @@ describe("sales documents", () => {
     mockMe(meWith(...PERMS)); mockDocument(doc({ status: "issued", number: "INV-2026-0001", issue_date: "2026-10-27" }))
     const print = vi.spyOn(window, "print").mockImplementation(() => {})
     renderApp(`/sales/invoices/${ID}`)
-    expect(await screen.findByText("An issued invoice cannot be changed. Create a credit note to cancel it.")).toBeInTheDocument()
+    expect(await screen.findByText("An issued invoice cannot be changed. Credit some or all of it instead.")).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Edit items" })).not.toBeInTheDocument()
     const printable = screen.getByRole("article", { name: "Printable document" })
     expect(within(printable).getByText("Example Cycle Works")).toBeInTheDocument()

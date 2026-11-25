@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, unwrap } from "@/api/client"
-import type { SalesDocument, SalesDocumentCreate, SalesDocumentUpdate, SalesPaymentInput } from "@/api/types"
+import type { Schemas, SalesDocument, SalesDocumentCreate, SalesDocumentUpdate, SalesPaymentInput } from "@/api/types"
 import { useSession } from "@/app/session-context"
 import { destination, READ, WRITE, type DocumentFamily, type SalesAction } from "./model"
 
@@ -81,6 +81,9 @@ export function useConversionTarget(family: DocumentFamily, d: SalesDocument) {
 }
 export function useRecordPayment(id: string) {
   return useSalesMutation("invoices", async (body: SalesPaymentInput) => unwrap(await api.POST("/api/v1/sales/invoices/{document_id}/payments", { params: { path: { document_id: id } }, body })))
+}
+export function useCreditInvoice(id: string) {
+  return useSalesMutation("invoices", async (body: Schemas["CreditIn"]) => unwrap(await api.POST("/api/v1/sales/invoices/{document_id}/credit", { params: { path: { document_id: id } }, body })))
 }
 export function useVoidPayment(id: string) {
   return useSalesMutation("invoices", async ({ paymentId, version }: { paymentId: string; version: number }) => unwrap(await api.POST("/api/v1/sales/invoices/{document_id}/payments/{payment_id}/void", { params: { path: { document_id: id, payment_id: paymentId } }, body: { version } })))

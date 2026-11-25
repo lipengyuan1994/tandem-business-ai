@@ -2967,7 +2967,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Issue a full credit note and void the invoice */
+        /** Credit some or all of an invoice, refunding what was overpaid */
         post: operations["credit_api_v1_sales_invoices__document_id__credit_post"];
         delete?: never;
         options?: never;
@@ -5508,6 +5508,46 @@ export interface components {
             /** Quote Version */
             quote_version: number;
         };
+        /**
+         * CreditIn
+         * @description Credit some or all of an issued or paid invoice.
+         *
+         *     Without `lines`, everything not yet credited is credited. When the credit is larger than what the customer still
+         *     owes, `refund` says how the difference is paid back; the request is refused without it.
+         */
+        CreditIn: {
+            /** Lines */
+            lines?: components["schemas"]["CreditLineIn"][] | null;
+            /** Notes */
+            notes?: string | null;
+            refund?: components["schemas"]["RefundIn"] | null;
+            /** Version */
+            version: number;
+        };
+        /** CreditLineIn */
+        CreditLineIn: {
+            /**
+             * Line Id
+             * Format: uuid
+             */
+            line_id: string;
+            /** Quantity */
+            quantity: number | string;
+        };
+        /** CreditNoteRef */
+        CreditNoteRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Issue Date */
+            issue_date: string | null;
+            /** Number */
+            number: string | null;
+            /** Total Minor */
+            total_minor: number;
+        };
         /** CustomerBooking */
         CustomerBooking: {
             /**
@@ -5930,8 +5970,12 @@ export interface components {
         };
         /** DocumentOut */
         DocumentOut: {
+            /** Amount Credited Minor */
+            amount_credited_minor?: number | null;
             /** Amount Paid Minor */
             amount_paid_minor?: number | null;
+            /** Amount Refunded Minor */
+            amount_refunded_minor?: number | null;
             /** Balance Minor */
             balance_minor?: number | null;
             /** Bill To Address */
@@ -5945,6 +5989,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Credit Notes */
+            credit_notes?: components["schemas"]["CreditNoteRef"][];
             /** Credit Of Invoice Id */
             credit_of_invoice_id?: string | null;
             /** Currency */
@@ -5979,6 +6025,8 @@ export interface components {
             payment_status?: ("unpaid" | "partially_paid" | "paid") | null;
             /** Payments */
             payments?: components["schemas"]["PaymentOut"][];
+            /** Refunds */
+            refunds?: components["schemas"]["RefundOut"][];
             /** Source Appointment Id */
             source_appointment_id?: string | null;
             /** Source Order Id */
@@ -6388,6 +6436,14 @@ export interface components {
         LineOut: {
             /** Catalog Item Id */
             catalog_item_id: string | null;
+            /** Credited Line Id */
+            credited_line_id?: string | null;
+            /** Credited Quantity */
+            credited_quantity?: string | null;
+            /** Credited Subtotal Minor */
+            credited_subtotal_minor?: number | null;
+            /** Credited Tax Minor */
+            credited_tax_minor?: number | null;
             /**
              * Id
              * Format: uuid
@@ -7830,6 +7886,56 @@ export interface components {
             /** Valid Until */
             valid_until?: string | null;
         };
+        /**
+         * RefundIn
+         * @description How the money is paid back. The amount is not given: it is whatever the credit exceeds the open balance by.
+         */
+        RefundIn: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Reference */
+            reference?: string | null;
+        };
+        /** RefundOut */
+        RefundOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Credit Note Id
+             * Format: uuid
+             */
+            credit_note_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Reference */
+            reference: string | null;
+        };
         /** ReindexOut */
         ReindexOut: {
             /**
@@ -8979,7 +9085,7 @@ export interface components {
              * Entity Type
              * @enum {string}
              */
-            entity_type: "customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "invoice_payment" | "bill" | "bill_payment" | "item";
+            entity_type: "customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "customer_refund" | "invoice_payment" | "bill" | "bill_payment" | "item";
             /**
              * Id
              * Format: uuid
@@ -9815,7 +9921,7 @@ export interface operations {
                 limit?: number;
                 cursor?: string | null;
                 status?: ("synced" | "failed" | "skipped")[] | null;
-                entity_type?: ("customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "invoice_payment" | "bill" | "bill_payment" | "item")[] | null;
+                entity_type?: ("customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "customer_refund" | "invoice_payment" | "bill" | "bill_payment" | "item")[] | null;
             };
             header?: never;
             path?: never;
@@ -22725,7 +22831,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["app__modules__sales__schemas__VersionIn"];
+                "application/json": components["schemas"]["CreditIn"];
             };
         };
         responses: {

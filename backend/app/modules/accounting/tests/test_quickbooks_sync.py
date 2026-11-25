@@ -22,7 +22,7 @@ from app.platform.registry import Registry
 from app.platform.testing.auth import ctx_for
 
 from .fake_quickbooks import REALM, FakeQuickBooks, fault
-from .helpers import BASE, QB, Shop, connect, issued_invoice, map_accounts, pay, records, supplier_bill, sync
+from .helpers import BASE, QB, TODAY, Shop, connect, issued_invoice, map_accounts, pay, records, supplier_bill, sync
 
 # Shop.create(): 2 x brake service at 45.00, no tax -> 90.00
 
@@ -231,6 +231,38 @@ def test_payment_void_and_credit_note(books: Shop, intuit: FakeQuickBooks, regis
     kinds = {r["entity_type"]: r["status"] for r in records(books)}
     assert kinds["credit_note"] == kinds["credit_application"] == kinds["invoice_payment"] == "synced"
     assert not [w for w in intuit.writes if w[0] == "invoice" and w[1] != "create"]  # invoice itself untouched
+
+
+def test_credit_with_refund_applies_only_what_was_still_owed(
+    books: Shop, intuit: FakeQuickBooks, registry: Registry
+) -> None:
+    invoice = issued_invoice(books)
+    paid = pay(books, invoice, 5000)
+    refund = {"paid_on": TODAY, "method": "bank_transfer"}
+    r = books.owner.post(f"{BASE}/invoices/{invoice['id']}/credit", json={"version": paid["version"], "refund": refund})
+    assert r.status_code == 201, r.text
+    sync(books, registry)
+    [memo] = intuit.of("creditmemo")
+    assert memo["Line"][0]["Amount"] == 90.0
+    application = next(p for p in intuit.of("payment") if p["TotalAmt"] == 0)
+    assert [line["Amount"] for line in application["Line"]] == [40.0, 40.0]
+    [rec] = records(books, entity_type="customer_refund")
+    assert rec["status"] == "skipped"
+    assert "50.00 USD" in rec["last_error"] and r.json()["number"] in rec["last_error"]
+    sync(books, registry)  # nothing new is sent the second time
+    assert len([p for p in intuit.of("payment") if p["TotalAmt"] == 0]) == 1
+
+
+def test_fully_refunded_credit_is_not_applied(books: Shop, intuit: FakeQuickBooks, registry: Registry) -> None:
+    invoice = issued_invoice(books)
+    paid = pay(books, invoice, 9000)
+    refund = {"paid_on": TODAY, "method": "card"}
+    r = books.owner.post(f"{BASE}/invoices/{invoice['id']}/credit", json={"version": paid["version"], "refund": refund})
+    assert r.status_code == 201, r.text
+    sync(books, registry)
+    assert len(intuit.of("creditmemo")) == 1
+    assert [p for p in intuit.of("payment") if p["TotalAmt"] == 0] == []
+    assert records(books, entity_type="credit_application") == []
 
 
 def test_voided_before_sync_is_skipped_and_void_bill_is_deleted(

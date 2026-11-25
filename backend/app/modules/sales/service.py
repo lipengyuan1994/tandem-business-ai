@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.modules.catalog import public as catalog
@@ -20,10 +21,21 @@ from app.platform.errors import Conflict, Invalid
 from . import payments
 from . import permissions as P
 from . import repository as repo
-from .calculations import prepare_lines
+from .calculations import line_values, prepare_lines
 from .events import DocumentChanged
-from .models import Document, Invoice, SalesOrder
-from .schemas import DocumentOut, DocumentType, DocumentUpdate, LineOut, PaymentIn, PaymentOut
+from .models import Document, Invoice, InvoiceLine, InvoiceRefund, SalesOrder
+from .schemas import (
+    CreditIn,
+    CreditLineIn,
+    CreditNoteRef,
+    DocumentOut,
+    DocumentType,
+    DocumentUpdate,
+    LineOut,
+    PaymentIn,
+    PaymentOut,
+    RefundOut,
+)
 
 FLOWS: dict[DocumentType, dict[str, tuple[str, str]]] = {
     "quote": {
@@ -88,8 +100,17 @@ def detail(db: Session, ctx: Context, family: DocumentType, row: Document) -> Do
             out.balance_minor = payments.balance(row) if row.status in ("issued", "paid") else None
             out.payment_status = payments.payment_status(row)
             out.payments = [PaymentOut.model_validate(p) for p in payments.for_invoice(db, ctx, row.id)]
+            if row.status != "draft":
+                done = credited_so_far(db, ctx, row.id)
+                for line in out.lines:
+                    qty, sub, tax = done.get(line.id, (Decimal("0.000"), 0, 0))
+                    line.credited_quantity, line.credited_subtotal_minor, line.credited_tax_minor = qty, sub, tax
+                out.credit_notes = [CreditNoteRef.model_validate(n) for n in credit_notes_of(db, ctx, row.id)]
+                out.refunds = [RefundOut.model_validate(r) for r in refunds_of(db, ctx, row.id)]
         else:
             out.amount_paid_minor = None
+            out.amount_credited_minor = None
+            out.amount_refunded_minor = None
     return out
 
 
@@ -274,32 +295,187 @@ def invoice_order(db: Session, ctx: Context, row_id: uuid.UUID, version: int) ->
     return row
 
 
-def credit(db: Session, ctx: Context, row_id: uuid.UUID, version: int) -> Document:
+def credited_so_far(db: Session, ctx: Context, invoice_id: uuid.UUID) -> dict[uuid.UUID, tuple[Decimal, int, int]]:
+    """Per invoice line: quantity, subtotal and tax its credit notes have credited so far."""
+    rows = db.execute(
+        select(
+            InvoiceLine.credited_line_id,
+            func.sum(InvoiceLine.quantity),
+            func.sum(InvoiceLine.line_subtotal_minor),
+            func.sum(InvoiceLine.line_tax_minor),
+        )
+        .join(
+            Invoice,
+            (Invoice.business_id == InvoiceLine.business_id) & (Invoice.id == InvoiceLine.document_id),
+        )
+        .where(
+            InvoiceLine.business_id == ctx.business_id,
+            Invoice.credit_of_invoice_id == invoice_id,
+            Invoice.kind == "credit_note",
+            InvoiceLine.credited_line_id.is_not(None),
+        )
+        .group_by(InvoiceLine.credited_line_id)
+    ).all()
+    return {line_id: (Decimal(qty), int(sub), int(tax)) for line_id, qty, sub, tax in rows if line_id is not None}
+
+
+def _credit_lines(
+    db: Session, ctx: Context, original: Invoice, wanted: list[CreditLineIn] | None
+) -> list[dict[str, Any]]:
+    """Credit note lines for the wanted quantities. Crediting what is left of a line takes exactly what is left of its
+    amounts, so a line credited in parts never adds up to more or less than the invoice charged."""
+    lines = {line.id: line for line in repo.lines(db, ctx, "invoice", original.id)}
+    done = credited_so_far(db, ctx, original.id)
+    if wanted is None:
+        quantities = {
+            line_id: line.quantity - done.get(line_id, (Decimal(0), 0, 0))[0]
+            for line_id, line in lines.items()
+            if line.quantity > done.get(line_id, (Decimal(0), 0, 0))[0]
+        }
+        if not quantities:
+            raise Conflict("sales.nothing_to_credit", detail="Everything on this invoice is already credited")
+    else:
+        quantities = {}
+        for item in wanted:
+            if item.line_id not in lines:
+                raise Invalid("sales.credit_line_unknown", detail="A line is not on this invoice")
+            if item.line_id in quantities:
+                raise Invalid("sales.credit_line_repeated", detail="Each invoice line can be listed once")
+            quantities[item.line_id] = item.quantity
+    values: list[dict[str, Any]] = []
+    for line in sorted(lines.values(), key=lambda x: x.position):
+        if line.id not in quantities:
+            continue
+        quantity = quantities[line.id]
+        qty_done, sub_done, tax_done = done.get(line.id, (Decimal(0), 0, 0))
+        left = line.quantity - qty_done
+        if quantity > left:
+            raise Conflict(
+                "sales.credit_exceeds_line",
+                detail=f"Only {left.normalize():f} of '{line.name}' is left to credit",
+                line_id=str(line.id),
+            )
+        if quantity == left:
+            subtotal = line.line_subtotal_minor - sub_done
+            tax = line.line_tax_minor - tax_done
+        else:
+            subtotal, tax, _ = line_values(quantity, line.unit_price_minor, line.tax_rate)
+            # Never let a partial credit take more than is left of the line's amounts after rounding.
+            subtotal, tax = min(subtotal, line.line_subtotal_minor - sub_done), min(tax, line.line_tax_minor - tax_done)
+        values.append(
+            {
+                "catalog_item_id": line.catalog_item_id,
+                "name": line.name,
+                "quantity": quantity,
+                "unit_price_minor": line.unit_price_minor,
+                "tax_rate": line.tax_rate,
+                "line_subtotal_minor": subtotal,
+                "line_tax_minor": tax,
+                "line_total_minor": subtotal + tax,
+                "position": len(values),
+                "credited_line_id": line.id,
+            }
+        )
+    return values
+
+
+def credit(db: Session, ctx: Context, row_id: uuid.UUID, version: int, data: CreditIn | None = None) -> Document:
+    """Issue a credit note for some or all of an issued or paid invoice.
+
+    The credit first reduces what the customer still owes. Whatever it exceeds that by was already paid, so it is paid
+    back as a refund, recorded with the credit note. Credited in full, the invoice becomes void.
+    """
     ctx.require(P.CREDIT)
+    data = data or CreditIn(version=version)
     original = repo.get(db, ctx, "invoice", row_id, lock=True)
     check_version(original, version)
-    require_status(original, "issued")
     assert isinstance(original, Invoice)
     if original.kind != "invoice":
         raise Conflict("sales.invalid_transition", detail="Cannot credit a credit note")
-    if original.amount_paid_minor > 0:
-        raise Conflict("sales.invoice_has_payments", detail="Void the invoice's payments before crediting it")
-    issue_date = clock.now().astimezone(ZoneInfo(org.get_business_brief(db, ctx).timezone)).date()
-    number = repo.next_number(db, ctx, "CN", issue_date.year)
-    row = copy_document(
-        db,
-        ctx,
-        "invoice",
-        original,
-        "invoice",
+    if original.status not in ("issued", "paid"):
+        raise Conflict("sales.invalid_transition", detail=f"Cannot credit a {original.status} invoice")
+    values = _credit_lines(db, ctx, original, data.lines)
+    amount = sum(v["line_total_minor"] for v in values)
+    if amount == 0:
+        raise Conflict("sales.nothing_to_credit", detail="The credit would be for nothing")
+    refund_minor = max(0, amount - payments.balance(original))
+    today = business_today(db, ctx)
+    if refund_minor and data.refund is None:
+        raise Conflict(
+            "sales.refund_required",
+            detail="The credit is more than the customer still owes; say how the difference is paid back",
+            refund_minor=refund_minor,
+        )
+    if not refund_minor and data.refund is not None:
+        raise Invalid("sales.refund_not_needed", detail="The customer still owes more than this credit")
+    if data.refund is not None and data.refund.paid_on > today:
+        raise Invalid("sales.payment_date_in_future")
+    number = repo.next_number(db, ctx, "CN", today.year)
+    fields = ("customer_id", "bill_to_name", "bill_to_email", "bill_to_address", "currency", "due_date")
+    note = Invoice(
+        business_id=ctx.business_id,
+        **{field: getattr(original, field) for field in fields},
+        notes=data.notes if data.notes is not None else original.notes,
         kind="credit_note",
         credit_of_invoice_id=row_id,
         status="issued",
         number=number,
-        issue_date=issue_date,
+        issue_date=today,
     )
-    original.status = "void"
+    db.add(note)
+    db.flush()
+    store_lines(db, ctx, "invoice", note, values)
+    refund = None
+    if refund_minor:
+        assert data.refund is not None
+        refund = InvoiceRefund(
+            business_id=ctx.business_id,
+            invoice_id=original.id,
+            credit_note_id=note.id,
+            amount_minor=refund_minor,
+            paid_on=data.refund.paid_on,
+            method=data.refund.method,
+            reference=data.refund.reference,
+        )
+        db.add(refund)
+    original.amount_credited_minor += amount
+    original.amount_refunded_minor += refund_minor
+    payments.settle_after_credit(original)
     original.version += 1
-    record(db, ctx, "invoice", original, "credited")
-    record(db, ctx, "invoice", row, "issued")
-    return row
+    db.flush()
+    record(
+        db,
+        ctx,
+        "invoice",
+        original,
+        "credited",
+        credit_note_id=str(note.id),
+        amount_minor=amount,
+        refund_minor=refund_minor,
+    )
+    record(db, ctx, "invoice", note, "issued")
+    return note
+
+
+def refunds_of(db: Session, ctx: Context, invoice_id: uuid.UUID) -> list[InvoiceRefund]:
+    return list(
+        db.scalars(
+            select(InvoiceRefund)
+            .where(InvoiceRefund.business_id == ctx.business_id, InvoiceRefund.invoice_id == invoice_id)
+            .order_by(InvoiceRefund.paid_on, InvoiceRefund.created_at, InvoiceRefund.id)
+        )
+    )
+
+
+def credit_notes_of(db: Session, ctx: Context, invoice_id: uuid.UUID) -> list[Invoice]:
+    return list(
+        db.scalars(
+            select(Invoice)
+            .where(
+                Invoice.business_id == ctx.business_id,
+                Invoice.credit_of_invoice_id == invoice_id,
+                Invoice.kind == "credit_note",
+            )
+            .order_by(Invoice.issue_date, Invoice.number)
+        )
+    )

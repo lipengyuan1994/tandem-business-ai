@@ -5102,6 +5102,132 @@
         "title": "CreatePOFromQuote",
         "type": "object"
       },
+      "CreditIn": {
+        "additionalProperties": false,
+        "description": "Credit some or all of an issued or paid invoice.\n\nWithout `lines`, everything not yet credited is credited. When the credit is larger than what the customer still\nowes, `refund` says how the difference is paid back; the request is refused without it.",
+        "properties": {
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CreditLineIn"
+                },
+                "maxItems": 500,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "refund": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefundIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "CreditIn",
+        "type": "object"
+      },
+      "CreditLineIn": {
+        "additionalProperties": false,
+        "properties": {
+          "line_id": {
+            "format": "uuid",
+            "title": "Line Id",
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          }
+        },
+        "required": [
+          "line_id",
+          "quantity"
+        ],
+        "title": "CreditLineIn",
+        "type": "object"
+      },
+      "CreditNoteRef": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "total_minor": {
+            "title": "Total Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "issue_date",
+          "total_minor"
+        ],
+        "title": "CreditNoteRef",
+        "type": "object"
+      },
       "CustomerBooking": {
         "properties": {
           "ends_at": {
@@ -6337,6 +6463,17 @@
       },
       "DocumentOut": {
         "properties": {
+          "amount_credited_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Credited Minor"
+          },
           "amount_paid_minor": {
             "anyOf": [
               {
@@ -6347,6 +6484,17 @@
               }
             ],
             "title": "Amount Paid Minor"
+          },
+          "amount_refunded_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Refunded Minor"
           },
           "balance_minor": {
             "anyOf": [
@@ -6389,6 +6537,13 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "credit_notes": {
+            "items": {
+              "$ref": "#/components/schemas/CreditNoteRef"
+            },
+            "title": "Credit Notes",
+            "type": "array"
           },
           "credit_of_invoice_id": {
             "anyOf": [
@@ -6529,6 +6684,13 @@
               "$ref": "#/components/schemas/PaymentOut"
             },
             "title": "Payments",
+            "type": "array"
+          },
+          "refunds": {
+            "items": {
+              "$ref": "#/components/schemas/RefundOut"
+            },
+            "title": "Refunds",
             "type": "array"
           },
           "source_appointment_id": {
@@ -7662,6 +7824,51 @@
               }
             ],
             "title": "Catalog Item Id"
+          },
+          "credited_line_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credited Line Id"
+          },
+          "credited_quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credited Quantity"
+          },
+          "credited_subtotal_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credited Subtotal Minor"
+          },
+          "credited_tax_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credited Tax Minor"
           },
           "id": {
             "format": "uuid",
@@ -11592,6 +11799,107 @@
         "title": "RecordSupplierQuote",
         "type": "object"
       },
+      "RefundIn": {
+        "additionalProperties": false,
+        "description": "How the money is paid back. The amount is not given: it is whatever the credit exceeds the open balance by.",
+        "properties": {
+          "method": {
+            "enum": [
+              "cash",
+              "card",
+              "bank_transfer",
+              "check",
+              "other"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "paid_on",
+          "method"
+        ],
+        "title": "RefundIn",
+        "type": "object"
+      },
+      "RefundOut": {
+        "properties": {
+          "amount_minor": {
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "credit_note_id": {
+            "format": "uuid",
+            "title": "Credit Note Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "cash",
+              "card",
+              "bank_transfer",
+              "check",
+              "other"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "id",
+          "credit_note_id",
+          "amount_minor",
+          "paid_on",
+          "method",
+          "reference",
+          "created_at"
+        ],
+        "title": "RefundOut",
+        "type": "object"
+      },
       "ReindexOut": {
         "properties": {
           "job_id": {
@@ -14480,6 +14788,7 @@
               "invoice",
               "credit_note",
               "credit_application",
+              "customer_refund",
               "invoice_payment",
               "bill",
               "bill_payment",
@@ -16341,6 +16650,7 @@
                       "invoice",
                       "credit_note",
                       "credit_application",
+                      "customer_refund",
                       "invoice_payment",
                       "bill",
                       "bill_payment",
@@ -30455,7 +30765,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/app__modules__sales__schemas__VersionIn"
+                "$ref": "#/components/schemas/CreditIn"
               }
             }
           },
@@ -30503,7 +30813,7 @@
             "description": "Validation failed"
           }
         },
-        "summary": "Issue a full credit note and void the invoice",
+        "summary": "Credit some or all of an invoice, refunding what was overpaid",
         "tags": [
           "sales"
         ]

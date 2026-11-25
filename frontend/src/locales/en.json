@@ -182,7 +182,6 @@
     "scheduling.invalid_window": "The end must be after the start.",
     "sales.overpayment": "The payment is more than the invoice's open balance.",
     "sales.payment_date_in_future": "The payment date cannot be in the future.",
-    "sales.invoice_has_payments": "This invoice has payments. Void them before creating a credit note.",
     "sales.payment_already_voided": "This payment was already voided.",
     "reports.invalid_range": "The start date must be on or before the end date.",
     "reports.range_too_long": "Choose a date range of up to three years.",
@@ -202,7 +201,14 @@
     "catalog.part_archived": "This {{service}} uses up an archived product. Restore that product, or take it off the parts list, first.",
     "catalog.item_not_archived": "This item isn't archived.",
     "crm.customer_not_archived": "This {{customer}} isn't archived.",
-    "scheduling.invalid_exception": "That closure doesn't fit: a closure for every location can't also name one resource or location."
+    "scheduling.invalid_exception": "That closure doesn't fit: a closure for every location can't also name one resource or location.",
+    "sales.refund_required": "This credit is more than the invoice still owes, so the difference has to be refunded. Add the refund details.",
+    "sales.refund_not_needed": "This credit is covered by what the invoice still owes, so there is nothing to refund.",
+    "sales.credit_exceeds_line": "One line is credited for more than is left on it. Reload the invoice and try again.",
+    "sales.nothing_to_credit": "Everything on this invoice is already credited.",
+    "sales.payment_refunded": "Part of this payment was refunded on a credit note, so it can't be voided.",
+    "sales.credit_line_unknown": "A line is no longer on this invoice. Reload and try again.",
+    "sales.credit_line_repeated": "A line was listed twice. Reload and try again."
   },
   "identity": {
     "selectBusiness": {
@@ -1054,7 +1060,9 @@
       "notes": "Notes",
       "address": "Bill-to address (optional)",
       "amountPaid": "Paid",
-      "balanceDue": "Balance due"
+      "balanceDue": "Balance due",
+      "amountCredited": "Credited",
+      "amountRefunded": "Refunded to customer"
     },
     "allStatuses": "All statuses",
     "empty": "No documents found.",
@@ -1082,7 +1090,7 @@
     "editLines": "Edit items",
     "editHint": "Save to update the total. Catalog items use their current name and price when you save.",
     "locked": "This document is no longer a draft and can no longer be edited.",
-    "invoiceLocked": "An issued invoice cannot be changed. Create a credit note to cancel it.",
+    "invoiceLocked": "An issued invoice cannot be changed. Credit some or all of it instead.",
     "actionDone": "Document updated.",
     "print": "Print",
     "printable": "Printable document",
@@ -1111,10 +1119,6 @@
       "issue": {
         "title": "Issue this invoice?",
         "text": "The invoice will get a number. Once issued, it cannot be changed or undone."
-      },
-      "credit": {
-        "title": "Create a credit note?",
-        "text": "A full credit note will be issued and the invoice will be cancelled. This cannot be undone."
       },
       "cancel": {
         "title": "Cancel this order?",
@@ -1177,6 +1181,30 @@
       },
       "download": "Download CSV",
       "currency": "Currency"
+    },
+    "credit": {
+      "title": "Credit invoice",
+      "hint": "Choose how much of each line to credit on invoice {{number}}. The credit takes off what is still owed ({{balance}}) first, and anything over that is refunded to the customer.",
+      "lines": "Lines to credit",
+      "quantityOf": "Quantity of {{name}}",
+      "left": "{{left}} left to credit",
+      "total": "Credit note total",
+      "againstBalance": "Taken off the balance",
+      "refund": "Refund to customer",
+      "refundDetails": "Refund",
+      "refundHint": "Record how {{amount}} was paid back to the customer.",
+      "refundDate": "Refund date",
+      "irreversible": "A credit note can't be changed or removed once issued.",
+      "submit": "Issue credit note",
+      "done": "Credit note issued.",
+      "notes": "Credit notes",
+      "refunds": "Refunds",
+      "refundOn": "Refunded on {{date}}",
+      "errors": {
+        "quantity": "Enter a quantity with up to three decimals.",
+        "overLeft": "Only {{left}} is left to credit.",
+        "future": "The refund date cannot be in the future."
+      }
     }
   },
   "purchasing": {
