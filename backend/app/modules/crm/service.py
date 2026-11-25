@@ -268,7 +268,24 @@ def remove_contact_point(db: Session, ctx: Context, contact_point_id: uuid.UUID)
     from .booking import lock_customers
 
     lock_customers(db, ctx, {cp.customer_id})
+    was_primary = cp.is_primary and cp.is_active
     cp.is_active, cp.is_primary = False, False
+    if was_primary:
+        # Keep one primary per type, as adding a contact does: messaging and campaigns only use the primary.
+        successor = db.scalar(
+            select(ContactPoint)
+            .where(
+                ContactPoint.business_id == ctx.business_id,
+                ContactPoint.customer_id == cp.customer_id,
+                ContactPoint.type == cp.type,
+                ContactPoint.is_active.is_(True),
+                ContactPoint.id != cp.id,
+            )
+            .order_by(ContactPoint.created_at, ContactPoint.id)
+            .limit(1)
+        )
+        if successor is not None:
+            successor.is_primary = True
     audit.record(
         db,
         ctx,

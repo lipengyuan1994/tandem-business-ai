@@ -4,7 +4,7 @@ import uuid
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Kind = Literal["service", "product"]
 ResourceKind = Literal["staff", "room", "equipment"]
@@ -97,6 +97,14 @@ class CatalogItemUpdate(BaseModel):
     recall_interval_months: int | None = Field(default=None, ge=1, le=120)
     buffer_minutes: int | None = Field(default=None, ge=0, le=240)
     is_bookable_online: bool | None = None
+
+    @field_validator("name", "buffer_minutes", "is_bookable_online")
+    @classmethod
+    def _not_cleared(cls, v: object) -> object:
+        # Omit a field to leave it unchanged; these columns can't be empty, so an explicit null is a 422, not a 500.
+        if v is None:
+            raise ValueError("can't be cleared; leave it out to keep the current value")
+        return v
 
 
 class ServicePartIn(BaseModel):

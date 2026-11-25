@@ -106,8 +106,11 @@ def invite(db: Session, ctx: Context, data: InvitationIn) -> InvitationOut:
     roles: set[str] = set(data.roles)
     _require_owner_power(ctx, roles)
     email = str(data.email).lower()
-    if repository.pending_invitation_exists(db, ctx, email):
+    now = clock.now()
+    if repository.pending_invitation_exists(db, ctx, email, now):
         raise Conflict("identity.invitation_exists")
+    # An expired invitation used to block inviting the same person again, with nothing left to revoke.
+    repository.expire_lapsed_invitations(db, ctx, email, now)
     assert ctx.business_id is not None
     existing = repository.get_user_by_email(db, email)
     invitation = Invitation(
@@ -135,8 +138,10 @@ def invite(db: Session, ctx: Context, data: InvitationIn) -> InvitationOut:
         invitation.status, invitation.accepted_at = "accepted", clock.now()
     else:
         smtp = bool(get_settings().smtp_url)
-        temp_password = None if smtp else keycloak_admin.temporary_password()
-        invitation.keycloak_user_id = keycloak_admin.create_user(email, data.display_name, temp_password)
+        # An earlier invitation may already have made the account; a new password shown here would not be set on it.
+        earlier = None if smtp else keycloak_admin.find_user_id(email)
+        temp_password = None if smtp or earlier else keycloak_admin.temporary_password()
+        invitation.keycloak_user_id = earlier or keycloak_admin.create_user(email, data.display_name, temp_password)
         if smtp:
             keycloak_admin.send_setup_email(invitation.keycloak_user_id)
     db.add(invitation)

@@ -221,10 +221,25 @@ def list_pending_invitations(db: Session, ctx: Context, now: datetime) -> list[I
     return list(db.scalars(stmt))
 
 
-def pending_invitation_exists(db: Session, ctx: Context, email: str) -> bool:
+def pending_invitation_exists(db: Session, ctx: Context, email: str, now: datetime) -> bool:
     stmt = select(Invitation.id).where(
         Invitation.business_id == ctx.business_id,
         func.lower(Invitation.email) == email.lower(),
         Invitation.status == "pending",
+        Invitation.expires_at > now,
     )
     return db.scalar(stmt) is not None
+
+
+def expire_lapsed_invitations(db: Session, ctx: Context, email: str, now: datetime) -> None:
+    """Pending invitations past their expiry are no longer listed or usable: record them as expired."""
+    db.execute(
+        update(Invitation)
+        .where(
+            Invitation.business_id == ctx.business_id,
+            func.lower(Invitation.email) == email.lower(),
+            Invitation.status == "pending",
+            Invitation.expires_at <= now,
+        )
+        .values(status="expired")
+    )

@@ -756,3 +756,21 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   in, return add; loss, consumption, sale, transfer out remove; count corrections go either way), in
   `record_movement` and in the adjust-stock proposal validator. All internal callers already used the right sign.
 - Verification: regression tests for each (fail before, pass after), backend lint, types and full backend suite.
+
+## 2026-11-25 — Bug sweep: scheduling override, re-invites, primary contacts, null and time zone validation
+
+- Scheduling: `holds._allocation` let an hours override skip every check for single-resource services, so any
+  resource (a room, another location's staff) could be booked for any service. With an override and no offered slot,
+  the resource must now still be in `slots._qualified` for the service's kind at its own location.
+- Scheduling: `GET /slots` and `GET /appointments` take `AwareDatetime`, and `HoldIn` uses the `_aware` validator, so
+  naive timestamps are a 422 rather than a 500 from comparing naive and aware datetimes.
+- Identity: `pending_invitation_exists` ignored `expires_at`, and nothing marks invitations expired, so an expired
+  invitation (no longer listed, so not revocable) blocked re-inviting forever. Lapsed ones are now set to `expired`
+  when the person is invited again. Without SMTP, a re-invite reuses the Keycloak account the first invitation made
+  and shows no temporary password, since `create_user` returns the existing account without setting one.
+- CRM: `remove_contact_point` cleared `is_primary` without promoting another, and campaign eligibility and message
+  sends only use the primary. The oldest remaining active contact of that type becomes primary.
+- Catalog: `CatalogItemUpdate` accepted explicit null for `name`, `buffer_minutes` and `is_bookable_online`, which
+  are NOT NULL columns, giving a 500. Now a 422.
+- Verification: regression tests for each (fail before, pass after), backend lint, types and the scheduling,
+  identity, crm and catalog suites.

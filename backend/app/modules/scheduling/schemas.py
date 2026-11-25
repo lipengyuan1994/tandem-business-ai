@@ -82,6 +82,11 @@ class SlotQuery(BaseModel):
     location_id: uuid.UUID | None = None
     limit: int = Field(default=10, ge=1, le=100)
 
+    @field_validator("earliest", "latest")
+    @classmethod
+    def _require_timezone(cls, v: datetime) -> datetime:
+        return _aware(v)
+
 
 class AllocatedResource(BaseModel):
     role: str
@@ -129,6 +134,11 @@ class HoldIn(BaseModel):
     resource_id: uuid.UUID
     customer_id: uuid.UUID
     starts_at: datetime
+
+    @field_validator("starts_at")
+    @classmethod
+    def _require_timezone(cls, v: datetime) -> datetime:
+        return _aware(v)
 
 
 class BookingRequest(BaseModel):

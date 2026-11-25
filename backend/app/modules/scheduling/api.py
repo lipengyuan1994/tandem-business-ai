@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Query, Request, Response
+from pydantic import AwareDatetime
 from sqlalchemy.orm import Session
 
 from app.modules.catalog import public as catalog
@@ -147,8 +147,8 @@ def remove_exception(exception_id: uuid.UUID, ctx: Context = Depends(require(P.R
 )
 def slots(
     service_id: uuid.UUID,
-    earliest: datetime,
-    latest: datetime,
+    earliest: AwareDatetime,
+    latest: AwareDatetime,
     resource_id: uuid.UUID | None = None,
     location_id: uuid.UUID | None = None,
     limit: int = Query(default=10, ge=1, le=100),
@@ -173,8 +173,8 @@ def slots(
     "/appointments", response_model=list[AppointmentOut], summary="Appointments in a time window", responses=ERRORS
 )
 def list_appointments(
-    start: datetime,
-    end: datetime,
+    start: AwareDatetime,
+    end: AwareDatetime,
     resource_id: uuid.UUID | None = None,
     customer_id: uuid.UUID | None = None,
     status: str | None = None,
