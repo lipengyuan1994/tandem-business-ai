@@ -98,3 +98,17 @@ def test_sku_unique_version_conflict_permissions_and_isolation(client: Any) -> N
     assert client(["operator"]).get("/api/v1/catalog/items", params={"q": "brake"}).json()["items"][0]["sku"] == "BP-01"
     other = client(["owner"], make_business("example-garden-store"))
     assert other.get(f"/api/v1/catalog/items/{pads['id']}").status_code == 404
+
+
+@pytest.mark.parametrize("field", ["name", "buffer_minutes", "is_bookable_online"])
+def test_clearing_a_required_field_is_refused_not_500(client: Any, field: str) -> None:
+    c = client()
+    item = c.post("/api/v1/catalog/items", json=SERVICE).json()
+    r = c.patch(f"/api/v1/catalog/items/{item['id']}", json={"version": item["version"], field: None})
+    assert r.status_code == 422, r.text
+    assert (
+        c.patch(
+            f"/api/v1/catalog/items/{item['id']}", json={"version": item["version"], "description": None}
+        ).status_code
+        == 200
+    )  # nullable fields can still be cleared

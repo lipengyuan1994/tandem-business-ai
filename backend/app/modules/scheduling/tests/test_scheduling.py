@@ -620,6 +620,39 @@ def test_permissions_and_isolation(shop: Shop) -> None:
     assert other.get(f"/api/v1/scheduling/appointments/{a['id']}").status_code == 404
 
 
+def test_hours_override_still_needs_a_qualified_resource(shop: Shop) -> None:
+    bay = shop.owner.post("/api/v1/scheduling/resources", json={"name": "Wash bay", "kind": "room"}).json()["id"]
+    r = shop.book(shop.brake, shop.ada, f"{TUE}T23:30:00Z", resource=bay, override_hours=True)
+    assert (r.status_code, r.json()["code"]) == (409, "scheduling.slot_unavailable")
+    a = shop.book(shop.brake, shop.ada, f"{TUE}T16:00:00Z").json()
+    r = shop.owner.post(
+        f"/api/v1/scheduling/appointments/{a['id']}/reschedule",
+        json={"version": a["version"], "starts_at": f"{TUE}T23:30:00Z", "resource_id": bay, "override_hours": True},
+    )
+    assert (r.status_code, r.json()["code"]) == (409, "scheduling.slot_unavailable")
+    assert shop.book(shop.brake, shop.ada, f"{TUE}T23:30:00Z", override_hours=True).status_code == 201
+
+
+def test_naive_timestamps_are_refused_not_500(shop: Shop) -> None:
+    r = shop.owner.get(
+        "/api/v1/scheduling/slots",
+        params={"service_id": shop.brake, "earliest": f"{TUE}T07:00:00", "latest": "2026-11-11T07:00:00"},
+    )
+    assert r.status_code == 422, r.text
+    r = shop.owner.get("/api/v1/scheduling/appointments", params={"start": f"{TUE}T00:00:00", "end": f"{TUE}T23:00:00"})
+    assert r.status_code == 422, r.text
+    r = shop.owner.post(
+        "/api/v1/scheduling/holds",
+        json={
+            "service_id": shop.brake,
+            "resource_id": shop.jordan,
+            "customer_id": shop.ada,
+            "starts_at": f"{TUE}T16:00:00",
+        },
+    )
+    assert r.status_code == 422, r.text
+
+
 def test_confirming_a_hold_blocks_the_current_service_duration(shop: Shop, owner_engine: Engine) -> None:
     """Review finding: a hold keeps the interval it was placed with; confirming must use the service's current one."""
     ctx = shop.ctx()

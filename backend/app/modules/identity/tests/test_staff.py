@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import text
+from sqlalchemy import Engine, text
 
 from app.modules.identity.roles import ROLES
 from app.modules.identity.testing import add_member, login_as, make_user
@@ -174,3 +174,25 @@ def test_pending_invitations_are_listed_and_can_be_revoked(app: Any, keycloak: F
     assert owner.post(f"/api/v1/identity/invitations/{created['id']}/revoke").status_code == 204
     assert owner.get("/api/v1/identity/invitations").json() == []
     assert owner.post(f"/api/v1/identity/invitations/{created['id']}/revoke").status_code == 409
+
+
+def test_expired_invitation_can_be_sent_again(app: Any, keycloak: FakeKeycloak, owner_engine: Engine) -> None:
+    business = make_business("example-cycle-works")
+    owner = login_as(app, business, ["owner"])
+    body = {"email": "nia@example.com", "display_name": "Nia", "roles": ["operator"]}
+    first = owner.post("/api/v1/identity/invitations", json=body)
+    assert first.status_code == 201, first.text
+    assert owner.post("/api/v1/identity/invitations", json=body).json()["code"] == "identity.invitation_exists"
+
+    with owner_engine.begin() as conn:  # a week passes
+        conn.execute(text("update invitations set expires_at = now() - interval '1 day'"))
+    assert owner.get("/api/v1/identity/invitations").json() == []  # nothing left to revoke
+    again = owner.post("/api/v1/identity/invitations", json=body)
+    assert again.status_code == 201, again.text
+    # the account from the first invitation is reused; a fresh password would not be set on it, so none is shown
+    assert again.json()["temporary_password"] is None
+    assert len(keycloak.created_users) == 1
+    assert [i["id"] for i in owner.get("/api/v1/identity/invitations").json()] == [again.json()["id"]]
+    with owner_engine.connect() as conn:
+        statuses = conn.execute(text("select status from invitations order by expires_at")).scalars().all()
+    assert statuses == ["expired", "pending"]

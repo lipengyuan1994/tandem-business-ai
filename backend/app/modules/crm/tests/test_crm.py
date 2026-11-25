@@ -234,3 +234,15 @@ def test_permissions_isolation_and_idempotency(client: Any) -> None:
 )
 def test_identity_name_overlap_requires_two_distinct_tokens(name: str | None, candidate: str, expected: bool) -> None:
     assert crm.has_identity_name_overlap(name, candidate) is expected
+
+
+def test_removing_the_primary_contact_promotes_the_next_one(client: Any) -> None:
+    c = client()
+    ada = _ada(c)
+    first = ada["contact_points"][0]
+    r = c.post(f"/api/v1/crm/customers/{ada['id']}/contact-points", json={"type": "email", "value": "ada@work.example"})
+    assert r.status_code == 201 and r.json()["is_primary"] is False
+    assert c.delete(f"/api/v1/crm/contact-points/{first['id']}").status_code == 204
+    emails = [p for p in c.get(f"/api/v1/crm/customers/{ada['id']}").json()["contact_points"] if p["type"] == "email"]
+    # campaigns and reminders only use the primary contact, so the customer must keep one
+    assert [(p["value"], p["is_primary"]) for p in emails] == [("ada@work.example", True)]

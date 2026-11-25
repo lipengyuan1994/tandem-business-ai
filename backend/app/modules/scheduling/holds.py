@@ -26,6 +26,7 @@ from .models import Appointment, AppointmentResource
 from .resources import _resource
 from .schemas import SlotOut
 from .slots import _offered as _offered
+from .slots import _qualified
 
 ACTIVE = ("held", "confirmed")
 
@@ -59,10 +60,15 @@ def _allocation(
     ignore_lead_time: bool = False,
 ) -> SlotOut | None:
     slot = _offered(db, ctx, service_id, resource_id, starts_at, ignore, ignore_lead_time=ignore_lead_time)
-    required = catalog.get_service_requirements(db, ctx, service_id).required_resources
+    requirements = catalog.get_service_requirements(db, ctx, service_id)
     # An hours override never bypasses qualification, location, or multi-resource availability.
-    if not slot and (not override or required):
+    if not slot and (not override or requirements.required_resources):
         raise Conflict("scheduling.slot_unavailable")
+    if not slot:
+        resource = _resource(db, ctx, resource_id)
+        qualified = _qualified(db, ctx, service_id, requirements.resource_kind, resource.location_id)
+        if resource_id not in {r.id for r in qualified}:
+            raise Conflict("scheduling.slot_unavailable", detail="This resource can't perform this service")
     return slot
 
 

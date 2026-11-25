@@ -4,6 +4,14 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **Fix (2026-11-25):** booking or moving an appointment with "override hours" no longer lets a resource that can't do
+  the service (say, a room for a technician's job) take it; the override only lifts opening hours.
+- **Fix:** an invitation that expired unanswered no longer blocks inviting the same person again. The new invitation
+  reuses the account the first one made and doesn't show a temporary password that wouldn't work.
+- **Fix:** removing a customer's primary email or phone makes their next one primary, so reminders and campaigns
+  still reach them.
+- **Fix:** scheduling endpoints answer 422 instead of failing with an error for timestamps without a time zone, and
+  clearing a catalog item's name, buffer or online-booking flag is refused (422) instead of failing.
 - **Fix (2026-11-25):** an order that already has an invoice can no longer be cancelled (it used to release its
   reserved stock while the invoice stayed live); credit or delete the invoice instead.
 - **Fix:** QuickBooks sync no longer turns the owner's settings save into a "changed since you opened it" conflict
