@@ -28,7 +28,8 @@ export function allowedActions(family: DocumentFamily, d: SalesDocument): SalesA
   }
   if (family === "invoices" && d.kind !== "credit_note") {
     if (d.status === "draft") return ["issue"]
-    if (d.status === "issued") return ["mark-paid", "credit"]
+    // A credit note cancels the whole invoice, so the API refuses it once any payment is recorded.
+    if (d.status === "issued") return (d.amount_paid_minor ?? 0) > 0 ? ["mark-paid"] : ["mark-paid", "credit"]
   }
   return []
 }

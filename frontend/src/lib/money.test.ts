@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { minorToDecimal, parseMoneyInput } from "./money"
+import { formatMoney, minorToDecimal, minorUnitDigits, parseMoneyInput } from "./money"
 
 describe("exact money input", () => {
   it.each([
@@ -37,5 +37,28 @@ describe("exact money input", () => {
   ])("displays API price %i %s as %s and round-trips exactly", (minor, currency, decimal) => {
     expect(minorToDecimal(minor, currency)).toBe(decimal)
     expect(parseMoneyInput(decimal, currency)).toEqual({ ok: true, minor })
+  })
+})
+
+describe("minor units follow the backend's ISO 4217 table, not the browser's currency data", () => {
+  it.each([
+    ["USD", 2], ["EUR", 2], ["HUF", 2], ["IDR", 2], ["COP", 2], ["PKR", 2],
+    ["JPY", 0], ["KRW", 0], ["CLP", 0], ["ISK", 0], ["IQD", 3], ["KWD", 3],
+  ])("%s has %i decimal places", (currency, digits) => {
+    expect(minorUnitDigits(currency)).toBe(digits)
+  })
+
+  it("reads 1000 HUF as 100000 minor units, as the API counts them", () => {
+    expect(parseMoneyInput("1000", "HUF")).toEqual({ ok: true, minor: 100000 })
+    expect(parseMoneyInput("1000.50", "HUF")).toEqual({ ok: true, minor: 100050 })
+    expect(minorToDecimal(100050, "HUF")).toBe("1000.50")
+    expect(parseMoneyInput("1000", "IQD")).toEqual({ ok: true, minor: 1000000 })
+  })
+
+  it("formats amounts with the same number of decimal places", () => {
+    expect(formatMoney({ amount_minor: 100050, currency: "HUF" })).toBe("HUF\u00a01,000.50")
+    expect(formatMoney({ amount_minor: 1000000, currency: "IQD" })).toBe("IQD\u00a01,000.000")
+    expect(formatMoney({ amount_minor: 2500, currency: "JPY" })).toBe("¥2,500")
+    expect(formatMoney({ amount_minor: 2500, currency: "USD" })).toBe("$25.00")
   })
 })

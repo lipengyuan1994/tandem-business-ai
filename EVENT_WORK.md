@@ -728,3 +728,16 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   types, and all 638 frontend tests passed locally. The full local backend suite was too slow on the 4-CPU cloud
   machine and was not finished there; the complete backend suite passed in CI on all four shards (PR #5).
   Not run: browser or end-to-end checks against a running app.
+
+## 2026-11-25 — Bug sweep: currency decimals and invoice payment dialog
+
+- `frontend/src/lib/money.ts` took each currency's decimal places from the browser's `Intl` data, which disagrees with
+  the server's ISO 4217 table (`app/platform/money.py`) for 17 currencies (HUF, IDR, COP, PKR, IQD, ...). A HUF
+  business typing 1000 sent 1000 minor units, which the server, QuickBooks sync, exports and reminders read as 10.00.
+  The frontend now uses the server's table for parsing, display and report CSVs.
+- The invoice payment dialog froze the version and balance it opened with (as the bill payment dialog already did),
+  so a background refetch cannot turn a stale form into an accepted duplicate payment.
+- Invoice actions: "Create credit note" only before any payment (the API returns `sales.invoice_has_payments`
+  otherwise); "Record payment" only while a balance is owed.
+- Verification: new frontend tests (fail before, pass after), frontend lint, types and full frontend suite.
+

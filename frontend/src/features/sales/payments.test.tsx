@@ -71,6 +71,40 @@ describe("invoice payments", () => {
     await waitFor(() => expect(queryClient.isFetching({ queryKey: ["sales"] })).toBe(0))
   })
 
+  it("keeps the version the dialog opened with when the invoice refetches underneath it", async () => {
+    mockMe(meWith(...PERMS))
+    const posted = serve(doc(ISSUED))
+    const { queryClient } = renderApp(`/sales/invoices/${ID}`)
+    await userEvent.click(await screen.findByRole("button", { name: "Record payment" }))
+    const dialog = await screen.findByRole("dialog", { name: "Record payment" })
+    // Someone else records a payment meanwhile; a focus refetch brings the newer version into the page.
+    server.use(http.get(`*/api/v1/sales/invoices/${ID}`, () => HttpResponse.json(doc({ ...ISSUED, version: 4, amount_paid_minor: 4000, balance_minor: 5634, payment_status: "partially_paid", payments: [PAYMENT] }))))
+    await queryClient.invalidateQueries({ queryKey: ["sales"] })
+    await waitFor(() => expect(queryClient.isFetching({ queryKey: ["sales"] })).toBe(0))
+    const amount = within(dialog).getByLabelText("Amount (USD)")
+    await userEvent.clear(amount)
+    await userEvent.type(amount, "40")
+    await userEvent.click(within(dialog).getByRole("button", { name: "Record payment" }))
+    await waitFor(() => expect(posted).toHaveLength(1))
+    expect(posted[0]!.body).toMatchObject({ version: 3, amount_minor: 4000 })
+  })
+
+  it("offers a credit note only before any payment, and no payment once nothing is owed", async () => {
+    mockMe(meWith(...PERMS, "sales.invoice.credit"))
+    serve(doc({ ...ISSUED, amount_paid_minor: 4000, balance_minor: 5634, payment_status: "partially_paid", payments: [PAYMENT] }))
+    const first = renderApp(`/sales/invoices/${ID}`)
+    expect(await screen.findByRole("button", { name: "Mark fully paid" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Record payment" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Create credit note" })).not.toBeInTheDocument()
+    first.unmount()
+
+    serve(doc({ ...ISSUED, total_minor: 0, subtotal_minor: 0, tax_minor: 0, balance_minor: 0 }))
+    renderApp(`/sales/invoices/${ID}`)
+    expect(await screen.findByRole("button", { name: "Create credit note" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Mark fully paid" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Record payment" })).not.toBeInTheDocument()
+  })
+
   it("hides payment actions without the permissions", async () => {
     mockMe(meWith("sales.document.read"))
     serve(doc({ ...ISSUED, payments: [PAYMENT] }))
