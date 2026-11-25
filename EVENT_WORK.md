@@ -741,3 +741,18 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   otherwise); "Record payment" only while a balance is owed.
 - Verification: new frontend tests (fail before, pass after), frontend lint, types and full frontend suite.
 
+## 2026-11-25 — Bug sweep: order cancel, QuickBooks sync, stock movement signs
+
+- `sales.service.transition`: cancelling a confirmed order that has an invoice now returns 409 `sales.order_invoiced`.
+  Before, it released the order's stock reservations while the invoice stayed issued. The check sits under the order
+  row lock that invoicing takes too, so the two can't race.
+- QuickBooks: sync start/finish and token refresh bumped `accounting_connections.version`, the optimistic-lock value
+  the settings form holds, so a save during or after any background run failed with `accounting.version_conflict`
+  and the form remounted, dropping edits. Only owner actions (settings, connect, disconnect) bump it now.
+- QuickBooks: the payment feeds (`sales.ledger.payment_versions`, `purchasing.ledger.bill_payment_versions`) selected
+  by `paid_on >= sync_from` only, so a payment dated before `sync_from` against an invoice or bill that does sync was
+  never sent. They now also include payments whose invoice/bill date is on or after `sync_from`.
+- Inventory: `service.check_direction` refuses a movement whose sign contradicts its reason (receipt, gain, transfer
+  in, return add; loss, consumption, sale, transfer out remove; count corrections go either way), in
+  `record_movement` and in the adjust-stock proposal validator. All internal callers already used the right sign.
+- Verification: regression tests for each (fail before, pass after), backend lint, types and full backend suite.

@@ -470,3 +470,32 @@ def test_older_bill_sent_for_a_payment_stays_watched(books: Shop, intuit: FakeQu
     sync(books, registry)
     assert intuit.of("bill")[0].get("deleted") is True
     assert intuit.of("billpayment")[0].get("voided") is True
+
+
+def test_payment_dated_before_sync_from_still_syncs(books: Shop, intuit: FakeQuickBooks, registry: Registry) -> None:
+    # a deposit taken before the invoice (and before sync_from) belongs to an invoice that does sync
+    invoice = issued_invoice(books)
+    pay(books, invoice, 2000, paid_on="2026-10-20")
+    bill = supplier_bill(books)
+    r = books.owner.post(
+        f"/api/v1/purchasing/bills/{bill['id']}/payments",
+        json={"version": bill["version"], "amount_minor": 5000, "paid_on": "2026-10-20", "method": "bank_transfer"},
+    )
+    assert r.status_code == 201, r.text
+    sync(books, registry)
+    assert len(intuit.of("payment")) == 1 and len(intuit.of("billpayment")) == 1
+
+
+def test_sync_and_token_refresh_keep_the_settings_version(
+    books: Shop, intuit: FakeQuickBooks, registry: Registry
+) -> None:
+    # the owner's settings form holds `version`; a background run must not turn their save into a conflict
+    before = books.owner.get(QB).json()["version"]
+    later = clock.now() + timedelta(minutes=58)  # forces a token refresh during the run
+    clock.set_clock(lambda: later)
+    issued_invoice(books)
+    sync(books, registry)
+    assert intuit.token_calls[-1]["grant_type"] == "refresh_token"
+    assert books.owner.get(QB).json()["version"] == before
+    r = books.owner.put(f"{QB}/settings", json={"version": before, "sync_from": "2026-10-01", "auto_sync": False})
+    assert r.status_code == 200, r.text

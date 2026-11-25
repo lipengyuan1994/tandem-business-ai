@@ -33,6 +33,7 @@ def _describe_adjust(db: Session, ctx: Context, p: AdjustStockPayload) -> list[P
 
 
 def _validate_adjust(db: Session, ctx: Context, p: AdjustStockPayload) -> None:
+    service.check_direction(p.reason, p.quantity)
     service.availability(db, ctx, [p.item_id])
 
 
