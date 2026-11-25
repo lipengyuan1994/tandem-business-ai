@@ -834,4 +834,6 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   durations file can be refreshed.
 - Export: every exported table is read in primary-key order. The byte-for-byte export test failed once in CI because
   two reads of `audit_events` came back in different orders (no ORDER BY; Postgres may synchronize concurrent scans).
+- AI router: the first attempt of a model call now gets its timeout exactly as given. It was worked out as
+  `(started + timeout) - started`, which can be off by a rounding error and failed an exact test in CI once.
 
