@@ -228,8 +228,11 @@ BILL_STATUSES = ("open", "partially_paid", "paid", "void")
 class SupplierBill(BusinessScopedBase):
     """A supplier's invoice to the business (accounts payable). Corrections void the bill instead of deleting it.
 
-    `amount_paid_minor` always equals the sum of the bill's non-voided payments, and `status` follows it:
-    open (nothing paid), partially_paid, paid (sum reaches the total), or void (cancelled, never paid).
+    `amount_paid_minor` always equals the sum of the bill's non-voided payments, `amount_credited_minor` the sum of its
+    live supplier credits and `amount_refunded_minor` the part of those credits the supplier paid back in money. The
+    balance is total - (paid - refunded) - credited, and `status` follows what is settled: open (nothing),
+    partially_paid, paid (nothing left to pay, by payments or credits), or void (cancelled, never paid or credited).
+    A bill may list its lines; its total is then their sum.
     """
 
     __tablename__ = "supplier_bills"
@@ -242,6 +245,8 @@ class SupplierBill(BusinessScopedBase):
     currency: Mapped[str] = mapped_column(String(3))
     total_minor: Mapped[int] = mapped_column(BigInteger)
     amount_paid_minor: Mapped[int] = mapped_column(BigInteger, default=0)
+    amount_credited_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    amount_refunded_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
     status: Mapped[str] = mapped_column(String(16), default="open")
     notes: Mapped[str | None] = mapped_column(Text)
     voided_at: Mapped[datetime | None]
@@ -256,6 +261,65 @@ class SupplierBill(BusinessScopedBase):
             "total_minor > 0 and amount_paid_minor >= 0 and amount_paid_minor <= total_minor", name="amounts"
         ),
         CheckConstraint("due_date is null or due_date >= bill_date", name="dates"),
+        CheckConstraint(
+            "amount_credited_minor >= 0 and amount_refunded_minor >= 0 "
+            "and amount_refunded_minor <= amount_paid_minor and amount_refunded_minor <= amount_credited_minor "
+            "and amount_paid_minor - amount_refunded_minor + amount_credited_minor <= total_minor",
+            name="settlement",
+        ),
+    )
+
+
+class SupplierBillLine(BusinessScopedBase):
+    """One line of a supplier bill: what was bought, optionally a catalog item or a line of the bill's order."""
+
+    __tablename__ = "supplier_bill_lines"
+    bill_id: Mapped[uuid.UUID]
+    position: Mapped[int] = mapped_column(Integer)
+    description: Mapped[str] = mapped_column(String(200))
+    quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3))
+    unit_cost_minor: Mapped[int] = mapped_column(BigInteger)
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    catalog_item_id: Mapped[uuid.UUID | None]
+    purchase_order_line_id: Mapped[uuid.UUID | None]
+    __table_args__ = scoped_table_args(
+        ForeignKeyConstraint(["business_id", "bill_id"], ["supplier_bills.business_id", "supplier_bills.id"]),
+        reference("catalog_item_id", "catalog_items"),
+        reference("purchase_order_line_id", "purchase_order_lines"),
+        UniqueConstraint("business_id", "bill_id", "position"),
+        CheckConstraint("quantity > 0 and unit_cost_minor >= 0 and amount_minor >= 0", name="values"),
+    )
+
+
+class SupplierCredit(BusinessScopedBase):
+    """A credit from a supplier against one bill (a returned item, a price correction). It takes off what is still
+    owed first; any amount beyond that was paid back by the supplier (`refund_minor`, with how and when). Corrections
+    void the row instead of deleting it."""
+
+    __tablename__ = "supplier_credits"
+    bill_id: Mapped[uuid.UUID]
+    credit_date: Mapped[date]
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    supplier_reference: Mapped[str | None] = mapped_column(String(100))
+    reason: Mapped[str | None] = mapped_column(String(500))
+    refund_minor: Mapped[int] = mapped_column(BigInteger, default=0)
+    refund_received_on: Mapped[date | None]
+    refund_method: Mapped[str | None] = mapped_column(String(16))
+    refund_reference: Mapped[str | None] = mapped_column(String(200))
+    voided_at: Mapped[datetime | None]
+    __table_args__ = scoped_table_args(
+        ForeignKeyConstraint(["business_id", "bill_id"], ["supplier_bills.business_id", "supplier_bills.id"]),
+        Index("ix_supplier_credits_bill", "business_id", "bill_id"),
+        CheckConstraint("amount_minor > 0 and refund_minor >= 0 and refund_minor <= amount_minor", name="amounts"),
+        CheckConstraint(
+            "(refund_minor = 0 and refund_received_on is null and refund_method is null and refund_reference is null)"
+            " or (refund_minor > 0 and refund_received_on is not null and refund_method is not null)",
+            name="refund",
+        ),
+        CheckConstraint(
+            f"refund_method is null or refund_method in ({','.join(repr(m) for m in BILL_PAYMENT_METHODS)})",
+            name="refund_method",
+        ),
     )
 
 

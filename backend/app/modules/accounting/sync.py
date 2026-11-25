@@ -25,10 +25,13 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.modules.purchasing.public import (
     LedgerBill,
     LedgerBillPayment,
+    LedgerSupplierCredit,
     ledger_bill_payment_versions,
     ledger_bill_payments,
     ledger_bill_versions,
     ledger_bills,
+    ledger_supplier_credit_versions,
+    ledger_supplier_credits,
     ledger_suppliers,
 )
 from app.modules.sales.public import (
@@ -546,6 +549,24 @@ class Engine:
             raise self._failed(key, label, p.version, "Waiting for the supplier to reach QuickBooks")
         self.push(key, "billpayment", label, p.version, build.bill_payment(p, vendor.remote_id, bill_id, bank))
 
+    def supplier_credit(self, c: LedgerSupplierCredit) -> None:
+        """QuickBooks applies a vendor credit to a bill only through a bill payment, which the API cannot create
+        safely beside the payments already sent, so the bookkeeper enters supplier credits by hand."""
+        key = ("supplier_credit", str(c.id))
+        bill = f"bill {c.bill_reference}" if c.bill_reference else "a bill"
+        label = f"Credit from {c.supplier_name} on {bill}"
+        amount_text = f"{minor_text(c.amount_minor, c.currency)} {c.currency}"
+        if c.voided:
+            message = f"This credit of {amount_text} was voided; remove it in QuickBooks if it was entered there"
+        else:
+            message = f"Enter this vendor credit of {amount_text} ({c.credit_date}) against {bill} in QuickBooks"
+            if c.refund_minor:
+                message += (
+                    f", and the refund of {minor_text(c.refund_minor, c.currency)} {c.currency} received "
+                    f"({c.refund_method}, {c.refund_received_on})"
+                )
+        self._skipped(key, label, c.version, message)
+
     # ---- the run -----------------------------------------------------------------------------------------
 
     def _each(self, items: list[T], work: Callable[[T], object]) -> bool:
@@ -588,6 +609,11 @@ class Engine:
                 for i, v in ledger_bill_payment_versions(db, self.ctx, since).items()
                 if self.due(("bill_payment", str(i)), v)
             ]
+            credit_due = [
+                i
+                for i, v in ledger_supplier_credit_versions(db, self.ctx, since).items()
+                if self.due(("supplier_credit", str(i)), v)
+            ]
         # Older invoices and bills sent only because a newer payment needed them stay watched for voids and edits.
         invoice_due += [
             d.id
@@ -621,7 +647,8 @@ class Engine:
                 return True
         if m.expense_account_id and not self._each(bill_rows, self.bill):
             return True
-        return False
+        credits_in = sorted(self._load(credit_due, ledger_supplier_credits), key=lambda c: (c.credit_date, str(c.id)))
+        return not self._each(credits_in, self.supplier_credit)
 
     def _exported_outside(
         self, entities: tuple[str, ...], window: dict[uuid.UUID, int], loader: Callable[..., dict[uuid.UUID, T]]

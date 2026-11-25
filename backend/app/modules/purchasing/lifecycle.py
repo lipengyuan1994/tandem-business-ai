@@ -23,7 +23,9 @@ from .models import (
     QuoteRequestSupplier,
     Supplier,
     SupplierBill,
+    SupplierBillLine,
     SupplierBillPayment,
+    SupplierCredit,
     SupplierItem,
     SupplierQuote,
     SupplierQuoteLine,
@@ -43,7 +45,9 @@ TABLES = [
     SupplierQuote,
     SupplierQuoteLine,
     SupplierBill,
+    SupplierBillLine,
     SupplierBillPayment,
+    SupplierCredit,
 ]
 
 
@@ -90,6 +94,8 @@ def erase(db: Session, ctx: Context, target: ErasureTarget) -> dict[str, int]:
         (SupplierQuote, SupplierQuote.notes, 500),
         (PurchaseOrder, PurchaseOrder.notes, None),
         (SupplierBill, SupplierBill.notes, None),
+        (SupplierBillLine, SupplierBillLine.description, 200),
+        (SupplierCredit, SupplierCredit.reason, 500),
     ):
         redacted = func.redact_text(field, target.needles)
         if limit is not None:
