@@ -10,6 +10,7 @@ const TABS = [
   { to: "/settings/policies", key: "settings.tabs.policies", permission: "org.settings.read" },
   { to: "/settings/staff", key: "settings.tabs.staff", permission: "identity.membership.read" },
   { to: "/settings/ai", key: "ai.settings.tab", permission: "ai.settings.read" },
+  { to: "/settings/accounting", key: "settings.tabs.accounting", permission: "accounting.sync.read" },
 ] as const
 
 export function SettingsLayout() {

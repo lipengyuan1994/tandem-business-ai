@@ -1,6 +1,131 @@
 {
   "components": {
     "schemas": {
+      "AccountMapping": {
+        "description": "QuickBooks account ids. Income, expense and bank are needed; the rest fall back to QuickBooks defaults.",
+        "properties": {
+          "bank_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Account Id"
+          },
+          "deposit_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Account Id"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id"
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id"
+          },
+          "payable_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payable Account Id"
+          },
+          "receivable_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receivable Account Id"
+          },
+          "tax_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Account Id"
+          }
+        },
+        "title": "AccountMapping",
+        "type": "object"
+      },
+      "AccountOut": {
+        "properties": {
+          "account_type": {
+            "title": "Account Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sub_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sub Type"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "account_type"
+        ],
+        "title": "AccountOut",
+        "type": "object"
+      },
       "ActionTypeOut": {
         "properties": {
           "action_type": {
@@ -4064,6 +4189,185 @@
           "value"
         ],
         "title": "Clause",
+        "type": "object"
+      },
+      "ConnectStartOut": {
+        "properties": {
+          "authorize_url": {
+            "title": "Authorize Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorize_url"
+        ],
+        "title": "ConnectStartOut",
+        "type": "object"
+      },
+      "ConnectionOut": {
+        "properties": {
+          "auto_sync": {
+            "default": true,
+            "title": "Auto Sync",
+            "type": "boolean"
+          },
+          "business_currency": {
+            "title": "Business Currency",
+            "type": "string"
+          },
+          "company_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Name"
+          },
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "connected_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connected At"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/SyncCounts"
+          },
+          "environment": {
+            "enum": [
+              "sandbox",
+              "production"
+            ],
+            "title": "Environment",
+            "type": "string"
+          },
+          "home_currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Currency"
+          },
+          "last_sync_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync Error"
+          },
+          "last_sync_finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync Finished At"
+          },
+          "last_sync_started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync Started At"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/AccountMapping"
+          },
+          "missing_mapping": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Mapping",
+            "type": "array"
+          },
+          "provider": {
+            "const": "quickbooks",
+            "default": "quickbooks",
+            "title": "Provider",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "not_connected",
+              "pending",
+              "connected",
+              "needs_reconnect",
+              "disconnected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "sync_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sync From"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "configured",
+          "status",
+          "environment",
+          "business_currency"
+        ],
+        "title": "ConnectionOut",
         "type": "object"
       },
       "ConsentIn": {
@@ -9323,6 +9627,33 @@
         "title": "Page[SupplierOut]",
         "type": "object"
       },
+      "Page_SyncRecordOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SyncRecordOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[SyncRecordOut]",
+        "type": "object"
+      },
       "PauseOut": {
         "properties": {
           "paused": {
@@ -12688,6 +13019,114 @@
         "title": "ServicePartOut",
         "type": "object"
       },
+      "SettingsIn": {
+        "properties": {
+          "auto_sync": {
+            "default": true,
+            "title": "Auto Sync",
+            "type": "boolean"
+          },
+          "bank_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank Account Id"
+          },
+          "deposit_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deposit Account Id"
+          },
+          "expense_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expense Account Id"
+          },
+          "income_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Account Id"
+          },
+          "payable_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payable Account Id"
+          },
+          "receivable_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receivable Account Id"
+          },
+          "sync_from": {
+            "format": "date",
+            "title": "Sync From",
+            "type": "string"
+          },
+          "tax_account_id": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,20}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Account Id"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "sync_from"
+        ],
+        "title": "SettingsIn",
+        "type": "object"
+      },
       "SettingsOut": {
         "properties": {
           "settings": {
@@ -13963,6 +14402,176 @@
           "business_id"
         ],
         "title": "SwitchBusinessIn",
+        "type": "object"
+      },
+      "SyncCounts": {
+        "properties": {
+          "failed": {
+            "default": 0,
+            "title": "Failed",
+            "type": "integer"
+          },
+          "skipped": {
+            "default": 0,
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "synced": {
+            "default": 0,
+            "title": "Synced",
+            "type": "integer"
+          }
+        },
+        "title": "SyncCounts",
+        "type": "object"
+      },
+      "SyncQueuedOut": {
+        "properties": {
+          "queued": {
+            "title": "Queued",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "queued"
+        ],
+        "title": "SyncQueuedOut",
+        "type": "object"
+      },
+      "SyncRecordOut": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "entity_type": {
+            "enum": [
+              "customer",
+              "supplier",
+              "invoice",
+              "credit_note",
+              "credit_application",
+              "invoice_payment",
+              "bill",
+              "bill_payment",
+              "item"
+            ],
+            "title": "Entity Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "last_attempt_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Attempt At"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "local_id": {
+            "title": "Local Id",
+            "type": "string"
+          },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
+          "remote_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote Id"
+          },
+          "remote_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote State"
+          },
+          "status": {
+            "enum": [
+              "synced",
+              "failed",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "synced_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synced At"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entity_type",
+          "local_id",
+          "label",
+          "status",
+          "remote_id",
+          "remote_state",
+          "attempts",
+          "last_error",
+          "last_attempt_at",
+          "next_attempt_at",
+          "synced_at",
+          "updated_at"
+        ],
+        "title": "SyncRecordOut",
         "type": "object"
       },
       "SystemStatus": {
@@ -15253,6 +15862,19 @@
         "title": "WorkPage",
         "type": "object"
       },
+      "app__modules__accounting__schemas__VersionIn": {
+        "properties": {
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "VersionIn",
+        "type": "object"
+      },
       "app__modules__ai__customer_care__api__ResolveIn": {
         "additionalProperties": false,
         "properties": {
@@ -15378,6 +16000,582 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/accounting/quickbooks": {
+      "get": {
+        "operationId": "status_api_v1_accounting_quickbooks_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "QuickBooks connection and sync status",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/api/v1/accounting/quickbooks/accounts": {
+      "get": {
+        "operationId": "accounts_api_v1_accounting_quickbooks_accounts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountOut"
+                  },
+                  "title": "Response Accounts Api V1 Accounting Quickbooks Accounts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Active accounts in the connected QuickBooks company",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/api/v1/accounting/quickbooks/connect": {
+      "post": {
+        "operationId": "connect_api_v1_accounting_quickbooks_connect_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectStartOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Start connecting QuickBooks Online (returns Intuit's sign-in URL)",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/api/v1/accounting/quickbooks/disconnect": {
+      "post": {
+        "operationId": "disconnect_api_v1_accounting_quickbooks_disconnect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__accounting__schemas__VersionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Disconnect QuickBooks (records already sent stay there)",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/api/v1/accounting/quickbooks/records": {
+      "get": {
+        "operationId": "records_api_v1_accounting_quickbooks_records_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "enum": [
+                      "synced",
+                      "failed",
+                      "skipped"
+                    ],
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "entity_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "enum": [
+                      "customer",
+                      "supplier",
+                      "invoice",
+                      "credit_note",
+                      "credit_application",
+                      "invoice_payment",
+                      "bill",
+                      "bill_payment",
+                      "item"
+                    ],
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Entity Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_SyncRecordOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Sync log: what was sent to QuickBooks, failed or skipped",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/api/v1/accounting/quickbooks/records/{record_id}/retry": {
+      "post": {
+        "operationId": "retry_api_v1_accounting_quickbooks_records__record_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncRecordOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Try a failed or skipped record again on the next sync (which starts now)",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/api/v1/accounting/quickbooks/settings": {
+      "put": {
+        "operationId": "update_settings_api_v1_accounting_quickbooks_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Set the QuickBooks account mapping, sync start date and automatic sync",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
+    "/api/v1/accounting/quickbooks/sync": {
+      "post": {
+        "operationId": "sync_now_api_v1_accounting_quickbooks_sync_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncQueuedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Sync with QuickBooks now",
+        "tags": [
+          "accounting"
+        ]
+      }
+    },
     "/api/v1/admin/erasures": {
       "get": {
         "operationId": "erasures_api_v1_admin_erasures_get",

@@ -105,6 +105,14 @@ class Settings(BaseSettings):
             raise ValueError("WORKER_AI_CONCURRENCY must be less than WORKER_CONCURRENCY")
         return self
 
+    # QuickBooks Online accounting sync (modules/accounting). Empty client id = the integration is not offered.
+    quickbooks_client_id: str = ""
+    quickbooks_client_secret: SecretStr = Field(default=SecretStr(""), repr=False)
+    quickbooks_environment: Literal["sandbox", "production"] = "sandbox"
+    # Must match a redirect URI registered on the Intuit app.
+    # Empty = {APP_BASE_URL}/api/v1/accounting/quickbooks/callback
+    quickbooks_redirect_uri: str = ""
+
     log_level: str = "info"
 
     @property

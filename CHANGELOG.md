@@ -25,6 +25,21 @@ Release notes for operators. Each release lists database migrations and any manu
 - **Migration:** `20261124_1200_invoice_payments` adds `invoice_payments` and `invoices.amount_paid_minor`, and records
   one payment for each invoice already marked paid. No manual steps.
 - **Migration:** `20261124_1800_supplier_bills` adds `supplier_bills` and `supplier_bill_payments`. No manual steps.
+- **QuickBooks Online sync (2026-11-24):** Settings → Accounting connects one QuickBooks Online company per business
+  (owner only) and sends issued invoices, credit notes, customer payments, supplier bills and bill payments there,
+  every 15 minutes or on "Sync now". The owner picks the income, expense and bank accounts and a start date; records
+  before it stay out. Voided payments are voided in QuickBooks and voided bills deleted. A sync log shows what was
+  sent, skipped (with the reason) or failed, and failed records can be retried. Connecting is refused under
+  `DATA_PROFILE=regulated`.
+- New permissions `accounting.sync.read|run` and `accounting.connection.manage` (policy 2026-11-24.2): owner has all;
+  admin and demo reviewer can see and run syncs; auditors can read the log.
+- **Migration:** `20261124_2000_accounting_sync` adds `accounting_connections` and `accounting_sync_records`. No manual
+  steps.
+- **Configuration (to use QuickBooks, after the upgrade):** create an app at developer.intuit.com, set
+  `QUICKBOOKS_CLIENT_ID`, `QUICKBOOKS_CLIENT_SECRET` and `QUICKBOOKS_ENVIRONMENT` (`sandbox` or `production`), register
+  `{APP_BASE_URL}/api/v1/accounting/quickbooks/callback` as a redirect URI (or set `QUICKBOOKS_REDIRECT_URI`), and add
+  `oauth.platform.intuit.com,developer.api.intuit.com,sandbox-quickbooks.api.intuit.com,quickbooks.api.intuit.com` to
+  `EGRESS_ALLOWLIST`. Without them the page says QuickBooks isn't set up.
 
 ## 0.1.20 (2026-11-24) — Boston AI Forward product branding
 
