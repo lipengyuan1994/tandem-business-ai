@@ -136,6 +136,28 @@ def test_reschedule_shared_slots_and_stale_version(shop: Shop, owner_engine: Eng
     assert shop.available() == 2  # existing parts reservation retained
 
 
+def test_reschedule_into_time_overlapping_own_booking(shop: Shop, owner_engine: Engine) -> None:
+    """The customer's own booking (Tue 17:00-18:00Z + buffer) must not block moving it 30 minutes later."""
+    client, appt = logged_in(shop, owner_engine)
+    r = client.get(
+        BASE + f"/bookings/{appt['id']}/slots",
+        params={"earliest": "2026-11-10T17:15:00Z", "latest": "2026-11-10T17:45:00Z"},
+    )
+    assert r.status_code == 200, r.text
+    overlapping = [
+        s for s in r.json() if s["resource_id"] == appt["resource_id"] and s["starts_at"].startswith("2026-11-10T17:30")
+    ]
+    assert overlapping, r.json()
+    body = {"version": appt["version"], "starts_at": overlapping[0]["starts_at"], "resource_id": appt["resource_id"]}
+    r = client.post(BASE + f"/bookings/{appt['id']}/reschedule", json=body)
+    assert r.status_code == 200, r.text
+    assert r.json()["starts_at"].startswith("2026-11-10T17:30")
+    assert shop.available() == 2  # the same parts reservation, no second one
+    with owner_engine.connect() as db:
+        statuses = db.execute(text("select status from appointments")).scalars().all()
+    assert sorted(statuses) == ["confirmed"]  # no stray hold left behind
+
+
 def test_expiry_and_idle_session(shop: Shop, owner_engine: Engine) -> None:
     enable(shop)
     contact(shop)

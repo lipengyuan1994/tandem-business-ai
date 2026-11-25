@@ -4,6 +4,10 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **Fix (2026-11-25):** customers rescheduling online can pick a time that overlaps their current booking (for example
+  half an hour later); their own booking no longer blocks it.
+- **Fix:** on the day clocks go back, the first slot after 2 a.m. daylight time is no longer skipped to 2 a.m.
+  standard time; the repeated hour is offered.
 - **Fix (2026-11-25):** an order whose invoice was credited can be cancelled again, releasing its reserved stock
   (the guard added earlier today also counted the voided invoice).
 - **Fix (2026-11-25):** booking or moving an appointment with "override hours" no longer lets a resource that can't do

@@ -213,7 +213,9 @@ def slots(
     query = SlotQuery.model_validate(
         {"service_id": row.service_id, "location_id": row.location_id, "earliest": earliest, "latest": latest}
     )
-    return [CustomerSlot(**slot.model_dump(exclude={"resource_name"})) for slot in service.find_slots(db, ctx, query)]
+    # The customer's own booking doesn't block its replacement: a later or earlier time that overlaps it is offered.
+    found = service.find_slots(db, ctx, query, ignore_appointment=row.id)
+    return [CustomerSlot(**slot.model_dump(exclude={"resource_name"})) for slot in found]
 
 
 def change(
@@ -230,7 +232,10 @@ def change(
         raise Conflict("self_service.fee_changed")
     if reschedule:
         assert isinstance(body, CustomerReschedule)
-        # Same service and location. Selection is revalidated by the canonical slot finder and hold path.
+        # Same service and location. The canonical slot finder revalidates the selection with the customer's own
+        # booking ignored, so a time overlapping it is allowed; reschedule() rechecks it the same way under the
+        # appointment lock and the exclusion constraint stays the final guard. No hold: a hold would collide with
+        # the booking it replaces.
         available = service.find_slots(
             db,
             ctx,
@@ -241,15 +246,11 @@ def change(
                 earliest=body.starts_at,
                 latest=body.starts_at + timedelta(seconds=1),
             ),
+            ignore_appointment=row.id,
         )
         if not any(s.starts_at == body.starts_at and s.resource_id == body.resource_id for s in available):
             raise Conflict("scheduling.slot_unavailable")
-        hold = service.place_hold(
-            db, ctx, service_id=row.service_id, resource_id=body.resource_id, starts_at=body.starts_at, customer_id=cid
-        )
-        # Consume the transactional hold before updating the original appointment; retain id and stock.
-        db.delete(hold)
-        db.flush()
+        crm.get_booking_customer(db, ctx, cid)
         row = service.reschedule(db, ctx, row.id, body.version, body.starts_at, body.resource_id)
         action = "reschedule"
     else:

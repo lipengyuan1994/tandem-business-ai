@@ -72,16 +72,22 @@ def working_intervals(
 
 
 def align_up(t: datetime, tz: ZoneInfo, granularity_min: int) -> datetime:
-    """Round up to the next local-time boundary of `granularity_min` minutes."""
-    local = t.astimezone(tz)
-    minutes = local.hour * 60 + local.minute
-    extra = (-minutes) % granularity_min
-    if extra == 0 and local.second == 0 and local.microsecond == 0:
-        return t
-    if extra == 0:
-        extra = granularity_min
-    aligned = (local.replace(second=0, microsecond=0) + timedelta(minutes=extra)).replace(fold=local.fold)
-    return aligned.astimezone(UTC)
+    """The first instant at or after `t` whose local time is on a `granularity_min` boundary.
+
+    Steps forward in absolute time, not wall-clock time: on a fall-back day 01:55 EDT is followed by 01:00 EST (the
+    repeated hour), which wall-clock arithmetic would skip by jumping to 02:00 EST. Re-checks after each step because a
+    DST change in between can shift the local offset.
+    """
+    candidate = t.astimezone(UTC)
+    if candidate.second or candidate.microsecond:
+        candidate = candidate.replace(second=0, microsecond=0) + timedelta(minutes=1)
+    for _ in range(4):
+        local = candidate.astimezone(tz)
+        extra = (-(local.hour * 60 + local.minute)) % granularity_min
+        if extra == 0:
+            return candidate
+        candidate += timedelta(minutes=extra)
+    return candidate  # unreachable for real zones (offsets change at most once per step)
 
 
 def slot_starts(
