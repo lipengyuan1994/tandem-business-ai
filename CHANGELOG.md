@@ -4,6 +4,11 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **Fix (2026-11-25):** amounts in currencies whose decimals browsers drop (HUF, IDR, COP, PKR, IQD and others) were
+  entered and shown 100 or 1000 times too small; the app now uses the same ISO 4217 decimal places as the server.
+- **Fix:** an open "Record payment" dialog no longer picks up a newer invoice version in the background, so two people
+  cannot record the same payment twice. "Create credit note" is hidden once an invoice has payments (the server refuses
+  it), and "Record payment" is hidden when nothing is owed.
 - **Partial payments:** record full or part payments (amount, date, method, reference) against issued invoices. The
   invoice shows what was paid and the balance due, and becomes paid when the payments reach its total. Admins can void
   a payment entered in error. "Mark fully paid" now records the open balance as a payment.

@@ -4,14 +4,18 @@ export interface Money {
   currency: string
 }
 
-const currencyDigits = new Map<string, number>()
+// ISO 4217 minor-unit exceptions, the same table as the backend (backend/app/platform/money.py). Every amount the
+// API sends or accepts is in these units, so the browser's own Intl currency data (which drops the decimals of HUF,
+// IDR, COP, IQD and others) must not decide how many digits a minor unit has.
+const ZERO_DECIMAL = ["BIF", "CLP", "DJF", "GNF", "ISK", "JPY", "KMF", "KRW", "PYG", "RWF", "UGX", "UYI", "VND", "VUV", "XAF", "XOF", "XPF"]
+const THREE_DECIMAL = ["BHD", "IQD", "JOD", "KWD", "LYD", "OMR", "TND"]
+const currencyDigits = new Map<string, number>([
+  ...ZERO_DECIMAL.map((code): [string, number] => [code, 0]),
+  ...THREE_DECIMAL.map((code): [string, number] => [code, 3]),
+])
 
 export function minorUnitDigits(currency: string): number {
-  const cached = currencyDigits.get(currency)
-  if (cached !== undefined) return cached
-  const digits = new Intl.NumberFormat("en-US", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2
-  currencyDigits.set(currency, digits)
-  return digits
+  return currencyDigits.get(currency) ?? 2
 }
 
 export type MoneyInputResult =
@@ -43,7 +47,12 @@ export function minorToDecimal(minor: number, currency: string): string {
 }
 
 export function formatMoney(money: Money, locale = "en-US"): string {
-  const formatter = new Intl.NumberFormat(locale, { style: "currency", currency: money.currency })
-  const digits = formatter.resolvedOptions().maximumFractionDigits ?? 2
+  const digits = minorUnitDigits(money.currency)
+  const formatter = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: money.currency,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })
   return formatter.format(money.amount_minor / 10 ** digits)
 }
