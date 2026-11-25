@@ -20,6 +20,7 @@ from app.platform.permissions import hash_token
 from . import repository
 from .models import Invitation, Membership, OidcLoginState, RoleGrant, User
 from .oidc import LoginFailed
+from .service import reactivate
 
 log = structlog.get_logger(__name__)
 STATE_TTL = timedelta(minutes=10)
@@ -88,6 +89,9 @@ def _accept_invitations(db: Session, user: User) -> None:
         if membership is None:
             membership = Membership(id=new_id(), business_id=business_id, user_id=user.id, status="active")
             db.add(membership)
+        elif membership.status == "removed":
+            # Removed earlier, invited again: only the invited roles, not the ones held before the removal.
+            reactivate(db, ctx, membership)
         else:
             membership.status = "active"
         db.flush()

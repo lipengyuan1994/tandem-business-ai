@@ -4,6 +4,12 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **Fix (2026-11-25):** removing a staff member works again (it failed and was undone), and a removed person can be
+  invited back. They return with only the roles in the new invitation.
+- **Fix:** a stock-adjustment proposal for a location other than the main one shows that location's count, not the
+  main location's.
+- **Fix:** archiving a part at the same moment someone adds it to a service can no longer leave an active service
+  that needs an archived part; the later of the two is refused.
 - **Fix (2026-11-25):** customers rescheduling online can pick a time that overlaps their current booking (for example
   half an hour later); their own booking no longer blocks it.
 - **Fix:** on the day clocks go back, the first slot after 2 a.m. daylight time is no longer skipped to 2 a.m.

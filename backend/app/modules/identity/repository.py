@@ -118,17 +118,17 @@ def get_membership_for_user(db: Session, ctx: Context, user_id: uuid.UUID) -> Me
     return db.scalar(select(Membership).where(Membership.business_id == ctx.business_id, Membership.user_id == user_id))
 
 
-def list_members(db: Session, ctx: Context) -> list[dict[str, Any]]:
+def list_members(db: Session, ctx: Context, *, include_removed: bool = False) -> list[dict[str, Any]]:
     rows = db.execute(
         text(
             """select m.id as membership_id, m.user_id, u.display_name, u.email, m.title, m.status, m.version,
                       coalesce(array_agg(g.role order by g.role) filter (where g.role is not null), '{}') as roles
                  from memberships m join users u on u.id = m.user_id
                  left join role_grants g on g.membership_id = m.id and g.revoked_at is null
-                where m.business_id = :b and m.status <> 'removed'
+                where m.business_id = :b and (:all or m.status <> 'removed')
                 group by m.id, u.display_name, u.email order by u.display_name"""
         ),
-        {"b": ctx.business_id},
+        {"b": ctx.business_id, "all": include_removed},
     ).mappings()
     return [dict(r) for r in rows]
 
@@ -177,6 +177,18 @@ def revoke_role(db: Session, ctx: Context, membership_id: uuid.UUID, role: str, 
             RoleGrant.business_id == ctx.business_id,
             RoleGrant.membership_id == membership_id,
             RoleGrant.role == role,
+            RoleGrant.revoked_at.is_(None),
+        )
+        .values(revoked_at=now)
+    )
+
+
+def revoke_all_roles(db: Session, ctx: Context, membership_id: uuid.UUID, now: datetime) -> None:
+    db.execute(
+        update(RoleGrant)
+        .where(
+            RoleGrant.business_id == ctx.business_id,
+            RoleGrant.membership_id == membership_id,
             RoleGrant.revoked_at.is_(None),
         )
         .values(revoked_at=now)

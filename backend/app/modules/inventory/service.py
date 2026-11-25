@@ -356,8 +356,11 @@ def consume(
     return len(rows)
 
 
-def availability(db: Session, ctx: Context, item_ids: list[uuid.UUID] | None = None) -> list[AvailabilityOut]:
-    location = default_location(db, ctx)
+def availability(
+    db: Session, ctx: Context, item_ids: list[uuid.UUID] | None = None, stock_location_id: uuid.UUID | None = None
+) -> list[AvailabilityOut]:
+    """Stock at one location: the default one unless `stock_location_id` names another (404 if not this business's)."""
+    location_id = _location_id(db, ctx, stock_location_id)
     products = {p.id: p for p in catalog.list_stock_tracked(db, ctx)}
     wanted = [i for i in (item_ids or list(products)) if i in products]
     levels = {
@@ -365,7 +368,7 @@ def availability(db: Session, ctx: Context, item_ids: list[uuid.UUID] | None = N
         for lv in db.scalars(
             select(StockLevel).where(
                 StockLevel.business_id == ctx.business_id,
-                StockLevel.stock_location_id == location.id,
+                StockLevel.stock_location_id == location_id,
                 StockLevel.item_id.in_(wanted),
             )
         )
@@ -375,7 +378,7 @@ def availability(db: Session, ctx: Context, item_ids: list[uuid.UUID] | None = N
         for r in db.scalars(
             select(ReorderRule).where(
                 ReorderRule.business_id == ctx.business_id,
-                ReorderRule.stock_location_id == location.id,
+                ReorderRule.stock_location_id == location_id,
                 ReorderRule.item_id.in_(wanted),
             )
         )
@@ -391,7 +394,7 @@ def availability(db: Session, ctx: Context, item_ids: list[uuid.UUID] | None = N
                 item_name=p.name,
                 sku=p.sku,
                 unit=p.unit,
-                stock_location_id=location.id,
+                stock_location_id=location_id,
                 on_hand=on_hand,
                 reserved=reserved,
                 available=available,

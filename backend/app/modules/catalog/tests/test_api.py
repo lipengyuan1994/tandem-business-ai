@@ -112,3 +112,56 @@ def test_clearing_a_required_field_is_refused_not_500(client: Any, field: str) -
         ).status_code
         == 200
     )  # nullable fields can still be cleared
+
+
+@pytest.mark.concurrency
+@pytest.mark.parametrize("first", ["parts", "archive"])
+def test_archive_and_parts_edit_cannot_both_win(client: Any, biz: uuid.UUID, first: str) -> None:
+    """Archiving a part while someone adds it to a service used to let both commit: an active service then needed an
+    archived part. Whichever starts second must now see the first one's result."""
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    from decimal import Decimal
+
+    from app.modules.catalog import permissions, service
+    from app.modules.catalog.schemas import ServicePartIn
+    from app.modules.org.testing import system_ctx
+    from app.platform.db import transaction
+    from app.platform.errors import Conflict, Invalid
+
+    c = client()
+    svc = c.post("/api/v1/catalog/items", json=SERVICE).json()
+    pads = c.post("/api/v1/catalog/items", json=PADS).json()
+    ctx = system_ctx(biz, permissions.ALL)
+    done_first, release = threading.Event(), threading.Event()
+    part = [ServicePartIn(item_id=uuid.UUID(pads["id"]), quantity=Decimal(1))]
+
+    def run(action: str, hold: bool) -> str:
+        try:
+            with transaction(ctx) as db:
+                if action == "parts":
+                    service.replace_parts(db, ctx, uuid.UUID(svc["id"]), part)
+                else:
+                    service.archive_item(db, ctx, uuid.UUID(pads["id"]), pads["version"])
+                if hold:  # keep the first transaction open while the second one starts
+                    done_first.set()
+                    release.wait(10)
+            return "ok"
+        except (Conflict, Invalid) as exc:
+            return exc.code
+
+    second = "archive" if first == "parts" else "parts"
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        a = pool.submit(run, first, True)
+        assert done_first.wait(10)
+        b = pool.submit(run, second, False)
+        time.sleep(0.5)  # the second request is now waiting on the first one's lock
+        release.set()
+        results = {first: a.result(timeout=15), second: b.result(timeout=15)}
+    expected = (
+        {"parts": "ok", "archive": "catalog.item_in_use"}
+        if first == "parts"
+        else {"archive": "ok", "parts": "catalog.invalid_part"}
+    )
+    assert results == expected

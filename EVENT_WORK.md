@@ -795,3 +795,18 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   the local boundary after each step. Design call: the repeated hour is offered (labels say EDT or EST). The old test
   expected the skip; its expectation changed and spring-forward and repeated-hour cases were added.
 - Verification: regression tests (fail before, pass after), backend lint and types, scheduling suite.
+
+## 2026-11-25 — Bigger bugs from the sweep: re-adding removed staff, stock location in AI proposals, archive race
+
+- Identity: removing a staff member answered 500 and rolled the removal back, because the PATCH response read the
+  member from `list_members`, which hides removed members. `_member` now includes removed ones. Inviting a removed
+  person failed with "already a member"; the invite (and invitation acceptance at sign-in) now reactivates the same
+  membership. Design call: they come back with only the invited roles; grants held before the removal are revoked.
+- Inventory: the `inventory.adjust_stock` proposal preview and validation read the default location's stock even when
+  the payload named another location, so the reviewer approved against the wrong count. `availability` takes an
+  optional `stock_location_id` (404 for a location outside the business) and the executor passes it.
+- Catalog: archiving a part while someone added it to a service could let both commit, leaving an active service that
+  needs an archived part. `archive_item` locks the item before its in-use check and `replace_parts` share-locks each
+  part (re-read with `populate_existing`), so whichever comes second sees the first one's result.
+- Verification: regression tests (fail before, pass after; the race test runs both orders on two connections), backend
+  lint and types, identity, inventory, catalog, scheduling, approvals and AI tool suites.

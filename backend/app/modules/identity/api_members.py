@@ -22,7 +22,10 @@ ERRORS = error_responses(401, 403, 404, 409, 422)
 
 
 def _member(db: Session, ctx: Context, membership_id: uuid.UUID) -> MemberOut:
-    row = next((m for m in repository.list_members(db, ctx) if m["membership_id"] == membership_id), None)
+    # Includes removed members: the response to removing someone describes that member (it used to fail with 500,
+    # which rolled the removal back).
+    members = repository.list_members(db, ctx, include_removed=True)
+    row = next((m for m in members if m["membership_id"] == membership_id), None)
     assert row is not None
     return MemberOut(**row)
 

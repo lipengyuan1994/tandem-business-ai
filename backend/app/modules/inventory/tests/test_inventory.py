@@ -243,6 +243,54 @@ def test_adjust_stock_executor_through_approval(client: Any, pads: str, registry
     assert Decimal(_level(client, pads)["on_hand"]) == 2
 
 
+def test_adjust_stock_preview_uses_the_adjusted_location(client: Any, biz: uuid.UUID, pads: str) -> None:
+    """The proposal showed the default location's count even when adjusting stock somewhere else."""
+    from app.modules.inventory import service
+    from app.modules.inventory.models import StockLocation
+    from app.modules.inventory.schemas import MovementIn
+
+    ctx = system_ctx(biz, PERMS)
+    with transaction(ctx) as db:
+        back_room = new_id()
+        db.add(StockLocation(id=back_room, business_id=biz, name="Back room", is_default=False))
+        db.flush()
+        service.record_movement(
+            db,
+            ctx,
+            MovementIn(item_id=uuid.UUID(pads), quantity=Decimal(7), reason="receipt", stock_location_id=back_room),
+        )
+    p = client(["operator"]).post(
+        "/api/v1/approvals/proposals",
+        json={
+            "action_type": "inventory.adjust_stock",
+            "title": "Back room count",
+            "payload": {
+                "item_id": pads,
+                "quantity": "-1",
+                "reason": "count_correction",
+                "stock_location_id": str(back_room),
+            },
+        },
+    )
+    assert p.status_code == 201, p.text
+    preview = p.json()["current_revision"]["preview"][0]
+    assert preview["before"] == "7" and preview["after"].startswith("6")  # not the default location's 3
+    unknown = client(["operator"]).post(
+        "/api/v1/approvals/proposals",
+        json={
+            "action_type": "inventory.adjust_stock",
+            "title": "Nowhere",
+            "payload": {
+                "item_id": pads,
+                "quantity": "-1",
+                "reason": "count_correction",
+                "stock_location_id": str(new_id()),
+            },
+        },
+    )
+    assert unknown.status_code == 404 and unknown.json()["code"] == "inventory.stock_location_not_found"
+
+
 @pytest.mark.parametrize("reason", ["consumption", "sale"])
 def test_consuming_reserved_stock_does_not_repeat_reorder_crossing(
     client: Any, biz: uuid.UUID, pads: str, owner_engine: Engine, reason: str

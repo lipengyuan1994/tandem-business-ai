@@ -20,7 +20,8 @@ from .schemas import AdjustStockPayload, MovementIn, ReorderDraftIn
 
 
 def _describe_adjust(db: Session, ctx: Context, p: AdjustStockPayload) -> list[PreviewLine]:
-    a = next(iter(service.availability(db, ctx, [p.item_id])), None)
+    # The count where the adjustment lands, not the default location's (the reviewer approves against this number).
+    a = next(iter(service.availability(db, ctx, [p.item_id], p.stock_location_id)), None)
     name = a.item_name if a else str(p.item_id)
     before = a.on_hand if a else None
     return [
@@ -34,7 +35,7 @@ def _describe_adjust(db: Session, ctx: Context, p: AdjustStockPayload) -> list[P
 
 def _validate_adjust(db: Session, ctx: Context, p: AdjustStockPayload) -> None:
     service.check_direction(p.reason, p.quantity)
-    service.availability(db, ctx, [p.item_id])
+    service.availability(db, ctx, [p.item_id], p.stock_location_id)
 
 
 def _run_adjust(db: Session, ctx: Context, p: AdjustStockPayload, meta: ExecutionMeta) -> dict[str, Any]:
