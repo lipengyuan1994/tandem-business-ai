@@ -1,5 +1,7 @@
 """Server-owned wording and promotion of explicit request consent; never marketing consent."""
 
+from datetime import UTC
+
 from sqlalchemy.orm import Session
 
 from app.modules.crm import public as crm
@@ -16,13 +18,12 @@ def promote_contact_consent(db: Session, ctx: Context, conv: Conversation) -> No
         return
     if not conv.contact_consent_text:
         return
+    recorded_at = conv.contact_consent_at.astimezone(UTC)
     crm.record_request_contact_consent(
         db,
         ctx,
         conv.customer_id,
         email=conv.visitor_email,
-        recorded_at=conv.contact_consent_at,
-        evidence=(
-            f"Public chat {conv.contact_consent_at.isoformat()}: {conv.contact_consent_text} (conversation {conv.id})"
-        ),
+        recorded_at=recorded_at,
+        evidence=f"Public chat {recorded_at.isoformat()}: {conv.contact_consent_text} (conversation {conv.id})",
     )

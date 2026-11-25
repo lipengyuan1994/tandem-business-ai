@@ -55,7 +55,8 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
   // Until the user types an amount, a new bill for an order starts at what was received and not yet billed.
   const [typed, setTyped] = useState<string | null>(bill ? minorToDecimal(bill.total_minor, bill.currency) : null)
   const unbilled = billing.data?.unbilled_received_minor ?? 0
-  const amount = typed ?? (billing.data && unbilled > 0 ? minorToDecimal(unbilled, billing.data.currency) : "")
+  const amount = typed ?? (billing.data && billing.data.remaining_received_lines !== null && unbilled > 0
+    ? minorToDecimal(unbilled, billing.data.currency) : "")
   const touchedAmount = typed !== null
   const save = useSaveBill(bill?.id)
   const [lines, setLines] = useState<LineDraft[]>(() => (bill?.lines ?? []).map((l) => ({
@@ -63,6 +64,7 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
     catalogItemId: l.catalog_item_id, poLineId: l.purchase_order_line_id,
   })))
   const order = useOrder(poId)
+  const [matchReceived, setMatchReceived] = useState(false)
 
   const fixedSupplier = !!bill || !!purchaseOrder
   const billableOrders = (orders.data?.pages.flatMap((p) => p.items) ?? []).filter((o) => o.supplier_id === supplierId && BILLABLE_PO_STATUSES.includes(o.status))
@@ -86,17 +88,25 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
   const ready = !!supplierId && !!knownCurrency && parsed.ok && !amountError && !linesError && !linesTotalError && !billDateError && !dueDateError && !save.isPending
   const setLine = (key: string, change: Partial<LineDraft>) => setLines((ls) => ls.map((l) => l.key === key ? { ...l, ...change } : l))
   const orderLines = poId ? (order.data?.lines ?? []) : []
-  const fillFromOrder = () => setLines(orderLines.map((l) => {
-    const received = Number(l.received_quantity) > 0
-    return {
-      key: newKey(), description: l.name, quantity: quantityInput(String(received ? l.received_quantity : l.quantity)),
-      unitCost: minorToDecimal(l.unit_cost_minor, currency), catalogItemId: l.catalog_item_id, poLineId: l.id,
-    }
-  }))
+  const remaining = billing.data?.remaining_received_lines
+  const fromReceipts = new Map(remaining?.map((line) => [line.purchase_order_line_id, line.quantity]))
+  const canFill = !bill && orderLines.some((line) => fromReceipts.has(line.id))
+  const fillFromOrder = () => {
+    setMatchReceived(true)
+    setLines(orderLines.flatMap((line) => {
+      const quantity = fromReceipts.get(line.id)
+      return quantity === undefined ? [] : [{
+        key: newKey(), description: line.name, quantity: quantityInput(String(quantity)),
+        unitCost: minorToDecimal(line.unit_cost_minor, currency), catalogItemId: line.catalog_item_id, poLineId: line.id,
+      }]
+    }))
+  }
+  const resetReceiptMatch = () => setMatchReceived(false)
   const submit = () => {
     if (!ready || !parsed.ok) return
     save.mutateAsync({
-      version, supplier_id: supplierId, purchase_order_id: poId || null, supplier_reference: reference.trim() || null,
+      version, match_received: matchReceived && lines.some((line) => line.poLineId),
+      supplier_id: supplierId, purchase_order_id: poId || null, supplier_reference: reference.trim() || null,
       bill_date: billDate, due_date: dueDate || null, notes: notes.trim() || null,
       ...(itemised ? { total_minor: null, lines: lineRows.map(({ l, cost }): BillLineInput => ({
         description: l.description.trim(), quantity: l.quantity.trim(), unit_cost_minor: cost.ok ? cost.minor : 0,
@@ -104,7 +114,11 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
       })) } : { total_minor: parsed.minor }),
     }).then(
       (saved) => { toast.success(t(bill ? "common.saved" : "bills.recorded")); onClose(); onSaved?.(saved) },
-      (err: unknown) => { if (err instanceof ApiProblem && err.isConflict && err.code.endsWith("version_conflict")) { onClose(); onConflict?.() } },
+      (err: unknown) => {
+        if (!(err instanceof ApiProblem) || !err.isConflict) return
+        if (err.code.endsWith("version_conflict")) { onClose(); onConflict?.() }
+        if (err.code === "purchasing.bill_receipts_changed") void billing.refetch()
+      },
     )
   }
   return <Dialog open onOpenChange={(open) => { if (!open && !save.isPending) onClose() }}>
@@ -117,7 +131,7 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
         <div className="space-y-1">
           <Label htmlFor="bill-supplier">{t("purchasing.supplier")}</Label>
           <select id="bill-supplier" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={supplierId} disabled={fixedSupplier || save.isPending}
-            onChange={(e) => { setSupplierId(e.target.value); setPoId(""); setLines((ls) => ls.map((l) => ({ ...l, poLineId: null }))) }}>
+            onChange={(e) => { setSupplierId(e.target.value); setPoId(""); resetReceiptMatch(); setLines((ls) => ls.map((l) => ({ ...l, poLineId: null }))) }}>
             <option value="">{t("bills.chooseSupplier")}</option>
             {(suppliers.data ?? []).filter((s) => s.active || s.id === supplierId).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             {bill && !(suppliers.data ?? []).some((s) => s.id === bill.supplier_id) ? <option value={bill.supplier_id}>{bill.supplier_name}</option> : null}
@@ -126,7 +140,7 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
         {!bill ? <div className="space-y-1">
           <Label htmlFor="bill-po">{t("bills.purchaseOrder")}</Label>
           <select id="bill-po" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={poId} disabled={!!purchaseOrder || !supplierId || save.isPending}
-            onChange={(e) => { setPoId(e.target.value); setTyped(null); setLines((ls) => ls.map((l) => ({ ...l, poLineId: null }))) }}>
+            onChange={(e) => { setPoId(e.target.value); setTyped(null); resetReceiptMatch(); setLines((ls) => ls.map((l) => ({ ...l, poLineId: null }))) }}>
             <option value="">{t("bills.noPurchaseOrder")}</option>
             {purchaseOrder ? <option value={purchaseOrder.id}>{purchaseOrder.number ?? t("status.draft")}</option>
               : billableOrders.map((o) => <option key={o.id} value={o.id}>{o.number ?? t("status.draft")}</option>)}
@@ -183,8 +197,9 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" disabled={save.isPending}
               onClick={() => setLines((ls) => [...ls, { key: newKey(), description: "", quantity: "1", unitCost: "", catalogItemId: null, poLineId: null }])}>{t("bills.lines.add")}</Button>
-            {orderLines.length ? <Button type="button" variant="outline" size="sm" disabled={save.isPending} onClick={fillFromOrder}>{t("bills.lines.fromOrder")}</Button> : null}
+            {!bill && orderLines.length > 0 ? <Button type="button" variant="outline" size="sm" disabled={save.isPending || !canFill} onClick={fillFromOrder}>{t("bills.lines.fromOrder")}</Button> : null}
           </div>
+          {!bill && billing.data && !canFill ? <p className="text-sm text-muted-foreground">{t(remaining == null ? "bills.lines.unallocated" : "bills.lines.noneReceived")}</p> : null}
           {linesTotalError ? <p className="text-sm text-destructive">{linesTotalError}</p> : null}
         </fieldset>
         {itemised ? <p className="text-sm font-medium">{t("bills.lines.total", { total: formatMoney({ amount_minor: linesTotal, currency }) })}</p> : <div className="space-y-1">

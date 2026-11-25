@@ -18,8 +18,9 @@ from sqlalchemy.orm import Session
 from app.platform import clock
 from app.platform.context import Context
 from app.platform.errors import Conflict, NotFound
+from app.platform.refunds import refunds_covered
 
-from .models import Invoice, InvoicePayment
+from .models import Invoice, InvoicePayment, InvoiceRefund
 from .schemas import PaymentStatus
 
 
@@ -81,6 +82,32 @@ def add(
     return payment
 
 
+def refund_dates_covered(
+    db: Session,
+    ctx: Context,
+    invoice_id: uuid.UUID,
+    *,
+    extra: tuple[date, int] | None = None,
+    exclude_payment: uuid.UUID | None = None,
+) -> bool:
+    paid = (
+        (p.paid_on, p.amount_minor)
+        for p in for_invoice(db, ctx, invoice_id)
+        if p.voided_at is None and p.id != exclude_payment
+    )
+    refunded = [
+        (r.paid_on, r.amount_minor)
+        for r in db.scalars(
+            select(InvoiceRefund).where(
+                InvoiceRefund.business_id == ctx.business_id, InvoiceRefund.invoice_id == invoice_id
+            )
+        )
+    ]
+    if extra is not None:
+        refunded.append(extra)
+    return refunds_covered(paid, refunded)
+
+
 def void(db: Session, ctx: Context, row: Invoice, payment_id: uuid.UUID) -> InvoicePayment:
     """Void one payment of a locked invoice and reopen the invoice if it was paid."""
     payment = db.scalar(
@@ -98,7 +125,7 @@ def void(db: Session, ctx: Context, row: Invoice, payment_id: uuid.UUID) -> Invo
         raise Conflict("sales.payment_already_voided")
     if row.status not in ("issued", "paid"):
         raise Conflict("sales.invalid_transition", detail=f"Cannot change payments of a {row.status} invoice")
-    if row.amount_paid_minor - payment.amount_minor < row.amount_refunded_minor:
+    if row.amount_refunded_minor and not refund_dates_covered(db, ctx, row.id, exclude_payment=payment.id):
         raise Conflict(
             "sales.payment_refunded",
             detail="Part of this money was already paid back to the customer, so the payment cannot be voided",

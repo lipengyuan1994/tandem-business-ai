@@ -410,6 +410,13 @@ def credit(db: Session, ctx: Context, row_id: uuid.UUID, version: int, data: Cre
         raise Invalid("sales.refund_not_needed", detail="The customer still owes more than this credit")
     if data.refund is not None and data.refund.paid_on > today:
         raise Invalid("sales.payment_date_in_future")
+    if data.refund is not None and not payments.refund_dates_covered(
+        db, ctx, row_id, extra=(data.refund.paid_on, refund_minor)
+    ):
+        raise Conflict(
+            "sales.refund_exceeds_dated_payments",
+            detail="Recorded payments do not cover all refunds on their effective dates",
+        )
     number = repo.next_number(db, ctx, "CN", today.year)
     fields = ("customer_id", "bill_to_name", "bill_to_email", "bill_to_address", "currency", "due_date")
     note = Invoice(

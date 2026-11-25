@@ -19,7 +19,7 @@ const po: PO = {
   ],
   receipts: [],
 }
-const billing: POBilling = { purchase_order_id: po.id, currency: "USD", ordered_minor: 12500, received_minor: 4800, billed_minor: 0, unbilled_received_minor: 4800 }
+const billing: POBilling = { purchase_order_id: po.id, currency: "USD", ordered_minor: 12500, received_minor: 4800, billed_minor: 2400, unbilled_received_minor: 2400, remaining_received_lines: [{ purchase_order_line_id: "po-line-1", quantity: "2.000" }] }
 const bill: Bill = {
   id: "bill-1", supplier_id: supplier.id, supplier_name: supplier.name, purchase_order_id: null, purchase_order_number: null, supplier_reference: "INV-77",
   bill_date: "2026-10-02", due_date: null, currency: "USD", total_minor: 10000, amount_paid_minor: 0, amount_credited_minor: 0, amount_refunded_minor: 0,
@@ -48,7 +48,7 @@ describe("itemised supplier bills", () => {
     expect(billLineAmount("1.0005", 100)).toBeNull()
   })
 
-  it("fills the lines from the order's received quantities and sends them instead of a total", async () => {
+  it("fills only received and unbilled lines, and sends them instead of a total", async () => {
     mocks(bill, BILL_WRITE)
     let body: unknown
     server.use(http.post(`${ROOT}/bills`, async ({ request }) => { body = await request.json(); return HttpResponse.json({ ...bill, id: "bill-2" }, { status: 201 }) }))
@@ -56,14 +56,13 @@ describe("itemised supplier bills", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Record bill" }))
     const dialog = screen.getByRole("dialog", { name: "Record bill" })
     await userEvent.click(await within(dialog).findByRole("button", { name: "Fill from purchase order" }))
-    expect(within(dialog).getByLabelText("Quantity of line 1")).toHaveValue("4") // received so far
-    expect(within(dialog).getByLabelText("Quantity of line 2")).toHaveValue("1") // nothing received: what was ordered
+    expect(within(dialog).getByLabelText("Quantity of line 1")).toHaveValue("2") // two of the four received units are already billed
+    expect(within(dialog).queryByLabelText("Quantity of line 2")).not.toBeInTheDocument()
     expect(within(dialog).queryByLabelText("Total (USD)")).not.toBeInTheDocument()
-    expect(within(dialog).getByText("Total from lines: $53.00")).toBeInTheDocument()
-    await userEvent.click(within(dialog).getByRole("button", { name: "Remove line 2" }))
+    expect(within(dialog).getByText("Total from lines: $24.00")).toBeInTheDocument()
     await userEvent.clear(within(dialog).getByLabelText("Unit cost of line 1 (USD)"))
     await userEvent.type(within(dialog).getByLabelText("Unit cost of line 1 (USD)"), "12.5")
-    expect(within(dialog).getByText("Total from lines: $50.00")).toBeInTheDocument()
+    expect(within(dialog).getByText("Total from lines: $25.00")).toBeInTheDocument()
     await userEvent.click(within(dialog).getByRole("button", { name: "Add line" }))
     expect(within(dialog).getByText("Enter a description.")).toBeInTheDocument()
     expect(within(dialog).getByRole("button", { name: "Record bill" })).toBeDisabled()
@@ -71,9 +70,9 @@ describe("itemised supplier bills", () => {
     await userEvent.type(within(dialog).getByLabelText("Unit cost of line 2 (USD)"), "7.25")
     await userEvent.click(within(dialog).getByRole("button", { name: "Record bill" }))
     await waitFor(() => expect(body).toMatchObject({
-      purchase_order_id: "order-1", total_minor: null,
+      purchase_order_id: "order-1", total_minor: null, match_received: true,
       lines: [
-        { description: "Brake pads", quantity: "4", unit_cost_minor: 1250, catalog_item_id: "item-1", purchase_order_line_id: "po-line-1" },
+        { description: "Brake pads", quantity: "2", unit_cost_minor: 1250, catalog_item_id: "item-1", purchase_order_line_id: "po-line-1" },
         { description: "Freight", quantity: "1", unit_cost_minor: 725, catalog_item_id: null, purchase_order_line_id: null },
       ],
     }))
@@ -99,9 +98,32 @@ describe("itemised supplier bills", () => {
       supplier_id: "supplier-2", purchase_order_id: null,
       lines: [
         { description: "Brake pads", catalog_item_id: "item-1", purchase_order_line_id: null },
-        { description: "Shop rags", catalog_item_id: "item-2", purchase_order_line_id: null },
       ],
     }))
+  })
+
+  it("asks for manual entry when earlier bills do not allocate quantities", async () => {
+    mocks(bill, BILL_WRITE)
+    let body: unknown
+    server.use(
+      http.get(`${ROOT}/purchase-orders/order-1/billing`, () => HttpResponse.json({ ...billing, remaining_received_lines: null })),
+      http.post(`${ROOT}/bills`, async ({ request }) => {
+        body = await request.json()
+        return HttpResponse.json({ ...bill, id: "bill-2" }, { status: 201 })
+      }),
+    )
+    renderApp("/purchasing/purchase-orders/order-1")
+    await userEvent.click(await screen.findByRole("button", { name: "Record bill" }))
+    const dialog = screen.getByRole("dialog", { name: "Record bill" })
+    expect(await within(dialog).findByText("Earlier bill lines cannot be matched", { exact: false })).toBeInTheDocument()
+    expect(await within(dialog).findByRole("button", { name: "Fill from purchase order" })).toBeDisabled()
+    const total = within(dialog).getByLabelText("Total (USD)")
+    expect(total).toHaveValue("")
+    expect(within(dialog).getByRole("button", { name: "Record bill" })).toBeDisabled()
+    await userEvent.type(total, "75")
+    await userEvent.click(within(dialog).getByRole("button", { name: "Record bill" }))
+    await waitFor(() => expect(body).toMatchObject({ purchase_order_id: "order-1", total_minor: 7500 }))
+    expect(body).toHaveProperty("match_received", false)
   })
 
   it("shows a bill's lines, and editing back to no lines sends a total", async () => {

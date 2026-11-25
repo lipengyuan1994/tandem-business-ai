@@ -11,6 +11,7 @@ error is voided, never deleted, and reopens the bill.
 from __future__ import annotations
 
 import uuid
+from collections import defaultdict
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from zoneinfo import ZoneInfo
@@ -23,6 +24,7 @@ from app.modules.org import public as org
 from app.platform import audit, clock, crud
 from app.platform.context import Context
 from app.platform.errors import Conflict, Invalid, NotFound
+from app.platform.refunds import refunds_covered
 
 from . import permissions as P
 from . import repository as repo
@@ -45,6 +47,7 @@ from .schemas_bills import (
     BillUpdate,
     BillVoidIn,
     PurchaseOrderBilling,
+    PurchaseOrderUnbilledLine,
     SupplierCreditIn,
     SupplierCreditOut,
 )
@@ -197,10 +200,10 @@ def create(db: Session, ctx: Context, data: BillIn) -> SupplierBill:
     supplier = repo.supplier(db, ctx, data.supplier_id)
     _check_bill_date(db, ctx, data.bill_date)
     currency = catalog.get_default_currency(db, ctx)
+    # Serialize bill entry per supplier, including the recheck for receipt-based bills.
+    repo.supplier(db, ctx, supplier.id, lock=True)
     if data.purchase_order_id is not None:
         currency = _purchase_order(db, ctx, supplier.id, data.purchase_order_id).currency
-    # Serialize bill entry per supplier so two people cannot record the same supplier reference at once.
-    repo.supplier(db, ctx, supplier.id, lock=True)
     _check_duplicate(db, ctx, supplier.id, data.supplier_reference)
     row = SupplierBill(
         business_id=ctx.business_id,
@@ -221,6 +224,18 @@ def create(db: Session, ctx: Context, data: BillIn) -> SupplierBill:
     if data.lines is not None:
         lines = _line_rows(db, ctx, row, data.lines)
         row.total_minor = _lines_total(lines, data.total_minor)
+    if data.match_received:
+        assert data.purchase_order_id is not None
+        remaining = _remaining_received(db, ctx, data.purchase_order_id)
+        requested: dict[uuid.UUID, Decimal] = defaultdict(Decimal)
+        for line in lines:
+            if line.purchase_order_line_id is not None:
+                requested[line.purchase_order_line_id] += line.quantity
+        if not requested or remaining is None or any(qty > remaining.get(key, 0) for key, qty in requested.items()):
+            raise Conflict(
+                "purchasing.bill_receipts_changed",
+                detail="Received and unbilled quantities changed; refill or enter the bill manually",
+            )
     db.add(row)
     db.flush()
     for line in lines:
@@ -244,8 +259,9 @@ def update(db: Session, ctx: Context, bill_id: uuid.UUID, data: BillUpdate) -> S
         row.due_date = data.due_date
     if row.due_date is not None and row.due_date < row.bill_date:
         raise Invalid("purchasing.bill_due_before_bill_date")
-    if "supplier_reference" in fields:
+    if fields & {"supplier_reference", "lines", "total_minor"}:
         repo.supplier(db, ctx, row.supplier_id, lock=True)
+    if "supplier_reference" in fields:
         _check_duplicate(db, ctx, row.supplier_id, data.supplier_reference, exclude=row.id)
         row.supplier_reference = data.supplier_reference
     if "lines" in fields and data.lines is not None:
@@ -276,6 +292,7 @@ def void(db: Session, ctx: Context, bill_id: uuid.UUID, data: BillVoidIn) -> Sup
         raise Conflict("purchasing.bill_has_payments", detail="Void the bill's payments first")
     if row.amount_credited_minor > 0:
         raise Conflict("purchasing.bill_has_credits", detail="Void the bill's supplier credits first")
+    repo.supplier(db, ctx, row.supplier_id, lock=True)
     row.status = "void"
     row.voided_at = clock.now()
     row.version += 1
@@ -312,6 +329,29 @@ def record_payment(db: Session, ctx: Context, bill_id: uuid.UUID, data: BillPaym
     return row
 
 
+def _refund_dates_covered(
+    db: Session,
+    ctx: Context,
+    bill_id: uuid.UUID,
+    *,
+    extra: tuple[date, int] | None = None,
+    exclude_payment: uuid.UUID | None = None,
+) -> bool:
+    paid = (
+        (p.paid_on, p.amount_minor)
+        for p in payments_of(db, ctx, bill_id)
+        if p.voided_at is None and p.id != exclude_payment
+    )
+    refunded = [
+        (c.refund_received_on, c.refund_minor)
+        for c in credits_of(db, ctx, bill_id)
+        if c.voided_at is None and c.refund_received_on is not None
+    ]
+    if extra is not None:
+        refunded.append(extra)
+    return refunds_covered(paid, refunded)
+
+
 def void_payment(db: Session, ctx: Context, bill_id: uuid.UUID, payment_id: uuid.UUID, version: int) -> SupplierBill:
     ctx.require(P.BILL_VOID)
     row = get(db, ctx, bill_id, lock=True)
@@ -329,7 +369,7 @@ def void_payment(db: Session, ctx: Context, bill_id: uuid.UUID, payment_id: uuid
         raise NotFound("purchasing.bill_payment_not_found")
     if payment.voided_at is not None:
         raise Conflict("purchasing.bill_payment_already_voided")
-    if row.amount_paid_minor - payment.amount_minor < row.amount_refunded_minor:
+    if row.amount_refunded_minor and not _refund_dates_covered(db, ctx, row.id, exclude_payment=payment.id):
         raise Conflict(
             "purchasing.payment_refunded",
             detail="The supplier refunded part of this payment with a credit; void that credit first",
@@ -372,6 +412,11 @@ def add_credit(db: Session, ctx: Context, bill_id: uuid.UUID, data: SupplierCred
         raise Invalid("purchasing.refund_not_needed", detail="The bill still owes more than this credit")
     if data.refund is not None and data.refund.received_on > today:
         raise Invalid("purchasing.payment_date_in_future")
+    if data.refund is not None and not _refund_dates_covered(db, ctx, bill_id, extra=(data.refund.received_on, refund)):
+        raise Conflict(
+            "purchasing.refund_exceeds_dated_payments",
+            detail="Recorded payments do not cover all refunds on their effective dates",
+        )
     credit = SupplierCredit(
         business_id=ctx.business_id,
         bill_id=row.id,
@@ -496,6 +541,30 @@ def listing(
     return items, next_cursor
 
 
+def _remaining_received(db: Session, ctx: Context, po_id: uuid.UUID) -> dict[uuid.UUID, Decimal] | None:
+    received = {line.id: line.received_quantity for line in repo.lines(db, ctx, po_id)}
+    billed: dict[uuid.UUID, Decimal] = defaultdict(Decimal)
+    # Credits are amounts, not quantities. Don't assume they free previously invoiced units.
+    rows = db.execute(
+        select(SupplierBillLine.purchase_order_line_id, SupplierBillLine.quantity)
+        .select_from(SupplierBill)
+        .outerjoin(
+            SupplierBillLine,
+            (SupplierBillLine.business_id == SupplierBill.business_id) & (SupplierBillLine.bill_id == SupplierBill.id),
+        )
+        .where(
+            SupplierBill.business_id == ctx.business_id,
+            SupplierBill.purchase_order_id == po_id,
+            SupplierBill.status != "void",
+        )
+    )
+    for line_id, quantity in rows:
+        if line_id not in received or quantity is None:
+            return None  # total-only or unallocated bill lines: require manual allocation
+        billed[line_id] += quantity
+    return {key: qty - billed[key] for key, qty in received.items() if qty > billed[key]}
+
+
 def po_billing(db: Session, ctx: Context, po_id: uuid.UUID) -> PurchaseOrderBilling:
     ctx.require(P.BILL_READ)
     po = repo.order(db, ctx, po_id)
@@ -512,6 +581,7 @@ def po_billing(db: Session, ctx: Context, po_id: uuid.UUID) -> PurchaseOrderBill
         )
     )
     billed_minor = int(billed or 0)
+    remaining = _remaining_received(db, ctx, po.id)
     return PurchaseOrderBilling(
         purchase_order_id=po.id,
         currency=po.currency,
@@ -519,4 +589,7 @@ def po_billing(db: Session, ctx: Context, po_id: uuid.UUID) -> PurchaseOrderBill
         received_minor=received,
         billed_minor=billed_minor,
         unbilled_received_minor=max(0, received - billed_minor),
+        remaining_received_lines=None
+        if remaining is None
+        else [PurchaseOrderUnbilledLine(purchase_order_line_id=key, quantity=qty) for key, qty in remaining.items()],
     )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
@@ -11,7 +12,7 @@ from app.platform.registry import ErasureTarget, Registry
 from app.platform.testing.auth import ctx_for
 
 from .test_bills import TODAY, bill, new_bill, pay, received_po
-from .test_purchasing import BASE
+from .test_purchasing import BASE, action, create, receive
 
 # Synthetic data only.
 
@@ -232,3 +233,60 @@ def test_export_and_erasure_cover_lines_and_credits(shop: Any, registry: Registr
     assert counts["supplier_bill_lines_redacted"] == 1 and counts["supplier_credits_redacted"] == 1
     assert exported["supplier_bill_lines"][0]["description"] == "Parts for [erased]"
     assert exported["supplier_credits"][0]["reason"] == "Returned by [erased]"
+
+
+def test_receipt_prefill_subtracts_already_billed_and_rechecks_stale_quantities(shop: Any) -> None:
+    po = action(shop, action(shop, create(shop, "10"), "approve"), "send")
+    r = receive(shop, po, "4")
+    assert r.status_code == 201, r.text
+    po_line = po["lines"][0]["id"]
+    linked = line("Brake pads", "2", 1200, purchase_order_line_id=po_line)
+    arguments = dict(total_minor=None, purchase_order_id=po["id"], lines=[linked], match_received=True)
+    billing_url = f"{BASE}/purchase-orders/{po['id']}/billing"
+    bill(shop, **arguments)
+    snapshot = shop["client"].get(billing_url).json()
+    assert snapshot["unbilled_received_minor"] == 2400
+    [remaining] = snapshot["remaining_received_lines"]
+    assert remaining["purchase_order_line_id"] == po_line and Decimal(remaining["quantity"]) == 2
+    later = bill(shop, **arguments)  # another staff member bills the remaining receipts
+    stale = new_bill(shop, **arguments)
+    assert stale.status_code == 409 and stale.json()["code"] == "purchasing.bill_receipts_changed"
+    assert shop["client"].get(billing_url).json()["remaining_received_lines"] == []
+
+    voided = shop["client"].post(f"{BASE}/bills/{later['id']}/void", json={"version": later["version"]})
+    assert voided.status_code == 200, voided.text
+    [available] = shop["client"].get(billing_url).json()["remaining_received_lines"]
+    assert Decimal(available["quantity"]) == 2
+    # A deliberate advance bill remains allowed; a total-only bill cannot be split among order lines.
+    bill(shop, purchase_order_id=po["id"], total_minor=9000)
+    assert shop["client"].get(billing_url).json()["remaining_received_lines"] is None
+    assert new_bill(shop, **arguments).status_code == 409
+
+
+def test_refund_requires_enough_dated_payments_and_does_not_reopen_paid_bill(shop: Any) -> None:
+    row = bill(shop, bill_date="2026-10-20", total_minor=12000)
+    row = pay(shop, row, 1000, paid_on="2026-10-22").json()
+    row = pay(shop, row, 11000, paid_on="2026-10-26").json()
+
+    def payable(as_of: str) -> int:
+        r = shop["client"].get(f"{BASE}/payables/aging", params={"as_of": as_of})
+        assert r.status_code == 200, r.text
+        return sum(part["total_minor"] for part in r.json()["totals"])
+
+    r = credit(shop, row, 3000, refund={**REFUND, "received_on": "2026-10-23"})
+    assert r.status_code == 409 and r.json()["code"] == "purchasing.refund_exceeds_dated_payments"
+    assert payable("2026-10-23") == 11000
+    r = credit(shop, row, 3000, refund={**REFUND, "received_on": "2026-10-26"})
+    assert r.status_code == 201, r.text
+    assert payable("2026-10-26") == payable(TODAY) == 0
+
+    # Voiding is also date-sensitive: the later installment cannot back a previously recorded refund.
+    other = bill(shop, bill_date="2026-10-20", total_minor=12000)
+    other = pay(shop, other, 4000, paid_on="2026-10-22").json()
+    other = pay(shop, other, 8000, paid_on="2026-10-26").json()
+    other = credit(shop, other, 3000, refund={**REFUND, "received_on": "2026-10-23"}).json()
+    first_payment = other["payments"][0]["id"]
+    r = shop["client"].post(
+        f"{BASE}/bills/{other['id']}/payments/{first_payment}/void", json={"version": other["version"]}
+    )
+    assert r.status_code == 409 and r.json()["code"] == "purchasing.payment_refunded"

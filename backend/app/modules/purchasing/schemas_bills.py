@@ -57,11 +57,15 @@ class BillIn(_Input):
     total_minor: int | None = Field(default=None, gt=0, le=10**14, strict=True)
     lines: list[BillLineIn] | None = Field(default=None, min_length=1, max_length=200)
     notes: Trimmed = Field(default=None, max_length=4000)
+    # Keep the pre-flag idempotency payload unchanged for ordinary bills.
+    match_received: bool = Field(default=False, exclude_if=lambda value: not value)
 
     @model_validator(mode="after")
     def due_after_bill(self) -> BillIn:
         if self.due_date is not None and self.due_date < self.bill_date:
             raise ValueError("due_date cannot be before bill_date")
+        if self.match_received and (self.purchase_order_id is None or self.lines is None):
+            raise ValueError("matching receipts requires a purchase order and itemised lines")
         if self.total_minor is None and self.lines is None:
             raise ValueError("give total_minor or lines")
         return self
@@ -185,6 +189,11 @@ class BillOut(BaseModel):
     credits: list[SupplierCreditOut] = Field(default_factory=list)
 
 
+class PurchaseOrderUnbilledLine(BaseModel):
+    purchase_order_line_id: uuid.UUID
+    quantity: Decimal
+
+
 class PurchaseOrderBilling(BaseModel):
     """How much of a purchase order has been received and billed, to prefill and check a new bill."""
 
@@ -194,6 +203,8 @@ class PurchaseOrderBilling(BaseModel):
     received_minor: int
     billed_minor: int
     unbilled_received_minor: int
+    # None means prior bills cannot be allocated reliably to individual purchase order lines.
+    remaining_received_lines: list[PurchaseOrderUnbilledLine] | None = None
 
 
 class PayablesBuckets(BaseModel):
