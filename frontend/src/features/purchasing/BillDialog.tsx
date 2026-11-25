@@ -117,7 +117,7 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
         <div className="space-y-1">
           <Label htmlFor="bill-supplier">{t("purchasing.supplier")}</Label>
           <select id="bill-supplier" className="h-9 w-full rounded-md border bg-background px-3 text-sm" value={supplierId} disabled={fixedSupplier || save.isPending}
-            onChange={(e) => { setSupplierId(e.target.value); setPoId("") }}>
+            onChange={(e) => { setSupplierId(e.target.value); setPoId(""); setLines((ls) => ls.map((l) => ({ ...l, poLineId: null }))) }}>
             <option value="">{t("bills.chooseSupplier")}</option>
             {(suppliers.data ?? []).filter((s) => s.active || s.id === supplierId).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             {bill && !(suppliers.data ?? []).some((s) => s.id === bill.supplier_id) ? <option value={bill.supplier_id}>{bill.supplier_name}</option> : null}

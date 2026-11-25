@@ -79,6 +79,31 @@ describe("itemised supplier bills", () => {
     }))
   })
 
+  it("drops the order line links when the supplier changes", async () => {
+    mocks(bill, BILL_WRITE)
+    const other: Supplier = { ...supplier, id: "supplier-2", name: "Other Supplies" }
+    let body: unknown
+    server.use(
+      http.get(`${ROOT}/suppliers`, () => HttpResponse.json({ items: [supplier, other], next_cursor: null })),
+      http.post(`${ROOT}/bills`, async ({ request }) => { body = await request.json(); return HttpResponse.json({ ...bill, id: "bill-2" }, { status: 201 }) }),
+    )
+    renderApp("/purchasing?tab=bills")
+    await userEvent.click(await screen.findByRole("button", { name: "Record bill" }))
+    const dialog = screen.getByRole("dialog", { name: "Record bill" })
+    await userEvent.selectOptions(within(dialog).getByLabelText("Supplier"), await within(dialog).findByRole("option", { name: "Example Parts" }))
+    await userEvent.selectOptions(within(dialog).getByLabelText("Purchase order"), await within(dialog).findByRole("option", { name: "PO-2026-0001" }))
+    await userEvent.click(await within(dialog).findByRole("button", { name: "Fill from purchase order" }))
+    await userEvent.selectOptions(within(dialog).getByLabelText("Supplier"), "Other Supplies")
+    await userEvent.click(within(dialog).getByRole("button", { name: "Record bill" }))
+    await waitFor(() => expect(body).toMatchObject({
+      supplier_id: "supplier-2", purchase_order_id: null,
+      lines: [
+        { description: "Brake pads", catalog_item_id: "item-1", purchase_order_line_id: null },
+        { description: "Shop rags", catalog_item_id: "item-2", purchase_order_line_id: null },
+      ],
+    }))
+  })
+
   it("shows a bill's lines, and editing back to no lines sends a total", async () => {
     const itemised = { ...bill, total_minor: 2400, balance_minor: 2400, lines: [{ id: "l1", position: 0, description: "Rotors", quantity: "2.000", unit_cost_minor: 1200, amount_minor: 2400, catalog_item_id: null, purchase_order_line_id: null }] }
     mocks(itemised, BILL_WRITE)

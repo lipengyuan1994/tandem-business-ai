@@ -861,4 +861,6 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
 - Screens: "Create credit note" dialog with per-line quantities and a refund section; bill dialog with optional lines
   and "Fill from purchase order"; "Record supplier credit" dialog; bill page lists lines and credits.
 - Quantity helpers (`quantityMilli`, `milliText`, `halfUp`) moved to `src/lib/quantity.ts` for both features.
+- Bill dialog: changing the supplier also clears each line's purchase-order line link (review finding), so lines
+  filled from an order can still be saved against another supplier.
 
