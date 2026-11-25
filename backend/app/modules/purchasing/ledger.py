@@ -1,4 +1,4 @@
-"""Read-only feed of supplier bills, bill payments and suppliers for bookkeeping sync (accounting module).
+"""Read-only feed of supplier bills, bill payments, supplier credits and suppliers for bookkeeping sync (accounting).
 
 Rows carry their `version`, which changes whenever the row changes. Callers own the transaction.
 """
@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.platform.context import Context
 
 from . import permissions as P
-from .models import PurchaseOrder, Supplier, SupplierBill, SupplierBillPayment
+from .models import PurchaseOrder, Supplier, SupplierBill, SupplierBillLine, SupplierBillPayment, SupplierCredit
 
 MAX_IDS = 500
 
@@ -24,6 +24,11 @@ class LedgerSupplier(BaseModel):
     id: uuid.UUID
     name: str
     email: str | None
+
+
+class LedgerBillLine(BaseModel):
+    description: str
+    amount_minor: int
 
 
 class LedgerBill(BaseModel):
@@ -38,6 +43,23 @@ class LedgerBill(BaseModel):
     due_date: date | None
     currency: str
     total_minor: int
+    lines: list[LedgerBillLine] = []
+
+
+class LedgerSupplierCredit(BaseModel):
+    id: uuid.UUID
+    version: int
+    bill_id: uuid.UUID
+    bill_reference: str | None
+    supplier_name: str
+    currency: str
+    credit_date: date
+    amount_minor: int
+    supplier_reference: str | None
+    refund_minor: int
+    refund_received_on: date | None
+    refund_method: str | None
+    voided: bool
 
 
 class LedgerBillPayment(BaseModel):
@@ -77,6 +99,18 @@ def bills(db: Session, ctx: Context, ids: set[uuid.UUID]) -> dict[uuid.UUID, Led
         )
         .where(SupplierBill.business_id == ctx.business_id, SupplierBill.id.in_(list(ids)[:MAX_IDS]))
     ).all()
+    lines: dict[uuid.UUID, list[LedgerBillLine]] = {}
+    for line in db.scalars(
+        select(SupplierBillLine)
+        .where(
+            SupplierBillLine.business_id == ctx.business_id,
+            SupplierBillLine.bill_id.in_([bill.id for bill, _ in rows]),
+        )
+        .order_by(SupplierBillLine.bill_id, SupplierBillLine.position)
+    ):
+        lines.setdefault(line.bill_id, []).append(
+            LedgerBillLine(description=line.description, amount_minor=line.amount_minor)
+        )
     return {
         bill.id: LedgerBill(
             id=bill.id,
@@ -90,8 +124,52 @@ def bills(db: Session, ctx: Context, ids: set[uuid.UUID]) -> dict[uuid.UUID, Led
             due_date=bill.due_date,
             currency=bill.currency,
             total_minor=bill.total_minor,
+            lines=lines.get(bill.id, []),
         )
         for bill, po_number in rows
+    }
+
+
+def supplier_credit_versions(db: Session, ctx: Context, since: date) -> dict[uuid.UUID, int]:
+    """Supplier credits dated on or after `since`, voided ones included: id -> version."""
+    ctx.require(P.BILL_READ)
+    rows = db.execute(
+        select(SupplierCredit.id, SupplierCredit.version).where(
+            SupplierCredit.business_id == ctx.business_id, SupplierCredit.credit_date >= since
+        )
+    )
+    return {row.id: row.version for row in rows}
+
+
+def supplier_credits(db: Session, ctx: Context, ids: set[uuid.UUID]) -> dict[uuid.UUID, LedgerSupplierCredit]:
+    ctx.require(P.BILL_READ)
+    if not ids:
+        return {}
+    rows = db.execute(
+        select(SupplierCredit, SupplierBill)
+        .join(
+            SupplierBill,
+            (SupplierBill.business_id == SupplierCredit.business_id) & (SupplierBill.id == SupplierCredit.bill_id),
+        )
+        .where(SupplierCredit.business_id == ctx.business_id, SupplierCredit.id.in_(list(ids)[:MAX_IDS]))
+    ).all()
+    return {
+        credit.id: LedgerSupplierCredit(
+            id=credit.id,
+            version=credit.version,
+            bill_id=bill.id,
+            bill_reference=bill.supplier_reference,
+            supplier_name=bill.supplier_name,
+            currency=bill.currency,
+            credit_date=credit.credit_date,
+            amount_minor=credit.amount_minor,
+            supplier_reference=credit.supplier_reference,
+            refund_minor=credit.refund_minor,
+            refund_received_on=credit.refund_received_on,
+            refund_method=credit.refund_method,
+            voided=credit.voided_at is not None,
+        )
+        for credit, bill in rows
     }
 
 

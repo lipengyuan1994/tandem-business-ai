@@ -21,13 +21,24 @@ from .models import (
     Invoice,
     InvoiceLine,
     InvoicePayment,
+    InvoiceRefund,
     Quote,
     QuoteLine,
     SalesOrder,
     SalesOrderLine,
 )
 
-TABLES = [DocumentSequence, Quote, QuoteLine, SalesOrder, SalesOrderLine, Invoice, InvoiceLine, InvoicePayment]
+TABLES = [
+    DocumentSequence,
+    Quote,
+    QuoteLine,
+    SalesOrder,
+    SalesOrderLine,
+    Invoice,
+    InvoiceLine,
+    InvoicePayment,
+    InvoiceRefund,
+]
 
 
 def export(db: Session, ctx: Context, *, streaming: bool = False) -> ExportTables:

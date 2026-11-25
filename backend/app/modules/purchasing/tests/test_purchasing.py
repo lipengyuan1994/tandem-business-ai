@@ -181,7 +181,9 @@ def test_suggestions_open_quantities_and_tenant_export(shop: Any, registry: Regi
         "supplier_quotes",
         "supplier_quote_lines",
         "supplier_bills",
+        "supplier_bill_lines",
         "supplier_bill_payments",
+        "supplier_credits",
     }
     assert "purchasing" in registry.erasure_handlers
 

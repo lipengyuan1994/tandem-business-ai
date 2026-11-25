@@ -2,7 +2,7 @@ import { useRef } from "react"
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, unwrap } from "@/api/client"
 import { useSession } from "@/app/session-context"
-import { BILL_READ, filterStatuses, type BillFilter, type BillInput, type BillPaymentInput } from "./billModel"
+import { BILL_READ, filterStatuses, type BillFilter, type BillInput, type BillPaymentInput, type SupplierCreditInput } from "./billModel"
 
 export function useBills({ filter, purchaseOrderId }: { filter: BillFilter; purchaseOrderId?: string }) {
   const { permissions } = useSession()
@@ -40,8 +40,10 @@ export function useSaveBill(id?: string) {
       key.current = crypto.randomUUID()
       return created
     }
-    const { supplier_reference, bill_date, due_date, total_minor, notes } = body
-    return unwrap(await api.PATCH("/api/v1/purchasing/bills/{bill_id}", { params: { path: { bill_id: id } }, body: { version: body.version!, supplier_reference, bill_date, due_date, total_minor, notes } }))
+    const { supplier_reference, bill_date, due_date, total_minor, notes, lines } = body
+    // An itemised bill's total is the sum of its lines; `lines: null` turns it back into a total-only bill.
+    const items = lines?.length ? { lines } : { lines: null, total_minor }
+    return unwrap(await api.PATCH("/api/v1/purchasing/bills/{bill_id}", { params: { path: { bill_id: id } }, body: { version: body.version!, supplier_reference, bill_date, due_date, notes, ...items } }))
   })
 }
 /** One idempotency key per dialog, so a retried click after a lost response cannot pay twice. */
@@ -58,4 +60,16 @@ export function useVoidBill(id: string) {
 }
 export function useVoidBillPayment(id: string) {
   return useBillMutation(async ({ paymentId, version }: { paymentId: string; version: number }) => unwrap(await api.POST("/api/v1/purchasing/bills/{bill_id}/payments/{payment_id}/void", { params: { path: { bill_id: id, payment_id: paymentId } }, body: { version } })))
+}
+/** One idempotency key per dialog, so a retried click after a lost response cannot record a credit twice. */
+export function useAddSupplierCredit(id: string) {
+  const key = useRef(crypto.randomUUID())
+  return useBillMutation(async (body: SupplierCreditInput) => {
+    const result = unwrap(await api.POST("/api/v1/purchasing/bills/{bill_id}/credits", { params: { path: { bill_id: id } }, headers: { "Idempotency-Key": key.current }, body }))
+    key.current = crypto.randomUUID()
+    return result
+  })
+}
+export function useVoidSupplierCredit(id: string) {
+  return useBillMutation(async ({ creditId, version }: { creditId: string; version: number }) => unwrap(await api.POST("/api/v1/purchasing/bills/{bill_id}/credits/{credit_id}/void", { params: { path: { bill_id: id, credit_id: creditId } }, body: { version } })))
 }

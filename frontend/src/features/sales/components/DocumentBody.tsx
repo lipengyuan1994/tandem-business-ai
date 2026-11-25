@@ -51,9 +51,22 @@ export function DocumentBody({ document: d, family }: { document: SalesDocument;
       <dt className="font-semibold">{t("sales.fields.total")}</dt><dd className="text-right font-semibold">{money(d.total_minor)}</dd>
       {d.balance_minor != null ? <>
         <dt>{t("sales.fields.amountPaid")}</dt><dd className="text-right">{money(d.amount_paid_minor ?? 0)}</dd>
+        {d.amount_credited_minor ? <><dt>{t("sales.fields.amountCredited")}</dt><dd className="text-right">{money(d.amount_credited_minor)}</dd></> : null}
+        {d.amount_refunded_minor ? <><dt>{t("sales.fields.amountRefunded")}</dt><dd className="text-right">{money(d.amount_refunded_minor)}</dd></> : null}
         <dt className="font-semibold">{t("sales.fields.balanceDue")}</dt><dd className="text-right font-semibold">{money(d.balance_minor)}</dd>
       </> : null}
     </dl>
+    {d.credit_notes?.length ? <section aria-label={t("sales.credit.notes")} className="print:hidden">
+      <h3 className="font-medium">{t("sales.credit.notes")}</h3>
+      <ul className="text-sm">{d.credit_notes.map((note) => {
+        const refund = d.refunds?.find((r) => r.credit_note_id === note.id)
+        return <li key={note.id}>
+          <Link className="underline" to="/sales/invoices/$id" params={{ id: note.id }}>{note.number}</Link>
+          {" · "}{note.issue_date} · {money(note.total_minor)}
+          {refund ? <> · {t("sales.credit.refundOn", { date: refund.paid_on })}: {money(refund.amount_minor)} ({t(`sales.payments.methods.${refund.method}`)}{refund.reference ? `, ${refund.reference}` : ""})</> : null}
+        </li>
+      })}</ul>
+    </section> : null}
     {d.notes ? <section><h3 className="font-medium">{t("sales.fields.notes")}</h3><p className="whitespace-pre-wrap text-sm">{d.notes}</p></section> : null}
   </article>
 }

@@ -168,6 +168,16 @@ def bill(row: LedgerBill, vendor_id: str, expense_account_id: str, payable_accou
         "Line": [
             {
                 "DetailType": "AccountBasedExpenseLineDetail",
+                "Amount": amount(line.amount_minor, row.currency),
+                "Description": line.description,
+                "AccountBasedExpenseLineDetail": {"AccountRef": ref(expense_account_id)},
+            }
+            for line in row.lines
+            if line.amount_minor > 0
+        ]
+        or [
+            {
+                "DetailType": "AccountBasedExpenseLineDetail",
                 "Amount": value,
                 "Description": f"Bill {row.supplier_reference}" if row.supplier_reference else "Supplier bill",
                 "AccountBasedExpenseLineDetail": {"AccountRef": ref(expense_account_id)},

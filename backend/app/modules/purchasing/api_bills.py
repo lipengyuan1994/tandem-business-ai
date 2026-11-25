@@ -1,4 +1,4 @@
-"""Staff endpoints for supplier bills, bill payments and payables aging."""
+"""Staff endpoints for supplier bills, bill payments, supplier credits and payables aging."""
 
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ from .schemas_bills import (
     BillVoidIn,
     PayablesAgingReport,
     PurchaseOrderBilling,
+    SupplierCreditIn,
 )
 
 router = APIRouter()
@@ -71,7 +72,10 @@ def get_bill(bill_id: uuid.UUID, ctx: Context = Depends(require(P.BILL_READ))) -
 
 
 @router.patch(
-    "/bills/{bill_id}", response_model=BillOut, summary="Edit an open supplier bill with no payments", responses=ERRORS
+    "/bills/{bill_id}",
+    response_model=BillOut,
+    summary="Edit an open supplier bill with no payments or credits",
+    responses=ERRORS,
 )
 def update_bill(bill_id: uuid.UUID, body: BillUpdate, ctx: Context = Depends(require(P.BILL_WRITE))) -> BillOut:
     with transaction(ctx) as db:
@@ -79,7 +83,10 @@ def update_bill(bill_id: uuid.UUID, body: BillUpdate, ctx: Context = Depends(req
 
 
 @router.post(
-    "/bills/{bill_id}/void", response_model=BillOut, summary="Void a supplier bill with no payments", responses=ERRORS
+    "/bills/{bill_id}/void",
+    response_model=BillOut,
+    summary="Void a supplier bill with no payments or credits",
+    responses=ERRORS,
 )
 def void_bill(bill_id: uuid.UUID, body: BillVoidIn, ctx: Context = Depends(require(P.BILL_VOID))) -> BillOut:
     with transaction(ctx) as db:
@@ -121,6 +128,43 @@ def void_bill_payment(
 ) -> BillOut:
     with transaction(ctx) as db:
         return bills.detail(db, ctx, bills.void_payment(db, ctx, bill_id, payment_id, body.version))
+
+
+@router.post(
+    "/bills/{bill_id}/credits",
+    response_model=BillOut,
+    status_code=201,
+    summary="Record a supplier credit against a bill, with the refund received for any part beyond the balance",
+    responses=ERRORS,
+)
+def record_supplier_credit(
+    bill_id: uuid.UUID,
+    body: SupplierCreditIn,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    ctx: Context = Depends(require(P.BILL_WRITE)),
+) -> Any:
+    with transaction(ctx) as db:
+        return creating_response(
+            db,
+            ctx,
+            idempotency_key,
+            f"bill.{bill_id}.credit",
+            body,
+            lambda: bills.detail(db, ctx, bills.add_credit(db, ctx, bill_id, body)),
+        )
+
+
+@router.post(
+    "/bills/{bill_id}/credits/{credit_id}/void",
+    response_model=BillOut,
+    summary="Void a supplier credit recorded in error and put its amount back on the bill",
+    responses=ERRORS,
+)
+def void_supplier_credit(
+    bill_id: uuid.UUID, credit_id: uuid.UUID, body: VersionIn, ctx: Context = Depends(require(P.BILL_VOID))
+) -> BillOut:
+    with transaction(ctx) as db:
+        return bills.detail(db, ctx, bills.void_credit(db, ctx, bill_id, credit_id, body.version))
 
 
 @router.get(

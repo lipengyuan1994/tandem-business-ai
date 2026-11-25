@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.platform.context import Context
 
 from . import permissions as P
-from .models import SupplierBill, SupplierBillPayment
+from .models import SupplierBill, SupplierBillPayment, SupplierCredit
 from .schemas_bills import PayablesAgingReport, PayablesSupplier, PayablesTotal
 
 BUCKETS = ("current_minor", "days_1_30_minor", "days_31_60_minor", "days_61_90_minor", "days_over_90_minor")
@@ -49,7 +49,8 @@ class _Sum:
 
 
 def aging(db: Session, ctx: Context, as_of: date) -> PayablesAgingReport:
-    """Point in time: bills dated by `as_of`, minus non-voided payments dated by `as_of`.
+    """Point in time: bills dated by `as_of`, minus non-voided payments dated by `as_of` and live supplier credits dated
+    by `as_of`, plus what the supplier refunded by `as_of`.
 
     Days past due count from the due date, or from the bill date when a bill has none. Not yet due is current.
     Void bills are excluded.
@@ -65,7 +66,32 @@ def aging(db: Session, ctx: Context, as_of: date) -> PayablesAgingReport:
         .group_by(SupplierBillPayment.bill_id)
         .subquery()
     )
-    open_minor = SupplierBill.total_minor - func.coalesce(paid.c.paid_minor, 0)
+    credited = (
+        select(SupplierCredit.bill_id, func.sum(SupplierCredit.amount_minor).label("credited_minor"))
+        .where(
+            SupplierCredit.business_id == ctx.business_id,
+            SupplierCredit.voided_at.is_(None),
+            SupplierCredit.credit_date <= as_of,
+        )
+        .group_by(SupplierCredit.bill_id)
+        .subquery()
+    )
+    refunded = (
+        select(SupplierCredit.bill_id, func.sum(SupplierCredit.refund_minor).label("refunded_minor"))
+        .where(
+            SupplierCredit.business_id == ctx.business_id,
+            SupplierCredit.voided_at.is_(None),
+            SupplierCredit.refund_received_on <= as_of,
+        )
+        .group_by(SupplierCredit.bill_id)
+        .subquery()
+    )
+    open_minor = (
+        SupplierBill.total_minor
+        - func.coalesce(paid.c.paid_minor, 0)
+        - func.coalesce(credited.c.credited_minor, 0)
+        + func.coalesce(refunded.c.refunded_minor, 0)
+    )
     rows = db.execute(
         select(
             SupplierBill.supplier_id,
@@ -76,6 +102,8 @@ def aging(db: Session, ctx: Context, as_of: date) -> PayablesAgingReport:
             open_minor.label("open_minor"),
         )
         .outerjoin(paid, paid.c.bill_id == SupplierBill.id)
+        .outerjoin(credited, credited.c.bill_id == SupplierBill.id)
+        .outerjoin(refunded, refunded.c.bill_id == SupplierBill.id)
         .where(
             SupplierBill.business_id == ctx.business_id,
             SupplierBill.status != "void",

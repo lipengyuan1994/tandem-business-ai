@@ -2437,8 +2437,42 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Edit an open supplier bill with no payments */
+        /** Edit an open supplier bill with no payments or credits */
         patch: operations["update_bill_api_v1_purchasing_bills__bill_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/purchasing/bills/{bill_id}/credits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a supplier credit against a bill, with the refund received for any part beyond the balance */
+        post: operations["record_supplier_credit_api_v1_purchasing_bills__bill_id__credits_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchasing/bills/{bill_id}/credits/{credit_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void a supplier credit recorded in error and put its amount back on the bill */
+        post: operations["void_supplier_credit_api_v1_purchasing_bills__bill_id__credits__credit_id__void_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/purchasing/bills/{bill_id}/payments": {
@@ -2484,7 +2518,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Void a supplier bill with no payments */
+        /** Void a supplier bill with no payments or credits */
         post: operations["void_bill_api_v1_purchasing_bills__bill_id__void_post"];
         delete?: never;
         options?: never;
@@ -2967,7 +3001,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Issue a full credit note and void the invoice */
+        /** Credit some or all of an invoice, refunding what was overpaid */
         post: operations["credit_api_v1_sales_invoices__document_id__credit_post"];
         delete?: never;
         options?: never;
@@ -4244,6 +4278,9 @@ export interface components {
         /**
          * BillIn
          * @description A bill from a supplier, optionally linked to one of its purchase orders (same supplier, approved or later).
+         *
+         *     Give either `total_minor` or `lines`; with lines the total is their sum (and must match `total_minor` if both are
+         *     given).
          */
         BillIn: {
             /**
@@ -4253,6 +4290,8 @@ export interface components {
             bill_date: string;
             /** Due Date */
             due_date?: string | null;
+            /** Lines */
+            lines?: components["schemas"]["BillLineIn"][] | null;
             /** Notes */
             notes?: string | null;
             /** Purchase Order Id */
@@ -4265,12 +4304,60 @@ export interface components {
             /** Supplier Reference */
             supplier_reference?: string | null;
             /** Total Minor */
-            total_minor: number;
+            total_minor?: number | null;
+        };
+        /**
+         * BillLineIn
+         * @description One line of a bill. `amount` is quantity × unit cost, rounded half up to the minor unit.
+         */
+        BillLineIn: {
+            /** Catalog Item Id */
+            catalog_item_id?: string | null;
+            /** Description */
+            description: string;
+            /** Purchase Order Line Id */
+            purchase_order_line_id?: string | null;
+            /** Quantity */
+            quantity: number | string;
+            /** Unit Cost Minor */
+            unit_cost_minor: number;
+        };
+        /** BillLineOut */
+        BillLineOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Catalog Item Id */
+            catalog_item_id: string | null;
+            /** Description */
+            description: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Position */
+            position: number;
+            /** Purchase Order Line Id */
+            purchase_order_line_id: string | null;
+            /** Quantity */
+            quantity: string;
+            /** Unit Cost Minor */
+            unit_cost_minor: number;
         };
         /** BillOut */
         BillOut: {
+            /**
+             * Amount Credited Minor
+             * @default 0
+             */
+            amount_credited_minor: number;
             /** Amount Paid Minor */
             amount_paid_minor: number;
+            /**
+             * Amount Refunded Minor
+             * @default 0
+             */
+            amount_refunded_minor: number;
             /**
              * Balance Minor
              * @default 0
@@ -4286,6 +4373,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Credits */
+            credits?: components["schemas"]["SupplierCreditOut"][];
             /** Currency */
             currency: string;
             /** Due Date */
@@ -4295,6 +4384,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Lines */
+            lines?: components["schemas"]["BillLineOut"][];
             /** Notes */
             notes: string | null;
             /** Payments */
@@ -4377,13 +4468,16 @@ export interface components {
         };
         /**
          * BillUpdate
-         * @description Edits an open bill with no payments. Omitted fields stay as they are.
+         * @description Edits an open bill with no payments or credits. Omitted fields stay as they are. `lines` replaces the bill's
+         *     lines and sets its total; `lines: null` removes them, keeping the total (or the `total_minor` given).
          */
         BillUpdate: {
             /** Bill Date */
             bill_date?: string | null;
             /** Due Date */
             due_date?: string | null;
+            /** Lines */
+            lines?: components["schemas"]["BillLineIn"][] | null;
             /** Notes */
             notes?: string | null;
             /** Supplier Reference */
@@ -5508,6 +5602,46 @@ export interface components {
             /** Quote Version */
             quote_version: number;
         };
+        /**
+         * CreditIn
+         * @description Credit some or all of an issued or paid invoice.
+         *
+         *     Without `lines`, everything not yet credited is credited. When the credit is larger than what the customer still
+         *     owes, `refund` says how the difference is paid back; the request is refused without it.
+         */
+        CreditIn: {
+            /** Lines */
+            lines?: components["schemas"]["CreditLineIn"][] | null;
+            /** Notes */
+            notes?: string | null;
+            refund?: components["schemas"]["RefundIn"] | null;
+            /** Version */
+            version: number;
+        };
+        /** CreditLineIn */
+        CreditLineIn: {
+            /**
+             * Line Id
+             * Format: uuid
+             */
+            line_id: string;
+            /** Quantity */
+            quantity: number | string;
+        };
+        /** CreditNoteRef */
+        CreditNoteRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Issue Date */
+            issue_date: string | null;
+            /** Number */
+            number: string | null;
+            /** Total Minor */
+            total_minor: number;
+        };
         /** CustomerBooking */
         CustomerBooking: {
             /**
@@ -5930,8 +6064,12 @@ export interface components {
         };
         /** DocumentOut */
         DocumentOut: {
+            /** Amount Credited Minor */
+            amount_credited_minor?: number | null;
             /** Amount Paid Minor */
             amount_paid_minor?: number | null;
+            /** Amount Refunded Minor */
+            amount_refunded_minor?: number | null;
             /** Balance Minor */
             balance_minor?: number | null;
             /** Bill To Address */
@@ -5945,6 +6083,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Credit Notes */
+            credit_notes?: components["schemas"]["CreditNoteRef"][];
             /** Credit Of Invoice Id */
             credit_of_invoice_id?: string | null;
             /** Currency */
@@ -5979,6 +6119,8 @@ export interface components {
             payment_status?: ("unpaid" | "partially_paid" | "paid") | null;
             /** Payments */
             payments?: components["schemas"]["PaymentOut"][];
+            /** Refunds */
+            refunds?: components["schemas"]["RefundOut"][];
             /** Source Appointment Id */
             source_appointment_id?: string | null;
             /** Source Order Id */
@@ -6388,6 +6530,14 @@ export interface components {
         LineOut: {
             /** Catalog Item Id */
             catalog_item_id: string | null;
+            /** Credited Line Id */
+            credited_line_id?: string | null;
+            /** Credited Quantity */
+            credited_quantity?: string | null;
+            /** Credited Subtotal Minor */
+            credited_subtotal_minor?: number | null;
+            /** Credited Tax Minor */
+            credited_tax_minor?: number | null;
             /**
              * Id
              * Format: uuid
@@ -7830,6 +7980,56 @@ export interface components {
             /** Valid Until */
             valid_until?: string | null;
         };
+        /**
+         * RefundIn
+         * @description How the money is paid back. The amount is not given: it is whatever the credit exceeds the open balance by.
+         */
+        RefundIn: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Reference */
+            reference?: string | null;
+        };
+        /** RefundOut */
+        RefundOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Credit Note Id
+             * Format: uuid
+             */
+            credit_note_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Reference */
+            reference: string | null;
+        };
         /** ReindexOut */
         ReindexOut: {
             /**
@@ -8728,6 +8928,60 @@ export interface components {
             run_id: string;
             summary: components["schemas"]["ThreadSummary"];
         };
+        /**
+         * SupplierCreditIn
+         * @description A supplier credit against a bill. Whatever exceeds the open balance must come with `refund`.
+         */
+        SupplierCreditIn: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Credit Date
+             * Format: date
+             */
+            credit_date: string;
+            /** Reason */
+            reason?: string | null;
+            refund?: components["schemas"]["SupplierRefundIn"] | null;
+            /** Supplier Reference */
+            supplier_reference?: string | null;
+            /** Version */
+            version: number;
+        };
+        /** SupplierCreditOut */
+        SupplierCreditOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Credit Date
+             * Format: date
+             */
+            credit_date: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string | null;
+            /** Refund Method */
+            refund_method: ("cash" | "card" | "bank_transfer" | "check" | "other") | null;
+            /** Refund Minor */
+            refund_minor: number;
+            /** Refund Received On */
+            refund_received_on: string | null;
+            /** Refund Reference */
+            refund_reference: string | null;
+            /** Supplier Reference */
+            supplier_reference: string | null;
+            /** Voided At */
+            voided_at: string | null;
+        };
         /** SupplierFollowup */
         SupplierFollowup: {
             /** About */
@@ -8893,6 +9147,24 @@ export interface components {
             /** Version */
             version: number;
         };
+        /**
+         * SupplierRefundIn
+         * @description Money the supplier paid back, for the part of a credit beyond what the bill still owed.
+         */
+        SupplierRefundIn: {
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "card" | "bank_transfer" | "check" | "other";
+            /**
+             * Received On
+             * Format: date
+             */
+            received_on: string;
+            /** Reference */
+            reference?: string | null;
+        };
         /** SupplierUpdate */
         SupplierUpdate: {
             /** Active */
@@ -8979,7 +9251,7 @@ export interface components {
              * Entity Type
              * @enum {string}
              */
-            entity_type: "customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "invoice_payment" | "bill" | "bill_payment" | "item";
+            entity_type: "customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "customer_refund" | "supplier_credit" | "invoice_payment" | "bill" | "bill_payment" | "item";
             /**
              * Id
              * Format: uuid
@@ -9815,7 +10087,7 @@ export interface operations {
                 limit?: number;
                 cursor?: string | null;
                 status?: ("synced" | "failed" | "skipped")[] | null;
-                entity_type?: ("customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "invoice_payment" | "bill" | "bill_payment" | "item")[] | null;
+                entity_type?: ("customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "customer_refund" | "supplier_credit" | "invoice_payment" | "bill" | "bill_payment" | "item")[] | null;
             };
             header?: never;
             path?: never;
@@ -20205,6 +20477,151 @@ export interface operations {
             };
         };
     };
+    record_supplier_credit_api_v1_purchasing_bills__bill_id__credits_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                bill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupplierCreditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    void_supplier_credit_api_v1_purchasing_bills__bill_id__credits__credit_id__void_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bill_id: string;
+                credit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__purchasing__schemas__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     record_bill_payment_api_v1_purchasing_bills__bill_id__payments_post: {
         parameters: {
             query?: never;
@@ -22725,7 +23142,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["app__modules__sales__schemas__VersionIn"];
+                "application/json": components["schemas"]["CreditIn"];
             };
         };
         responses: {

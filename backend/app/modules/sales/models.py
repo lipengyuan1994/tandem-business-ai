@@ -85,6 +85,13 @@ class SalesOrder(Document):
 
 
 class Invoice(Document):
+    """An invoice or a credit note.
+
+    For an ordinary invoice: `amount_paid_minor` is the sum of its non-voided payments, `amount_credited_minor` the sum
+    of its credit notes and `amount_refunded_minor` the money paid back to the customer when a credit note was larger
+    than what was still owed. The open balance is total - (paid - refunded) - credited and never goes below zero.
+    """
+
     __tablename__ = "invoices"
     kind: Mapped[str] = mapped_column(String(12), default="invoice")
     credit_of_invoice_id: Mapped[uuid.UUID | None]
@@ -94,14 +101,22 @@ class Invoice(Document):
     paid_at: Mapped[datetime | None]
     last_reminder_at: Mapped[datetime | None]
     amount_paid_minor: Mapped[int] = mapped_column(BigInteger, default=0)
+    amount_credited_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    amount_refunded_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
     __table_args__ = (
         *document_args("'draft','issued','paid','void'"),
         CheckConstraint("amount_paid_minor >= 0 and amount_paid_minor <= total_minor", name="amount_paid"),
+        CheckConstraint(
+            "amount_credited_minor >= 0 and amount_refunded_minor >= 0 "
+            "and amount_refunded_minor <= amount_paid_minor and amount_refunded_minor <= amount_credited_minor "
+            "and amount_paid_minor - amount_refunded_minor + amount_credited_minor <= total_minor",
+            name="settlement",
+        ),
         reference("credit_of_invoice_id", "invoices"),
         reference("source_appointment_id", "appointments"),
         reference("source_order_id", "sales_orders"),
         reference("source_quote_id", "quotes"),
-        UniqueConstraint("business_id", "credit_of_invoice_id"),
+        Index("ix_invoices_credit_of_invoice", "business_id", "credit_of_invoice_id"),
         UniqueConstraint("business_id", "source_order_id"),
         UniqueConstraint("business_id", "source_appointment_id"),
         CheckConstraint(
@@ -128,6 +143,26 @@ class InvoicePayment(BusinessScopedBase):
     __table_args__ = scoped_table_args(
         ForeignKeyConstraint(["business_id", "invoice_id"], ["invoices.business_id", "invoices.id"]),
         Index("ix_invoice_payments_invoice", "business_id", "invoice_id"),
+        CheckConstraint("amount_minor > 0", name="amount"),
+        CheckConstraint(f"method in ({','.join(repr(m) for m in PAYMENT_METHODS)})", name="method"),
+    )
+
+
+class InvoiceRefund(BusinessScopedBase):
+    """Money paid back to a customer, the part of a credit note larger than what was still owed on its invoice."""
+
+    __tablename__ = "invoice_refunds"
+    invoice_id: Mapped[uuid.UUID]
+    credit_note_id: Mapped[uuid.UUID]
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    paid_on: Mapped[date]
+    method: Mapped[str] = mapped_column(String(16))
+    reference: Mapped[str | None] = mapped_column(String(200))
+    __table_args__ = scoped_table_args(
+        ForeignKeyConstraint(["business_id", "invoice_id"], ["invoices.business_id", "invoices.id"]),
+        ForeignKeyConstraint(["business_id", "credit_note_id"], ["invoices.business_id", "invoices.id"]),
+        Index("ix_invoice_refunds_invoice", "business_id", "invoice_id"),
+        UniqueConstraint("business_id", "credit_note_id"),
         CheckConstraint("amount_minor > 0", name="amount"),
         CheckConstraint(f"method in ({','.join(repr(m) for m in PAYMENT_METHODS)})", name="method"),
     )
@@ -173,4 +208,6 @@ class SalesOrderLine(Line):
 
 class InvoiceLine(Line):
     __tablename__ = "invoice_lines"
-    __table_args__ = line_args("invoices")
+    credited_line_id: Mapped[uuid.UUID | None]
+    """On a credit note: the invoice line it credits (credit notes from before partial credits have none)."""
+    __table_args__ = (*line_args("invoices"), reference("credited_line_id", "invoice_lines"))

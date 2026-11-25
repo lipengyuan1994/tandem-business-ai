@@ -92,19 +92,20 @@ describe("invoice payments", () => {
     expect(posted[0]!.body).toMatchObject({ version: 3, amount_minor: 4000 })
   })
 
-  it("offers a credit note only before any payment, and no payment once nothing is owed", async () => {
+  it("offers a credit note after a part payment, and no payment once nothing is owed", async () => {
     mockMe(meWith(...PERMS, "sales.invoice.credit"))
     serve(doc({ ...ISSUED, amount_paid_minor: 4000, balance_minor: 5634, payment_status: "partially_paid", payments: [PAYMENT] }))
     const first = renderApp(`/sales/invoices/${ID}`)
     expect(await screen.findByRole("button", { name: "Mark fully paid" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Record payment" })).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Create credit note" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Create credit note" })).toBeInTheDocument()
     first.unmount()
 
+    // A free invoice has nothing to credit.
     serve(doc({ ...ISSUED, total_minor: 0, subtotal_minor: 0, tax_minor: 0, balance_minor: 0 }))
     renderApp(`/sales/invoices/${ID}`)
-    expect(await screen.findByRole("button", { name: "Create credit note" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Mark fully paid" })).toBeInTheDocument()
+    expect(await screen.findByRole("button", { name: "Mark fully paid" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Create credit note" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Record payment" })).not.toBeInTheDocument()
   })
 

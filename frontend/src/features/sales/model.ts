@@ -2,6 +2,7 @@ import type { TFunction } from "i18next"
 import type { AgingReport } from "@/api/types"
 import { decimalAmount, type CsvCell } from "@/lib/csv"
 import type { SalesDocument } from "@/api/types"
+import { canCredit } from "./credit"
 
 export type DocumentFamily = "quotes" | "orders" | "invoices"
 export const FAMILIES: DocumentFamily[] = ["quotes", "orders", "invoices"]
@@ -31,8 +32,10 @@ export function allowedActions(family: DocumentFamily, d: SalesDocument): SalesA
   }
   if (family === "invoices" && d.kind !== "credit_note") {
     if (d.status === "draft") return ["issue"]
-    // A credit note cancels the whole invoice, so the API refuses it once any payment is recorded.
-    if (d.status === "issued") return (d.amount_paid_minor ?? 0) > 0 ? ["mark-paid"] : ["mark-paid", "credit"]
+    // Credit notes can take some or all of an issued or paid invoice; any amount already paid beyond what is left
+    // owed is refunded to the customer.
+    if (d.status === "issued") return canCredit(d) ? ["mark-paid", "credit"] : ["mark-paid"]
+    if (d.status === "paid") return canCredit(d) ? ["credit"] : []
   }
   return []
 }

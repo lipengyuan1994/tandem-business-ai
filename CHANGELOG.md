@@ -4,6 +4,18 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **New (2026-11-25):** an invoice can be credited in part: choose how much of each line to credit. Several credit
+  notes per invoice are allowed. A credit larger than what the customer still owes records the difference as a refund
+  to the customer (date, method, reference). QuickBooks gets the credit memo; refunds are listed for the bookkeeper.
+- **New:** supplier bills can list their lines (description, quantity, unit cost; optionally filled from the purchase
+  order). The total is then the sum of the lines, and QuickBooks gets one expense line per bill line.
+- **New:** supplier credits against a bill. A credit takes off what is still owed; on a paid bill the rest is recorded
+  as money the supplier paid back. Credits can be voided. Payables aging and purchase-order billing count them.
+  QuickBooks sync lists each supplier credit for the bookkeeper to enter by hand.
+- **Migrations:** `20261125_1600_credits_refunds` (invoice credited and refunded amounts, backfilled for invoices
+  already credited in full; credit-note lines point at the line they credit; new `invoice_refunds` table) and
+  `20261125_1700_bill_credits` (supplier bill credited and refunded amounts; new `supplier_bill_lines` and
+  `supplier_credits` tables). No manual step. Both downgrades refuse once the new features have been used.
 - **New (2026-11-25):** archived catalog items and customers can be restored ("Show archived", then Restore). A
   service comes back only once the products it uses up are active. A customer comes back with the emails and phone
   numbers they had when archived, except any another customer has taken since.

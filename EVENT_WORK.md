@@ -840,3 +840,27 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
 - AI router: the first attempt of a model call now gets its timeout exactly as given. It was worked out as
   `(started + timeout) - started`, which can be off by a rounding error and failed an exact test in CI once.
 
+## 2026-11-25 — Partial credit notes, customer refunds, bill line items and supplier credits
+
+- Sales: `POST /sales/invoices/{id}/credit` takes `lines` (line id and quantity; omitted = everything not yet
+  credited) and `refund`. A line's credit is its quantity × unit price rounded half up, tax worked out the same way,
+  and crediting the last of a line takes exactly what is left, so several partial credits add up to the line. The
+  credit takes off the balance first; anything beyond needs `refund` (`sales.refund_required`), and a refund that is
+  not needed is refused. `amount_refunded_minor <= amount_paid_minor` is a database check, so a refunded payment
+  cannot be voided (`sales.payment_refunded`). Status: paid once paid − refunded + credited covers the total; void
+  once credited in full.
+- Purchasing: bills take optional `lines` (1–200); the total is their sum (`bill_total_mismatch` when a stated total
+  differs). Lines may link a catalog item and a line of the bill's own order. `lines: null` in an edit turns an
+  itemised bill back into a total-only one. New `POST /bills/{id}/credits` and `/credits/{credit_id}/void`. A credit
+  is capped at total − credited; the part beyond the balance is the supplier's refund. A fully credited bill shows as
+  paid (no new status). Aging subtracts credits dated by `as_of` and adds back refunds received by then; a bill the
+  supplier owes money on is not a payable.
+- QuickBooks: credit memos for partial credits; customer refunds and supplier credits are recorded as skipped with a
+  note for the bookkeeper (applying a vendor credit needs a bill payment the API cannot add safely beside the ones
+  already sent).
+- Screens: "Create credit note" dialog with per-line quantities and a refund section; bill dialog with optional lines
+  and "Fill from purchase order"; "Record supplier credit" dialog; bill page lists lines and credits.
+- Quantity helpers (`quantityMilli`, `milliText`, `halfUp`) moved to `src/lib/quantity.ts` for both features.
+- Bill dialog: changing the supplier also clears each line's purchase-order line link (review finding), so lines
+  filled from an order can still be saved against another supplier.
+

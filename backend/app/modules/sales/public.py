@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.platform.context import Context
 
+from . import payments
 from .events import DocumentChanged
 from .ledger import LedgerInvoice, LedgerLine, LedgerPayment
 from .ledger import invoice_versions as ledger_invoice_versions
@@ -70,7 +71,7 @@ def get_overdue_invoice(
         due_date=row.due_date,
         days_overdue=(today - row.due_date).days,
         total_minor=row.total_minor,
-        balance_minor=row.total_minor - row.amount_paid_minor,
+        balance_minor=payments.balance(row),
         currency=row.currency,
         version=row.version,
         last_reminder_at=row.last_reminder_at,
@@ -107,7 +108,7 @@ def overdue_invoice_page(
             due_date=row.due_date,
             days_overdue=(today - row.due_date).days,
             total_minor=row.total_minor,
-            balance_minor=row.total_minor - row.amount_paid_minor,
+            balance_minor=payments.balance(row),
             currency=row.currency,
             version=row.version,
             last_reminder_at=row.last_reminder_at,

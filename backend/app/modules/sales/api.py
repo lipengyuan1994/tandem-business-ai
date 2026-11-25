@@ -27,6 +27,7 @@ from .receivables import aging
 from .reminders import business_today
 from .schemas import (
     AgingReport,
+    CreditIn,
     DocumentCreate,
     DocumentOut,
     DocumentType,
@@ -316,12 +317,12 @@ def invoice_order(
     "/invoices/{document_id}/credit",
     response_model=DocumentOut,
     status_code=201,
-    summary="Issue a full credit note and void the invoice",
+    summary="Credit some or all of an invoice, refunding what was overpaid",
     responses=ERRORS,
 )
 def credit(
     document_id: uuid.UUID,
-    body: VersionIn,
+    body: CreditIn,
     idempotency_key: str | None = Header(default=None),
     ctx: Context = Depends(require(P.CREDIT)),
 ) -> DocumentOut | JSONResponse:
@@ -335,5 +336,5 @@ def credit(
                 "document_id": str(document_id),
                 "body": body.model_dump(mode="json"),
             },
-            lambda: service.detail(db, ctx, "invoice", service.credit(db, ctx, document_id, body.version)),
+            lambda: service.detail(db, ctx, "invoice", service.credit(db, ctx, document_id, body.version, body)),
         )

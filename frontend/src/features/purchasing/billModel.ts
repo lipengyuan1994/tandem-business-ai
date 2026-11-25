@@ -1,11 +1,16 @@
 import type { TFunction } from "i18next"
 import { decimalAmount, type CsvCell } from "@/lib/csv"
 import type { Schemas } from "@/api/types"
+import { halfUp, MILLI, quantityMilli } from "@/lib/quantity"
 
 export type Bill = Schemas["BillOut"]
 export type BillPayment = Schemas["BillPaymentOut"]
 export type BillInput = Schemas["BillIn"]
 export type BillPaymentInput = Schemas["BillPaymentIn"]
+export type BillLine = Schemas["BillLineOut"]
+export type BillLineInput = Schemas["BillLineIn"]
+export type SupplierCredit = Schemas["SupplierCreditOut"]
+export type SupplierCreditInput = Schemas["SupplierCreditIn"]
 export type PayablesReport = Schemas["PayablesAgingReport"]
 export type POBilling = Schemas["PurchaseOrderBilling"]
 export type BillStatus = Bill["status"]
@@ -39,3 +44,18 @@ export function payablesCsv(report: PayablesReport, t: TFunction): CsvCell[][] {
     ]),
   ]
 }
+
+/** A bill line's amount exactly as the server works it out: quantity × unit cost, rounded half up. Null for a bad quantity. */
+export function billLineAmount(quantity: string, unitCostMinor: number): number | null {
+  const milli = quantityMilli(quantity)
+  if (milli === null || milli <= 0n || unitCostMinor < 0) return null
+  return Number(halfUp(milli * BigInt(unitCostMinor), MILLI))
+}
+
+/** What is still owed on the bill and what a supplier credit can still take off it. */
+export const creditableOf = (b: Bill) => b.total_minor - (b.amount_credited_minor ?? 0)
+/** A credit takes what is still owed first; the rest the supplier must have paid back. */
+export const supplierRefundFor = (b: Bill, credit: number) => Math.max(0, credit - b.balance_minor)
+export const canCreditBill = (b: Bill) => b.status !== "void" && creditableOf(b) > 0
+/** Only open bills with no credits can be edited (the server refuses the rest). */
+export const canEditBill = (b: Bill) => b.status === "open" && (b.amount_credited_minor ?? 0) === 0

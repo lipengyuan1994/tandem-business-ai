@@ -1,7 +1,10 @@
 """Invoice payment ledger: amounts received against ordinary invoices. Callers lock the invoice row first.
 
-`invoices.amount_paid_minor` always equals the sum of the invoice's non-voided payments; an invoice is `paid` exactly
-when that sum reaches its total. Payments never exceed the open balance (no customer credit balances yet).
+`invoices.amount_paid_minor` always equals the sum of the invoice's non-voided payments. Credit notes reduce what is
+owed (`amount_credited_minor`), and money paid back to the customer (`amount_refunded_minor`) reduces what was paid.
+The open balance is total - (paid - refunded) - credited; an issued invoice becomes `paid` exactly when it reaches
+zero with some money received, and `void` when credited in full. Payments never exceed the open balance (no customer
+credit balances yet).
 """
 
 from __future__ import annotations
@@ -20,8 +23,12 @@ from .models import Invoice, InvoicePayment
 from .schemas import PaymentStatus
 
 
+def net_paid(row: Invoice) -> int:
+    return row.amount_paid_minor - row.amount_refunded_minor
+
+
 def balance(row: Invoice) -> int:
-    return row.total_minor - row.amount_paid_minor
+    return row.total_minor - net_paid(row) - row.amount_credited_minor
 
 
 def payment_status(row: Invoice) -> PaymentStatus | None:
@@ -29,7 +36,18 @@ def payment_status(row: Invoice) -> PaymentStatus | None:
         return None
     if row.status == "paid":
         return "paid"
-    return "partially_paid" if row.amount_paid_minor > 0 else "unpaid"
+    return "partially_paid" if net_paid(row) > 0 else "unpaid"
+
+
+def settle_after_credit(row: Invoice) -> None:
+    """Status of a credited invoice: void when credited in full, paid when nothing is left to pay, else issued."""
+    if row.amount_credited_minor == row.total_minor:
+        row.status, row.paid_at = "void", None
+    elif balance(row) == 0:
+        if row.status != "paid":
+            row.status, row.paid_at = "paid", clock.now()
+    else:
+        row.status, row.paid_at = "issued", None
 
 
 def add(
@@ -56,7 +74,7 @@ def add(
         )
         db.add(payment)
     row.amount_paid_minor += amount_minor
-    if row.amount_paid_minor == row.total_minor:
+    if balance(row) == 0:
         row.status = "paid"
         row.paid_at = clock.now()
     db.flush()
@@ -80,10 +98,15 @@ def void(db: Session, ctx: Context, row: Invoice, payment_id: uuid.UUID) -> Invo
         raise Conflict("sales.payment_already_voided")
     if row.status not in ("issued", "paid"):
         raise Conflict("sales.invalid_transition", detail=f"Cannot change payments of a {row.status} invoice")
+    if row.amount_paid_minor - payment.amount_minor < row.amount_refunded_minor:
+        raise Conflict(
+            "sales.payment_refunded",
+            detail="Part of this money was already paid back to the customer, so the payment cannot be voided",
+        )
     payment.voided_at = clock.now()
     payment.version += 1
     row.amount_paid_minor -= payment.amount_minor
-    if row.status == "paid" and row.amount_paid_minor < row.total_minor:
+    if row.status == "paid" and balance(row) > 0:
         row.status = "issued"
         row.paid_at = None
     db.flush()

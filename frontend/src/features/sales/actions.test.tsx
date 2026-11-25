@@ -20,7 +20,6 @@ const CASES: [DocumentFamily, string, string, string, string][] = [
   ["orders", "fulfilled", "Create invoice", "invoice", "draft"],
   ["invoices", "draft", "Issue invoice", "issue", "issued"],
   ["invoices", "issued", "Mark fully paid", "mark-paid", "paid"],
-  ["invoices", "issued", "Create credit note", "credit", "issued"],
 ]
 describe("sales actions", () => {
   it.each(CASES)("%s %s: %s calls /%s with the displayed version", async (family, status, label, action, nextStatus) => {

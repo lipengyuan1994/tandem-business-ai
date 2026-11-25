@@ -7,12 +7,12 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from app.platform.context import Context
 
 from . import permissions as P
-from .models import Invoice, InvoicePayment
+from .models import Invoice, InvoicePayment, InvoiceRefund
 from .schemas import AgingCustomer, AgingReport, AgingTotal
 
 BUCKETS = ("current_minor", "days_1_30_minor", "days_31_60_minor", "days_61_90_minor", "days_over_90_minor")
@@ -46,10 +46,11 @@ class _Sum:
 
 
 def aging(db: Session, ctx: Context, as_of: date) -> AgingReport:
-    """Point in time: invoices issued by `as_of`, minus non-voided payments dated by `as_of`.
+    """Point in time: invoices issued by `as_of`, minus non-voided payments dated by `as_of`, minus credit notes
+    issued by `as_of`, plus money paid back to the customer by `as_of`.
 
     Days past due count from the due date, or from the issue date when an invoice has none. Not yet due is current.
-    Credited (void) invoices and credit notes are excluded.
+    Credit notes are not listed themselves; an invoice credited in full by `as_of` owes nothing.
     """
     ctx.require(P.DOCUMENT_READ)
     paid = (
@@ -62,7 +63,25 @@ def aging(db: Session, ctx: Context, as_of: date) -> AgingReport:
         .group_by(InvoicePayment.invoice_id)
         .subquery()
     )
-    open_minor = Invoice.total_minor - func.coalesce(paid.c.paid_minor, 0)
+    note = aliased(Invoice)
+    credited = (
+        select(note.credit_of_invoice_id.label("invoice_id"), func.sum(note.total_minor).label("credited_minor"))
+        .where(note.business_id == ctx.business_id, note.kind == "credit_note", note.issue_date <= as_of)
+        .group_by(note.credit_of_invoice_id)
+        .subquery()
+    )
+    refunded = (
+        select(InvoiceRefund.invoice_id, func.sum(InvoiceRefund.amount_minor).label("refunded_minor"))
+        .where(InvoiceRefund.business_id == ctx.business_id, InvoiceRefund.paid_on <= as_of)
+        .group_by(InvoiceRefund.invoice_id)
+        .subquery()
+    )
+    open_minor = (
+        Invoice.total_minor
+        - func.coalesce(paid.c.paid_minor, 0)
+        + func.coalesce(refunded.c.refunded_minor, 0)
+        - func.coalesce(credited.c.credited_minor, 0)
+    )
     rows = db.execute(
         select(
             Invoice.customer_id,
@@ -73,10 +92,12 @@ def aging(db: Session, ctx: Context, as_of: date) -> AgingReport:
             open_minor.label("open_minor"),
         )
         .outerjoin(paid, paid.c.invoice_id == Invoice.id)
+        .outerjoin(credited, credited.c.invoice_id == Invoice.id)
+        .outerjoin(refunded, refunded.c.invoice_id == Invoice.id)
         .where(
             Invoice.business_id == ctx.business_id,
             Invoice.kind == "invoice",
-            Invoice.status.in_(("issued", "paid")),
+            Invoice.status.in_(("issued", "paid", "void")),
             Invoice.issue_date <= as_of,
             open_minor > 0,
         )

@@ -14,6 +14,8 @@ EntityType = Literal[
     "invoice",
     "credit_note",
     "credit_application",
+    "customer_refund",
+    "supplier_credit",
     "invoice_payment",
     "bill",
     "bill_payment",
