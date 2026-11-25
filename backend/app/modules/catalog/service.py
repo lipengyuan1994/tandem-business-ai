@@ -132,7 +132,9 @@ def update_item(db: Session, ctx: Context, item_id: uuid.UUID, data: CatalogItem
 
 def archive_item(db: Session, ctx: Context, item_id: uuid.UUID, version: int) -> CatalogItem:
     ctx.require(P.ITEM_WRITE)
-    item = _item(db, ctx, item_id)
+    # Lock the item before the in-use check. replace_parts() share-locks each part it adds, so a parts edit that
+    # adds this item either finishes first (and the check below sees it) or waits and then sees it archived.
+    item = _item(db, ctx, item_id, for_update=True)
     if item.kind == "product":
         used_by = db.scalar(
             select(CatalogItem.name)
@@ -191,8 +193,15 @@ def replace_parts(db: Session, ctx: Context, service_id: uuid.UUID, parts: list[
         raise Invalid("catalog.invalid_part", detail="parts belong to services")
     if len({p.item_id for p in parts}) != len(parts):
         raise Invalid("catalog.invalid_part", detail="duplicate item")
-    for p in parts:
-        item = crud.get_scoped(db, ctx, CatalogItem, p.item_id)
+    for p in sorted(parts, key=lambda part: part.item_id):
+        # FOR SHARE: a concurrent archive_item() of this part waits for this edit, or this edit waits for the archive
+        # and re-reads the part as archived (populate_existing), so an active service never needs an archived part.
+        item = db.scalar(
+            select(CatalogItem)
+            .where(CatalogItem.business_id == ctx.business_id, CatalogItem.id == p.item_id)
+            .with_for_update(read=True)
+            .execution_options(populate_existing=True)
+        )
         if item is None or item.kind != "product" or not item.is_stock_tracked or item.status != "active":
             raise Invalid("catalog.invalid_part", detail="a part must be an active, stock-tracked product")
     db.execute(

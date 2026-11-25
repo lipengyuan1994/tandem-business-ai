@@ -126,10 +126,17 @@ def invite(db: Session, ctx: Context, data: InvitationIn) -> InvitationOut:
     temp_password: str | None = None
     if existing is not None:
         # Already a user (e.g. member of another business): add the membership now.
-        if repository.get_membership_for_user(db, ctx, existing.id) is not None:
+        membership_or_none = repository.get_membership_for_user(db, ctx, existing.id)
+        if membership_or_none is not None and membership_or_none.status != "removed":
             raise Conflict("identity.already_member")
-        membership = Membership(id=new_id(), business_id=ctx.business_id, user_id=existing.id, status="active")
-        db.add(membership)
+        if membership_or_none is not None:
+            # Someone removed earlier and invited again: reactivate the same membership (one per person per
+            # business) with exactly the invited roles; roles held before the removal don't come back.
+            membership = membership_or_none
+            reactivate(db, ctx, membership)
+        else:
+            membership = Membership(id=new_id(), business_id=ctx.business_id, user_id=existing.id, status="active")
+            db.add(membership)
         db.flush()
         for role in sorted(roles):
             db.add(
@@ -162,6 +169,21 @@ def invite(db: Session, ctx: Context, data: InvitationIn) -> InvitationOut:
         status=invitation.status,
         expires_at=invitation.expires_at,
         temporary_password=temp_password,
+    )
+
+
+def reactivate(db: Session, ctx: Context, membership: Membership) -> None:
+    """Bring back a removed membership with no roles; the caller grants the new ones."""
+    repository.revoke_all_roles(db, ctx, membership.id, clock.now())
+    membership.status, membership.version = "active", membership.version + 1
+    audit.record(
+        db,
+        ctx,
+        action="identity.membership.reactivated",
+        target_type="membership",
+        target_id=membership.id,
+        summary="Removed staff member added back",
+        changes={"status": {"from": "removed", "to": "active"}},
     )
 
 

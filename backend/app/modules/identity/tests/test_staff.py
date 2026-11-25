@@ -196,3 +196,28 @@ def test_expired_invitation_can_be_sent_again(app: Any, keycloak: FakeKeycloak, 
     with owner_engine.connect() as conn:
         statuses = conn.execute(text("select status from invitations order by expires_at")).scalars().all()
     assert statuses == ["expired", "pending"]
+
+
+def test_removed_member_can_be_invited_again(app: Any, keycloak: FakeKeycloak) -> None:
+    """Removing someone used to make every later invitation fail with "already a member"."""
+    business = make_business("example-cycle-works")
+    owner = login_as(app, business, ["owner"])
+    casey = make_user("casey@example.com")
+    membership = add_member(casey, business, ["admin"])
+    me = _members(owner)["casey@example.com"]
+    removed = owner.patch(
+        f"/api/v1/identity/members/{membership}", json={"version": me["version"], "status": "removed"}
+    )
+    assert removed.status_code == 200, removed.text  # used to be a 500 that rolled the removal back
+    assert removed.json()["status"] == "removed"
+    assert "casey@example.com" not in _members(owner)
+
+    body = {"email": "casey@example.com", "display_name": "Casey", "roles": ["operator"]}
+    again = owner.post("/api/v1/identity/invitations", json=body)
+    assert again.status_code == 201, again.text
+    assert again.json()["status"] == "accepted"
+    back = _members(owner)["casey@example.com"]
+    # same membership, active again, with only the invited role (the earlier admin role doesn't come back)
+    assert back["membership_id"] == str(membership)
+    assert back["status"] == "active" and back["roles"] == ["operator"]
+    assert owner.post("/api/v1/identity/invitations", json=body).json()["code"] == "identity.already_member"
