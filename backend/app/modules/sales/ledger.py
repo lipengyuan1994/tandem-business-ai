@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
@@ -127,11 +127,18 @@ def invoices(db: Session, ctx: Context, ids: set[uuid.UUID]) -> dict[uuid.UUID, 
 
 
 def payment_versions(db: Session, ctx: Context, since: date) -> dict[uuid.UUID, int]:
-    """Payments received on or after `since`, voided ones included: id -> version."""
+    """Payments received on or after `since`, or against an invoice issued on or after it (a payment can be dated
+    before its invoice, such as a deposit), voided ones included: id -> version."""
     ctx.require(P.DOCUMENT_READ)
     rows = db.execute(
-        select(InvoicePayment.id, InvoicePayment.version).where(
-            InvoicePayment.business_id == ctx.business_id, InvoicePayment.paid_on >= since
+        select(InvoicePayment.id, InvoicePayment.version)
+        .join(
+            Invoice,
+            (Invoice.business_id == InvoicePayment.business_id) & (Invoice.id == InvoicePayment.invoice_id),
+        )
+        .where(
+            InvoicePayment.business_id == ctx.business_id,
+            or_(InvoicePayment.paid_on >= since, Invoice.issue_date >= since),
         )
     )
     return {row.id: row.version for row in rows}

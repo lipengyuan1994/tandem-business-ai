@@ -4,6 +4,13 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **Fix (2026-11-25):** an order that already has an invoice can no longer be cancelled (it used to release its
+  reserved stock while the invoice stayed live); credit or delete the invoice instead.
+- **Fix:** QuickBooks sync no longer turns the owner's settings save into a "changed since you opened it" conflict
+  while a sync runs or a token refreshes, and payments dated before the sync start date (a deposit taken before the
+  invoice or bill) now reach QuickBooks when their invoice or bill does.
+- **Fix:** a stock movement's reason and sign must agree: a "loss" of +5 used to add five units, and a "receipt" of
+  -2 removed them. Applies to manual adjustments and to approved stock-adjustment proposals.
 - **Fix (2026-11-25):** amounts in currencies whose decimals browsers drop (HUF, IDR, COP, PKR, IQD and others) were
   entered and shown 100 or 1000 times too small; the app now uses the same ISO 4217 decimal places as the server.
 - **Fix:** an open "Record payment" dialog no longer picks up a newer invoice version in the background, so two people

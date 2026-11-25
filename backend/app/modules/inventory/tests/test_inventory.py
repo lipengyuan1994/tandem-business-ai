@@ -199,6 +199,29 @@ def test_reorder_suggestion_formula(client: Any, biz: uuid.UUID, pads: str) -> N
     )
 
 
+@pytest.mark.parametrize(
+    ("quantity", "reason"),
+    [("5", "adjustment_loss"), ("-1", "adjustment_gain"), ("-1", "receipt"), ("-1", "return")],
+)
+def test_reason_and_sign_must_agree(client: Any, pads: str, quantity: str, reason: str) -> None:
+    # a "loss" of +5 used to add five units to stock
+    r = client().post("/api/v1/inventory/movements", json={"item_id": pads, "quantity": quantity, "reason": reason})
+    assert (r.status_code, r.json()["code"]) == (422, "inventory.reason_sign_mismatch")
+    assert Decimal(_level(client, pads)["on_hand"]) == 3
+
+
+def test_adjust_stock_proposal_with_wrong_sign_is_refused(client: Any, pads: str) -> None:
+    r = client(["operator"]).post(
+        "/api/v1/approvals/proposals",
+        json={
+            "action_type": "inventory.adjust_stock",
+            "title": "Broken pads",
+            "payload": {"item_id": pads, "quantity": "2", "reason": "adjustment_loss"},
+        },
+    )
+    assert r.status_code == 422 and r.json()["code"] == "inventory.reason_sign_mismatch"
+
+
 def test_adjust_stock_executor_through_approval(client: Any, pads: str, registry: Registry) -> None:
     operator, manager = client(["operator"]), client(["inventory_manager"])
     p = operator.post(

@@ -9,7 +9,7 @@ import uuid
 from datetime import date
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.platform.context import Context
@@ -96,11 +96,19 @@ def bills(db: Session, ctx: Context, ids: set[uuid.UUID]) -> dict[uuid.UUID, Led
 
 
 def bill_payment_versions(db: Session, ctx: Context, since: date) -> dict[uuid.UUID, int]:
-    """Bill payments made on or after `since`, voided ones included: id -> version."""
+    """Bill payments made on or after `since`, or against a bill dated on or after it (a payment can be dated before
+    its bill, such as a deposit), voided ones included: id -> version."""
     ctx.require(P.BILL_READ)
     rows = db.execute(
-        select(SupplierBillPayment.id, SupplierBillPayment.version).where(
-            SupplierBillPayment.business_id == ctx.business_id, SupplierBillPayment.paid_on >= since
+        select(SupplierBillPayment.id, SupplierBillPayment.version)
+        .join(
+            SupplierBill,
+            (SupplierBill.business_id == SupplierBillPayment.business_id)
+            & (SupplierBill.id == SupplierBillPayment.bill_id),
+        )
+        .where(
+            SupplierBillPayment.business_id == ctx.business_id,
+            or_(SupplierBillPayment.paid_on >= since, SupplierBill.bill_date >= since),
         )
     )
     return {row.id: row.version for row in rows}

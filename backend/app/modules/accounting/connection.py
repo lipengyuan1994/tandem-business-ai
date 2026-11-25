@@ -318,8 +318,7 @@ def _access(ctx: Context, client: object, *, force_refresh: bool) -> tuple[str, 
                 if not conn.refresh_token_sealed:
                     raise LedgerError("auth", "No QuickBooks sign-in is stored; reconnect")
                 tokens = provider.auth(client).refresh(unseal(conn.refresh_token_sealed))  # type: ignore[arg-type]
-                _store_tokens(conn, tokens)
-                _bump(conn)
+                _store_tokens(conn, tokens)  # a token refresh is not a settings change: keep `version`
                 access = tokens.access_token
             else:
                 access = unseal(conn.access_token_sealed)

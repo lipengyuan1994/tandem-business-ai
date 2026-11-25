@@ -152,12 +152,27 @@ def _after_change(db: Session, ctx: Context, level: StockLevel, available_before
         )
 
 
+# Reasons whose direction is fixed; count corrections go either way.
+INBOUND = frozenset({"receipt", "adjustment_gain", "transfer_in", "return"})
+OUTBOUND = frozenset({"adjustment_loss", "consumption", "sale", "transfer_out"})
+
+
+def check_direction(reason: str, quantity: Decimal) -> None:
+    """A loss can't add stock and a receipt can't remove it: the reason and the sign must agree."""
+    if quantity == 0:
+        raise Invalid("inventory.zero_quantity")
+    if (reason in INBOUND and quantity < 0) or (reason in OUTBOUND and quantity > 0):
+        raise Invalid(
+            "inventory.reason_sign_mismatch",
+            detail=f"{reason.replace('_', ' ')} must {'add' if reason in INBOUND else 'remove'} stock",
+        )
+
+
 def record_movement(
     db: Session, ctx: Context, m: MovementIn, *, available_before: Decimal | None = None
 ) -> StockMovement:
     """Ledger entry + level update. Callers check permissions (direct API requires inventory.stock.adjust)."""
-    if m.quantity == 0:
-        raise Invalid("inventory.zero_quantity")
+    check_direction(m.reason, m.quantity)
     item = _tracked(db, ctx, m.item_id, m.quantity)
     location_id = _location_id(db, ctx, m.stock_location_id)
     level = _locked_level(db, ctx, m.item_id, location_id)

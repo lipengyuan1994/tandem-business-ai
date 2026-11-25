@@ -74,6 +74,16 @@ def test_cancel_releases_reservations(shop: Shop) -> None:
     assert Decimal(shop.available()["on_hand"]) == 10
 
 
+def test_invoiced_order_cannot_be_cancelled(shop: Shop) -> None:
+    order = shop.action("orders", shop.create("orders"), "confirm")
+    shop.action("orders", order, "invoice")
+    current = shop.owner.get(f"{BASE}/orders/{order['id']}").json()
+    r = shop.owner.post(f"{BASE}/orders/{order['id']}/cancel", json={"version": current["version"]})
+    assert r.status_code == 409 and r.json()["code"] == "sales.order_invoiced"
+    assert shop.owner.get(f"{BASE}/orders/{order['id']}").json()["status"] == "confirmed"
+    assert Decimal(shop.available()["reserved"]) == 1
+
+
 def test_issued_immutable_credit_voids_original(shop: Shop) -> None:
     invoice = shop.action("invoices", shop.create(), "issue")
     r = shop.owner.patch(f"{BASE}/invoices/{invoice['id']}", json={"version": invoice["version"], "notes": "change"})

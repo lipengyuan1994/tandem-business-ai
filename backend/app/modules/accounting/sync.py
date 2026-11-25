@@ -655,7 +655,7 @@ def _acquire(ctx: Context, manual: bool) -> bool:
             return False
         conn.sync_lease_until = now + LEASE
         conn.last_sync_started_at = now
-        conn.version += 1
+        # no version bump: `version` guards the owner's settings form, which a background run must not invalidate
         return True
 
 
@@ -668,7 +668,6 @@ def _release(ctx: Context, error: str | None, more: bool) -> None:
         conn.last_sync_finished_at = clock.now()
         if conn.status == "connected":
             conn.last_sync_error = error[:500] if error else None
-        conn.version += 1
         if more:
             _queue(db, ctx, run_at=clock.now() + timedelta(seconds=30))
 
