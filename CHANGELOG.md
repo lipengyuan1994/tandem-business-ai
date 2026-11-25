@@ -4,6 +4,8 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **Fix (2026-11-25):** an order whose invoice was credited can be cancelled again, releasing its reserved stock
+  (the guard added earlier today also counted the voided invoice).
 - **Fix (2026-11-25):** booking or moving an appointment with "override hours" no longer lets a resource that can't do
   the service (say, a room for a technician's job) take it; the override only lifts opening hours.
 - **Fix:** an invitation that expired unanswered no longer blocks inviting the same person again. The new invitation

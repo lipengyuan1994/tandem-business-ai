@@ -84,6 +84,19 @@ def test_invoiced_order_cannot_be_cancelled(shop: Shop) -> None:
     assert Decimal(shop.available()["reserved"]) == 1
 
 
+def test_order_can_be_cancelled_once_its_invoice_is_credited(shop: Shop) -> None:
+    order = shop.action("orders", shop.create("orders"), "confirm")
+    invoice = shop.action("orders", order, "invoice")
+    assert invoice["source_order_id"] == order["id"]
+    if invoice["status"] == "draft":
+        invoice = shop.action("invoices", invoice, "issue")
+    shop.action("invoices", invoice, "credit")
+    current = shop.owner.get(f"{BASE}/orders/{order['id']}").json()
+    r = shop.owner.post(f"{BASE}/orders/{order['id']}/cancel", json={"version": current["version"]})
+    assert r.status_code == 200, r.text
+    assert Decimal(shop.available()["reserved"]) == 0  # the credited sale no longer holds stock
+
+
 def test_issued_immutable_credit_voids_original(shop: Shop) -> None:
     invoice = shop.action("invoices", shop.create(), "issue")
     r = shop.owner.patch(f"{BASE}/invoices/{invoice['id']}", json={"version": invoice["version"], "notes": "change"})
