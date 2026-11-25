@@ -55,15 +55,21 @@ jobs:
       # exactly as `make test-db` starts it locally.
       - name: Start test database
         run: make test-db
-      # Each shard runs every fourth test file (sorted by path), against its own database.
+      # Each shard gets about a quarter of the run time, from the per-file seconds in
+      # .github/backend-test-durations.json (see .github/scripts/backend_shard.py), against its own database.
       - name: Run tests
         working-directory: backend
         env:
           SHARD: ${{ matrix.shard }}
         run: |
-          mapfile -t files < <(find app tests -name 'test_*.py' | sort | awk -v n=4 -v i="$SHARD" '(NR - 1) % n == i - 1')
+          mapfile -t files < <(python3 ../.github/scripts/backend_shard.py "$SHARD" 4)
           echo "Shard $SHARD: ${#files[@]} test files"
-          uv run pytest -q "${files[@]}"
+          uv run pytest -q --junitxml=junit.xml "${files[@]}"
+      # Seconds per file, to refresh .github/backend-test-durations.json when the shards drift apart.
+      - name: Test file durations
+        if: always()
+        working-directory: backend
+        run: test -f junit.xml && python3 ../.github/scripts/backend_shard.py --durations junit.xml || true
 
   frontend:
     name: Frontend lint, types and tests

@@ -115,6 +115,24 @@ describe("customer setup", () => {
     expect(screen.queryByRole("form", { name: "Add email or phone" })).not.toBeInTheDocument()
   })
 
+  it("restores an archived customer", async () => {
+    mockMe(meWith(...PERMS))
+    const state: { customer: CustomerDetail } = { customer: { ...ADA, status: "archived", version: 5 } }
+    let sent: unknown = null
+    profile(state)
+    server.use(http.post(`*/api/v1/crm/customers/${CID}/restore`, async ({ request }) => {
+      sent = await request.json()
+      state.customer = { ...state.customer, status: "active", version: 6 }
+      return HttpResponse.json(state.customer)
+    }))
+    renderApp(`/customers/${CID}`)
+    expect(await screen.findByText("This customer is archived.")).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: "Restore" }))
+    expect(await screen.findByText("Ada Example restored")).toBeInTheDocument()
+    expect(sent).toEqual({ version: 5 })
+    expect(await screen.findByRole("button", { name: "Archive" })).toBeInTheDocument()
+  })
+
   it("shows contact details read-only without write permission", async () => {
     mockMe(meWith("crm.customer.read"))
     profile({ customer: ADA })

@@ -810,3 +810,33 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   part (re-read with `populate_existing`), so whichever comes second sees the first one's result.
 - Verification: regression tests (fail before, pass after; the race test runs both orders on two connections), backend
   lint and types, identity, inventory, catalog, scheduling, approvals and AI tool suites.
+
+## 2026-11-25 — Small follow-ups: restore archived items and customers, all-locations closures, aging CSV, CI shards
+
+- Identity: `reactivate` clears the membership's job title (recorded in the audit change); the invitation that brings
+  someone back carries no title, so the old one no longer comes back with them.
+- Catalog: `POST /catalog/items/{id}/restore`. A service is refused (`catalog.part_archived`) while any part it uses
+  up is archived; parts are share-locked like `replace_parts`, so a concurrent part archive can't slip in between.
+  UI: "Show archived" on the catalog list and a Restore button on archived rows.
+- CRM: `POST /crm/customers/{id}/restore`. Archiving now marks the contact points it switches off
+  (`archived_with_customer`), and restore brings back exactly those, skipping any address another active customer took
+  meanwhile, and keeps one primary per type. Design call: points removed by hand before the archive stay removed.
+  Backfill for earlier archives marks their primary points (archive kept the primary flag; removal clears it).
+  UI: "Show archived customers only" on the list, Restore on an archived customer's page.
+- Scheduling: `ExceptionIn` takes `location_id` (everyone at that location) or `all_locations` (closure only, no
+  resource); stored as a null `location_id`, so it also covers locations added later. The slot finder reads closures
+  for its location or for all. Design call: an all-locations closure is one time range, entered in the business's
+  time zone. Downgrade copies each all-locations closure to every location before requiring the column again.
+- Aging CSV: receivables and payables aging download as CSV in the browser (one row per customer or supplier and
+  currency, a total row per currency, exact decimals). The CSV helpers moved from reports to `src/lib/csv.ts`.
+- CI: backend shards are split by measured seconds per test file (`.github/backend-test-durations.json`, longest file
+  first to the least loaded shard) instead of every fourth file; each shard prints its per-file seconds so the
+  durations file can be refreshed.
+- Export: every exported table is read in primary-key order. The byte-for-byte export test failed once in CI because
+  two reads of `audit_events` came back in different orders (no ORDER BY; Postgres may synchronize concurrent scans).
+- Restore: one primary contact point per type across all of the customer's active ones. An email added while the
+  customer was archived became primary (the old ones were inactive), and restoring then left two primaries; the
+  newer one now stays primary (review finding on PR #14).
+- AI router: the first attempt of a model call now gets its timeout exactly as given. It was worked out as
+  `(started + timeout) - started`, which can be off by a rounding error and failed an exact test in CI once.
+

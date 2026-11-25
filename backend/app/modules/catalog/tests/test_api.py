@@ -165,3 +165,39 @@ def test_archive_and_parts_edit_cannot_both_win(client: Any, biz: uuid.UUID, fir
         else {"archive": "ok", "parts": "catalog.invalid_part"}
     )
     assert results == expected
+
+
+def test_archived_item_can_be_restored(client: Any) -> None:
+    """Archiving used to be one-way: an item archived by mistake had to be created again under a new SKU."""
+    c = client()
+    svc = c.post("/api/v1/catalog/items", json=SERVICE).json()
+    pads = c.post("/api/v1/catalog/items", json=PADS).json()
+    c.put(f"/api/v1/catalog/items/{svc['id']}/parts", json=[{"item_id": pads["id"], "quantity": "1"}])
+    svc = c.post(f"/api/v1/catalog/items/{svc['id']}/archive", json={"version": svc["version"]}).json()
+    pads = c.post(f"/api/v1/catalog/items/{pads['id']}/archive", json={"version": pads["version"]}).json()
+    assert pads["status"] == "archived"
+    # a service needs its parts active first
+    blocked = c.post(f"/api/v1/catalog/items/{svc['id']}/restore", json={"version": svc["version"]})
+    assert blocked.status_code == 409 and blocked.json()["code"] == "catalog.part_archived"
+    assert (
+        client(["auditor"])
+        .post(f"/api/v1/catalog/items/{pads['id']}/restore", json={"version": pads["version"]})
+        .status_code
+        == 403
+    )
+    stale = c.post(f"/api/v1/catalog/items/{pads['id']}/restore", json={"version": pads["version"] - 1})
+    assert stale.status_code == 409
+    back = c.post(f"/api/v1/catalog/items/{pads['id']}/restore", json={"version": pads["version"]})
+    assert back.status_code == 200 and back.json()["status"] == "active"
+    svc_back = c.post(f"/api/v1/catalog/items/{svc['id']}/restore", json={"version": svc["version"]})
+    assert svc_back.status_code == 200 and svc_back.json()["status"] == "active"
+    assert (
+        c.post(f"/api/v1/catalog/items/{svc['id']}/restore", json={"version": svc_back.json()["version"]}).json()[
+            "code"
+        ]
+        == "catalog.item_not_archived"
+    )
+    listed = c.get("/api/v1/catalog/items", params={"kind": "service"}).json()["items"]
+    assert svc["id"] in [i["id"] for i in listed]
+    other = client(business=make_business("example-garden-store"))
+    assert other.post(f"/api/v1/catalog/items/{svc['id']}/restore", json={"version": 1}).status_code == 404

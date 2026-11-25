@@ -4,7 +4,9 @@ import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 import { meWith, mockMe, renderApp } from "@/test/app"
 import { server } from "@/test/server"
-import { BILL_PAY, BILL_READ, BILL_VOID, BILL_WRITE, type Bill, type PayablesReport, type POBilling } from "./billModel"
+import i18n from "@/app/i18n"
+import { toCsv } from "@/lib/csv"
+import { BILL_PAY, BILL_READ, BILL_VOID, BILL_WRITE, payablesCsv, type Bill, type PayablesReport, type POBilling } from "./billModel"
 import { READ, WRITE, type PO, type Supplier } from "./model"
 
 // Synthetic data only.
@@ -139,5 +141,12 @@ describe("supplier bills", () => {
     const table = await screen.findByRole("table", { name: "Amounts owed in USD" })
     const cells = within(within(table).getAllByRole("row")[1]!).getAllByRole("cell")
     expect(cells.map((c) => c.textContent)).toEqual(["Example Parts", "1", "$0.00", "$75.00", "$0.00", "$0.00", "$0.00", "$75.00"])
+    expect(screen.getByRole("button", { name: "Download CSV" })).toBeInTheDocument()
+    expect(toCsv(payablesCsv(report, i18n.t)).split("\r\n")).toEqual([
+      "Currency,Supplier,Unpaid bills,Not yet due,1–30 days,31–60 days,61–90 days,Over 90 days,Total",
+      "USD,Example Parts,1,0.00,75.00,0.00,0.00,0.00,75.00",
+      "USD,Total,1,0.00,75.00,0.00,0.00,0.00,75.00",
+      "",
+    ])
   })
 })

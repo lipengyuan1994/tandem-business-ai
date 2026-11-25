@@ -76,6 +76,34 @@ describe("catalog setup", () => {
     expect(archived).toEqual([{ id: "p1", version: 3 }, { id: "p2", version: 3 }])
   })
 
+  it("shows archived items on request and restores one", async () => {
+    mockMe(meWith("catalog.item.read", "catalog.item.write"))
+    const asked: (string | null)[] = []
+    let restored: unknown = null
+    server.use(
+      http.get("*/api/v1/org/business", () => HttpResponse.json({ currency: "USD" })),
+      http.get("*/api/v1/catalog/items", ({ request }) => {
+        const archived = new URL(request.url).searchParams.get("include_archived")
+        asked.push(archived)
+        return HttpResponse.json({ next_cursor: null, items: archived ? [PADS, OLD] : [PADS] })
+      }),
+      http.post("*/api/v1/catalog/items/:id/restore", async ({ params, request }) => {
+        restored = { id: params.id, ...(await request.json() as object) }
+        return HttpResponse.json({ ...OLD, status: "active", version: 4 })
+      }),
+    )
+    renderApp("/catalog")
+    await userEvent.click(await screen.findByRole("tab", { name: "Products" }))
+    await screen.findByText("Brake pads (pair)")
+    expect(screen.queryByText("Old pads")).not.toBeInTheDocument()
+    await userEvent.click(screen.getByLabelText("Show archived"))
+    await userEvent.click(await screen.findByRole("button", { name: "Restore Old pads" }))
+    expect(await screen.findByText("Old pads restored")).toBeInTheDocument()
+    expect(restored).toEqual({ id: "p4", version: 3 })
+    expect(screen.queryByRole("button", { name: "Restore Brake pads (pair)" })).not.toBeInTheDocument()
+    expect(asked).toContain("true")
+  })
+
   it("hides parts and archive without write permission", async () => {
     mockMe(meWith("catalog.item.read"))
     catalog()

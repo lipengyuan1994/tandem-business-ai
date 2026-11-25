@@ -170,7 +170,8 @@ class Router:
             policy = attempt_policy(policy)
             if not self._allows(entry, policy) or entry not in self.allowed(model_class, policy):
                 continue
-            remaining = deadline - (started if index == 0 else _monotonic())
+            # The first attempt gets the whole timeout: deadline - started can be off by a rounding error.
+            remaining = req.timeout_s if index == 0 else deadline - _monotonic()
             if remaining <= 0:
                 raise ProviderError("timeout", "request deadline exceeded")
             attempt = req.model_copy(

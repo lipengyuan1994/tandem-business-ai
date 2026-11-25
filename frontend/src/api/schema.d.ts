@@ -963,6 +963,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/items/{item_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived item */
+        post: operations["restore_item_api_v1_catalog_items__item_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations": {
         parameters: {
             query?: never;
@@ -1201,6 +1218,23 @@ export interface paths {
         put?: never;
         /** Add a note */
         post: operations["add_note_api_v1_crm_customers__customer_id__notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/customers/{customer_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived customer */
+        post: operations["restore_api_v1_crm_customers__customer_id__restore_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6079,8 +6113,19 @@ export interface components {
             /** Ref Type */
             ref_type?: string | null;
         };
-        /** ExceptionIn */
+        /**
+         * ExceptionIn
+         * @description A closure or extra opening.
+         *
+         *     For one resource name `resource_id`. A closure for everyone at one location names `location_id` (the default
+         *     location when neither is given), or sets `all_locations` to close every location, including ones added later.
+         */
         ExceptionIn: {
+            /**
+             * All Locations
+             * @default false
+             */
+            all_locations: boolean;
             /**
              * Ends At
              * Format: date-time
@@ -6091,6 +6136,8 @@ export interface components {
              * @enum {string}
              */
             kind: "closed" | "extra_open";
+            /** Location Id */
+            location_id?: string | null;
             /** Reason */
             reason?: string | null;
             /** Resource Id */
@@ -6118,6 +6165,11 @@ export interface components {
              * @enum {string}
              */
             kind: "closed" | "extra_open";
+            /**
+             * Location Id
+             * @description null: a closure for every location
+             */
+            location_id?: string | null;
             /** Reason */
             reason?: string | null;
             /** Resource Id */
@@ -13378,6 +13430,77 @@ export interface operations {
             };
         };
     };
+    restore_item_api_v1_catalog_items__item_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__catalog__api__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItemOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
     inbox_api_v1_conversations_get: {
         parameters: {
             query?: {
@@ -14712,6 +14835,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NoteOut"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    restore_api_v1_crm_customers__customer_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__modules__crm__api__VersionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerOut"];
                 };
             };
             /** @description Authentication required */

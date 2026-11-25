@@ -4,6 +4,18 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **New (2026-11-25):** archived catalog items and customers can be restored ("Show archived", then Restore). A
+  service comes back only once the products it uses up are active. A customer comes back with the emails and phone
+  numbers they had when archived, except any another customer has taken since.
+- **New:** a closure can cover every location at once, or everyone at one chosen location (it used to cover only the
+  main location). Choose "Every location" or "Everyone at …" under Applies to.
+- **New:** receivables and payables aging download as CSV.
+- **Fix:** a staff member invited back after being removed no longer keeps their old job title.
+- **Fix:** the full data export lists each table's rows in a stable order, so two exports of the same data match.
+- **Migrations:** `20261125_1500_cp_archived` (adds `contact_points.archived_with_customer`; the primary contact
+  points of already archived customers are marked, so restoring those brings back at least their primary email and
+  phone) and `20261125_1510_all_loc_closure` (`availability_exceptions.location_id` may be null for an all-locations
+  closure). No manual step.
 - **Fix (2026-11-25):** removing a staff member works again (it failed and was undone), and a removed person can be
   invited back. They return with only the roles in the new invitation.
 - **Fix:** a stock-adjustment proposal for a location other than the main one shows that location's count, not the

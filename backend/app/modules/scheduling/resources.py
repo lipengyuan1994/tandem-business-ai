@@ -151,11 +151,27 @@ def add_exception(db: Session, ctx: Context, data: ExceptionIn) -> AvailabilityE
     ctx.require(P.RESOURCE_WRITE)
     if data.ends_at <= data.starts_at:
         raise Invalid("scheduling.invalid_window")
-    location_id = org.get_default_location(db, ctx).id
-    if data.resource_id:
+    location_id: uuid.UUID | None
+    if data.all_locations:
+        if data.resource_id or data.location_id or data.kind != "closed":
+            raise Invalid(
+                "scheduling.invalid_exception", detail="all_locations is for a closure, without a resource or location"
+            )
+        location_id = None
+    elif data.resource_id:
         location_id = _resource(db, ctx, data.resource_id).location_id
+        if data.location_id and data.location_id != location_id:
+            raise Invalid("scheduling.invalid_exception", detail="the resource belongs to another location")
+    elif data.location_id:
+        location_id = org.get_location(db, ctx, data.location_id).id
+    else:
+        location_id = org.get_default_location(db, ctx).id
     assert ctx.business_id is not None
-    row = AvailabilityException(business_id=ctx.business_id, location_id=location_id, **data.model_dump())
+    row = AvailabilityException(
+        business_id=ctx.business_id,
+        location_id=location_id,
+        **data.model_dump(exclude={"location_id", "all_locations"}),
+    )
     db.add(row)
     db.flush()
     audit.record(

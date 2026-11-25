@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next"
+import { decimalAmount, type CsvCell } from "@/lib/csv"
 import type { Schemas } from "@/api/types"
 
 export type Bill = Schemas["BillOut"]
@@ -24,3 +26,16 @@ export const BILL_PAYMENT_METHODS = ["bank_transfer", "check", "card", "cash", "
 export const PAYABLES_BUCKETS = ["current_minor", "days_1_30_minor", "days_31_60_minor", "days_61_90_minor", "days_over_90_minor"] as const
 /** Purchase orders that can carry a supplier bill (backend BILLABLE_PO_STATUSES). */
 export const BILLABLE_PO_STATUSES = ["approved", "sent", "partially_received", "received"]
+
+/** One row per supplier and currency, then a total row per currency; amounts as exact decimals. */
+export function payablesCsv(report: PayablesReport, t: TFunction): CsvCell[][] {
+  type Row = PayablesReport["suppliers"][number] | PayablesReport["totals"][number]
+  const amounts = (row: Row, currency: string) => [...PAYABLES_BUCKETS.map((b) => decimalAmount(row[b], currency)), decimalAmount(row.total_minor, currency)]
+  return [
+    [t("sales.aging.currency"), t("purchasing.supplier"), t("payables.bills"), ...PAYABLES_BUCKETS.map((b) => t(`sales.aging.buckets.${b}`)), t("sales.aging.total")],
+    ...report.totals.flatMap((total) => [
+      ...report.suppliers.filter((s) => s.currency === total.currency).map((s) => [s.currency, s.supplier_name, s.bill_count, ...amounts(s, s.currency)]),
+      [total.currency, t("sales.aging.total"), total.bill_count, ...amounts(total, total.currency)],
+    ]),
+  ]
+}

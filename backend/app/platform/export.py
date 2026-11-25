@@ -56,9 +56,12 @@ def export_tables(tables: ExportTables, *, streaming: bool) -> ExportTables:
 
 def _model_rows(db: Session, ctx: Context, model: type[Base], skip: set[str]) -> Iterable[dict[str, Any]]:
     columns = [c.key for c in inspect(model).mapper.column_attrs if c.key not in skip]
+    # A stable order: without one, Postgres may start a sequential scan part-way through the table while another
+    # scan of it runs (synchronized scans), so two exports of the same data could list rows differently.
     stmt = (
         select(model)
         .where(model.business_id == ctx.business_id)  # type: ignore[attr-defined]
+        .order_by(*inspect(model).mapper.primary_key)
         .execution_options(yield_per=BATCH)
     )
     for row in db.scalars(stmt):

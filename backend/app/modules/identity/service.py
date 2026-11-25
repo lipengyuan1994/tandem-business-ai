@@ -173,9 +173,16 @@ def invite(db: Session, ctx: Context, data: InvitationIn) -> InvitationOut:
 
 
 def reactivate(db: Session, ctx: Context, membership: Membership) -> None:
-    """Bring back a removed membership with no roles; the caller grants the new ones."""
+    """Bring back a removed membership with no roles and no job title; the caller grants the new roles.
+
+    Like the roles, the job title held before the removal doesn't come back: it described the old job, and the
+    invitation that brings the person back carries no title. The owner sets a new one on the staff screen.
+    """
     repository.revoke_all_roles(db, ctx, membership.id, clock.now())
-    membership.status, membership.version = "active", membership.version + 1
+    changes: dict[str, dict[str, object]] = {"status": {"from": "removed", "to": "active"}}
+    if membership.title is not None:
+        changes["title"] = {"from": membership.title, "to": None}
+    membership.status, membership.title, membership.version = "active", None, membership.version + 1
     audit.record(
         db,
         ctx,
@@ -183,7 +190,7 @@ def reactivate(db: Session, ctx: Context, membership: Membership) -> None:
         target_type="membership",
         target_id=membership.id,
         summary="Removed staff member added back",
-        changes={"status": {"from": "removed", "to": "active"}},
+        changes=changes,
     )
 
 

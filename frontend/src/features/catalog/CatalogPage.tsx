@@ -19,7 +19,7 @@ import { useBusiness } from "@/features/org/hooks"
 import { minorToDecimal, parseMoneyInput } from "@/lib/money"
 import { toastError } from "@/lib/errors"
 import { ApiProblem } from "@/lib/problem"
-import { useArchiveItem, useCatalogItems, useCreateItem, useUpdateItem } from "./hooks"
+import { useArchiveItem, useCatalogItems, useCreateItem, useRestoreItem, useUpdateItem } from "./hooks"
 import { PartsDialog } from "./PartsDialog"
 
 type Kind = "service" | "product"
@@ -30,7 +30,9 @@ export function CatalogPage() {
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<CatalogItem | undefined>()
   const [partsFor, setPartsFor] = useState<CatalogItem | undefined>()
-  const items = useCatalogItems(kind)
+  const [showArchived, setShowArchived] = useState(false)
+  const items = useCatalogItems(kind, "", showArchived)
+  const restore = useRestoreItem()
 
   const columns = useMemo<ColumnDef<CatalogItem, unknown>[]>(() => [
     { header: t("catalog.fields.name"), cell: ({ row }) => <span className="font-medium">{row.original.name}</span> },
@@ -41,11 +43,16 @@ export function CatalogPage() {
       : { header: t("catalog.fields.tracked"), cell: ({ row }) => (row.original.is_stock_tracked ? t("catalog.yes") : t("catalog.no")) },
     { header: t("catalog.fields.status"), cell: ({ row }) => <StatusBadge status={row.original.status} /> },
     { header: t("common.edit"), cell: ({ row }) => <PermissionGate permission="catalog.item.write"><div className="flex gap-2">
+      {row.original.status === "archived" ? <Button variant="outline" size="sm" disabled={restore.isPending} aria-label={t("catalog.restore.openFor", { name: row.original.name })}
+        onClick={() => restore.mutate({ id: row.original.id, version: row.original.version }, {
+          onSuccess: () => toast.success(t("catalog.restore.done", { name: row.original.name })),
+          onError: (e) => toastError(e),
+        })}>{t("catalog.restore.open")}</Button> : null}
       <Button variant="outline" size="sm" onClick={() => setEditing(row.original)} aria-label={t("catalog.editFor", { name: row.original.name })}>{t("common.edit")}</Button>
       {row.original.kind === "service" ? <Button variant="outline" size="sm" onClick={() => setPartsFor(row.original)} aria-label={t("catalog.parts.openFor", { name: row.original.name })}>{t("catalog.parts.open")}</Button> : null}
     </div></PermissionGate> },
     { header: t("catalog.fields.sku"), cell: ({ row }) => row.original.sku ?? "—" },
-  ], [t, kind])
+  ], [t, kind, restore])
 
   return (
     <>
@@ -57,6 +64,7 @@ export function CatalogPage() {
           <TabsTrigger value="product">{t("catalog.tabs.products")}</TabsTrigger>
         </TabsList>
         <TabsContent value={kind}>
+          <label className="mb-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />{t("catalog.restore.showArchived")}</label>
           <DataTable columns={columns} data={items.data?.items} isLoading={items.isPending} error={items.error} onRetry={() => items.refetch()} caption={t("nav.catalog")} />
         </TabsContent>
       </Tabs>
