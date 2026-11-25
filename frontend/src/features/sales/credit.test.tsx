@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest"
 import type { SalesDocument, SalesLine } from "@/api/types"
 import { meWith, mockMe, renderApp } from "@/test/app"
 import { server } from "@/test/server"
-import { creditableLines, creditAmount, quantityMilli } from "./credit"
+import { quantityMilli } from "@/lib/quantity"
+import { creditableLines, creditAmount } from "./credit"
 import { doc, ID, PERMS } from "./test-support"
 
 // Synthetic data only.

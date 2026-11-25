@@ -1,22 +1,7 @@
 import type { SalesDocument, SalesLine } from "@/api/types"
+import { halfUp, MILLI, quantityMilli } from "@/lib/quantity"
 
-/** Quantities are exact to the thousandth; work in thousandths as integers so nothing is lost to floating point. */
-const MILLI = 1000n
 const RATE = 10000n
-
-/** "2.5" → 2500n; null when the text is not a quantity with at most three decimals. */
-export function quantityMilli(value: string): bigint | null {
-  const m = /^(\d{1,11})(?:\.(\d{1,3}))?$/.exec(value.trim())
-  if (!m) return null
-  return BigInt(m[1]!) * MILLI + BigInt((m[2] ?? "").padEnd(3, "0"))
-}
-export function milliText(milli: bigint): string {
-  const whole = milli / MILLI
-  const frac = (milli % MILLI).toString().padStart(3, "0").replace(/0+$/, "")
-  return frac ? `${whole}.${frac}` : whole.toString()
-}
-/** Round half up of a non-negative fraction, as the server's ROUND_HALF_UP does. */
-const halfUp = (numerator: bigint, denominator: bigint) => (2n * numerator + denominator) / (2n * denominator)
 const rateTenThousandths = (rate: string) => BigInt(Math.round(Number(rate) * 10000))
 
 export interface CreditableLine { line: SalesLine; leftMilli: bigint; leftSubtotal: number; leftTax: number }

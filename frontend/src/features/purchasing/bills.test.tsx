@@ -15,7 +15,7 @@ const supplier: Supplier = { active: true, id: "supplier-1", name: "Example Part
 const po: PO = { id: "order-1", supplier_id: supplier.id, supplier_name: supplier.name, currency: "USD", status: "received", number: "PO-2026-0001", approved_date: "2026-10-01", notes: null, total_minor: 10000, source_draft_id: null, source_quote_id: null, sent_at: null, expected_delivery_date: null, last_followup_at: null, version: 3, created_at: "2026-10-01T12:00:00Z", lines: [], receipts: [] }
 const bill: Bill = {
   id: "bill-1", supplier_id: supplier.id, supplier_name: supplier.name, purchase_order_id: po.id, purchase_order_number: po.number, supplier_reference: "INV-77",
-  bill_date: "2026-10-02", due_date: "2026-11-01", currency: "USD", total_minor: 10000, amount_paid_minor: 2500, balance_minor: 7500, status: "partially_paid",
+  bill_date: "2026-10-02", due_date: "2026-11-01", currency: "USD", total_minor: 10000, amount_paid_minor: 2500, amount_credited_minor: 0, amount_refunded_minor: 0, balance_minor: 7500, status: "partially_paid",
   notes: null, voided_at: null, version: 2, created_at: "2026-10-02T12:00:00Z",
   payments: [{ id: "pay-1", amount_minor: 2500, paid_on: "2026-10-05", method: "check", reference: "1001", voided_at: null, created_at: "2026-10-05T12:00:00Z" }],
 }

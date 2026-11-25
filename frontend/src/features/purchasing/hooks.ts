@@ -25,7 +25,7 @@ export function useOrders() {
 }
 export function useOrder(id: string) {
   const { permissions } = useSession()
-  return useQuery({ queryKey: ["purchasing", "order", id], enabled: permissions.has(READ), queryFn: async () => unwrap(await api.GET("/api/v1/purchasing/purchase-orders/{purchase_order_id}", { params: { path: { purchase_order_id: id } } })) })
+  return useQuery({ queryKey: ["purchasing", "order", id], enabled: !!id && permissions.has(READ), queryFn: async () => unwrap(await api.GET("/api/v1/purchasing/purchase-orders/{purchase_order_id}", { params: { path: { purchase_order_id: id } } })) })
 }
 export function useSuggestions() {
   const { permissions } = useSession()
