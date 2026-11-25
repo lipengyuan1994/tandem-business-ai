@@ -781,3 +781,17 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   `source_order_id`, including one a credit note voided. Following the error's advice (credit the invoice) left the
   order uncancellable and its stock reserved. The guard now uses `has_live_invoice` (kind `invoice`, not `void`).
 - Verification: new test (fails before, passes after), backend lint and types, sales and inventory suites.
+
+## 2026-11-25 — Bigger bugs from the sweep: online reschedule overlap, slot rounding on DST days
+
+- Self-service: rescheduling to a time that overlaps the customer's own booking (say, 30 minutes later) was impossible.
+  The customer's slot list and the reschedule check both counted the booking being moved as busy, and the reschedule
+  placed a hold that collided with it in the exclusion constraint. `self_service.slots` and `change` now pass
+  `ignore_appointment` to `find_slots`, and the hold is gone: `service.reschedule` already rechecks the slot with the
+  appointment ignored under its lock, and the exclusion constraint stays the final guard. Booking eligibility is still
+  rechecked with `crm.get_booking_customer`.
+- Availability: `align_up` rounded in wall-clock time, so on a fall-back day a free interval starting at 01:55 EDT got
+  its first slot at 02:00 EST, skipping the repeated 01:00–01:59 EST hour. It now steps in absolute time and rechecks
+  the local boundary after each step. Design call: the repeated hour is offered (labels say EDT or EST). The old test
+  expected the skip; its expectation changed and spring-forward and repeated-hour cases were added.
+- Verification: regression tests (fail before, pass after), backend lint and types, scheduling suite.

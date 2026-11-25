@@ -718,10 +718,14 @@ def test_booking_a_service_with_a_very_long_name_still_writes_the_timeline(shop:
     [
         ("2026-11-01T06:05:00Z", "2026-11-01T06:15:00Z"),
         ("2026-11-01T06:15:01Z", "2026-11-01T06:30:00Z"),
-        ("2026-11-01T05:55:00Z", "2026-11-01T07:00:00Z"),
+        # 01:55 EDT is followed by 01:00 EST (06:00Z), the repeated hour; it used to jump to 02:00 EST (07:00Z).
+        ("2026-11-01T05:55:00Z", "2026-11-01T06:00:00Z"),
+        ("2026-11-01T06:20:00Z", "2026-11-01T06:30:00Z"),  # 01:20 EST, second occurrence
+        ("2026-03-08T06:55:00Z", "2026-03-08T07:00:00Z"),  # spring forward: 01:55 EST -> 03:00 EDT
     ],
 )
 def test_slot_rounding_preserves_dst_occurrence(instant: str, expected: str) -> None:
+    from itertools import pairwise
     from zoneinfo import ZoneInfo
 
     from app.modules.scheduling.availability import align_up, slot_starts
@@ -738,6 +742,27 @@ def test_slot_rounding_preserves_dst_occurrence(instant: str, expected: str) -> 
         latest_start=z("2026-11-01T08:00:00Z"),
     )
     assert slots and slots[0] == z(expected) and all(s >= start for s in slots)
+    # No slot skipped: every start is one 15-minute step after the previous, across the DST change.
+    assert all(b - a == timedelta(minutes=15) for a, b in pairwise(slots))
+
+
+def test_fall_back_day_offers_the_repeated_hour() -> None:
+    """A business open through the night (or a 24h resource) gets both 01:xx hours on the fall-back day."""
+    from zoneinfo import ZoneInfo
+
+    from app.modules.scheduling.availability import slot_starts
+
+    tz = ZoneInfo("America/New_York")
+    slots = slot_starts(
+        [(z("2026-11-01T05:00:00Z"), z("2026-11-01T08:00:00Z"))],  # 01:00 EDT to 03:00 EST
+        tz=tz,
+        granularity_min=30,
+        block=timedelta(minutes=30),
+        not_before=z("2026-11-01T05:45:00Z"),  # 01:45 EDT: the next half hour is 01:00 EST, not 02:00 EST
+        latest_start=z("2026-11-01T08:00:00Z"),
+    )
+    labels = [f"{s.astimezone(tz):%H:%M %Z}" for s in slots]
+    assert labels == ["01:00 EST", "01:30 EST", "02:00 EST", "02:30 EST"]
 
 
 def _request_appointment(visitor: TestClient, service_id: str) -> Any:
