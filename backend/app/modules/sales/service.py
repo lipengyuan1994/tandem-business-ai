@@ -126,7 +126,7 @@ def transition(
     if flow is None:
         raise Conflict("sales.invalid_transition")
     require_status(row, flow[0])
-    if family == "order" and action == "cancel" and repo.converted(db, ctx, "invoice", "source_order_id", row.id):
+    if family == "order" and action == "cancel" and repo.has_live_invoice(db, ctx, row.id):
         # invoice_order locks the same order row, so this check cannot race with invoicing it
         raise Conflict("sales.order_invoiced", detail="The order has an invoice; credit or delete the invoice instead")
     if action == "mark-paid":

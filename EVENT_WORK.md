@@ -774,3 +774,10 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   are NOT NULL columns, giving a 500. Now a 422.
 - Verification: regression tests for each (fail before, pass after), backend lint, types and the scheduling,
   identity, crm and catalog suites.
+
+## 2026-11-25 — Bug sweep follow-up: cancelling an order after its invoice is credited
+
+- Codex review on #9: the invoiced-order cancel guard used `repository.converted`, which counts any invoice with
+  `source_order_id`, including one a credit note voided. Following the error's advice (credit the invoice) left the
+  order uncancellable and its stock reserved. The guard now uses `has_live_invoice` (kind `invoice`, not `void`).
+- Verification: new test (fails before, passes after), backend lint and types, sales and inventory suites.

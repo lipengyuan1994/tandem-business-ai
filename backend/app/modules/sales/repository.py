@@ -107,6 +107,21 @@ def converted(db: Session, ctx: Context, family: DocumentType, source: str, row_
     )
 
 
+def has_live_invoice(db: Session, ctx: Context, order_id: uuid.UUID) -> bool:
+    """An invoice raised from this order that still stands: a credited (void) invoice no longer holds the sale."""
+    return (
+        db.scalar(
+            select(Invoice.id).where(
+                Invoice.business_id == ctx.business_id,
+                Invoice.source_order_id == order_id,
+                Invoice.kind == "invoice",
+                Invoice.status != "void",
+            )
+        )
+        is not None
+    )
+
+
 def export_invoices(db: Session, ctx: Context, start: date, end: date) -> list[Invoice]:
     return list(
         db.scalars(
