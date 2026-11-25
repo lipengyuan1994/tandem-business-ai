@@ -832,4 +832,6 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
 - CI: backend shards are split by measured seconds per test file (`.github/backend-test-durations.json`, longest file
   first to the least loaded shard) instead of every fourth file; each shard prints its per-file seconds so the
   durations file can be refreshed.
+- Export: every exported table is read in primary-key order. The byte-for-byte export test failed once in CI because
+  two reads of `audit_events` came back in different orders (no ORDER BY; Postgres may synchronize concurrent scans).
 

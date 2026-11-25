@@ -11,6 +11,7 @@ Release notes for operators. Each release lists database migrations and any manu
   main location). Choose "Every location" or "Everyone at …" under Applies to.
 - **New:** receivables and payables aging download as CSV.
 - **Fix:** a staff member invited back after being removed no longer keeps their old job title.
+- **Fix:** the full data export lists each table's rows in a stable order, so two exports of the same data match.
 - **Migrations:** `20261125_1500_cp_archived` (adds `contact_points.archived_with_customer`; the primary contact
   points of already archived customers are marked, so restoring those brings back at least their primary email and
   phone) and `20261125_1510_all_loc_closure` (`availability_exceptions.location_id` may be null for an all-locations
