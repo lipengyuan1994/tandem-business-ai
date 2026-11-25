@@ -834,6 +834,9 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   durations file can be refreshed.
 - Export: every exported table is read in primary-key order. The byte-for-byte export test failed once in CI because
   two reads of `audit_events` came back in different orders (no ORDER BY; Postgres may synchronize concurrent scans).
+- Restore: one primary contact point per type across all of the customer's active ones. An email added while the
+  customer was archived became primary (the old ones were inactive), and restoring then left two primaries; the
+  newer one now stays primary (review finding on PR #14).
 - AI router: the first attempt of a model call now gets its timeout exactly as given. It was worked out as
   `(started + timeout) - started`, which can be off by a rounding error and failed an exact test in CI once.
 

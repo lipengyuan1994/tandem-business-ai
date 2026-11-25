@@ -293,10 +293,24 @@ def restore_customer(db: Session, ctx: Context, customer_id: uuid.UUID, version:
             continue
         cp.is_active = True
         db.flush()
-    active = [cp for cp in points if cp.is_active]
+    # One primary per type across every active contact point, including any added while the customer was archived:
+    # such a newer primary wins over one that comes back with the restore.
+    restored = {cp.id for cp in points}
+    active = db.scalars(
+        select(ContactPoint)
+        .where(
+            ContactPoint.business_id == ctx.business_id,
+            ContactPoint.customer_id == customer_id,
+            ContactPoint.is_active.is_(True),
+        )
+        .order_by(ContactPoint.created_at, ContactPoint.id)
+    ).all()
     for kind in sorted({cp.type for cp in active}):
         of_kind = [cp for cp in active if cp.type == kind]
-        primary = next((cp for cp in of_kind if cp.is_primary), of_kind[0])
+        primary = next(
+            (cp for cp in of_kind if cp.is_primary and cp.id not in restored),
+            next((cp for cp in of_kind if cp.is_primary), of_kind[0]),
+        )
         for cp in of_kind:
             cp.is_primary = cp is primary
     db.flush()

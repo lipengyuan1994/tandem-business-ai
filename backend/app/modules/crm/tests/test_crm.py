@@ -285,3 +285,22 @@ def test_archived_customer_can_be_restored_with_their_contact_points(client: Any
         json={"display_name": "Ada Again", "contact_points": [{"type": "email", "value": "ada@example.com"}]},
     )
     assert dup.status_code == 409
+
+
+def test_restore_keeps_one_primary_when_a_contact_was_added_while_archived(client: Any) -> None:
+    c = client()
+    ada = _ada(c)
+    archived = c.post(f"/api/v1/crm/customers/{ada['id']}/archive", json={"version": ada["version"]}).json()
+    added = c.post(
+        f"/api/v1/crm/customers/{ada['id']}/contact-points", json={"type": "email", "value": "new@example.com"}
+    )
+    assert added.status_code == 201 and added.json()["is_primary"] is True  # the archived email is inactive
+    archived = c.get(f"/api/v1/crm/customers/{ada['id']}").json()
+    back = c.post(f"/api/v1/crm/customers/{ada['id']}/restore", json={"version": archived["version"]})
+    assert back.status_code == 200, back.text
+    emails = [p for p in c.get(f"/api/v1/crm/customers/{ada['id']}").json()["contact_points"] if p["type"] == "email"]
+    # the newer primary stays primary; the restored email comes back as a second address
+    assert sorted((p["value"], p["is_primary"]) for p in emails) == [
+        ("Ada@Example.com", False),
+        ("new@example.com", True),
+    ]
