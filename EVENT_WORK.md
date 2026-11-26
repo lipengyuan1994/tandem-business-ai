@@ -873,3 +873,6 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   never adds back more than payments recorded to date.
 - Prefill received, unbilled PO line quantities and recheck receipt-filled submissions against the current ledger.
   Leave intentional manual and advance bills available. Normalize contact-consent evidence timestamps to UTC.
+
+- Review follow-up: aggregate PO valuation is a comparison estimate, not a default bill total. Require a manual total
+  unless the operator chooses receipt-matched lines. Added legacy refund-date review instructions without a migration.

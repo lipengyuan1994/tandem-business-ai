@@ -253,6 +253,16 @@ def test_receipt_prefill_subtracts_already_billed_and_rechecks_stale_quantities(
     assert stale.status_code == 409 and stale.json()["code"] == "purchasing.bill_receipts_changed"
     assert shop["client"].get(billing_url).json()["remaining_received_lines"] == []
 
+    # A cheaper actual unit price can leave a positive PO estimate with no unbilled receipts.
+    replacement = received_po(shop, quantity="4")
+    replacement_url = f"{BASE}/purchase-orders/{replacement['id']}/billing"
+    priced = line("Brake pads", "4", 1000, purchase_order_line_id=replacement["lines"][0]["id"])
+    bill(shop, purchase_order_id=replacement["id"], total_minor=None, lines=[priced], match_received=True)
+    report = shop["client"].get(replacement_url).json()
+    assert report["unbilled_received_minor"] == 800 and report["remaining_received_lines"] == []
+    stale = new_bill(shop, purchase_order_id=replacement["id"], total_minor=None, lines=[priced], match_received=True)
+    assert stale.status_code == 409 and stale.json()["code"] == "purchasing.bill_receipts_changed"
+
     voided = shop["client"].post(f"{BASE}/bills/{later['id']}/void", json={"version": later["version"]})
     assert voided.status_code == 200, voided.text
     [available] = shop["client"].get(billing_url).json()["remaining_received_lines"]

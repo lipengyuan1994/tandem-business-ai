@@ -25,7 +25,7 @@ const newKey = () => crypto.randomUUID()
 
 /**
  * Records a supplier bill, or edits an open one with no payments. Opened from a purchase order, the supplier and the
- * order are fixed and the total starts at the received value not yet billed.
+ * order are fixed. Enter the supplier's total manually or choose to fill receipt-matched lines.
  */
 export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }: {
   bill?: Bill
@@ -52,11 +52,9 @@ export function BillDialog({ bill, purchaseOrder, onClose, onSaved, onConflict }
   // Minor units depend on the currency, so a new bill waits for the order's or the business's currency before saving.
   const knownCurrency = bill?.currency ?? (poId ? billing.data?.currency : pickers.data?.currency)
   const currency = knownCurrency ?? pickers.data?.currency ?? "USD"
-  // Until the user types an amount, a new bill for an order starts at what was received and not yet billed.
+  // Aggregate receipt value is for comparison, never an amount to record.
   const [typed, setTyped] = useState<string | null>(bill ? minorToDecimal(bill.total_minor, bill.currency) : null)
-  const unbilled = billing.data?.unbilled_received_minor ?? 0
-  const amount = typed ?? (billing.data && billing.data.remaining_received_lines !== null && unbilled > 0
-    ? minorToDecimal(unbilled, billing.data.currency) : "")
+  const amount = typed ?? ""
   const touchedAmount = typed !== null
   const save = useSaveBill(bill?.id)
   const [lines, setLines] = useState<LineDraft[]>(() => (bill?.lines ?? []).map((l) => ({

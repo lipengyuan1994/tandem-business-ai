@@ -2285,7 +2285,7 @@
     "edit": "Edit bill",
     "record": "Record bill",
     "recorded": "Bill recorded",
-    "newHint": "Enter a bill you received from a supplier. Link it to a purchase order to compare it with what arrived.",
+    "newHint": "Enter a bill you received from a supplier. For a purchase order, enter the supplier’s actual total or fill lines from unbilled receipts.",
     "editHint": "You can change a bill until a payment or a supplier credit is recorded against it.",
     "chooseSupplier": "Choose a supplier",
     "purchaseOrder": "Purchase order",
@@ -2323,7 +2323,7 @@
     "forOrder": "Supplier bills",
     "received": "Received",
     "billed": "Billed",
-    "unbilled": "Received, not billed",
+    "unbilled": "Estimated unbilled value",
     "noneForOrder": "No bills recorded for this order yet.",
     "errors": {
       "zero": "Enter an amount above zero.",

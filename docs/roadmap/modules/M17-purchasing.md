@@ -200,8 +200,8 @@ showcase"); `docs/roadmap/ai/integration-map.md` §G lists the facts the AI eval
   not exceed the balance or be dated after business today. The bill becomes partially paid, then paid. Voiding a payment
   (`purchasing.bill.void`) reopens the balance; a bill can be voided only with no live payments.
 - **Purchase order billing.** `GET /purchasing/purchase-orders/{id}/billing` returns ordered, received (received
-  quantity × unit cost) and billed value, and what was received but not billed. The PO page shows it and starts a new
-  bill at the unbilled amount when earlier bills are allocatable. Receipt-based line fill uses quantities received
+  quantity × unit cost) and billed value, and the estimated unbilled value, for comparison only. A new bill starts
+  with a blank total. Receipt-based line fill uses quantities received
   minus quantities on live linked bill lines; total-only or unallocated bill lines require manual entry. A supplier
   credit has no line quantities and does not automatically free invoiced units. Saving receipt-filled bills rechecks
   remaining quantities under the supplier lock. Explicit manual entry remains available for advance bills.

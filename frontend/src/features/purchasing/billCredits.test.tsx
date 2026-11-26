@@ -102,6 +102,56 @@ describe("itemised supplier bills", () => {
     }))
   })
 
+  it("does not turn a positive PO estimate into a bill when all receipts have been billed", async () => {
+    mocks(bill, BILL_WRITE)
+    server.use(http.get(`${ROOT}/purchase-orders/order-1/billing`, () => HttpResponse.json({
+      ...billing, billed_minor: 4000, unbilled_received_minor: 800, remaining_received_lines: [],
+    })))
+    renderApp("/purchasing/purchase-orders/order-1")
+    expect(await screen.findByText("$8.00")).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: "Record bill" }))
+    const dialog = screen.getByRole("dialog", { name: "Record bill" })
+    expect(await within(dialog).findByText("No received quantities are left to bill.", { exact: false })).toBeInTheDocument()
+    expect(await within(dialog).findByRole("button", { name: "Fill from purchase order" })).toBeDisabled()
+    expect(within(dialog).getByLabelText("Total (USD)")).toHaveValue("")
+    expect(within(dialog).getByRole("button", { name: "Record bill" })).toBeDisabled()
+  })
+
+  it("refreshes stale receipt suggestions without falling back to a manual total", async () => {
+    mocks(bill, BILL_WRITE)
+    const bodies: unknown[] = []
+    let current = billing
+    server.use(
+      http.get(`${ROOT}/purchase-orders/order-1/billing`, () => HttpResponse.json(current)),
+      http.post(`${ROOT}/bills`, async ({ request }) => {
+        bodies.push(await request.json())
+        if (bodies.length === 1) {
+          current = { ...billing, billed_minor: 3600, unbilled_received_minor: 1200,
+            remaining_received_lines: [{ purchase_order_line_id: "po-line-1", quantity: "1.000" }] }
+          return HttpResponse.json({ code: "purchasing.bill_receipts_changed", status: 409, title: "Receipts changed" }, { status: 409 })
+        }
+        return HttpResponse.json({ ...bill, id: "bill-2" }, { status: 201 })
+      }),
+    )
+    renderApp("/purchasing/purchase-orders/order-1")
+    await userEvent.click(await screen.findByRole("button", { name: "Record bill" }))
+    const dialog = screen.getByRole("dialog", { name: "Record bill" })
+    const record = within(dialog).getByRole("button", { name: "Record bill" })
+    const fill = await within(dialog).findByRole("button", { name: "Fill from purchase order" })
+    await userEvent.click(fill)
+    await userEvent.click(record)
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Received and unbilled quantities changed")
+    await within(dialog).findByText(/already billed \$36\.00/)
+    expect(within(dialog).queryByLabelText("Total (USD)")).not.toBeInTheDocument()
+    await userEvent.click(fill)
+    expect(within(dialog).getByLabelText("Quantity of line 1")).toHaveValue("1")
+    await userEvent.click(record)
+    await waitFor(() => expect(bodies).toMatchObject([
+      { match_received: true, lines: [{ purchase_order_line_id: "po-line-1", quantity: "2" }], total_minor: null },
+      { match_received: true, lines: [{ purchase_order_line_id: "po-line-1", quantity: "1" }], total_minor: null },
+    ]))
+  })
+
   it("asks for manual entry when earlier bills do not allocate quantities", async () => {
     mocks(bill, BILL_WRITE)
     let body: unknown
