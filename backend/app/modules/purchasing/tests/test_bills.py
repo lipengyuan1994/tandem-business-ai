@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
@@ -42,6 +43,9 @@ def pay(shop: Any, row: dict[str, Any], amount: int, client: Any = None, **over:
 def test_bill_against_received_po_then_partial_and_full_payment(shop: Any) -> None:
     po = received_po(shop)
     billing = shop["client"].get(f"{BASE}/purchase-orders/{po['id']}/billing").json()
+    [remaining] = billing.pop("remaining_received_lines")
+    assert remaining["purchase_order_line_id"] == po["lines"][0]["id"]
+    assert Decimal(remaining["quantity"]) == 10
     assert billing == {
         "purchase_order_id": po["id"],
         "currency": "USD",

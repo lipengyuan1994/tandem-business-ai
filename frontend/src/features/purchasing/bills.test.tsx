@@ -113,7 +113,7 @@ describe("supplier bills", () => {
     expect(await screen.findByRole("dialog", { name: "This record changed since you opened it" })).toBeInTheDocument()
   })
 
-  it("starts a bill from a received order at the value not yet billed", async () => {
+  it("starts a bill from an older order without suggesting a total", async () => {
     mocks(BILL_READ, BILL_WRITE)
     let body: unknown
     server.use(
@@ -124,11 +124,14 @@ describe("supplier bills", () => {
     expect(await screen.findByText("No bills recorded for this order yet.")).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: "Record bill" }))
     const dialog = screen.getByRole("dialog", { name: "Record bill" })
-    await waitFor(() => expect(within(dialog).getByLabelText("Total (USD)")).toHaveValue("100.00"))
+    const total = within(dialog).getByLabelText("Total (USD)")
+    expect(total).toHaveValue("")
+    expect(within(dialog).getByRole("button", { name: "Record bill" })).toBeDisabled()
+    await userEvent.type(total, "125")
     expect(within(dialog).getByLabelText("Supplier")).toBeDisabled()
     await userEvent.type(within(dialog).getByLabelText("Supplier's bill number"), " INV-88 ")
     await userEvent.click(within(dialog).getByRole("button", { name: "Record bill" }))
-    await waitFor(() => expect(body).toMatchObject({ supplier_id: "supplier-1", purchase_order_id: "order-1", supplier_reference: "INV-88", total_minor: 10000, due_date: null }))
+    await waitFor(() => expect(body).toMatchObject({ supplier_id: "supplier-1", purchase_order_id: "order-1", supplier_reference: "INV-88", total_minor: 12500, match_received: false, due_date: null }))
     expect(body).not.toHaveProperty("version")
   })
 

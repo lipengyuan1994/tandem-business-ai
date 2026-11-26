@@ -4292,6 +4292,11 @@ export interface components {
             due_date?: string | null;
             /** Lines */
             lines?: components["schemas"]["BillLineIn"][] | null;
+            /**
+             * Match Received
+             * @default false
+             */
+            match_received: boolean;
             /** Notes */
             notes?: string | null;
             /** Purchase Order Id */
@@ -7722,8 +7727,20 @@ export interface components {
             purchase_order_id: string;
             /** Received Minor */
             received_minor: number;
+            /** Remaining Received Lines */
+            remaining_received_lines?: components["schemas"]["PurchaseOrderUnbilledLine"][] | null;
             /** Unbilled Received Minor */
             unbilled_received_minor: number;
+        };
+        /** PurchaseOrderUnbilledLine */
+        PurchaseOrderUnbilledLine: {
+            /**
+             * Purchase Order Line Id
+             * Format: uuid
+             */
+            purchase_order_line_id: string;
+            /** Quantity */
+            quantity: string;
         };
         /** PurchasingSuggestion */
         PurchasingSuggestion: {

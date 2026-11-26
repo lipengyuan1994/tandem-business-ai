@@ -47,7 +47,7 @@ class _Sum:
 
 def aging(db: Session, ctx: Context, as_of: date) -> AgingReport:
     """Point in time: invoices issued by `as_of`, minus non-voided payments dated by `as_of`, minus credit notes
-    issued by `as_of`, plus money paid back to the customer by `as_of`.
+    issued by `as_of`, plus refunds by `as_of` whose credit was also issued by that date.
 
     Days past due count from the due date, or from the issue date when an invoice has none. Not yet due is current.
     Credit notes are not listed themselves; an invoice credited in full by `as_of` owes nothing.
@@ -70,16 +70,23 @@ def aging(db: Session, ctx: Context, as_of: date) -> AgingReport:
         .group_by(note.credit_of_invoice_id)
         .subquery()
     )
+    refund_note = aliased(Invoice)
     refunded = (
         select(InvoiceRefund.invoice_id, func.sum(InvoiceRefund.amount_minor).label("refunded_minor"))
-        .where(InvoiceRefund.business_id == ctx.business_id, InvoiceRefund.paid_on <= as_of)
+        .join(refund_note, refund_note.id == InvoiceRefund.credit_note_id)
+        .where(
+            InvoiceRefund.business_id == ctx.business_id,
+            InvoiceRefund.paid_on <= as_of,
+            refund_note.issue_date <= as_of,
+        )
         .group_by(InvoiceRefund.invoice_id)
         .subquery()
     )
+    # A legacy refund dated before the matching cash cannot add new debt to this report.
     open_minor = (
         Invoice.total_minor
         - func.coalesce(paid.c.paid_minor, 0)
-        + func.coalesce(refunded.c.refunded_minor, 0)
+        + func.least(func.coalesce(refunded.c.refunded_minor, 0), func.coalesce(paid.c.paid_minor, 0))
         - func.coalesce(credited.c.credited_minor, 0)
     )
     rows = db.execute(

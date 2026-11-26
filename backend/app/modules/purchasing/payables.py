@@ -50,7 +50,7 @@ class _Sum:
 
 def aging(db: Session, ctx: Context, as_of: date) -> PayablesAgingReport:
     """Point in time: bills dated by `as_of`, minus non-voided payments dated by `as_of` and live supplier credits dated
-    by `as_of`, plus what the supplier refunded by `as_of`.
+    by `as_of`, plus refunds by `as_of` whose credit was also dated by then.
 
     Days past due count from the due date, or from the bill date when a bill has none. Not yet due is current.
     Void bills are excluded.
@@ -82,15 +82,17 @@ def aging(db: Session, ctx: Context, as_of: date) -> PayablesAgingReport:
             SupplierCredit.business_id == ctx.business_id,
             SupplierCredit.voided_at.is_(None),
             SupplierCredit.refund_received_on <= as_of,
+            SupplierCredit.credit_date <= as_of,
         )
         .group_by(SupplierCredit.bill_id)
         .subquery()
     )
+    # A legacy refund dated before the matching cash cannot add new debt to this report.
     open_minor = (
         SupplierBill.total_minor
         - func.coalesce(paid.c.paid_minor, 0)
         - func.coalesce(credited.c.credited_minor, 0)
-        + func.coalesce(refunded.c.refunded_minor, 0)
+        + func.least(func.coalesce(refunded.c.refunded_minor, 0), func.coalesce(paid.c.paid_minor, 0))
     )
     rows = db.execute(
         select(

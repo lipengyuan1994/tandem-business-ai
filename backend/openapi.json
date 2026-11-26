@@ -1846,6 +1846,11 @@
             ],
             "title": "Lines"
           },
+          "match_received": {
+            "default": false,
+            "title": "Match Received",
+            "type": "boolean"
+          },
           "notes": {
             "anyOf": [
               {
@@ -11332,6 +11337,20 @@
             "title": "Received Minor",
             "type": "integer"
           },
+          "remaining_received_lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PurchaseOrderUnbilledLine"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Received Lines"
+          },
           "unbilled_received_minor": {
             "title": "Unbilled Received Minor",
             "type": "integer"
@@ -11346,6 +11365,25 @@
           "unbilled_received_minor"
         ],
         "title": "PurchaseOrderBilling",
+        "type": "object"
+      },
+      "PurchaseOrderUnbilledLine": {
+        "properties": {
+          "purchase_order_line_id": {
+            "format": "uuid",
+            "title": "Purchase Order Line Id",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "purchase_order_line_id",
+          "quantity"
+        ],
+        "title": "PurchaseOrderUnbilledLine",
         "type": "object"
       },
       "PurchasingSuggestion": {

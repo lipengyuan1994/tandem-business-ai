@@ -4,6 +4,10 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **Fixed (2026-11-25):** customer and supplier cash refunds must be covered by dated payments, and aging no longer
+  reopens a balance for a refund before its credit. Purchase order bill fill uses only received, unbilled units and
+  checks them again when saving. The PO estimate never becomes the bill's total automatically. Contact consent evidence uses UTC.
+
 - **New (2026-11-25):** an invoice can be credited in part: choose how much of each line to credit. Several credit
   notes per invoice are allowed. A credit larger than what the customer still owes records the difference as a refund
   to the customer (date, method, reference). QuickBooks gets the credit memo; refunds are listed for the bookkeeper.

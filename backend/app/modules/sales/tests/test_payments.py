@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import Engine, text
 
 from app.modules.identity.testing import login_as
 from app.modules.org.testing import make_business
+from app.platform import clock
 
 from .factories import BASE, Shop
 
@@ -307,3 +309,41 @@ def test_payments_table_is_exported_and_amount_paid_is_bounded(shop: Shop, owner
             assert "ck_invoices_amount_paid" in str(exc)
         else:  # pragma: no cover
             raise AssertionError("the database accepted a paid amount above the total")
+
+
+def test_refund_requires_dated_cash_and_aging_waits_for_associated_credit(shop: Shop) -> None:
+    original = issued(shop)
+    clock.set_clock(lambda: datetime(2026, 11, 1, 18, tzinfo=UTC))
+    shop.owner = login_as(shop.app, shop.business, ["owner"])
+    # A legitimate deposit may predate issue; a later installment cannot fund an earlier refund.
+    doc = pay(shop, original, 1000, paid_on="2026-10-27").json()
+    doc = pay(shop, doc, TOTAL - 1000, paid_on="2026-10-31").json()
+    lines = [{"line_id": doc["lines"][1]["id"], "quantity": "1"}]
+
+    invalid = credit(shop, doc, lines=lines, refund={**REFUND, "paid_on": "2026-10-29"})
+    assert invalid.status_code == 409 and invalid.json()["code"] == "sales.refund_exceeds_dated_payments"
+    assert aging(shop, "2026-10-29")["totals"][0]["total_minor"] == 5300
+    valid = credit(shop, doc, lines=lines, refund={**REFUND, "paid_on": "2026-10-31"})
+    assert valid.status_code == 201, valid.text
+    assert aging(shop, "2026-10-31")["customers"] == []
+    assert aging(shop, "2026-11-01")["customers"] == []
+
+
+def test_refund_cannot_reuse_previously_refunded_cash_or_void_supporting_payment(shop: Shop) -> None:
+    lines = [{"name": "Example parts", "quantity": "10", "unit_price_minor": 1000}]
+    invoice = shop.action("invoices", shop.create(lines=lines), "issue")
+    clock.set_clock(lambda: datetime(2026, 11, 1, 18, tzinfo=UTC))
+    shop.owner = login_as(shop.app, shop.business, ["owner"])
+    invoice = pay(shop, invoice, 3000, paid_on="2026-10-27").json()
+    invoice = pay(shop, invoice, 7000, paid_on="2026-10-31").json()
+    part = [{"line_id": invoice["lines"][0]["id"], "quantity": "2"}]
+    r = credit(shop, invoice, lines=part, refund={**REFUND, "paid_on": "2026-10-29"})
+    assert r.status_code == 201, r.text
+    invoice = get_invoice(shop, invoice["id"])
+    r = credit(shop, invoice, lines=part, refund={**REFUND, "paid_on": "2026-10-28"})
+    assert r.status_code == 409 and r.json()["code"] == "sales.refund_exceeds_dated_payments"
+    first_payment = invoice["payments"][0]["id"]
+    r = shop.owner.post(
+        f"{BASE}/invoices/{invoice['id']}/payments/{first_payment}/void", json={"version": invoice["version"]}
+    )
+    assert r.status_code == 409 and r.json()["code"] == "sales.payment_refunded"

@@ -864,3 +864,15 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
 - Bill dialog: changing the supplier also clears each line's purchase-order line link (review finding), so lines
   filled from an order can still be saved against another supplier.
 
+
+
+### 2026-11-25 — cloud sweep fixes
+
+- Validate cash coverage at each refund date, including when voiding an earlier payment. Keep legitimate deposits and
+  noncash credits. Aging counts a cash refund only when both the refund and its matching credit are effective, and
+  never adds back more than payments recorded to date.
+- Prefill received, unbilled PO line quantities and recheck receipt-filled submissions against the current ledger.
+  Leave intentional manual and advance bills available. Normalize contact-consent evidence timestamps to UTC.
+
+- Review follow-up: aggregate PO valuation is a comparison estimate, not a default bill total. Require a manual total
+  unless the operator chooses receipt-matched lines. Added legacy refund-date review instructions without a migration.
