@@ -55,9 +55,10 @@ The exact permission matrix is in [06-security-and-privacy.md](06-security-and-p
 | M13 | [ai](modules/M13-ai.md) | Inference gateway, assistant, tools, intake, evals, usage metering | MVP | P5 |
 | M14 | [voice](modules/M14-voice.md) | Browser voice in and out through speech-to-text and text-to-speech | Stretch / v1 | P6 / P8 |
 | M15 | [files](modules/M15-files.md) | Attachments in Vultr Object Storage | v1 | P8 |
-| M16 | [sales](modules/M16-sales.md) | Quotes, sales orders, invoices as documents (no payment processing) | v1 | P8 |
+| M16 | [sales](modules/M16-sales.md) | Quotes, sales orders, invoices; payments recorded against them (online payments in M21) | v1 | P8 |
 | M17 | [purchasing](modules/M17-purchasing.md) | Suppliers, purchase orders, goods receipt into stock | v1 | P8 |
 | M18 | [admin_ops](modules/M18-admin-ops.md) | System health, backup status, data export and erasure, version info | v1 | P8 |
+| M21 | [payments](modules/M21-payments.md) | Online invoice payments through Stripe Connect: onboarding, pay links, webhooks, refunds, disputes, payouts ([ADR-022](03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), proposed) | v1 | planned |
 
 ## The flagship workflow (demo script backbone)
 
@@ -83,7 +84,7 @@ The exact permission matrix is in [06-security-and-privacy.md](06-security-and-p
 
 ## Non-goals (v1)
 
-Payments and card handling; a double-entry accounting ledger (export to accounting tools instead); payroll and HR; autonomous purchasing or sending without approval; telephone systems; e-commerce storefront; clinical or medical use; multi-company consolidation; offline mobile apps. A **draft** purchase order is not an order. A **campaign draft** is not a sent campaign.
+Handling card data in Tandem (online payments go through Stripe-hosted pages, [ADR-022](03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout)); in-person card terminals; paying suppliers through Tandem; a double-entry accounting ledger (export to accounting tools instead); payroll and HR; autonomous purchasing or sending without approval; telephone systems; e-commerce storefront; clinical or medical use; multi-company consolidation; offline mobile apps. A **draft** purchase order is not an order. A **campaign draft** is not a sent campaign.
 
 ## Glossary
 

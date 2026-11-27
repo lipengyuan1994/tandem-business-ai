@@ -225,3 +225,46 @@ stays ask. The new recorded `reply_guardrail` use-case requires one constraint m
 - **Decision 4:** connecting is refused under `DATA_PROFILE=regulated` (customer names and amounts would leave the
   deployment for Intuit).
 
+## ADR-022 Online invoice payments: Stripe Connect, direct charges, Stripe Checkout
+- **Status:** PROPOSED 2026-11-27 (owner, in chat: "Plan Stripe payments", then "Start phase 0" for this record
+  and the roadmap change). Accepted when the owner merges it. It replaces the v1 non-goal "Payments and card
+  handling" in [01](01-product-and-scope.md#non-goals-v1).
+- **Decision 1:** a business's customers can pay an issued invoice online. Boston AI Forward runs a Stripe Connect
+  platform; each business gets its own connected Stripe account. The account uses Stripe's default controller
+  settings: full Stripe Dashboard, Stripe owns payment losses, the account pays Stripe's fees, Stripe collects
+  onboarding requirements. Accounts v2 if it is generally available when phase 1 starts, otherwise Accounts v1 with
+  the same controller settings (connecting an existing Stripe account by OAuth needs v1).
+- **Decision 2:** payments are **direct charges** on the business's account, taken on a **Stripe-hosted Checkout
+  Session** created per payment for the invoice's current open balance. Card entry never happens on a Tandem page;
+  Tandem stores Stripe ids, amounts, status and method type, never card numbers.
+- **Decision 3:** the platform's secret key never sits on a business's deployment. A small **payments relay** run by
+  Boston AI Forward holds a restricted platform key, creates accounts, onboarding links, Checkout Sessions and
+  refunds for the deployment it pins them to, receives the one Connect webhook endpoint and forwards each event to
+  its deployment signed with that deployment's key. Deployments register with the relay automatically from
+  Settings > Payments; owners never paste keys or set up webhooks. This holds whether businesses run their own copy
+  or Boston AI Forward hosts them (hosting is undecided, see Q13); if every business is hosted, the relay runs next
+  to the hosted Tandem and nothing in Tandem changes.
+- **Decision 4:** money is recorded into the existing ledger (`invoice_payments`, `invoice_refunds`). Webhooks are
+  verified on the raw body, stored once by Stripe event id, applied by the worker after re-reading the object from
+  Stripe (Stripe does not guarantee event order), and a payment row carries its Stripe payment id under a unique
+  constraint. Bank (ACH) payments are recorded only when Stripe confirms them. Online money beyond the open balance
+  is parked as an unapplied online payment and the agent drafts a refund proposal; refunds sent from Tandem go
+  through approvals.
+- **Decision 5:** new module `payments` ([M21](modules/M21-payments.md)), depending on org, sales, approvals and
+  notifications. It is added to the dependency table in [02](02-architecture.md) when it is built. QuickBooks gets a
+  Stripe clearing account, a processing-fees account and payout transfers through `accounting`.
+- **Decision 6:** online payments are refused under `DATA_PROFILE=regulated`, like the QuickBooks connection
+  (customer names and amounts would leave the deployment).
+- **Why:** card payments are the biggest gap against Square, Jobber and QuickBooks (competitor scan, 2026-11-25).
+  Connect keeps each business the merchant of record with its own payouts. With full-Dashboard accounts Stripe and
+  the business, not Boston AI Forward, carry disputes and losses. Checkout keeps card data entirely on Stripe.
+- **Rejected:** one shared Stripe account (Boston AI Forward would be every business's merchant); Express-dashboard
+  accounts (the platform carries dispute and loss liability by default); Payment Links (fixed prices, not invoice
+  balances); Payment Element on a Tandem page (more of Tandem in the card path, later if a fully branded page
+  matters); Stripe Invoicing (duplicates Tandem invoices, extra fee per paid invoice); each owner pasting their own
+  Stripe key (manual setup, against the owner's rule that setup is automated); the platform key on each deployment
+  (one server's compromise would reach every business).
+- **Consequences:** a new small service to run and secure (the relay); one small change to the "payments never
+  exceed the balance" rule (unapplied online payments). Stripe facts were read from Stripe's docs and pricing page on
+  2026-11-27 and must be re-checked when phase 1 starts. Plan and phases: Claude Doc "Tandem Stripe payments plan".
+- **Revisit when:** the hosting model is decided (Q13), or a business needs in-person card payments.

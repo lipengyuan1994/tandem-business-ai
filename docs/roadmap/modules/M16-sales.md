@@ -8,7 +8,7 @@
 | Owns tables | `document_sequences`, `quotes`, `quote_lines`, `sales_orders`, `sales_order_lines`, `invoices`, `invoice_lines` |
 
 ## Purpose
-Commercial documents: quote → sales order → invoice. **No payment processing and no general ledger.** Invoices are documents with numbers and totals that can be exported to accounting software (CSV, v1). AI may propose quotes (`sales.create_quote`) after v1.
+Commercial documents: quote → sales order → invoice. **No general ledger.** Payments are recorded against invoices here; taking them online is [M21 payments](M21-payments.md) (planned). Invoices are documents with numbers and totals that can be exported to accounting software (CSV, v1). AI may propose quotes (`sales.create_quote`) after v1.
 
 ## Key rules
 1. Document numbers are gap-free per business and type and year (`INV-2026-0001`) using `document_sequences` with `SELECT … FOR UPDATE`. Numbers are assigned only on issue, not on draft.
