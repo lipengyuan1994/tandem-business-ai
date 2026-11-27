@@ -47,6 +47,11 @@ ACTION = "payments.card_refund"
 SEND_JOB = "payments.send_refund"
 CHECK_JOB = "payments.check_refunds"
 EVENTS = frozenset({"refund.created", "refund.updated", "refund.failed", "charge.refund.updated"})
+# A refund or dispute for a payment Tandem has not recorded yet (Stripe does not keep events in order, and a lost
+# Checkout event is only caught by the hourly check). The event is retried, and replayed once the payment is recorded.
+WAITING = "waiting"
+WAITING_NOTE = "Waiting for the payment it is about to be recorded"
+REPLAY_JOB = "payments.replay_waiting_events"
 REFUND_ID = re.compile(r"^(re|pyr)_[A-Za-z0-9]{1,100}$")
 JOB_PERMISSIONS = frozenset(
     {P.CONNECTION_READ, P.CONNECTION_MANAGE, P.REFUND_SEND, "org.business.read", "sales.invoice.mark_paid"}
@@ -567,7 +572,11 @@ def _dashboard(db: Session, ctx: Context, view: RefundView) -> str:
             PaymentRequest.status == "paid",
         )
     )
-    if request is None or view.currency.upper() != request.currency.upper() or view.amount <= 0:
+    if view.amount <= 0:
+        return "ignored"
+    if request is None:
+        return WAITING
+    if view.currency.upper() != request.currency.upper():
         return "ignored"
     status = STRIPE_STATUS.get(view.status, "pending")
     row_id = db.scalar(

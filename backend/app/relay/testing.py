@@ -8,7 +8,9 @@ from __future__ import annotations
 import itertools
 import json
 import secrets
+import time
 import urllib.parse
+from collections.abc import Callable
 from typing import Any
 
 import httpx
@@ -46,6 +48,7 @@ class FakeStripe:
         self.by_key: dict[str, httpx.Response] = {}
         self.fail_next: list[httpx.Response] = []
         self._ids = itertools.count(1)
+        self.clock: Callable[[], int] = lambda: int(time.time())  # when charges happen (tests set the app's clock)
         router.route(host=urllib.parse.urlsplit(STRIPE_BASE).hostname).mock(side_effect=self._handle)
 
     # -- state helpers used by tests ------------------------------------------------------------------------
@@ -94,7 +97,7 @@ class FakeStripe:
         fee = round(found["amount"] * 0.029) + self.fee_fixed
         txn = self._txn(found["account"], "charge", "charge", found["amount"], fee, f"ch_{intent[3:]}")
         txn["currency"] = found["currency"]
-        found.update(charge=f"ch_{intent[3:]}", balance_transaction=txn)
+        found.update(charge=f"ch_{intent[3:]}", balance_transaction=txn, charged_at=self.clock())
 
     def pay(self, session_id: str) -> dict[str, Any]:
         """The customer paid by card on the Checkout page: returns the session as Stripe sends it in the event."""
@@ -334,7 +337,13 @@ class FakeStripe:
             session["status"] = "expired"
         elif not (request.method == "GET" and len(parts) == 5):
             return missing
-        return httpx.Response(200, json=self._public(session))
+        out = self._public(session)
+        intent = session["payment_intent"]
+        if intent and "payment_intent.latest_charge" in form.values() and "charge" in self.intents[intent]:
+            found = self.intents[intent]
+            charge = {"id": found["charge"], "object": "charge", "created": found["charged_at"]}
+            out["payment_intent"] = {"id": intent, "object": "payment_intent", "latest_charge": charge}
+        return httpx.Response(200, json=out)
 
     def _refunds(self, request: httpx.Request, form: dict[str, str]) -> httpx.Response:
         account = request.headers.get("stripe-account")

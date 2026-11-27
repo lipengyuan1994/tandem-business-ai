@@ -44,6 +44,9 @@ from .schemas import (
 
 CHECKOUT_LIFETIME = timedelta(hours=1)
 REUSE_IF_LEFT = timedelta(minutes=10)
+# A payment page still being opened. The relay call cannot outlast this (app.platform.http's timeouts add up to about
+# 70 seconds), so an older `creating` request is one whose opener gave up, and does not block a new page.
+STARTING_FOR = timedelta(minutes=2)
 JOB_PERMISSIONS = frozenset(
     {P.CONNECTION_READ, P.CONNECTION_MANAGE, P.LINK_SHARE, "org.business.read", "sales.invoice.mark_paid"}
 )
@@ -295,7 +298,9 @@ class _Start:
 def _prepare_checkout(ctx: Context, token: str) -> _Start:
     with transaction(ctx) as db:
         link = visitor_link(db, ctx, token, lock=True)
-        invoice = sales.online_invoice(db, ctx, link.invoice_id)
+        # The invoice row lock serialises every start for this invoice (two tabs, two links), so the check below
+        # sees a page another request is opening right now.
+        invoice = sales.online_invoice(db, ctx, link.invoice_id, lock=True)
         state = _state(db, ctx, invoice)
         if state == "paid":
             raise Conflict("payments.invoice_settled", detail="This invoice is already paid")
@@ -312,6 +317,9 @@ def _prepare_checkout(ctx: Context, token: str) -> _Start:
                 and r.expires_at - now > REUSE_IF_LEFT
             ):
                 return _Start(r.checkout_url, None, invoice.id, invoice.number, 0, invoice.currency, 0, None)
+        if any(r.status == "creating" and now - _started(r) < STARTING_FOR for r in _requests(db, ctx, invoice.id)):
+            # A second press, or a second tab: one Stripe page per invoice at a time, so the customer cannot pay twice.
+            raise Conflict("payments.checkout_starting", detail="Stripe's payment page is opening; try again shortly")
         conn = connection.get(db, ctx)
         assert conn is not None
         creds = connection.credentials(conn)
@@ -377,6 +385,21 @@ def start_checkout(ctx: Context, token: str) -> CheckoutStartOut:
         assert row is not None
         row.checkout_session_id, row.checkout_url, row.status = view.id, view.url, "open"
         row.version += 1
+        # The invoice may have changed while Stripe opened the page (paid in cash, credited, voided). The lock makes
+        # any change either finish first, so it is seen here, or wait until this request is open, so its own event
+        # closes the page (on_document_changed).
+        invoice = sales.online_invoice(db, ctx, start.invoice_id, lock=True)
+        changed = invoice.status != "issued" or invoice.balance_minor != start.amount
+        if changed:
+            jobs.enqueue(
+                db,
+                CLOSE_JOB,
+                {"invoice_id": str(start.invoice_id), "version": None},
+                business_id=ctx.business_id,
+                dedupe_key=f"payments-close:{ctx.business_id}:{start.invoice_id}:{row.id}",
+            )
+    if changed:
+        raise Conflict("payments.invoice_changed", detail="This invoice changed while the payment page was opening")
     return CheckoutStartOut(url=view.url)
 
 
@@ -450,23 +473,31 @@ def apply(ctx: Context, session_id: str, event_type: str | None = None) -> str:
 def _record_paid(db: Session, ctx: Context, row: PaymentRequest, view: CheckoutView) -> None:
     now = clock.now()
     method = "bank_transfer" if row.status == "processing" else "card"
+    # Dated by when Stripe took the money: a payment heard of late (a delayed event, the hourly check) still lands
+    # on the day the customer paid. Never in the future, whatever the clocks say.
+    taken = connection.from_unix(view.paid_at)
+    paid_at = min(taken, now) if taken is not None else now
     result = sales.record_online_payment(
         db,
         ctx,
         row.invoice_id,
         amount_minor=view.amount_total,
-        paid_at=now,
+        paid_at=paid_at,
         provider="stripe",
         external_id=view.payment_intent or view.id,
         method=method,
     )
-    row.status, row.method, row.paid_at, row.closed_at = "paid", method, now, now
+    row.status, row.method, row.paid_at, row.closed_at = "paid", method, paid_at, now
     row.payment_intent_id = view.payment_intent
     row.applied_minor, row.surplus_minor = result.applied_minor, result.surplus_minor
     row.invoice_payment_id = result.payment_id
     row.last_error = None
     jobs.enqueue(
         db, FEE_JOB, {"request_id": str(row.id)}, business_id=ctx.business_id, dedupe_key=f"payments-fee:{row.id}"
+    )
+    # Refunds or disputes of this payment that Stripe sent before it: apply them now.
+    jobs.enqueue(
+        db, refunds.REPLAY_JOB, {"request_id": str(row.id)}, business_id=ctx.business_id, dedupe_key=f"replay:{row.id}"
     )
     if result.surplus_minor:
         drafts.enqueue_surplus_draft(db, ctx, row.id)

@@ -167,7 +167,9 @@ class Stripe:
         return self.request("POST", "/v1/checkout/sessions", params, account=account, idempotency_key=key)
 
     def retrieve_checkout_session(self, account: str, session: str) -> dict[str, Any]:
-        return self.request("GET", f"/v1/checkout/sessions/{session}", account=account)
+        # The charge says when the money was taken; the invoice payment is dated by it, not by when Tandem heard.
+        expand = {"expand": ["payment_intent.latest_charge"]}
+        return self.request("GET", f"/v1/checkout/sessions/{session}", expand, account=account)
 
     def expire_checkout_session(self, account: str, session: str) -> dict[str, Any]:
         return self.request("POST", f"/v1/checkout/sessions/{session}/expire", account=account)
@@ -226,11 +228,13 @@ def verify_webhook(payload: bytes, header: str, secret: str, now: int) -> bool:
     return bool(secret) and signing.verify(secret, header, payload, now)
 
 
-def account_view(account: dict[str, Any]) -> dict[str, Any]:
-    """The part of a Stripe account a Tandem install needs: readiness and what Stripe still asks for."""
+def account_view(account: dict[str, Any], mode: str) -> dict[str, Any]:
+    """The part of a Stripe account a Tandem install needs: readiness and what Stripe still asks for, and whether the
+    relay works in test or live mode now (the install shows it, and it changes when the operator sets a live key)."""
     requirements = account.get("requirements") or {}
     return {
         "id": account.get("id"),
+        "mode": mode,
         "country": account.get("country"),
         "default_currency": account.get("default_currency"),
         "charges_enabled": bool(account.get("charges_enabled")),
@@ -246,7 +250,10 @@ def account_view(account: dict[str, Any]) -> dict[str, Any]:
 def checkout_view(session: dict[str, Any]) -> dict[str, Any]:
     """What Tandem needs to record a payment: never card details (Checkout does not return them anyway)."""
     intent = session.get("payment_intent")
+    paid_at = None
     if isinstance(intent, dict):
+        charge = intent.get("latest_charge")
+        paid_at = charge.get("created") if isinstance(charge, dict) else None
         intent = intent.get("id")
     metadata = session.get("metadata") or {}
     return {
@@ -257,6 +264,7 @@ def checkout_view(session: dict[str, Any]) -> dict[str, Any]:
         "amount_total": session.get("amount_total"),
         "currency": session.get("currency"),
         "payment_intent": intent,
+        "paid_at": paid_at,
         "expires_at": session.get("expires_at"),
         "client_reference_id": session.get("client_reference_id"),
         "metadata": {str(k): str(v) for k, v in metadata.items() if str(k).startswith("tandem_")},

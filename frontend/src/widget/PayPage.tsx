@@ -8,11 +8,15 @@ import { WidgetError, call, client } from "./api"
 type Page = Schemas["PayPageOut"]
 const button = "min-h-11 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50"
 const CONFIRM_TRIES = 10
+// 409s that mean the invoice moved on (paid, on its way, voided, changed): show the page again. Any other 409
+// (Stripe or the relay failed, a page already opening) is shown, so the customer is not left without a reason.
+const INVOICE_MOVED = new Set(["payments.invoice_settled", "payments.payment_processing", "payments.not_payable", "payments.invoice_changed"])
 
 function message(e: unknown) {
   if (e instanceof WidgetError) {
     if (e.status === 404) return S.expired
     if (e.status === 429) return S.rateLimited
+    if (e.code === "payments.checkout_starting") return S.starting
   }
   return S.error
 }
@@ -70,7 +74,7 @@ export function PayPage({ token, pollMs = 3000 }: { token: string; pollMs?: numb
                 (r) => { globalThis.location.assign(r.url) },
                 (e: unknown) => {
                   setBusy(false)
-                  if (e instanceof WidgetError && e.status === 409) { setAttempt((n) => n + 1); return }
+                  if (e instanceof WidgetError && e.status === 409 && INVOICE_MOVED.has(e.code)) { setAttempt((n) => n + 1); return }
                   setPayError(e)
                 },
               )

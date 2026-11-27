@@ -288,3 +288,27 @@ def test_the_hourly_check_sends_a_stuck_refund(world: World) -> None:
     world.run()
     assert len(world.stripe.refunds) == 1
     assert [r["status"] for r in _summary(world, invoice)["refunds"]] == ["succeeded"]
+
+
+def test_refund_and_dispute_events_that_arrive_before_the_payment_are_kept(world: World) -> None:
+    from app.modules.payments.models import PaymentEvent
+
+    world.ready()
+    invoice = world.invoice(6300)
+    session = _checkout(world, _link(world, invoice))
+    intent = str(world.stripe.pay(session)["payment_intent"])
+    made = world.stripe.dashboard_refund(intent, 1000)
+    dispute = world.stripe.dispute(intent, 5300)
+    _event(world, "refund.created", made, "refund")  # Stripe sent these first; the Checkout event comes later
+    _event(world, "charge.dispute.created", dispute, "dispute")
+    world.run()
+    with transaction(_ctx(world)) as db:
+        waiting = [(r.outcome, r.last_error) for r in db.scalars(select(PaymentEvent)) if r.object_type != "account"]
+    assert waiting == [("failed", refunds.WAITING_NOTE)] * 2  # kept and retried, not dropped
+    world.checkout_event(COMPLETED, session)
+    world.run()
+    summary = _summary(world, invoice)
+    assert [(r["source"], r["amount_minor"]) for r in summary["refunds"]] == [("dashboard", 1000)]
+    assert [d["amount_minor"] for d in summary["disputes"]] == [5300]
+    with transaction(_ctx(world)) as db:
+        assert {r.outcome for r in db.scalars(select(PaymentEvent))} == {"applied"}

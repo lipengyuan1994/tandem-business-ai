@@ -279,3 +279,88 @@ def test_export_leaves_out_link_hashes_and_stripe_page_addresses(world: World) -
         links, requests = list(tables["payment_links"]), list(tables["payment_requests"])
     assert len(links) == 1 and "token_hash" not in links[0]
     assert len(requests) == 1 and "checkout_url" not in requests[0] and requests[0]["amount_minor"] == 6300
+
+
+def _during_create(monkeypatch: pytest.MonkeyPatch, action: Any) -> None:
+    """Run `action` while the relay is opening Stripe's page, as a second visitor or the shop might."""
+    from app.modules.payments.relay import RelayApi
+
+    real = RelayApi.create_checkout
+    done: list[bool] = []
+
+    def create(self: RelayApi, *args: Any, **kwargs: Any) -> Any:
+        if not done:
+            done.append(True)
+            action()
+        return real(self, *args, **kwargs)
+
+    monkeypatch.setattr(RelayApi, "create_checkout", create)
+
+
+def test_a_second_press_while_the_page_opens_does_not_open_a_second_page(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    world.ready()
+    invoice = world.invoice(6300)
+    token = _link(world, invoice)
+    seen: list[tuple[int, str]] = []
+    _during_create(monkeypatch, lambda: seen.append(_post(world, token)))
+    first = _checkout(world, token)
+    assert seen == [(409, "payments.checkout_starting")]
+    assert len(world.stripe.sessions) == 1
+    assert _checkout(world, token) == first  # once it is open, the same page is offered again
+    # A request whose opener gave up long ago does not block a new page.
+    with transaction(_ctx(world)) as db:
+        db.add(
+            PaymentRequest(
+                business_id=world.business,
+                link_id=db.scalar(select(PaymentRequest.link_id)),
+                invoice_id=invoice["id"],
+                status="creating",
+                amount_minor=6300,
+                currency="USD",
+                expires_at=NOW + timedelta(hours=1),
+            )
+        )
+    world.stripe.expire_session(first)
+    world.checkout_event(EXPIRED, first)
+    world.run()
+    clock.set_clock(lambda: NOW + timedelta(minutes=3))
+    assert _checkout(world, token) != first
+
+
+def test_a_page_opened_while_the_invoice_changed_is_closed(world: World, monkeypatch: pytest.MonkeyPatch) -> None:
+    world.ready()
+    invoice = world.invoice(6300)
+    token = _link(world, invoice)
+    _during_create(monkeypatch, lambda: _cash(world, invoice, 1000))  # paid part in the shop meanwhile
+    r = world.visitor.post(f"{PAY}/{token}/checkout")
+    assert (r.status_code, r.json()["code"]) == (409, "payments.invoice_changed")
+    world.run()
+    [session] = world.stripe.sessions.values()
+    assert session["status"] == "expired"  # the page for the old 63.00 can no longer be paid
+    assert [r["status"] for r in _summary(world, invoice)["requests"]] == ["expired"]
+    second = _checkout(world, token)
+    assert world.stripe.sessions[second]["amount_total"] == 5300
+
+
+def _post(world: World, token: str) -> tuple[int, str]:
+    r = world.visitor.post(f"{PAY}/{token}/checkout")
+    return r.status_code, str(r.json().get("code"))
+
+
+def test_a_payment_heard_of_late_is_dated_when_stripe_took_it(world: World) -> None:
+    world.ready()
+    invoice = world.invoice(6300)
+    session = _checkout(world, _link(world, invoice))
+    world.stripe.pay(
+        session
+    )  # paid at 8:00 in Denver on the 27th, heard of after midnight; Stripe's event never arrives
+    clock.set_clock(lambda: NOW + timedelta(hours=17))  # heard of after midnight, by the hourly check
+    paylinks.check_job(_ctx(world), {})
+    clock.set_clock(lambda: NOW + timedelta(minutes=30))  # back within the owner's sign-in to read the invoice
+    doc = world.get_invoice(invoice["id"])
+    assert doc["status"] == "paid" and [p["paid_on"] for p in doc["payments"]] == ["2026-11-27"]
+    with transaction(_ctx(world)) as db:
+        row = db.scalars(select(PaymentRequest)).one()
+        assert row.paid_at == NOW and row.closed_at == NOW + timedelta(hours=17)

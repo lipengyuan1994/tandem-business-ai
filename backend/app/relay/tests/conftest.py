@@ -19,6 +19,9 @@ from app.relay.testing import STRIPE_KEY, WEBHOOK_SECRET, FakeStripe
 NOW = 1795000000
 TANDEM = "https://shop.example.com"
 EVENTS_URL = f"{TANDEM}/api/v1/payments/relay/events"
+# Where deliveries actually connect: the address the resolver checked (tests resolve every name to it).
+PUBLIC_IP = "93.184.216.34"
+PINNED_EVENTS_URL = f"https://{PUBLIC_IP}/api/v1/payments/relay/events"
 
 
 class Clock:
@@ -83,7 +86,7 @@ def make_relay(tmp_path: Path, clock: Clock, stripe: FakeStripe) -> Any:
             settings_for(tmp_path, **over),
             stripe_http=httpx.Client,
             callback_http=httpx.Client,
-            resolver=lambda host: ["93.184.216.34"],
+            resolver=lambda host: [PUBLIC_IP],
             clock=clock,
         )
         return TestClient(app)

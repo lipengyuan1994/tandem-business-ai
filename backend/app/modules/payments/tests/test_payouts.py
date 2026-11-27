@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
+import pytest
 from sqlalchemy import select
 
 from app.modules.identity.testing import login_as
 from app.modules.payments import payouts, refunds
 from app.modules.payments.models import PaymentPayout, PaymentRequest
 from app.modules.payments.public import ledger_payout_versions, ledger_payouts
+from app.platform import clock
 from app.platform.db import transaction
+from app.platform.testing.auth import ctx_for
 
-from .conftest import API, World
+from .conftest import API, NOW, World
 from .test_pay_links import _summary
 from .test_refunds import _ctx, _event, _notifications, _paid_online
 
@@ -124,3 +127,39 @@ def test_payout_events_for_unknown_or_malformed_ids_are_ignored(world: World) ->
 def test_payouts_need_the_payments_read_permission(world: World) -> None:
     staff = login_as(world.app, world.business, ["inventory_manager"])
     assert staff.get(f"{API}/payouts").status_code == 403
+
+
+def test_payments_whose_fee_stripe_never_settles_do_not_hold_up_the_rest(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    stuck_invoice, stuck_intent = _paid_online(world)
+    later_invoice, _ = _paid_online(world)
+    with transaction(_ctx(world)) as db:
+        for row in db.scalars(select(PaymentRequest)):
+            row.stripe_fee_minor = row.net_minor = None
+    world.stripe.intents[stuck_intent].pop("balance_transaction")  # Stripe has not settled this one's fee
+    monkeypatch.setattr(payouts, "FEE_BATCH", 1)
+    for hours in (1, 2):
+        clock.set_clock(lambda hours=hours: NOW + timedelta(hours=hours))
+        payouts.check_job(_ctx(world), {})
+    clock.set_clock(lambda: NOW)
+    assert _summary(world, stuck_invoice)["requests"][0]["stripe_fee_minor"] is None
+    assert _summary(world, later_invoice)["requests"][0]["stripe_fee_minor"] == FEE
+
+
+def test_the_hourly_check_catches_a_paid_payout_that_failed_later(world: World) -> None:
+    _paid_online(world)
+    payout_id = world.stripe.payout(world.account_id(), status="paid")
+    _event(world, "payout.paid", payout_id, "payout")
+    world.run()
+    ctx = ctx_for(world.business, ["payments.connection.read"])
+    with transaction(ctx) as db:
+        versions = ledger_payout_versions(db, ctx, date(2026, 11, 1))
+    payouts.check_job(_ctx(world), {})  # re-read, nothing changed: not a new version for the books
+    with transaction(ctx) as db:
+        assert ledger_payout_versions(db, ctx, date(2026, 11, 1)) == versions
+    world.stripe.fail_payout(payout_id)  # the bank returned it; the payout.failed event never arrived
+    payouts.check_job(_ctx(world), {})
+    [row] = _payouts(world)
+    assert (row["status"], row["failure_code"]) == ("failed", "account_closed")
+    assert any("did not go through" in t for t in _notifications(world.owner))

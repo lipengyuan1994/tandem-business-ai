@@ -13,10 +13,10 @@ from __future__ import annotations
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.modules.notifications import public as notifications
@@ -45,6 +45,7 @@ PAYOUT_ID = re.compile(r"^po_[A-Za-z0-9]{1,100}$")
 FEE_JOB = "payments.read_fees"
 CHECK_JOB = "payments.check_payouts"
 FEE_BATCH = 50
+RECHECK_PAID_FOR = timedelta(days=7)  # Stripe can report a paid payout as failed several business days later
 OPEN = ("pending", "in_transit")
 STATUSES = frozenset(PAYOUT_STATUSES)
 LIST_LIMIT = 100
@@ -109,7 +110,16 @@ def read_fees_job(ctx: Context, payload: dict[str, Any]) -> None:
         )
         if payload.get("request_id"):
             query = query.where(PaymentRequest.id == uuid.UUID(str(payload["request_id"])))
-        due = [(r.id, r.payment_intent_id) for r in db.execute(query.order_by(PaymentRequest.paid_at).limit(FEE_BATCH))]
+        # Least recently tried first, and each try is stamped, so payments whose fee Stripe never settles (or
+        # refuses to read) take their turn instead of filling every batch.
+        query = query.order_by(PaymentRequest.last_checked_at.asc().nulls_first(), PaymentRequest.paid_at)
+        due = [(r.id, r.payment_intent_id) for r in db.execute(query.limit(FEE_BATCH))]
+        if due:
+            db.execute(
+                update(PaymentRequest)
+                .where(PaymentRequest.id.in_([r for r, _ in due]))
+                .values(last_checked_at=clock.now(), version=PaymentRequest.version + 1)
+            )
     if not due:
         return
     creds = _creds(ctx)
@@ -179,6 +189,7 @@ def apply(ctx: Context, payout_id: str) -> str:
             .with_for_update()
         )
         before = row.status if row is not None else None
+        seen = _fields(row) if row is not None else None
         if row is None:
             row = PaymentPayout(
                 business_id=ctx.business_id,
@@ -199,7 +210,8 @@ def apply(ctx: Context, payout_id: str) -> str:
         row.arrival_date = connection.from_unix(view.arrival_date)
         row.method = (view.method or None) and view.method[:16]
         row.failure_code = (view.failure_code or None) and view.failure_code[:80]
-        row.version += 1
+        if seen is None or _fields(row) != seen:  # a re-read that changes nothing is not a new version for the books
+            row.version += 1
         db.flush()
         if row.status != before and row.status in ("paid", "failed", "canceled"):
             money = money_text(row.amount_minor, row.currency)
@@ -218,6 +230,10 @@ def apply(ctx: Context, payout_id: str) -> str:
     if summarize:
         _summarize(ctx, creds, payout_id)
     return "applied"
+
+
+def _fields(row: PaymentPayout) -> tuple[object, ...]:
+    return (row.status, row.amount_minor, row.automatic, row.arrival_date, row.method, row.failure_code, row.last_error)
 
 
 def _summarize(ctx: Context, creds: Credentials, payout_id: str) -> None:
@@ -251,17 +267,22 @@ def _summarize(ctx: Context, creds: Credentials, payout_id: str) -> None:
 
 
 def check_job(ctx: Context, payload: dict[str, Any]) -> None:
-    """Hourly (`payments.check_payouts`): fill in missing fees, and re-read payouts still on their way or not yet
-    summarised, in case an event was lost."""
+    """Hourly (`payments.check_payouts`): fill in missing fees, and re-read payouts still on their way, not yet
+    summarised, or paid in the last few days (a bank can return a paid payout, and Stripe then marks it failed), in
+    case an event was lost."""
     read_fees_job(ctx, {})
     ctx = refunds.job_context(ctx)
+    recent = clock.now() - RECHECK_PAID_FOR
     with transaction(ctx) as db:
         due = list(
             db.scalars(
                 select(PaymentPayout.stripe_payout_id).where(
                     PaymentPayout.business_id == ctx.business_id,
                     PaymentPayout.status.in_(OPEN)
-                    | ((PaymentPayout.status == "paid") & PaymentPayout.summarized_at.is_(None)),
+                    | (
+                        (PaymentPayout.status == "paid")
+                        & (PaymentPayout.summarized_at.is_(None) | (PaymentPayout.arrival_date >= recent))
+                    ),
                 )
             )
         )

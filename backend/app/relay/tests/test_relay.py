@@ -13,7 +13,7 @@ from app.relay import signing
 from app.relay.models import RelayEvent
 from app.relay.testing import FakeStripe
 
-from .conftest import EVENTS_URL, TANDEM, Clock, register
+from .conftest import EVENTS_URL, PINNED_EVENTS_URL, TANDEM, Clock, register
 
 ACCOUNT = {"country": "US", "email": "owner@example.com", "name": "Example Garage"}
 
@@ -173,7 +173,7 @@ def test_webhook_forwards_envelope_signed_once(
     caller = register(relay, clock)
     account = caller.call("POST", "/v1/account", ACCOUNT).json()["id"]
     received: list[httpx.Request] = []
-    router.post(EVENTS_URL).mock(side_effect=lambda req: received.append(req) or httpx.Response(200, json={}))
+    router.post(PINNED_EVENTS_URL).mock(side_effect=lambda req: received.append(req) or httpx.Response(200, json={}))
     event = stripe.event(account, "account.updated", {"id": account, "object": "account", "email": "x@example.com"})
     assert _webhook(relay, stripe, event, clock.now).json() == {"status": "accepted"}
     assert _webhook(relay, stripe, event, clock.now).json() == {"status": "duplicate"}
@@ -190,8 +190,37 @@ def test_webhook_forwards_envelope_signed_once(
         "object": {"id": account, "object": "account"},
     }
     assert "x@example.com" not in request.content.decode()
+    # Posted to the address that was checked, never a fresh DNS answer; Host and TLS name stay the real ones.
+    assert request.headers["host"] == "shop.example.com" and request.extensions["sni_hostname"] == "shop.example.com"
     assert request.headers[signing.CLIENT_HEADER] == caller.client_id
     assert signing.verify(caller.secret, request.headers[signing.SIGNATURE_HEADER], request.content, clock.now)
+
+
+def test_delivery_rechecks_the_address_and_never_posts_to_a_private_one(
+    tmp_path: Any, clock: Clock, stripe: FakeStripe, router: respx.MockRouter
+) -> None:
+    from app.relay.main import create_app
+
+    from .conftest import settings_for
+
+    asked: list[str] = []
+
+    def resolver(host: str) -> list[str]:  # public when registered, private by the time it is posted
+        asked.append(host)
+        return ["93.184.216.34"] if len(asked) == 1 else ["10.0.0.5"]
+
+    app = create_app(
+        settings_for(tmp_path), stripe_http=httpx.Client, callback_http=httpx.Client, resolver=resolver, clock=clock
+    )
+    relay = TestClient(app)
+    caller = register(relay, clock)
+    account = caller.call("POST", "/v1/account", ACCOUNT).json()["id"]
+    route = router.route(host="10.0.0.5").mock(return_value=httpx.Response(200))
+    event = stripe.event(account, "account.updated", {"id": account, "object": "account"})
+    _webhook(relay, stripe, event, clock.now)
+    assert route.call_count == 0
+    with app.state.relay.db.session() as db:  # type: ignore[attr-defined]
+        assert db.get(RelayEvent, event["id"]).last_error == "shop.example.com resolves to a non-public address"
 
 
 def test_failed_delivery_backs_off_and_gives_up_after_three_days(
@@ -199,7 +228,7 @@ def test_failed_delivery_backs_off_and_gives_up_after_three_days(
 ) -> None:
     caller = register(relay, clock)
     account = caller.call("POST", "/v1/account", ACCOUNT).json()["id"]
-    route = router.post(EVENTS_URL).mock(return_value=httpx.Response(503))
+    route = router.post(PINNED_EVENTS_URL).mock(return_value=httpx.Response(503))
     event = stripe.event(account, "account.updated", {"id": account, "object": "account"})
     _webhook(relay, stripe, event, clock.now)
     state = relay.app.state.relay  # type: ignore[attr-defined]

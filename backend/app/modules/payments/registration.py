@@ -10,6 +10,7 @@ def register(reg: Registry) -> None:
     reg.add_router(api.relay_router, "/payments/relay", ["payments-relay"])
     reg.add_router(api_pay.router, "/payments/pay", ["payments-pay"])
     reg.add_job(events.JOB_KIND, events.apply_job, transactional=False)
+    reg.add_job(refunds.REPLAY_JOB, events.replay_job)
     reg.add_job(paylinks.CLOSE_JOB, paylinks.close_job, transactional=False)
     reg.add_job(paylinks.CHECK_JOB, paylinks.check_job, transactional=False)
     reg.add_cron("payments.check_requests", paylinks.CHECK_JOB, 3600, per_business=True)
