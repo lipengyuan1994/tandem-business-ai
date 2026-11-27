@@ -4,7 +4,8 @@ The relay signs each forwarded event with this business's relay secret. The enve
 signature proves it came from the relay client registered for that business. Events are stored once by Stripe
 event id and applied by `payments.apply_event`, which re-reads the object through the relay (Stripe does not
 guarantee order, and the envelope never carries the object). Account events refresh the connection; Checkout
-Session events bring the payment request up to date (paylinks.apply).
+Session events bring the payment request up to date (paylinks.apply); refund and dispute events update the card
+refund (refunds.apply) or dispute (disputes.apply) they are about.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import Conflict, Unauthenticated
 
-from . import connection, paylinks, signing
+from . import connection, disputes, paylinks, refunds, signing
 from .crypto import UnsealError, unseal
 from .models import PaymentEvent
 from .schemas import RelayEventIn
@@ -112,9 +113,9 @@ def apply_job(ctx: Context, payload: dict[str, Any]) -> None:
             return
         _finish(ctx, row_id, "applied")
         return
-    if event_type in paylinks.CHECKOUT_EVENTS and object_id:
+    if object_id and event_type in paylinks.CHECKOUT_EVENTS | refunds.EVENTS | disputes.EVENTS:
         try:
-            outcome = paylinks.apply(ctx, object_id, event_type)
+            outcome = _apply_object(ctx, event_type, object_id)
         except Conflict as exc:
             _finish(ctx, row_id, "failed", exc.detail or exc.code)
             if exc.code == "payments.relay_unavailable":
@@ -123,3 +124,11 @@ def apply_job(ctx: Context, payload: dict[str, Any]) -> None:
         _finish(ctx, row_id, outcome)
         return
     _finish(ctx, row_id, "ignored")
+
+
+def _apply_object(ctx: Context, event_type: str, object_id: str) -> str:
+    if event_type in paylinks.CHECKOUT_EVENTS:
+        return paylinks.apply(ctx, object_id, event_type)
+    if event_type in refunds.EVENTS:
+        return refunds.apply(ctx, object_id)
+    return disputes.apply(ctx, object_id)

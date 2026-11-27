@@ -29,7 +29,7 @@ from app.platform.db import transaction
 from app.platform.errors import Conflict, NotFound
 from app.platform.money import money_text
 
-from . import connection, provider, tokens
+from . import connection, disputes, provider, refunds, tokens
 from . import permissions as P
 from .models import PaymentConnection, PaymentLink, PaymentRequest
 from .relay import CheckoutView, Credentials, RelayError
@@ -141,6 +141,9 @@ def summary(db: Session, ctx: Context, invoice_id: uuid.UUID) -> InvoiceOnlinePa
             for r in _requests(db, ctx, invoice_id)
             if r.status != "creating"
         ],
+        refunds=refunds.for_invoice(db, ctx, invoice_id),
+        refund_options=refunds.options(db, ctx, invoice_id),
+        disputes=disputes.for_invoice(db, ctx, invoice_id),
     )
 
 

@@ -16,13 +16,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.org import public as org
+from app.platform import clock
 from app.platform.context import Context
-from app.platform.errors import NotFound
+from app.platform.errors import Conflict, NotFound
 
 from . import payments
 from . import permissions as P
 from . import repository as repo
-from .models import Invoice, InvoicePayment
+from .models import Invoice, InvoicePayment, InvoiceRefund
 from .service import record
 
 PROVIDERS = frozenset({"stripe"})
@@ -49,6 +50,18 @@ class OnlinePayment:
     applied_minor: int
     surplus_minor: int
     already_recorded: bool
+
+
+@dataclass(frozen=True, slots=True)
+class OnlineRefund:
+    """Money a credit note says is owed back to the customer, which the payments module may pay out by card."""
+
+    id: uuid.UUID
+    credit_note_id: uuid.UUID
+    credit_note_number: str | None
+    amount_minor: int
+    paid_on: date
+    method: str
 
 
 def _get(db: Session, ctx: Context, invoice_id: uuid.UUID, *, lock: bool = False) -> Invoice:
@@ -127,3 +140,94 @@ def record_online_payment(
         source=provider,
     )
     return OnlinePayment(payment.id, applied, amount_minor - applied, False)
+
+
+def online_refunds(db: Session, ctx: Context, invoice_id: uuid.UUID) -> list[OnlineRefund]:
+    """The invoice's refunds (one per credit note larger than what was still owed), oldest first."""
+    rows = db.execute(
+        select(InvoiceRefund, Invoice.number)
+        .join(
+            Invoice, (Invoice.business_id == InvoiceRefund.business_id) & (Invoice.id == InvoiceRefund.credit_note_id)
+        )
+        .where(InvoiceRefund.business_id == ctx.business_id, InvoiceRefund.invoice_id == invoice_id)
+        .order_by(InvoiceRefund.paid_on, InvoiceRefund.created_at, InvoiceRefund.id)
+    ).all()
+    return [OnlineRefund(r.id, r.credit_note_id, number, r.amount_minor, r.paid_on, r.method) for r, number in rows]
+
+
+def reverse_online_payment(
+    db: Session,
+    ctx: Context,
+    invoice_id: uuid.UUID,
+    *,
+    provider: str,
+    external_id: str,
+    amount_minor: int,
+    reason: str,
+) -> int:
+    """Take money a provider took back (a lost dispute) off the invoice, and reopen it. Returns what came off.
+
+    The online payment is voided and whatever the provider let the business keep is recorded again on the same
+    date (external id `<id>#kept`), so refunds already paid out stay covered by dated payments. Never takes off
+    more than the invoice's net payments, so the ledger's settlement checks always hold. Calling it twice for the
+    same payment changes nothing the second time.
+    """
+    ctx.require(P.MARK_PAID)
+    if provider not in PROVIDERS or amount_minor <= 0 or not external_id:
+        raise ValueError("invalid reversal")
+    row = _get(db, ctx, invoice_id, lock=True)
+    payment = db.scalar(
+        select(InvoicePayment)
+        .where(
+            InvoicePayment.business_id == ctx.business_id,
+            InvoicePayment.invoice_id == row.id,
+            InvoicePayment.provider == provider,
+            InvoicePayment.external_id == external_id,
+        )
+        .with_for_update()
+    )
+    if payment is None or payment.voided_at is not None:
+        return 0  # nothing of this payment reached the invoice (all surplus), or it was reversed already
+    if row.status not in ("issued", "paid"):
+        raise Conflict("sales.invalid_transition", detail=f"Cannot change payments of a {row.status} invoice")
+    taken = min(amount_minor, payment.amount_minor, payments.net_paid(row))
+    if taken == 0:
+        return 0
+    kept = payment.amount_minor - taken
+    payment.voided_at = clock.now()
+    payment.version += 1
+    row.amount_paid_minor -= payment.amount_minor
+    if kept:
+        again = InvoicePayment(
+            business_id=ctx.business_id,
+            invoice_id=row.id,
+            amount_minor=kept,
+            paid_on=payment.paid_on,
+            method=payment.method,
+            reference=payment.reference,
+            provider=provider,
+            external_id=f"{external_id}#kept"[:80],
+        )
+        db.add(again)
+        row.amount_paid_minor += kept
+    if row.status == "paid" and payments.balance(row) > 0:
+        row.status, row.paid_at = "issued", None
+    db.flush()
+    if row.amount_refunded_minor and not payments.refund_dates_covered(db, ctx, row.id):
+        raise Conflict(
+            "sales.refund_exceeds_dated_payments",
+            detail="Recorded payments would no longer cover the refunds already paid back",
+        )
+    row.version += 1
+    record(
+        db,
+        ctx,
+        "invoice",
+        row,
+        "payment_reversed",
+        payment_id=str(payment.id),
+        amount_minor=taken,
+        source=provider,
+        reason=reason,
+    )
+    return taken
