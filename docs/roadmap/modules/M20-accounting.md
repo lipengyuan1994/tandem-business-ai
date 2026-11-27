@@ -4,7 +4,7 @@
 |---|---|
 | Release / phase | v1 · gap-map money side (2026-11-24) |
 | Tier / kind | A (OAuth tokens, outbound writes to the business's books) |
-| Depends on | platform, org, sales, purchasing |
+| Depends on | platform, org, sales, purchasing, payments (Stripe payouts, since M21 phase 4) |
 | Owns tables | `accounting_connections`, `accounting_sync_records` |
 
 ## Purpose
@@ -16,7 +16,7 @@ module never changes sales or purchasing data and never reads QuickBooks data ba
 ## Tables
 `accounting_connections` — one per business: provider, Intuit company (`realm_id`), status
 (`not_connected|pending|connected|needs_reconnect|disconnected`), sealed access and refresh tokens with expiries, a
-one-time OAuth state hash, company name, country and home currency, account mapping (7 QuickBooks account ids),
+one-time OAuth state hash, company name, country and home currency, account mapping (7 QuickBooks account ids, plus optional Stripe clearing and Stripe fees accounts since M21 phase 4),
 `sync_from`, `auto_sync`, sync lease and last-run fields.
 
 `accounting_sync_records` — one row per Tandem record per QuickBooks company: entity type, local id, label, local
@@ -39,9 +39,14 @@ Both tables use forced business RLS. Tokens are never exported, logged or audite
 9. A record that QuickBooks rejects backs off 5 min, 15 min, 1 h, 6 h, 24 h; staff can retry it at once. Records that
    depend on it wait for it.
 10. Lost sign-in, throttling, outages and egress denial stop the run without marking records failed.
+11. Stripe (M21 phase 4): when a Stripe clearing account is mapped, payments taken through Stripe are deposited to it,
+    and each paid Stripe payout is sent as a Transfer from clearing to the bank account plus a Purchase for Stripe's
+    fees from clearing to the Stripe fees account. A payout that later fails has both deleted. Fees of a manual
+    payout, or one Stripe could not list in full, are left to the bookkeeper with a reason in the sync log. With no
+    clearing account, nothing about Stripe is sent.
 
 ## Public interface (`public.py`)
-None. The module only reads `sales.public` and `purchasing.public` ledger feeds.
+None. The module only reads `sales.public`, `purchasing.public` and `payments.public` (`ledger_payouts`) ledger feeds.
 
 ## API
 | Method | Path | Permission | Notes |

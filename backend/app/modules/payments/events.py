@@ -5,7 +5,7 @@ signature proves it came from the relay client registered for that business. Eve
 event id and applied by `payments.apply_event`, which re-reads the object through the relay (Stripe does not
 guarantee order, and the envelope never carries the object). Account events refresh the connection; Checkout
 Session events bring the payment request up to date (paylinks.apply); refund and dispute events update the card
-refund (refunds.apply) or dispute (disputes.apply) they are about.
+refund (refunds.apply) or dispute (disputes.apply) they are about; payout events update the payout (payouts.apply).
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import Conflict, Unauthenticated
 
-from . import connection, disputes, paylinks, refunds, signing
+from . import connection, disputes, paylinks, payouts, refunds, signing
 from .crypto import UnsealError, unseal
 from .models import PaymentEvent
 from .schemas import RelayEventIn
@@ -113,7 +113,7 @@ def apply_job(ctx: Context, payload: dict[str, Any]) -> None:
             return
         _finish(ctx, row_id, "applied")
         return
-    if object_id and event_type in paylinks.CHECKOUT_EVENTS | refunds.EVENTS | disputes.EVENTS:
+    if object_id and event_type in paylinks.CHECKOUT_EVENTS | refunds.EVENTS | disputes.EVENTS | payouts.EVENTS:
         try:
             outcome = _apply_object(ctx, event_type, object_id)
         except Conflict as exc:
@@ -131,4 +131,6 @@ def _apply_object(ctx: Context, event_type: str, object_id: str) -> str:
         return paylinks.apply(ctx, object_id, event_type)
     if event_type in refunds.EVENTS:
         return refunds.apply(ctx, object_id)
+    if event_type in payouts.EVENTS:
+        return payouts.apply(ctx, object_id)
     return disputes.apply(ctx, object_id)

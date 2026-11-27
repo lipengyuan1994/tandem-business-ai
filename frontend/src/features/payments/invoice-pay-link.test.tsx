@@ -68,11 +68,12 @@ describe("invoice pay link", () => {
     mockMe(meWith(...PERMS, LINK_SHARE))
     serve({
       ...READY, available: false, unavailable_reason: "settled",
-      requests: [{ id: "r1", status: "paid", amount_minor: 9634, currency: "USD", method: "card", applied_minor: 0, surplus_minor: 9634, created_at: "2026-11-27T15:00:00Z", paid_at: "2026-11-27T15:05:00Z" }],
+      requests: [{ id: "r1", status: "paid", amount_minor: 9634, currency: "USD", method: "card", applied_minor: 0, surplus_minor: 9634, created_at: "2026-11-27T15:00:00Z", paid_at: "2026-11-27T15:05:00Z", stripe_fee_minor: 309, net_minor: 9325 }],
     }, { ...ISSUED, status: "paid", balance_minor: 0, payment_status: "paid" })
     renderApp(`/sales/invoices/${ID}`)
     const card = await screen.findByRole("region", { name: "Online payment" })
     expect(within(card).getByText("Paid")).toBeInTheDocument()
+    expect(card).toHaveTextContent("Stripe's fee $3.09; $93.25 reached your Stripe balance.")
     expect(within(card).getByRole("note")).toHaveTextContent("$96.34 came in after the invoice was already settled")
     expect(card).not.toHaveTextContent("Set up online payments")
   })

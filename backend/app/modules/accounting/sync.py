@@ -22,6 +22,7 @@ from typing import Any, TypeVar
 from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from app.modules.payments.public import LedgerPayout, ledger_payout_versions, ledger_payouts
 from app.modules.purchasing.public import (
     LedgerBill,
     LedgerBillPayment,
@@ -56,7 +57,9 @@ from .models import AccountingSyncRecord
 from .quickbooks import LedgerApi, LedgerError, RemoteRef, select_where
 
 JOB_KIND = "accounting.sync"
-JOB_PERMISSIONS = frozenset({P.SYNC_READ, P.SYNC_RUN, "sales.document.read", "purchasing.bill.read"})
+JOB_PERMISSIONS = frozenset(
+    {P.SYNC_READ, P.SYNC_RUN, "sales.document.read", "purchasing.bill.read", "payments.connection.read"}
+)
 MAX_OPS = 150
 TIME_BUDGET = timedelta(minutes=4)
 LEASE = timedelta(minutes=6)
@@ -444,7 +447,9 @@ class Engine:
         customer = self.recs.get(("customer", str(p.customer_id)))
         if customer is None or not customer.remote_id:
             raise self._failed(key, label, p.version, "Waiting for the customer to reach QuickBooks")
-        body = build.customer_payment(p, customer.remote_id, invoice_id, self.snap.mapping.deposit_account_id)
+        m = self.snap.mapping
+        deposit = m.stripe_clearing_account_id if p.provider == "stripe" and m.stripe_clearing_account_id else None
+        body = build.customer_payment(p, customer.remote_id, invoice_id, deposit or m.deposit_account_id)
         self.push(key, "payment", label, p.version, body)
 
     def credit_note(self, doc: LedgerInvoice) -> None:
@@ -567,6 +572,53 @@ class Engine:
                 )
         self._skipped(key, label, c.version, message)
 
+    def payout(self, p: LedgerPayout) -> None:
+        """A Stripe payout: a transfer from the Stripe clearing account to the bank, and Stripe's fees on what it
+        contained as an expense paid from the clearing account. Only once it has arrived; removed if it then fails."""
+        money = f"{minor_text(p.amount_minor, p.currency)} {p.currency}"
+        transfer_key, fees_key = ("payout_transfer", str(p.id)), ("payout_fees", str(p.id))
+        label = f"Stripe payout of {money} on {p.arrival_on}"
+        fees_label = f"Stripe fees in the payout of {money} on {p.arrival_on}"
+        if p.status != "paid":
+            self.push(transfer_key, "transfer", label, p.version, None, desired="deleted")
+            if fees_key in self.recs:
+                self.push(fees_key, "purchase", fees_label, p.version, None, desired="deleted")
+            return
+        m = self.snap.mapping
+        self._currency(transfer_key, label, p.version, p.currency)
+        assert m.stripe_clearing_account_id is not None and m.bank_account_id is not None
+        self.push(
+            transfer_key,
+            "transfer",
+            label,
+            p.version,
+            build.payout_transfer(p, m.stripe_clearing_account_id, m.bank_account_id),
+        )
+        if not p.summary_complete:
+            why = (
+                "it was started by hand in Stripe"
+                if not p.automatic
+                else "Stripe's list of what it contained was too long"
+            )
+            raise self._skipped(fees_key, fees_label, p.version, f"Enter Stripe's fees for this payout by hand ({why})")
+        if p.fees_minor <= 0:
+            return
+        if not m.stripe_fees_account_id:
+            raise self._failed(fees_key, fees_label, p.version, "Choose a Stripe fees account in QuickBooks settings")
+        self.push(
+            fees_key,
+            "purchase",
+            fees_label,
+            p.version,
+            build.payout_fees(p, m.stripe_clearing_account_id, m.stripe_fees_account_id),
+        )
+
+    def _payout_due(self, payout_id: uuid.UUID, version: int) -> bool:
+        local = str(payout_id)
+        return self.due(("payout_transfer", local), version) or (
+            ("payout_fees", local) in self.recs and self.due(("payout_fees", local), version)
+        )
+
     # ---- the run -----------------------------------------------------------------------------------------
 
     def _each(self, items: list[T], work: Callable[[T], object]) -> bool:
@@ -648,7 +700,14 @@ class Engine:
         if m.expense_account_id and not self._each(bill_rows, self.bill):
             return True
         credits_in = sorted(self._load(credit_due, ledger_supplier_credits), key=lambda c: (c.credit_date, str(c.id)))
-        return not self._each(credits_in, self.supplier_credit)
+        if not self._each(credits_in, self.supplier_credit):
+            return True
+        if not (m.stripe_clearing_account_id and m.bank_account_id):
+            return False  # Stripe payouts are sent only once a clearing account is chosen
+        with transaction(self.ctx) as db:
+            payout_due = [i for i, v in ledger_payout_versions(db, self.ctx, since).items() if self._payout_due(i, v)]
+        payouts = sorted(self._load(payout_due, ledger_payouts), key=lambda p: (p.arrival_on, str(p.id)))
+        return not self._each(payouts, self.payout)
 
     def _exported_outside(
         self, entities: tuple[str, ...], window: dict[uuid.UUID, int], loader: Callable[..., dict[uuid.UUID, T]]

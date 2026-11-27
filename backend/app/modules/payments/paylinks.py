@@ -49,6 +49,7 @@ JOB_PERMISSIONS = frozenset(
 )
 CLOSE_JOB = "payments.close_requests"
 CHECK_JOB = "payments.check_requests"
+FEE_JOB = "payments.read_fees"  # payouts.read_fees_job: Stripe's fee on a paid payment (phase 4)
 COMPLETED = "checkout.session.completed"
 ASYNC_SUCCEEDED = "checkout.session.async_payment_succeeded"
 ASYNC_FAILED = "checkout.session.async_payment_failed"
@@ -137,6 +138,8 @@ def summary(db: Session, ctx: Context, invoice_id: uuid.UUID) -> InvoiceOnlinePa
                 surplus_minor=r.surplus_minor,
                 created_at=r.created_at,
                 paid_at=r.paid_at,
+                stripe_fee_minor=r.stripe_fee_minor,
+                net_minor=r.net_minor,
             )
             for r in _requests(db, ctx, invoice_id)
             if r.status != "creating"
@@ -436,6 +439,9 @@ def _record_paid(db: Session, ctx: Context, row: PaymentRequest, view: CheckoutV
     row.applied_minor, row.surplus_minor = result.applied_minor, result.surplus_minor
     row.invoice_payment_id = result.payment_id
     row.last_error = None
+    jobs.enqueue(
+        db, FEE_JOB, {"request_id": str(row.id)}, business_id=ctx.business_id, dedupe_key=f"payments-fee:{row.id}"
+    )
     summary = f"Received {money_text(view.amount_total, row.currency)} online through Stripe"
     if result.surplus_minor:
         surplus = money_text(result.surplus_minor, row.currency)

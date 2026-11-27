@@ -2554,7 +2554,7 @@
     "disconnectTitle": "Disconnect QuickBooks?",
     "disconnectBody": "Tandem stops sending records and signs out of QuickBooks. Everything already in QuickBooks stays there, and the sync log is kept.",
     "mappingTitle": "QuickBooks accounts",
-    "mappingHelp": "Sales post to the income account, supplier bills to the expense account, and bill payments come out of the bank account. Optional ones use your QuickBooks defaults.",
+    "mappingHelp": "Sales post to the income account, supplier bills to the expense account, and bill payments come out of the bank account. Optional ones use your QuickBooks defaults. With a Stripe clearing account, online payments land there and each Stripe payout moves the money to the bank account, less Stripe's fees.",
     "mapping": {
       "income_account_id": "Income (sales)",
       "deposit_account_id": "Deposit customer payments to",
@@ -2562,7 +2562,9 @@
       "tax_account_id": "Sales tax collected",
       "expense_account_id": "Expense (supplier bills)",
       "payable_account_id": "Accounts payable",
-      "bank_account_id": "Pay supplier bills from"
+      "bank_account_id": "Pay supplier bills from",
+      "stripe_clearing_account_id": "Stripe clearing (card payments until Stripe pays out)",
+      "stripe_fees_account_id": "Stripe fees"
     },
     "chooseAccount": "Choose an account",
     "quickbooksDefault": "QuickBooks default",
@@ -2712,7 +2714,28 @@
       "disputeLost": "The dispute over {{amount}} was lost, so it came off the invoice.",
       "disputeWon": "The dispute over {{amount}} closed in your favour.",
       "disputeError": "The lost dispute over {{amount}} couldn't be taken off the invoice yet. Tandem will try again.",
-      "disputeDue": "Answer by"
+      "disputeDue": "Answer by",
+      "fee": "Stripe's fee {{fee}}; {{net}} reached your Stripe balance."
+    },
+    "payoutsList": {
+      "title": "Payouts to your bank",
+      "help": "Stripe pays your Stripe balance out to your bank, less its fees and any refunds or disputes. Payouts are set up in your Stripe Dashboard.",
+      "empty": "No payouts yet.",
+      "arrives": "Arrives",
+      "amount": "Amount",
+      "state": "Status",
+      "contents": "What it paid out",
+      "states": {
+        "pending": "Pending",
+        "in_transit": "On its way",
+        "paid": "Paid",
+        "failed": "Failed",
+        "canceled": "Canceled"
+      },
+      "failed": "It did not reach your bank. Stripe put the money back in your balance; check your bank details in Stripe.",
+      "manual": "Started by hand in Stripe, so Stripe does not list what it contains.",
+      "summary": "{{charges}} in payments, {{fees}} in Stripe fees ({{count}} items)",
+      "notYet": "Totals come once it has arrived."
     }
   },
   "payPage": {

@@ -170,6 +170,81 @@ class DisputeView:
         )
 
 
+@dataclass(frozen=True)
+class FeeView:
+    payment_intent: str
+    currency: str
+    amount: int | None
+    fee: int | None  # None until Stripe has a balance transaction for the charge
+    net: int | None
+
+    @classmethod
+    def parse(cls, data: dict[str, Any]) -> FeeView:
+        intent = data.get("payment_intent")
+        if not isinstance(intent, str):
+            raise RelayError("unavailable", "bad_response", "The payments relay answered without a payment")
+        return cls(
+            payment_intent=intent,
+            currency=str(data.get("currency") or ""),
+            amount=_int(data.get("amount")),
+            fee=_int(data.get("fee")),
+            net=_int(data.get("net")),
+        )
+
+
+@dataclass(frozen=True)
+class PayoutView:
+    id: str
+    amount: int
+    currency: str
+    status: str  # pending | in_transit | paid | failed | canceled
+    arrival_date: int | None
+    automatic: bool
+    method: str | None
+    failure_code: str | None
+
+    @classmethod
+    def parse(cls, data: dict[str, Any]) -> PayoutView:
+        payout_id, amount = data.get("id"), _int(data.get("amount"))
+        if not isinstance(payout_id, str) or amount is None:
+            raise RelayError("unavailable", "bad_response", "The payments relay answered without a payout")
+        return cls(
+            id=payout_id,
+            amount=amount,
+            currency=str(data.get("currency") or ""),
+            status=str(data.get("status") or ""),
+            arrival_date=_int(data.get("arrival_date")),
+            automatic=bool(data.get("automatic")),
+            method=_str(data.get("method")),
+            failure_code=_str(data.get("failure_code")),
+        )
+
+
+@dataclass(frozen=True)
+class PayoutSummary:
+    payout: PayoutView
+    available: bool  # False for a manual payout: Stripe does not list what it contains
+    complete: bool
+    charges: int
+    refunds: int
+    disputes: int
+    other: int
+    fees: int
+    count: int
+
+    @classmethod
+    def parse(cls, data: dict[str, Any]) -> PayoutSummary:
+        payout = data.get("payout")
+        if not isinstance(payout, dict):
+            raise RelayError("unavailable", "bad_response", "The payments relay answered without a payout")
+        return cls(
+            payout=PayoutView.parse(payout),
+            available=bool(data.get("available")),
+            complete=bool(data.get("complete")),
+            **{k: _int(data.get(k)) or 0 for k in ("charges", "refunds", "disputes", "other", "fees", "count")},
+        )
+
+
 class RelayApi:
     def __init__(self, client: httpx.Client, base_url: str) -> None:
         self._client = client
@@ -286,3 +361,12 @@ class RelayApi:
 
     def get_dispute(self, creds: Credentials, dispute_id: str) -> DisputeView:
         return DisputeView.parse(self._signed(creds, "GET", f"/v1/disputes/{dispute_id}"))
+
+    def get_payment_fee(self, creds: Credentials, payment_intent: str) -> FeeView:
+        return FeeView.parse(self._signed(creds, "GET", f"/v1/payments/{payment_intent}/fee"))
+
+    def get_payout(self, creds: Credentials, payout_id: str) -> PayoutView:
+        return PayoutView.parse(self._signed(creds, "GET", f"/v1/payouts/{payout_id}"))
+
+    def get_payout_summary(self, creds: Credentials, payout_id: str) -> PayoutSummary:
+        return PayoutSummary.parse(self._signed(creds, "GET", f"/v1/payouts/{payout_id}/summary"))

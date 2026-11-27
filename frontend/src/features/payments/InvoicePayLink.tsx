@@ -1,5 +1,5 @@
 // The pay link card on an issued invoice (ADR-022): copy the link for the customer, replace it, see attempts (phase 2);
-// pay money back to the card through Approvals, see card refunds and disputes (phase 3).
+// pay money back to the card through Approvals, see card refunds and disputes (phase 3); Stripe's fee (phase 4).
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -85,6 +85,7 @@ function Attempts({ data }: { data: InvoiceOnlinePayments }) {
         <TableCell><MoneyText value={{ amount_minor: r.amount_minor, currency: r.currency }} /></TableCell>
         <TableCell className="whitespace-normal">
           {t(`payments.invoice.states.${r.status === "creating" ? "open" : r.status}`)}
+          {r.stripe_fee_minor != null && r.net_minor != null ? <p className="mt-1 text-xs text-muted-foreground">{t("payments.invoice.fee", { fee: formatMoney({ amount_minor: r.stripe_fee_minor, currency: r.currency }), net: formatMoney({ amount_minor: r.net_minor, currency: r.currency }) })}</p> : null}
           {r.surplus_minor > 0 ? <p role="note" className="mt-1 text-sm">{t("payments.invoice.surplus", { amount: formatMoney({ amount_minor: r.surplus_minor, currency: r.currency }) })}</p> : null}
         </TableCell>
       </TableRow>)}</TableBody>

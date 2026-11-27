@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
+from app.modules.payments.public import LedgerPayout
 from app.modules.purchasing.public import LedgerBill, LedgerBillPayment
 from app.modules.sales.public import LedgerInvoice, LedgerPayment
 from app.platform.money import currency_exponent
@@ -144,6 +145,7 @@ def credit_application(
 def customer_payment(
     payment: LedgerPayment, customer_id: str, invoice_id: str, deposit_account_id: str | None
 ) -> dict[str, Any]:
+    """`deposit_account_id` is the Stripe clearing account for money taken through Stripe (when one is mapped)."""
     value = amount(payment.amount_minor, payment.currency)
     body: dict[str, Any] = {
         "CustomerRef": ref(customer_id),
@@ -208,3 +210,36 @@ def bill_payment(row: LedgerBillPayment, vendor_id: str, bill_id: str, bank_acco
     if number := doc_number(row.reference):
         body["DocNumber"] = number
     return body
+
+
+def payout_transfer(payout: LedgerPayout, clearing_account_id: str, bank_account_id: str) -> dict[str, Any]:
+    """Stripe paying out: the money moves from the Stripe clearing account to the bank account."""
+    assert payout.arrival_on is not None
+    return {
+        "FromAccountRef": ref(clearing_account_id),
+        "ToAccountRef": ref(bank_account_id),
+        "Amount": amount(payout.amount_minor, payout.currency),
+        "TxnDate": payout.arrival_on.isoformat(),
+        "PrivateNote": f"Stripe payout {payout.stripe_payout_id} (from Tandem)",
+    }
+
+
+def payout_fees(payout: LedgerPayout, clearing_account_id: str, fees_account_id: str) -> dict[str, Any]:
+    """Stripe's fees on what one payout contained, paid out of the Stripe clearing account."""
+    assert payout.arrival_on is not None
+    value = amount(payout.fees_minor, payout.currency)
+    return {
+        "PaymentType": "Cash",
+        "AccountRef": ref(clearing_account_id),
+        "TxnDate": payout.arrival_on.isoformat(),
+        "TotalAmt": value,
+        "Line": [
+            {
+                "DetailType": "AccountBasedExpenseLineDetail",
+                "Amount": value,
+                "Description": "Stripe processing fees",
+                "AccountBasedExpenseLineDetail": {"AccountRef": ref(fees_account_id)},
+            }
+        ],
+        "PrivateNote": f"Stripe fees in payout {payout.stripe_payout_id} (from Tandem)",
+    }

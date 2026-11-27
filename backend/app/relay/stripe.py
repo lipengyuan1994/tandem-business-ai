@@ -202,6 +202,24 @@ class Stripe:
     def retrieve_dispute(self, account: str, dispute: str) -> dict[str, Any]:
         return self.request("GET", f"/v1/disputes/{dispute}", account=account)
 
+    # -- fees and payouts (phase 4) -----------------------------------------------------------------------------
+
+    def retrieve_payment_intent(self, account: str, intent: str) -> dict[str, Any]:
+        """The payment with its charge's balance transaction, which carries Stripe's fee."""
+        return self.request(
+            "GET", f"/v1/payment_intents/{intent}", {"expand": ["latest_charge.balance_transaction"]}, account=account
+        )
+
+    def retrieve_payout(self, account: str, payout: str) -> dict[str, Any]:
+        return self.request("GET", f"/v1/payouts/{payout}", account=account)
+
+    def list_payout_transactions(self, account: str, payout: str, starting_after: str | None) -> dict[str, Any]:
+        """One page of the balance transactions an automatic payout paid out."""
+        params: dict[str, Any] = {"payout": payout, "limit": 100}
+        if starting_after:
+            params["starting_after"] = starting_after
+        return self.request("GET", "/v1/balance_transactions", params, account=account)
+
 
 def verify_webhook(payload: bytes, header: str, secret: str, now: int) -> bool:
     """Stripe-Signature: `t=<ts>,v1=<hex HMAC-SHA256 of "<ts>.<raw body>">` (same construction as signing.py)."""
@@ -279,3 +297,59 @@ def dispute_view(dispute: dict[str, Any]) -> dict[str, Any]:
         "created": dispute.get("created"),
         "due_by": evidence.get("due_by") if isinstance(evidence, dict) else None,
     }
+
+
+def payment_fee_view(intent: dict[str, Any]) -> dict[str, Any]:
+    """What a payment cost: Stripe's fee (with any platform fee) and what reached the business's balance."""
+    charge = intent.get("latest_charge")
+    found = charge.get("balance_transaction") if isinstance(charge, dict) else None
+    txn: dict[str, Any] = found if isinstance(found, dict) else {}
+    known = bool(txn)
+    return {
+        "payment_intent": intent.get("id"),
+        "charge": _object_id(charge),
+        "currency": intent.get("currency"),
+        "amount": intent.get("amount_received") or intent.get("amount"),
+        "balance_transaction": txn.get("id") if known else None,
+        "fee": txn.get("fee") if known else None,
+        "net": txn.get("net") if known else None,
+    }
+
+
+def payout_view(payout: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": payout.get("id"),
+        "amount": payout.get("amount"),
+        "currency": payout.get("currency"),
+        "status": payout.get("status"),
+        "arrival_date": payout.get("arrival_date"),
+        "created": payout.get("created"),
+        "automatic": bool(payout.get("automatic")),
+        "method": payout.get("method"),
+        "failure_code": payout.get("failure_code"),
+    }
+
+
+CHARGES = frozenset({"charge", "payment"})
+REFUNDS = frozenset({"refund", "refund_failure", "payment_refund", "payment_failure_refund"})
+DISPUTES = frozenset({"dispute", "dispute_reversal"})
+
+
+def add_to_summary(summary: dict[str, int], txn: dict[str, Any]) -> None:
+    """Sort one balance transaction of a payout into charges, refunds, disputes or other, and add its fee."""
+    category = str(txn.get("reporting_category") or txn.get("type") or "")
+    if category in ("payout", "payout_reversal") or txn.get("type") == "payout":
+        return  # the payout itself
+    amount, fee = int(txn.get("amount") or 0), int(txn.get("fee") or 0)
+    bucket = (
+        "charges"
+        if category in CHARGES
+        else "refunds"
+        if category in REFUNDS
+        else "disputes"
+        if category in DISPUTES
+        else "other"
+    )
+    summary[bucket] += amount
+    summary["fees"] += fee
+    summary["count"] += 1

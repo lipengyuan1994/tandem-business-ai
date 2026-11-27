@@ -13,7 +13,7 @@ from app.platform.db import transaction
 from app.platform.errors import Invalid, error_responses
 from app.platform.permissions import require
 
-from . import connection, events, paylinks, refunds, signing
+from . import connection, events, paylinks, payouts, refunds, signing
 from . import permissions as P
 from .schemas import (
     CardRefundIn,
@@ -22,6 +22,7 @@ from .schemas import (
     PayLinkOut,
     PaymentConnectionOut,
     PaymentDisconnectIn,
+    PayoutOut,
     RelayEventIn,
     RelayEventOut,
     StripeOnboardingIn,
@@ -77,6 +78,17 @@ def disconnect(body: PaymentDisconnectIn, ctx: Context = Depends(require(P.CONNE
         connection.disconnect(db, ctx, body.version)
     with transaction(ctx) as db:
         return connection.out(db, ctx)
+
+
+@router.get(
+    "/payouts",
+    response_model=list[PayoutOut],
+    summary="Stripe payouts to the business's bank, newest first",
+    responses=ERRORS,
+)
+def list_payouts(ctx: Context = Depends(require(P.CONNECTION_READ))) -> list[PayoutOut]:
+    with transaction(ctx) as db:
+        return payouts.recent(db, ctx)
 
 
 @router.get(

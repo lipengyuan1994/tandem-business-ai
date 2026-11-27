@@ -13,9 +13,9 @@ corrected there.
 Permissions: `accounting.sync.read|run` (owner/admin/demo_reviewer; auditor read) and
 `accounting.connection.manage` (owner only: connect, map accounts, disconnect).
 
-Reads only through `sales.public` (`ledger_*` invoice, credit note and payment feeds) and
-`purchasing.public` (`ledger_*` bill, bill payment and supplier feeds), plus `org.public` for the
-business currency and time zone. It never writes to other modules.
+Reads only through `sales.public` (`ledger_*` invoice, credit note and payment feeds),
+`purchasing.public` (`ledger_*` bill, bill payment and supplier feeds) and `payments.public`
+(`ledger_payouts`, Stripe payouts), plus `org.public` for the business currency and time zone. It never writes to other modules.
 
 Flow:
 - Connect: `POST /accounting/quickbooks/connect` stores a one-time state hash (10 min) and returns
@@ -39,6 +39,11 @@ Flow:
   lost, throttling (429), QuickBooks outages and a missing egress allowlist stop the run. A run makes at
   most 150 calls or 4 minutes of work, then queues a follow-up.
 - Records in a currency other than the QuickBooks home currency are skipped with a reason.
+- Stripe (M21 phase 4): with a Stripe clearing account mapped, Stripe payments are deposited to it, and each paid
+  payout becomes a Transfer from clearing to the bank (`payout_transfer`) and a Purchase for Stripe's fees from
+  clearing to the Stripe fees account (`payout_fees`). A payout that fails later has both deleted. Fees of manual
+  payouts, or of payouts Stripe could not list in full, are left to the bookkeeper. No clearing account: nothing
+  about Stripe is sent.
 
 Limits: one QuickBooks company per business; push only (edits in QuickBooks are not read back); invoice
 lines all post to the "Tandem sales" item and its mapped income account; bills post as one expense line;

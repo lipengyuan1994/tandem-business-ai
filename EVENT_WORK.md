@@ -945,3 +945,20 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   the agent draft the credit note); the platform fee is returned with a refund when one is charged.
 - Tests: 10 backend refund and dispute tests, 3 relay tests, 3 new frontend tests (invoice card).
 
+## 2026-11-27 — Online payments phase 4: Stripe fees, payouts and QuickBooks clearing
+
+- Continued as product owner on the owner's instruction to keep going phase by phase. Mocked Stripe and QuickBooks
+  only; no Stripe account, key or network call to Stripe.
+- Relay: `GET /v1/payments/{intent}/fee` (the payment's balance transaction), `GET /v1/payouts/{id}` and
+  `GET /v1/payouts/{id}/summary` (Stripe's list of what a payout contained, paged up to 5,000 items), each on the
+  caller's own account only. Tests: new relay payout tests.
+- Tandem: `payment_requests` gains the Stripe fee and net amount; new `payment_payouts` (forced RLS), migration
+  `20261128_0100_payments_fees_payouts`. Jobs `payments.read_fees` and hourly `payments.check_payouts`; `payout.*`
+  events tracked; a failed payout notifies owners and admins. `GET /payments/payouts`; Settings > Payments shows a
+  payouts table and the invoice card shows the fee.
+- Accounting: now depends on payments (`payments.public.ledger_payouts`). Optional Stripe clearing and Stripe fees
+  accounts (migration `20261128_0200_accounting_stripe`); Stripe payments deposited to clearing; each paid payout sent
+  as a QuickBooks Transfer and a Purchase for fees; deleted again if the payout fails.
+- Defaults chosen: both accounts optional, and without a clearing account nothing changes in QuickBooks; fees booked
+  per payout as Stripe settles them; manual payouts' fees left to the bookkeeper; Tandem never starts a payout.
+- Tests: 8 backend payout and fee tests, 6 QuickBooks payout sync tests, relay tests, 2 new frontend tests.

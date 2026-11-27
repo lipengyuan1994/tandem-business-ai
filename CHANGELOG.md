@@ -4,6 +4,18 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **New (2026-11-27): online payments, step 4 of 5.** The invoice's online payment card shows Stripe's fee and what
+  reached the Stripe balance. Settings > Payments lists Stripe's payouts to the business's bank with their arrival
+  date and what each contained; owners and admins are told when a payout fails. In Settings > Accounting, two
+  optional QuickBooks accounts can be chosen: a Stripe clearing account and a Stripe fees account. With a clearing
+  account, Stripe payments are deposited there, and each payout is sent to QuickBooks as a transfer to the bank plus
+  Stripe's fees. Without one, nothing changes in QuickBooks.
+- **Migration:** `20261128_0100_payments_fees_payouts` (new `payment_payouts` table; `payment_requests` gains
+  `stripe_fee_minor` and `net_minor`) and `20261128_0200_accounting_stripe` (two account columns on
+  `accounting_connections`, two new sync record types). No manual step.
+- **Relay:** its Stripe key needs Payouts read and Balance read, and its webhook endpoint the `payout.*` events (see
+  `docs/runbooks/payments-relay.md`). Before relying on payouts on a live relay.
+
 - **New (2026-11-27): online payments, step 3 of 5.** Money owed back on a card payment can be paid back to the
   customer's card from the invoice page: a credit note whose refund was recorded as "card", or money paid twice.
   Each card refund waits for an owner's or admin's approval in Approvals before Stripe pays it. Refunds made in the

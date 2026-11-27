@@ -2191,6 +2191,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stripe payouts to the business's bank, newest first */
+        get: operations["list_payouts_api_v1_payments_payouts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/relay/events": {
         parameters: {
             query?: never;
@@ -3836,6 +3853,16 @@ export interface components {
             payable_account_id?: string | null;
             /** Receivable Account Id */
             receivable_account_id?: string | null;
+            /**
+             * Stripe Clearing Account Id
+             * @description Where Stripe payments are deposited until Stripe pays them out to the bank account
+             */
+            stripe_clearing_account_id?: string | null;
+            /**
+             * Stripe Fees Account Id
+             * @description Expense account for Stripe's processing fees
+             */
+            stripe_fees_account_id?: string | null;
             /** Tax Account Id */
             tax_account_id?: string | null;
         };
@@ -7800,6 +7827,11 @@ export interface components {
             id: string;
             /** Method */
             method?: string | null;
+            /**
+             * Net Minor
+             * @description What reached the Stripe balance after Stripe's fee
+             */
+            net_minor?: number | null;
             /** Paid At */
             paid_at?: string | null;
             /**
@@ -7808,11 +7840,85 @@ export interface components {
              */
             status: "creating" | "open" | "processing" | "paid" | "expired" | "failed";
             /**
+             * Stripe Fee Minor
+             * @description Stripe's processing fee, once Stripe settled it
+             */
+            stripe_fee_minor?: number | null;
+            /**
              * Surplus Minor
              * @description Money taken after the invoice was already settled: pay it back from Stripe or keep it
              * @default 0
              */
             surplus_minor: number;
+        };
+        /**
+         * PayoutOut
+         * @description Stripe paying the business's Stripe balance out to its bank. Totals are Stripe's own, from what the payout
+         *     contained; a manual payout (started in the Stripe Dashboard) has none.
+         */
+        PayoutOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Arrival Date */
+            arrival_date?: string | null;
+            /** Automatic */
+            automatic: boolean;
+            /**
+             * Charges Minor
+             * @default 0
+             */
+            charges_minor: number;
+            /** Currency */
+            currency: string;
+            /**
+             * Disputes Minor
+             * @default 0
+             */
+            disputes_minor: number;
+            /** Failure Code */
+            failure_code?: string | null;
+            /**
+             * Fees Minor
+             * @default 0
+             */
+            fees_minor: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Method */
+            method?: string | null;
+            /**
+             * Other Minor
+             * @default 0
+             */
+            other_minor: number;
+            /**
+             * Refunds Minor
+             * @default 0
+             */
+            refunds_minor: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "in_transit" | "paid" | "failed" | "canceled";
+            /**
+             * Summarized
+             * @default false
+             */
+            summarized: boolean;
+            /**
+             * Summary Complete
+             * @default false
+             */
+            summary_complete: boolean;
+            /**
+             * Transaction Count
+             * @default 0
+             */
+            transaction_count: number;
         };
         /** PendingItem */
         PendingItem: {
@@ -9157,6 +9263,16 @@ export interface components {
             /** Receivable Account Id */
             receivable_account_id?: string | null;
             /**
+             * Stripe Clearing Account Id
+             * @description Where Stripe payments are deposited until Stripe pays them out to the bank account
+             */
+            stripe_clearing_account_id?: string | null;
+            /**
+             * Stripe Fees Account Id
+             * @description Expense account for Stripe's processing fees
+             */
+            stripe_fees_account_id?: string | null;
+            /**
              * Sync From
              * Format: date
              */
@@ -9789,7 +9905,7 @@ export interface components {
              * Entity Type
              * @enum {string}
              */
-            entity_type: "customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "customer_refund" | "supplier_credit" | "invoice_payment" | "bill" | "bill_payment" | "item";
+            entity_type: "customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "customer_refund" | "supplier_credit" | "invoice_payment" | "bill" | "bill_payment" | "item" | "payout_transfer" | "payout_fees";
             /**
              * Id
              * Format: uuid
@@ -10625,7 +10741,7 @@ export interface operations {
                 limit?: number;
                 cursor?: string | null;
                 status?: ("synced" | "failed" | "skipped")[] | null;
-                entity_type?: ("customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "customer_refund" | "supplier_credit" | "invoice_payment" | "bill" | "bill_payment" | "item")[] | null;
+                entity_type?: ("customer" | "supplier" | "invoice" | "credit_note" | "credit_application" | "customer_refund" | "supplier_credit" | "invoice_payment" | "bill" | "bill_payment" | "item" | "payout_transfer" | "payout_fees")[] | null;
             };
             header?: never;
             path?: never;
@@ -20172,6 +20288,80 @@ export interface operations {
             };
             /** @description Too many requests */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    list_payouts_api_v1_payments_payouts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutOut"][];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

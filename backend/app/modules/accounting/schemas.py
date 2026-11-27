@@ -20,6 +20,8 @@ EntityType = Literal[
     "bill",
     "bill_payment",
     "item",
+    "payout_transfer",
+    "payout_fees",
 ]
 AccountId = Field(default=None, pattern=r"^[0-9]{1,20}$")
 
@@ -34,6 +36,14 @@ class AccountMapping(BaseModel):
     expense_account_id: str | None = AccountId
     payable_account_id: str | None = AccountId
     bank_account_id: str | None = AccountId
+    stripe_clearing_account_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9]{1,20}$",
+        description="Where Stripe payments are deposited until Stripe pays them out to the bank account",
+    )
+    stripe_fees_account_id: str | None = Field(
+        default=None, pattern=r"^[0-9]{1,20}$", description="Expense account for Stripe's processing fees"
+    )
 
 
 class SyncCounts(BaseModel):

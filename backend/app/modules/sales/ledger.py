@@ -65,6 +65,7 @@ class LedgerPayment(BaseModel):
     method: str
     reference: str | None
     voided: bool
+    provider: str | None = None  # set for money taken online (M21), e.g. "stripe"
 
 
 def invoice_versions(db: Session, ctx: Context, since: date) -> dict[uuid.UUID, int]:
@@ -187,6 +188,7 @@ def payments(db: Session, ctx: Context, ids: set[uuid.UUID]) -> dict[uuid.UUID, 
             method=payment.method,
             reference=payment.reference,
             voided=payment.voided_at is not None,
+            provider=payment.provider,
         )
         for payment, customer_id, currency in rows
     }

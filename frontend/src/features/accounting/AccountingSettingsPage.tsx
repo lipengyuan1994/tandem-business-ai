@@ -30,6 +30,8 @@ const MAPPING: { field: keyof Mapping; types: string[]; required?: boolean }[] =
   { field: "expense_account_id", types: ["Expense", "Cost of Goods Sold", "Other Expense"], required: true },
   { field: "payable_account_id", types: ["Accounts Payable"] },
   { field: "bank_account_id", types: ["Bank"], required: true },
+  { field: "stripe_clearing_account_id", types: ["Bank", "Other Current Asset"] },
+  { field: "stripe_fees_account_id", types: ["Expense", "Other Expense"] },
 ]
 const STATUS_TONE = { connected: "success", pending: "pending", needs_reconnect: "failed", disconnected: "neutral", not_connected: "neutral" } as const
 

@@ -84,6 +84,7 @@ def test_export_contains_every_module_of_one_business_and_nothing_of_another(dem
         "payment_requests": 0,
         "payment_refunds": 0,
         "payment_disputes": 0,
+        "payment_payouts": 0,
     }
     # Nothing is sent while the demo data is loaded; it holds no assistant runs, voice sessions or accounting link.
     for module in expected - {"notifications", "admin_ops", "ai", "voice", "accounting", "payments"}:

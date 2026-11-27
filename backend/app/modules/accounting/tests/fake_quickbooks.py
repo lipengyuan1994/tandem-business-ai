@@ -25,12 +25,16 @@ ROOTS = {
     "payment": "Payment",
     "bill": "Bill",
     "billpayment": "BillPayment",
+    "transfer": "Transfer",
+    "purchase": "Purchase",
 }
 ACCOUNTS = [
     {"Id": "1", "Name": "Sales", "AccountType": "Income", "AccountSubType": "SalesOfProductIncome"},
     {"Id": "2", "Name": "Checking", "AccountType": "Bank", "AccountSubType": "Checking"},
     {"Id": "3", "Name": "Supplies", "AccountType": "Expense", "AccountSubType": "SuppliesMaterials"},
     {"Id": "4", "Name": "Sales tax payable", "AccountType": "Other Current Liability"},
+    {"Id": "5", "Name": "Stripe clearing", "AccountType": "Bank", "AccountSubType": "Checking"},
+    {"Id": "6", "Name": "Merchant fees", "AccountType": "Expense", "AccountSubType": "BankCharges"},
 ]
 
 

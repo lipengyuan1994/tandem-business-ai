@@ -1,8 +1,9 @@
 # payments (M21)
 
 Online invoice payments through Stripe Connect ([ADR-022](../../../../docs/roadmap/03-decisions.md)). Spec:
-[M21](../../../../docs/roadmap/modules/M21-payments.md). Phases 1 to 3 of 5: the business's connected Stripe
-account, pay links that let customers pay invoices on Stripe Checkout, and card refunds and disputes.
+[M21](../../../../docs/roadmap/modules/M21-payments.md). Phases 1 to 4 of 5: the business's connected Stripe
+account, pay links that let customers pay invoices on Stripe Checkout, card refunds and disputes, and Stripe's fees
+and payouts.
 
 Tandem never holds a Stripe key. Every Stripe call goes through the **payments relay** (`app/relay`, runbook
 `docs/runbooks/payments-relay.md`); this module talks to it over HTTP only (`relay.py`, signed with `signing.py`,
@@ -18,7 +19,9 @@ the sealed secret. Phase 2 adds `payment_links` (one active link per invoice, on
 token hashes and Stripe page addresses. Phase 3 adds `payment_refunds` (card refunds: source
 `credit_note|surplus|dashboard`, amount, status `proposed|sending|pending|succeeded|failed|canceled`, proposal, Stripe
 refund id) and `payment_disputes` (Stripe dispute id, amount, status, reason, answer-by date, outcome
-`open|won|lost`, amount taken off the invoice). Nothing names a customer, so there is still no erasure handler.
+`open|won|lost`, amount taken off the invoice). Phase 4 adds the Stripe fee and net amount to `payment_requests`, and
+`payment_payouts` (Stripe payout id, amount, status `pending|in_transit|paid|failed|canceled`, arrival date, automatic
+or manual, and Stripe's totals of what a paid payout contained: charges, refunds, disputes, other, fees, count). Nothing names a customer, so there is still no erasure handler.
 
 Permissions: `payments.connection.read` (owner, admin, demo reviewer), `payments.connection.manage` (owner,
 admin), `payments.link.share` (owner, admin, demo reviewer, operator), `payments.refund.propose` (owner, admin,
@@ -47,6 +50,11 @@ Flow:
   reported, never put on the invoice.
 - `charge.dispute.*` events (`disputes.py`) track disputes and notify owners and admins; a lost one calls
   `sales.reverse_online_payment` once. No card refund is offered while a dispute is open or lost.
+- Once a payment is paid, `payments.read_fees` reads Stripe's fee for it. `payout.*` events (`payouts.py`) re-read the
+  payout; a paid one gets Stripe's totals of what it contained; a failed one notifies owners and admins. The hourly
+  `payments.check_payouts` fills in missing fees and re-reads payouts still on their way. `GET /payments/payouts`
+  lists them. Accounting reads paid payouts through `public.py` (`ledger_payouts`) to book the transfer and fees.
+  Tandem never starts, changes or cancels a payout.
 - Refused under `DATA_PROFILE=regulated`; not offered while `PAYMENTS_RELAY_URL` is empty.
 
 Tests: `tests/` run the real relay app in-process against a fake Stripe over `respx` (`app.relay.testing`).
