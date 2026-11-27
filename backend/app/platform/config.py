@@ -120,6 +120,9 @@ class Settings(BaseSettings):
     payments_relay_private: bool = False
     # Where the relay posts Stripe events. Empty = {APP_BASE_URL}/api/v1/payments/relay/events
     payments_events_url: str = ""
+    # Offer US bank debits (ACH) beside cards on the pay page. Off by default: a bank payment can still fail days
+    # after the customer paid (open question Q16).
+    payments_bank_transfers: bool = False
 
     log_level: str = "info"
 

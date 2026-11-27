@@ -15,6 +15,7 @@ import { DocumentBody } from "./components/DocumentBody"
 import { EditDocumentDialog } from "./components/EditDocumentDialog"
 import { PaymentDialog } from "./components/PaymentDialog"
 import { PaymentsSection } from "./components/PaymentsSection"
+import { InvoicePayLink } from "@/features/payments/InvoicePayLink"
 import { useSalesDocument } from "./hooks"
 import { READ, RECORD_PAYMENT, WRITE, type DocumentFamily } from "./model"
 import "./print.css"
@@ -40,6 +41,7 @@ function DocumentPage({ family, id }: { family: DocumentFamily; id: string }) {
       <PageHeader title={d.number ?? t("status.draft")} description={d.bill_to_name} actions={<div className="flex items-center gap-2 print:hidden"><StatusBadge status={d.status} />{d.status === "draft" ? <PermissionGate permission={WRITE}><Button onClick={() => setEditing(true)}>{t("sales.editLines")}</Button></PermissionGate> : null}{family === "invoices" && d.kind === "invoice" && d.status === "issued" && (d.balance_minor ?? 0) > 0 ? <PermissionGate permission={RECORD_PAYMENT}><Button onClick={() => setPaying(true)}>{t("sales.payments.record")}</Button></PermissionGate> : null}<DocumentActions family={family} document={d} onConflict={() => setConflict(true)} /><Button variant="outline" onClick={() => window.print()}>{t("sales.print")}</Button></div>} />
       {d.status !== "draft" ? <p className="mb-6 text-sm text-muted-foreground print:hidden">{t(family === "invoices" ? "sales.invoiceLocked" : "sales.locked")}</p> : null}
       <DocumentBody family={family} document={d} />
+      {family === "invoices" && d.kind === "invoice" && d.status !== "draft" ? <div className="mt-6"><InvoicePayLink invoiceId={d.id} payable={d.status === "issued" && (d.balance_minor ?? 0) > 0} /></div> : null}
       {family === "invoices" ? <div className="mt-6"><PaymentsSection document={d} onConflict={() => setConflict(true)} /></div> : null}
       {paying ? <PermissionGate permission={RECORD_PAYMENT}><PaymentDialog document={d} onClose={() => setPaying(false)} onConflict={() => setConflict(true)} /></PermissionGate> : null}
       {editing ? <PermissionGate permission={WRITE}><EditDocumentDialog family={family} document={d} onOpenChange={setEditing} onReload={reload} /></PermissionGate> : null}

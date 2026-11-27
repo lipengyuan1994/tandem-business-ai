@@ -14,6 +14,7 @@ from .ledger import invoice_versions as ledger_invoice_versions
 from .ledger import invoices as ledger_invoices
 from .ledger import payment_versions as ledger_payment_versions
 from .ledger import payments as ledger_payments
+from .online import OnlineInvoice, OnlinePayment, online_invoice, record_online_payment
 from .reminders import list_overdue_invoices
 from .schemas import DocumentCreate, DocumentOut, DocumentUpdate, LineIn, OverdueInvoice
 from .service import convert_quote, credit, detail, invoice_order, transition, update
@@ -28,6 +29,8 @@ __all__ = [
     "LedgerLine",
     "LedgerPayment",
     "LineIn",
+    "OnlineInvoice",
+    "OnlinePayment",
     "OverdueInvoice",
     "convert_quote",
     "create",
@@ -41,7 +44,9 @@ __all__ = [
     "ledger_payment_versions",
     "ledger_payments",
     "list_overdue_invoices",
+    "online_invoice",
     "overdue_invoice_page",
+    "record_online_payment",
     "transition",
     "update",
 ]

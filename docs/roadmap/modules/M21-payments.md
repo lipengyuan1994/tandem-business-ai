@@ -2,10 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Release / phase | v1 · phase 1 built (connected accounts); phases 2 to 5 planned ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
+| Release / phase | v1 · phases 1 and 2 built (connected accounts, pay links); phases 3 to 5 planned ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
 | Tier / kind | A (outbound money movement, webhooks, public pay page) |
 | Depends on | platform, org, sales, approvals, notifications (in `dependencies.py` and [02](../02-architecture.md)) |
-| Owns tables | built: `payment_connections`, `payment_events`; planned: `payment_requests`, `payment_disputes`, `payment_payouts` |
+| Owns tables | built: `payment_connections`, `payment_events`, `payment_links`, `payment_requests`; planned: `payment_disputes`, `payment_payouts` |
 
 ## Purpose
 Let a business's customers pay issued invoices online through Stripe, and record that money in the sales ledger
@@ -72,12 +72,40 @@ right deployment signed with that deployment's key.
   setting at 0); cards only, bank payments wait for phase 2 behind a setting; only new Stripe accounts (connecting
   an existing one by OAuth is later); test mode until the relay holds a live key.
 
+## Phase 2 as built (2026-11-27)
+- **Pay link:** one per invoice (`payment_links`, only a hash of its token is stored). `POST
+  /payments/invoices/{id}/link` returns it (made on first use), `.../link/reset` replaces it and the old one stops
+  working; `GET /payments/invoices/{id}` gives availability, the link and every payment attempt. The token is signed
+  with a key derived from `APP_SECRET_KEY` and names the business, invoice and link. Permission `payments.link.share`
+  (owner, admin, demo reviewer, operator), policy 2026-11-27.2. The invoice page shows the card: copy link, replace
+  link, last opened, attempts, and a note when money came in after the invoice was settled.
+- **Pay page** (`/pay/<token>`, public widget bundle): business name, invoice number, due date, total and amount to
+  pay; states payable, processing (bank debit on its way), paid, unavailable. `GET /payments/pay/{token}` (120 per
+  minute per address, 60 per link) and `POST /payments/pay/{token}/checkout` (30 per hour per address, 10 per 10
+  minutes per link). Both answer `Cache-Control: no-store`; Caddy and the app logs mask the token.
+- **Checkout:** the relay creates a Checkout Session on the business's account for the open balance at that moment
+  (mode payment, one line "Invoice <number>", metadata with Tandem's ids, no customer name or email), expiring after
+  1 hour; an open session for the same amount with more than 10 minutes left is reused. Each attempt is a
+  `payment_requests` row (`creating|open|processing|paid|expired|failed`).
+- **Into the ledger:** `checkout.session.*` events reach Tandem as in phase 1; the worker re-reads the session
+  through the relay and records the payment with `sales.record_online_payment`: `invoice_payments.provider` and
+  `external_id` (the payment intent) are unique per business, so a payment is never recorded twice. Card payments
+  are recorded at completion; bank debits stay `processing` until the async success event. Money beyond the open
+  balance at that moment (for example cash recorded while the customer paid online) is kept on the attempt as
+  surplus for the business to pay back from the Stripe Dashboard; phases 3 and 5 automate this.
+- **Keeping it right:** any change to the invoice expires its open sessions (subscriber on `sales.document_changed`;
+  a session found paid while expiring is applied instead). An hourly check per business re-reads open and processing
+  attempts older than 15 minutes, so a lost webhook is caught, and fails attempts stuck in `creating`.
+- **Defaults chosen:** cards only, bank debit (ACH, USD only) behind `PAYMENTS_BANK_TRANSFERS` (off, Q16); the
+  relay's application fee `RELAY_APPLICATION_FEE_BPS` defaults to 0 (nothing charged, Q14); pay links do not expire
+  (replace one to cut it off); the hourly check replaces the planned daily one.
+
 ## Phases
 | Phase | What ships | Size |
 |---|---|---|
 | 0 | ADR-022, roadmap and this card | S |
 | 1 | Relay service, Settings > Payments, connected accounts and status (**built 2026-11-27**) | L |
-| 2 | Pay links and pay page, Checkout, webhooks into the ledger, unapplied payments, daily check | L |
+| 2 | Pay links and pay page, Checkout, webhooks into the ledger, unapplied payments, hourly check (**built 2026-11-27**) | L |
 | 3 | Card refunds through approvals, Dashboard refund matching, disputes | M |
 | 4 | Stripe fees, payouts, QuickBooks clearing and fees accounts, transfers | M |
 | 5 | Agent work: pay links in drafted reminders, surplus refunds, unmatched refunds, payouts in the briefing | M |

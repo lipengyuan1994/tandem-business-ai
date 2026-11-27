@@ -6,6 +6,10 @@ Tandem side (signed with the client's secret, see signing.py):
 - `POST /v1/account` creates the business's connected Stripe account, or returns the one it already has.
 - `GET /v1/account` reads the account's readiness.
 - `POST /v1/account/onboarding_link` makes a fresh Stripe onboarding link (single use, short-lived).
+- `POST /v1/checkout_sessions` makes a Stripe Checkout Session (a direct charge on the business's account) for one
+  payment request; `GET /v1/checkout_sessions/{id}` reads one back and `POST /v1/checkout_sessions/{id}/expire`
+  closes one. Sessions are always created and read with the caller's own account, so Stripe itself refuses a
+  session that belongs to another business.
 A client can only ever reach its own account: the account is found from the client, never named in the request.
 
 Stripe side:
@@ -41,11 +45,16 @@ from .config import RelaySettings, get_settings
 from .crypto import UnsealError, seal, unseal
 from .db import Database, make_engine
 from .models import RelayAccount, RelayClient, RelayEvent, RelayNonce
-from .stripe import Stripe, StripeError, account_view, verify_webhook
+from .stripe import Stripe, StripeError, account_view, checkout_view, verify_webhook
 
 log = structlog.get_logger(__name__)
 NONCE = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
 SETTINGS_PATH = "/settings/payments"
+SESSION_ID = re.compile(r"^cs_[A-Za-z0-9_]{1,200}$")
+# Checkout pages return to Tandem's public pay page only, never to an arbitrary URL.
+PAY_PATH = re.compile(r"^/pay/[A-Za-z0-9_.=-]{10,400}(\?[A-Za-z0-9_={}&-]{0,100})?$")
+# Stripe accepts expires_at between 30 minutes and 24 hours ahead.
+CHECKOUT_MIN_SECONDS, CHECKOUT_MAX_SECONDS = 30 * 60, 24 * 60 * 60
 
 
 class RelayError(Exception):
@@ -65,6 +74,18 @@ class AccountIn(BaseModel):
     country: str = Field(pattern=r"^[A-Z]{2}$")
     email: str | None = Field(default=None, max_length=254)
     name: str = Field(min_length=1, max_length=200)
+
+
+class CheckoutIn(BaseModel):
+    request_id: str = Field(pattern=r"^[0-9a-f-]{36}$")
+    invoice_ref: str = Field(pattern=r"^[0-9a-f-]{36}$")
+    amount: int = Field(gt=0, le=99_999_999)
+    currency: str = Field(pattern=r"^[a-z]{3}$")
+    description: str = Field(min_length=1, max_length=200)
+    success_path: str = Field(max_length=500)
+    cancel_path: str = Field(max_length=500)
+    expires_at: int = Field(gt=0)
+    bank_transfers: bool = False
 
 
 @dataclass
@@ -329,6 +350,86 @@ def create_app(
     @app.post("/v1/account/onboarding_link")
     async def onboarding_link(request: Request) -> dict[str, Any]:
         return await run_in_threadpool(_onboarding_link, await _raw(request))
+
+    # -- Checkout Sessions ------------------------------------------------------------------------------------
+
+    def _require_account(client: Caller) -> str:
+        account_id = _account_id(client)
+        if account_id is None:
+            raise RelayError(404, "no_account", "This business has no Stripe account yet")
+        return account_id
+
+    def _create_checkout(raw: Raw) -> dict[str, Any]:
+        client = authenticate(relay, raw)
+        body = _parse(CheckoutIn, raw.body)
+        for path in (body.success_path, body.cancel_path):
+            if not PAY_PATH.match(path):
+                raise RelayError(422, "invalid_return_path", "Checkout may only return to the public pay page")
+        ahead = body.expires_at - relay.clock()
+        if not CHECKOUT_MIN_SECONDS <= ahead <= CHECKOUT_MAX_SECONDS:
+            raise RelayError(422, "invalid_expiry", "expires_at must be 30 minutes to 24 hours ahead")
+        account_id = _require_account(client)
+        methods = ["card"]
+        if body.bank_transfers and body.currency == "usd":
+            methods.append("us_bank_account")
+        fee = body.amount * settings.application_fee_bps // 10_000
+        metadata = {
+            "tandem_request": body.request_id,
+            "tandem_invoice": body.invoice_ref,
+            "tandem_business_ref": client.business_ref,
+        }
+        with relay.stripe_http() as http:
+            try:
+                session = relay.stripe(http).create_checkout_session(
+                    account_id,
+                    amount=body.amount,
+                    currency=body.currency,
+                    name=body.description,
+                    reference=body.request_id,
+                    metadata=metadata,
+                    success_url=f"{client.base_url}{body.success_path}",
+                    cancel_url=f"{client.base_url}{body.cancel_path}",
+                    expires_at=body.expires_at,
+                    methods=methods,
+                    application_fee=fee,
+                    key=f"tandem-checkout-{client.id}-{body.request_id}",
+                )
+            except StripeError as exc:
+                raise _stripe_failure(exc) from None
+        log.info("relay.checkout_created", client=client.id, session=session.get("id"))
+        return checkout_view(session)
+
+    def _session_call(raw: Raw, session_id: str, *, expire: bool) -> dict[str, Any]:
+        client = authenticate(relay, raw)
+        if not SESSION_ID.match(session_id):
+            raise RelayError(404, "not_found", "No such checkout session")
+        account_id = _require_account(client)
+        with relay.stripe_http() as http:
+            stripe = relay.stripe(http)
+            try:
+                if expire:
+                    session = stripe.expire_checkout_session(account_id, session_id)
+                else:
+                    session = stripe.retrieve_checkout_session(account_id, session_id)
+            except StripeError as exc:
+                if exc.status == 404:
+                    raise RelayError(404, "not_found", "No such checkout session") from None
+                raise _stripe_failure(exc) from None
+        return checkout_view(session)
+
+    @app.post("/v1/checkout_sessions")
+    async def create_checkout(request: Request) -> dict[str, Any]:
+        return await run_in_threadpool(_create_checkout, await _raw(request))
+
+    @app.get("/v1/checkout_sessions/{session_id}")
+    async def read_checkout(session_id: str, request: Request) -> dict[str, Any]:
+        raw = await _raw(request)
+        return await run_in_threadpool(lambda: _session_call(raw, session_id, expire=False))
+
+    @app.post("/v1/checkout_sessions/{session_id}/expire")
+    async def expire_checkout(session_id: str, request: Request) -> dict[str, Any]:
+        raw = await _raw(request)
+        return await run_in_threadpool(lambda: _session_call(raw, session_id, expire=True))
 
     # -- Stripe's Connect webhook ---------------------------------------------------------------------------
 

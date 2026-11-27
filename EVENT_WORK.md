@@ -906,3 +906,21 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   block: the relay runs hosted or next to Tandem.
 - Tests: 14 relay tests, 13 payments module tests, 2 architecture tests, 6 frontend tests.
 
+
+## 2026-11-27 — Online payments phase 2: pay links, Stripe Checkout and payments on invoices
+
+- Continued as product owner on the owner's instruction to keep going phase by phase. Mocked Stripe only (fake
+  Stripe over `respx`); no Stripe account, key or network call to Stripe.
+- Relay: create, read and expire Checkout Sessions on the calling client's account only (card, plus US bank debit
+  when asked for a USD invoice), idempotency key per Tandem request, application fee `RELAY_APPLICATION_FEE_BPS`
+  (default 0). Tests: 7 new relay tests.
+- Tandem: `payment_links` and `payment_requests` (forced RLS), `invoice_payments.provider`/`external_id` with a
+  partial unique index, migration `20261127_1800_payments_pay_links`. Signed pay links (copy and replace on the
+  invoice page, permission `payments.link.share`, policy 2026-11-27.2), the public pay page `/pay/<token>` (rate
+  limited, `no-store`, token masked in app and Caddy logs), Checkout per attempt for the open balance, events
+  applied once through `sales.record_online_payment`, surplus kept on the attempt, open sessions expired when the
+  invoice changes, and an hourly check for lost webhooks.
+- Defaults for the open questions: platform fee 0 (Q14), bank debit off behind `PAYMENTS_BANK_TRANSFERS` (Q16), pay
+  links do not expire. Surplus is refunded from the Stripe Dashboard until phases 3 and 5.
+- Tests: 11 backend pay-link tests, 7 relay checkout tests, 5 log-masking cases, 14 frontend tests (pay page and
+  invoice card).

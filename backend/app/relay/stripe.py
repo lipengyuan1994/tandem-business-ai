@@ -126,6 +126,52 @@ class Stripe:
         }
         return self.request("POST", "/v1/account_links", params)
 
+    # -- Checkout Sessions (direct charges on the connected account) --------------------------------------------
+
+    def create_checkout_session(
+        self,
+        account: str,
+        *,
+        amount: int,
+        currency: str,
+        name: str,
+        reference: str,
+        metadata: dict[str, str],
+        success_url: str,
+        cancel_url: str,
+        expires_at: int,
+        methods: list[str],
+        application_fee: int,
+        key: str,
+    ) -> dict[str, Any]:
+        """One Stripe-hosted payment page for one amount (ADR-022 decision 2). Card entry happens only there."""
+        intent: dict[str, Any] = {"metadata": metadata}
+        if application_fee > 0:
+            intent["application_fee_amount"] = application_fee
+        params: dict[str, Any] = {
+            "mode": "payment",
+            "line_items": [
+                {
+                    "quantity": 1,
+                    "price_data": {"currency": currency, "unit_amount": amount, "product_data": {"name": name}},
+                }
+            ],
+            "payment_method_types": methods,
+            "client_reference_id": reference,
+            "metadata": metadata,
+            "payment_intent_data": intent,
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+            "expires_at": expires_at,
+        }
+        return self.request("POST", "/v1/checkout/sessions", params, account=account, idempotency_key=key)
+
+    def retrieve_checkout_session(self, account: str, session: str) -> dict[str, Any]:
+        return self.request("GET", f"/v1/checkout/sessions/{session}", account=account)
+
+    def expire_checkout_session(self, account: str, session: str) -> dict[str, Any]:
+        return self.request("POST", f"/v1/checkout/sessions/{session}/expire", account=account)
+
 
 def verify_webhook(payload: bytes, header: str, secret: str, now: int) -> bool:
     """Stripe-Signature: `t=<ts>,v1=<hex HMAC-SHA256 of "<ts>.<raw body>">` (same construction as signing.py)."""
@@ -146,4 +192,24 @@ def account_view(account: dict[str, Any]) -> dict[str, Any]:
         "past_due": [str(x) for x in requirements.get("past_due") or []][:50],
         "disabled_reason": requirements.get("disabled_reason"),
         "current_deadline": requirements.get("current_deadline"),
+    }
+
+
+def checkout_view(session: dict[str, Any]) -> dict[str, Any]:
+    """What Tandem needs to record a payment: never card details (Checkout does not return them anyway)."""
+    intent = session.get("payment_intent")
+    if isinstance(intent, dict):
+        intent = intent.get("id")
+    metadata = session.get("metadata") or {}
+    return {
+        "id": session.get("id"),
+        "url": session.get("url"),
+        "status": session.get("status"),
+        "payment_status": session.get("payment_status"),
+        "amount_total": session.get("amount_total"),
+        "currency": session.get("currency"),
+        "payment_intent": intent,
+        "expires_at": session.get("expires_at"),
+        "client_reference_id": session.get("client_reference_id"),
+        "metadata": {str(k): str(v) for k, v in metadata.items() if str(k).startswith("tandem_")},
     }

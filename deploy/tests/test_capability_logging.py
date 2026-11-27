@@ -1,8 +1,8 @@
 """Capability tokens must not reach Caddy's logs (docs/security/2026-11-03-rescan.md).
 
 Caddy writes no access log, but its error log records the URI and the Referer header of every request that fails, for
-example the 502 it answers while the api restarts. Supplier quote links carry a bearer token in their path
-(/q/<token> and /api/v1/public/quotes/<token>), the OIDC callback a one-time code and state, and the marketing
+example the 502 it answers while the api restarts. Supplier quote and invoice pay links carry a bearer token in their
+path (/q/<token>, /pay/<token> and their /api/v1 routes), the OIDC callback a one-time code and state, and the marketing
 unsubscribe link a token, in the query string. Both Caddyfiles mask these before anything is written.
 
 The live tests run an installed Caddy with each Caddyfile (see caddy_harness.py), once with the api stopped and once
@@ -48,6 +48,7 @@ SAFE_REFERRER_POLICIES = {
 def send_capability_requests(run):
     """Every way a capability reaches Caddy: path, query, and the Referer of the page's own requests."""
     page = {"Referer": f"http://127.0.0.1:{run.port}/q/{TOKEN}"}
+    pay_page = {"Referer": f"http://127.0.0.1:{run.port}/pay/{TOKEN}"}
     json = {"Content-Type": "application/json"}
     quote_api = f"/api/v1/public/quotes/{TOKEN}"
     callback = f"code={CODE}&state={STATE}&session_state={SESSION_STATE}"
@@ -57,6 +58,8 @@ def send_capability_requests(run):
         "page with a query": run.request("GET", f"/q/{TOKEN}?utm_source=mail"),
         "quote api": run.request("GET", quote_api, page),
         "quote api, upper case": run.request("GET", f"/API/V1/PUBLIC/QUOTES/{TOKEN}", page),
+        "pay page": run.request("GET", f"/pay/{TOKEN}?paid=1", page),
+        "pay api": run.request("POST", f"/api/v1/payments/pay/{TOKEN}/checkout", pay_page),
         "quote submit": run.request("POST", quote_api, {**page, **json}, b'{"declined": true}'),
         "quote submit, oversize": run.request("POST", quote_api, {**page, **json}, b"x" * 200_000),
         "oidc callback": run.request("GET", f"/api/v1/auth/callback?{callback}"),
@@ -87,6 +90,7 @@ class CaddyLogsCarryNoCapabilitiesTests(unittest.TestCase):
                 self.assertIn('"logger":"http.log.error"', log)
                 self.assertIn("/api/v1/public/quotes/[redacted]", log)
                 self.assertIn("/q/[redacted]", log)  # also the Referer header of the failed request
+                self.assertIn("/api/v1/payments/pay/[redacted]/checkout", log)
                 self.assertIn("code=[redacted]&state=[redacted]&session_state=[redacted]", log)
                 self.assertIn("unsubscribe?token=[redacted]", log)
 
@@ -136,6 +140,10 @@ class CaddyfileMaskingRulesTests(unittest.TestCase):
             f"/Q/{TOKEN}?utm=1": "/Q/[redacted]?utm=1",
             f"/api/v1/public/quotes/{TOKEN}": "/api/v1/public/quotes/[redacted]",
             f"https://shop.example.com/q/{TOKEN}": "https://shop.example.com/q/[redacted]",
+            f"/pay/{TOKEN}?paid=1": "/pay/[redacted]?paid=1",
+            f"/api/v1/payments/pay/{TOKEN}/checkout": "/api/v1/payments/pay/[redacted]/checkout",
+            f"https://shop.example.com/pay/{TOKEN}": "https://shop.example.com/pay/[redacted]",
+            "/api/v1/payments/invoices/abc/link": "/api/v1/payments/invoices/abc/link",
             f"/api/v1/auth/callback?code={CODE}&state={STATE}&iss=x": (
                 "/api/v1/auth/callback?code=[redacted]&state=[redacted]&iss=x"
             ),

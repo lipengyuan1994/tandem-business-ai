@@ -13,7 +13,7 @@
 	# Clients that send no server name (monitoring probes, some scanners) get the site's certificate, not a TLS error.
 	default_sni {$DOMAIN}
 	# Caddy writes no access log, but its error log (for example a 502 while the api restarts) records the request URI
-	# and the Referer header. Those carry capabilities: the token of /q/<token> and /api/v1/public/quotes/<token>, the
+	# and the Referer header. Those carry capabilities: the token of /q/<token>, /pay/<token> and their /api/v1 routes, the
 	# OIDC code and state, the unsubscribe token. Mask them before anything is written. The same rule is in
 	# Caddyfile.dev and tested in deploy/tests/test_capability_logging.py; a site-level `log` needs it too.
 	log {
@@ -21,8 +21,8 @@
 			wrap json
 			request>headers>X-Embed-Token delete
 			resp_headers>X-Embed-Token delete
-			request>uri regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
-			request>headers>Referer regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
+			request>uri regexp (?i)(/(?:q|pay|api/v1/public/quotes|api/v1/payments/pay)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
+			request>headers>Referer regexp (?i)(/(?:q|pay|api/v1/public/quotes|api/v1/payments/pay)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
 		}
 	}
 }
@@ -126,7 +126,7 @@
 	}
 
 	# The public widget and supplier capability page use the separate public bundle.
-	@public_pages path /p/* /q/*
+	@public_pages path /p/* /q/* /pay/*
 	handle @public_pages {
 		import app_csp
 		header Cache-Control "no-cache"

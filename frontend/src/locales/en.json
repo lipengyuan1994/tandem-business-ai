@@ -234,7 +234,14 @@
     "payments.not_connected": "Set up online payments first.",
     "payments.credential_unreadable": "Tandem can't read its stored payments credential. Whoever runs Tandem needs to check the server's secret key.",
     "payments.account_mismatch": "The payments service reports a different Stripe account than this business uses. Whoever runs Tandem needs to check it.",
-    "payments.version_conflict": "Someone else changed the payment settings. Reload to see the latest."
+    "payments.version_conflict": "Someone else changed the payment settings. Reload to see the latest.",
+    "payments.not_active": "Stripe isn't ready to take payments for this business yet. Finish setting it up in Settings > Payments.",
+    "payments.not_issued": "Only an issued invoice can be paid online.",
+    "payments.settled": "This invoice has nothing left to pay.",
+    "payments.link_not_found": "This pay link doesn't work any more. Ask the business for a new one.",
+    "payments.invoice_settled": "This invoice is already paid.",
+    "payments.payment_processing": "A bank payment for this invoice is already on its way.",
+    "payments.not_payable": "This invoice can't be paid online right now."
   },
   "identity": {
     "selectBusiness": {
@@ -2650,6 +2657,55 @@
     "disconnectBody": "Customers can no longer pay invoices online. Your Stripe account, its money and its payouts stay as they are, and you can turn this back on later.",
     "linkExpired": "That Stripe link expired. Continue in Stripe to get a fresh one.",
     "notConfigured": "Online payments aren't set up on this server yet. Whoever runs Tandem needs to connect the payments relay first.",
-    "cardsNote": "Cards only for now. Stripe takes its fees from each payment, in your Stripe account."
+    "cardsNote": "Cards only for now. Stripe takes its fees from each payment, in your Stripe account.",
+    "invoice": {
+      "title": "Online payment",
+      "intro": "Send the customer a link to pay this invoice by card on Stripe's secure page. The payment is recorded here on its own.",
+      "copy": "Copy pay link",
+      "copied": "Pay link copied. Paste it into your message to the customer.",
+      "copyFailed": "Couldn't copy the link. Select it and copy it yourself.",
+      "linkLabel": "Pay link",
+      "opened": "Customer last opened it",
+      "replace": "Replace link",
+      "replaceTitle": "Replace the pay link?",
+      "replaceBody": "The link you sent before will stop working. Send the customer the new one.",
+      "replaced": "New pay link made. The old one no longer works.",
+      "testMode": "Test mode: no real money moves.",
+      "setUp": "Set up online payments in Settings > Payments to send customers a pay link.",
+      "notActive": "Stripe isn't ready to take payments yet. Finish setting it up in Settings > Payments.",
+      "history": "Online payment attempts",
+      "date": "Started",
+      "amount": "Amount",
+      "state": "Status",
+      "states": {
+        "open": "Waiting for the customer",
+        "processing": "Bank payment on its way",
+        "paid": "Paid",
+        "expired": "Not paid (page closed)",
+        "failed": "Didn't go through"
+      },
+      "surplus": "{{amount}} came in after the invoice was already settled. Pay it back from the Stripe Dashboard, or keep it."
+    }
+  },
+  "payPage": {
+    "heading": "Pay invoice",
+    "title": "Pay {business}",
+    "loading": "Loading…",
+    "invoice": "Invoice",
+    "due": "Due",
+    "total": "Invoice total",
+    "balance": "Amount to pay",
+    "pay": "Pay {amount}",
+    "opening": "Opening the secure payment page…",
+    "secure": "You'll pay on Stripe's secure page. Your card details never reach {business}.",
+    "paid": "This invoice is paid. Thank you.",
+    "confirming": "Thanks. We're confirming your payment with Stripe…",
+    "processing": "Your bank payment is on its way. It can take a few business days to arrive.",
+    "unavailable": "This invoice can't be paid online. Please contact {business}.",
+    "testMode": "Test mode: no real money moves.",
+    "expired": "This pay link doesn't work any more. Ask the business for a new one.",
+    "rateLimited": "Too many tries. Wait a minute and try again.",
+    "error": "Something went wrong. Try again in a moment.",
+    "retry": "Try again"
   }
 }

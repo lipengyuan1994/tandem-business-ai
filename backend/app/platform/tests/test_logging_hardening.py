@@ -65,7 +65,9 @@ def test_database_engine_hides_bound_parameters() -> None:
     assert get_engine().hide_parameters is True
 
 
-@pytest.mark.parametrize("route", ["/api/v1/public/quotes/{token}", "/q/{token}"])
+@pytest.mark.parametrize(
+    "route", ["/api/v1/public/quotes/{token}", "/q/{token}", "/api/v1/payments/pay/{token}", "/pay/{token}"]
+)
 @pytest.mark.parametrize("json_output", [False, True])
 def test_capability_route_errors_mask_paths_before_logging(
     route: str, json_output: bool, monkeypatch: pytest.MonkeyPatch

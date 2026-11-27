@@ -2089,6 +2089,91 @@ export interface paths {
         patch: operations["update_settings_api_v1_org_settings_patch"];
         trace?: never;
     };
+    "/api/v1/payments/invoices/{invoice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An invoice's pay link and online payments */
+        get: operations["invoice_payments_api_v1_payments_invoices__invoice_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/invoices/{invoice_id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get the invoice's pay link (made on first use) to send to the customer */
+        post: operations["share_link_api_v1_payments_invoices__invoice_id__link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/invoices/{invoice_id}/link/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace the invoice's pay link; the old link stops working */
+        post: operations["reset_link_api_v1_payments_invoices__invoice_id__link_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/pay/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an invoice's pay page */
+        get: operations["pay_page_api_v1_payments_pay__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/pay/{token}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open Stripe's payment page for the invoice's open balance */
+        post: operations["checkout_api_v1_payments_pay__token__checkout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/relay/events": {
         parameters: {
             query?: never;
@@ -5343,6 +5428,14 @@ export interface components {
              */
             revision_id: string;
         };
+        /** CheckoutStartOut */
+        CheckoutStartOut: {
+            /**
+             * Url
+             * @description Stripe's hosted payment page for the open balance
+             */
+            url: string;
+        };
         /**
          * Clause
          * @description One whitelisted filter. There is no free-form SQL anywhere in a segment.
@@ -6558,6 +6651,31 @@ export interface components {
             /** Supplier Name */
             supplier_name: string;
         };
+        /** InvoiceOnlinePaymentsOut */
+        InvoiceOnlinePaymentsOut: {
+            /**
+             * Available
+             * @description Whether a pay link can be shared for this invoice now
+             */
+            available: boolean;
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+            /** Link Created At */
+            link_created_at?: string | null;
+            /** Link Last Opened At */
+            link_last_opened_at?: string | null;
+            /** Link Url */
+            link_url?: string | null;
+            /** Mode */
+            mode?: ("test" | "live") | null;
+            /** Requests */
+            requests?: components["schemas"]["PaymentRequestOut"][];
+            /** Unavailable Reason */
+            unavailable_reason?: ("not_configured" | "regulated_profile" | "not_connected" | "not_active" | "not_issued" | "settled") | null;
+        };
         /** ItemPage */
         ItemPage: {
             /** Items */
@@ -7309,6 +7427,41 @@ export interface components {
             /** Paused */
             paused: boolean;
         };
+        /** PayLinkOut */
+        PayLinkOut: {
+            /** Url */
+            url: string;
+        };
+        /**
+         * PayPageOut
+         * @description What a customer with the pay link sees. No customer details beyond what the invoice itself shows.
+         */
+        PayPageOut: {
+            /** Balance Minor */
+            balance_minor: number;
+            /** Business Name */
+            business_name: string;
+            /** Currency */
+            currency: string;
+            /** Due Date */
+            due_date: string | null;
+            /** Invoice Number */
+            invoice_number: string | null;
+            /** Issue Date */
+            issue_date: string | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "payable" | "processing" | "paid" | "unavailable";
+            /**
+             * Test Mode
+             * @default false
+             */
+            test_mode: boolean;
+            /** Total Minor */
+            total_minor: number;
+        };
         /**
          * PayablesAgingReport
          * @description Open balances of supplier bills on `as_of`, bucketed by days past due (bill date when no due date).
@@ -7480,6 +7633,43 @@ export interface components {
             body: string;
             /** Version */
             version: number;
+        };
+        /** PaymentRequestOut */
+        PaymentRequestOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Applied Minor
+             * @default 0
+             */
+            applied_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Method */
+            method?: string | null;
+            /** Paid At */
+            paid_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "creating" | "open" | "processing" | "paid" | "expired" | "failed";
+            /**
+             * Surplus Minor
+             * @description Money taken after the invoice was already settled: pay it back from Stripe or keep it
+             * @default 0
+             */
+            surplus_minor: number;
         };
         /** PendingItem */
         PendingItem: {
@@ -19391,6 +19581,350 @@ export interface operations {
             };
             /** @description Validation failed */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    invoice_payments_api_v1_payments_invoices__invoice_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceOnlinePaymentsOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    share_link_api_v1_payments_invoices__invoice_id__link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayLinkOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    reset_link_api_v1_payments_invoices__invoice_id__link_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayLinkOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    pay_page_api_v1_payments_pay__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayPageOut"];
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    checkout_api_v1_payments_pay__token__checkout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutStartOut"];
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many requests */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

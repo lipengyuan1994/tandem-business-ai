@@ -16,6 +16,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -140,11 +141,23 @@ class InvoicePayment(BusinessScopedBase):
     method: Mapped[str] = mapped_column(String(16))
     reference: Mapped[str | None] = mapped_column(String(200))
     voided_at: Mapped[datetime | None]
+    # Set for money taken online (M21): the provider and its payment id, so a payment is never recorded twice.
+    provider: Mapped[str | None] = mapped_column(String(12))
+    external_id: Mapped[str | None] = mapped_column(String(80))
     __table_args__ = scoped_table_args(
         ForeignKeyConstraint(["business_id", "invoice_id"], ["invoices.business_id", "invoices.id"]),
         Index("ix_invoice_payments_invoice", "business_id", "invoice_id"),
+        Index(
+            "uq_invoice_payments_external",
+            "business_id",
+            "provider",
+            "external_id",
+            unique=True,
+            postgresql_where=text("external_id is not null"),
+        ),
         CheckConstraint("amount_minor > 0", name="amount"),
         CheckConstraint(f"method in ({','.join(repr(m) for m in PAYMENT_METHODS)})", name="method"),
+        CheckConstraint("(provider is null) = (external_id is null)", name="external"),
     )
 
 
