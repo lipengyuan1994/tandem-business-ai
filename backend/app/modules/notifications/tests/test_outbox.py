@@ -186,6 +186,14 @@ def test_template_sandbox_blocks_attribute_access() -> None:
         render("no_such_template", {})
 
 
+def test_payment_reminder_adds_the_pay_link_only_when_there_is_one() -> None:
+    base = {"number": "INV-1", "body": "Please pay.", "amount": "42.00", "currency": "USD", "due_date": "2026-10-27"}
+    _subject, body = render("payment_reminder", {**base, "pay_url": "https://pay.example.test/p/abc"})
+    assert body.endswith("Pay online: https://pay.example.test/p/abc")
+    assert "Pay online" not in render("payment_reminder", {**base, "pay_url": ""})[1]
+    assert "Pay online" not in render("payment_reminder", base)[1]  # queued before pay links existed
+
+
 def test_approvers_notified_on_proposal_created(app_client: Any, biz: uuid.UUID, registry: Registry) -> None:
     creator = app_client(["operator"])
     admin, stock = app_client(["admin"]), app_client(["inventory_manager"])

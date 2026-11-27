@@ -8,10 +8,9 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import Engine, select, text
 
 from app.modules.identity.testing import login_as
-from app.modules.notifications.templates import render
 from app.modules.payments.public import briefing_facts
 from app.platform import clock
 from app.platform.db import transaction
@@ -62,8 +61,9 @@ def _overdue(world: World) -> dict[str, Any]:
     return dict(r.json())
 
 
-def _send_reminder(world: World, invoice: dict[str, Any]) -> tuple[list[str], str]:
-    """Preview and send a reminder as the approvals engine would. Returns the preview's labels and the e-mail body."""
+def _send_reminder(world: World, engine: Engine, invoice: dict[str, Any]) -> tuple[list[str], str]:
+    """Preview and send a reminder as the approvals engine would. Returns the preview's lines and the e-mail's pay link
+    (the template that shows it is tested in notifications)."""
     spec = world.registry.executors[REMINDER]
     payload = spec.payload_model.model_validate(
         {"invoice_id": invoice["id"], "invoice_version": invoice["version"], "body": "Please pay when you can."}
@@ -72,38 +72,36 @@ def _send_reminder(world: World, invoice: dict[str, Any]) -> tuple[list[str], st
     with transaction(ctx) as db:
         preview = spec.describe(db, ctx, payload)
         result = spec.run(db, ctx, payload, ExecutionMeta(uuid.uuid4(), uuid.uuid4(), str(uuid.uuid4())))
-    from app.modules.notifications.models import OutboxMessage
-
-    with transaction(ctx) as db:
-        message = db.get(OutboxMessage, uuid.UUID(result["outbox_id"]))
-        assert message is not None
-        _, body = render(message.template_key, message.variables)
-    return [f"{line.label}: {line.after}" for line in preview], body
+    with engine.connect() as conn:
+        variables = conn.execute(
+            text("select variables from outbox_messages where id = :id"), {"id": result["outbox_id"]}
+        ).scalar_one()
+    return [f"{line.label}: {line.after}" for line in preview], str(variables["pay_url"])
 
 
 # -- pay links in reminders ------------------------------------------------------------------------------------------
 
 
-def test_a_payment_reminder_carries_the_invoices_pay_link(world: World) -> None:
+def test_a_payment_reminder_carries_the_invoices_pay_link(world: World, owner_engine: Engine) -> None:
     world.ready()
     invoice = _overdue(world)
-    preview, body = _send_reminder(world, invoice)
+    preview, pay_url = _send_reminder(world, owner_engine, invoice)
     assert "Pay online: A pay link for this invoice is added when it is sent" in preview
     link = world.owner.post(f"{API}/invoices/{invoice['id']}/link").json()["url"]  # the same link, made at sending
-    assert f"Pay online: {link}" in body and body.startswith("Please pay when you can.")
+    assert pay_url == link
     page = world.visitor.get(f"{PAY}/{link.rsplit('/', 1)[1]}")
     assert page.status_code == 200 and page.json()["balance_minor"] == 4200
 
 
-def test_no_pay_link_when_turned_off_or_not_taking_payments(world: World) -> None:
+def test_no_pay_link_when_turned_off_or_not_taking_payments(world: World, owner_engine: Engine) -> None:
     invoice = _overdue(world)
-    _, body = _send_reminder(world, invoice)  # online payments not set up
-    assert "Pay online" not in body
+    _, pay_url = _send_reminder(world, owner_engine, invoice)  # online payments not set up
+    assert pay_url == ""
     world.ready()
     assert _settings(world, reminder_links=False)["reminder_links"] is False
     invoice = world.get_invoice(invoice["id"])
-    preview, body = _send_reminder(world, invoice)
-    assert "Pay online" not in body and not any(p.startswith("Pay online") for p in preview)
+    preview, pay_url = _send_reminder(world, owner_engine, invoice)
+    assert pay_url == "" and not any(p.startswith("Pay online") for p in preview)
 
 
 def test_settings_need_the_manage_permission_and_the_current_version(world: World) -> None:
