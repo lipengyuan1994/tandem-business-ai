@@ -81,6 +81,70 @@ class PaymentRequestOut(BaseModel):
     paid_at: datetime | None = None
 
 
+RefundSource = Literal["credit_note", "surplus", "dashboard"]
+RefundStatus = Literal["proposed", "sending", "pending", "succeeded", "failed", "canceled"]
+
+
+class CardRefundOut(BaseModel):
+    id: uuid.UUID
+    request_id: uuid.UUID
+    source: RefundSource
+    amount_minor: int
+    currency: str
+    status: RefundStatus
+    failure_reason: str | None = Field(default=None, description="Stripe's reason when a refund failed")
+    proposal_id: uuid.UUID | None = None
+    credit_note_number: str | None = None
+    created_at: datetime
+    settled_at: datetime | None = None
+
+
+class RefundOption(BaseModel):
+    """Something that may be paid back to the customer's card now, from one paid card payment."""
+
+    request_id: uuid.UUID
+    source: Literal["credit_note", "surplus"]
+    invoice_refund_id: uuid.UUID | None = None
+    credit_note_number: str | None = None
+    amount_minor: int
+    currency: str
+
+
+class DisputeOut(BaseModel):
+    id: uuid.UUID
+    request_id: uuid.UUID
+    amount_minor: int
+    currency: str
+    stripe_status: str
+    reason: str | None = None
+    outcome: Literal["open", "won", "lost"]
+    due_by: datetime | None = Field(default=None, description="Answer in Stripe's Dashboard before this")
+    opened_at: datetime
+    closed_at: datetime | None = None
+    reversed_minor: int = Field(default=0, description="What a lost dispute took back off the invoice")
+    last_error: str | None = None
+
+
+class CardRefundIn(BaseModel):
+    """Ask for a card refund. The amount is not chosen here: it is the credit note's refund, or what is left of the
+    surplus, so a refund never pays back more than the invoice's own records say."""
+
+    request_id: uuid.UUID
+    source: Literal["credit_note", "surplus"]
+    invoice_refund_id: uuid.UUID | None = None
+
+
+class CardRefundProposedOut(BaseModel):
+    refund: CardRefundOut
+    proposal_id: uuid.UUID
+
+
+class CardRefundPayload(BaseModel):
+    """Approvals payload for `payments.card_refund`."""
+
+    refund_id: uuid.UUID
+
+
 class InvoiceOnlinePaymentsOut(BaseModel):
     invoice_id: uuid.UUID
     available: bool = Field(description="Whether a pay link can be shared for this invoice now")
@@ -90,6 +154,11 @@ class InvoiceOnlinePaymentsOut(BaseModel):
     link_last_opened_at: datetime | None = None
     mode: Literal["test", "live"] | None = None
     requests: list[PaymentRequestOut] = Field(default_factory=list)
+    refunds: list[CardRefundOut] = Field(default_factory=list)
+    refund_options: list[RefundOption] = Field(
+        default_factory=list, description="Card refunds the reader may ask for now (empty without the permission)"
+    )
+    disputes: list[DisputeOut] = Field(default_factory=list)
 
 
 class PayLinkOut(BaseModel):

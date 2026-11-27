@@ -104,6 +104,72 @@ class CheckoutView:
         )
 
 
+def _str(value: Any) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def _int(value: Any) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+@dataclass(frozen=True, slots=True)
+class RefundView:
+    id: str
+    amount: int
+    currency: str
+    status: str  # pending | requires_action | succeeded | failed | canceled
+    failure_reason: str | None
+    payment_intent: str | None
+    created: int | None
+    refund_ref: str | None  # Tandem's refund id, for refunds Tandem sent
+
+    @classmethod
+    def parse(cls, data: dict[str, Any]) -> RefundView:
+        refund_id, amount = data.get("id"), _int(data.get("amount"))
+        if not isinstance(refund_id, str) or amount is None:
+            raise RelayError("unavailable", "bad_response", "The payments relay answered without a refund")
+        raw_metadata = data.get("metadata")
+        metadata: dict[str, Any] = raw_metadata if isinstance(raw_metadata, dict) else {}
+        return cls(
+            id=refund_id,
+            amount=amount,
+            currency=str(data.get("currency") or ""),
+            status=str(data.get("status") or ""),
+            failure_reason=_str(data.get("failure_reason")),
+            payment_intent=_str(data.get("payment_intent")),
+            created=_int(data.get("created")),
+            refund_ref=_str(metadata.get("tandem_refund")),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class DisputeView:
+    id: str
+    amount: int
+    currency: str
+    status: str  # warning_needs_response | needs_response | under_review | won | lost | warning_closed | ...
+    reason: str | None
+    payment_intent: str | None
+    created: int | None
+    due_by: int | None
+
+    @classmethod
+    def parse(cls, data: dict[str, Any]) -> DisputeView:
+        dispute_id, amount = data.get("id"), _int(data.get("amount"))
+        if not isinstance(dispute_id, str) or amount is None:
+            raise RelayError("unavailable", "bad_response", "The payments relay answered without a dispute")
+        return cls(
+            id=dispute_id,
+            amount=amount,
+            currency=str(data.get("currency") or ""),
+            status=str(data.get("status") or ""),
+            reason=_str(data.get("reason")),
+            payment_intent=_str(data.get("payment_intent")),
+            created=_int(data.get("created")),
+            due_by=_int(data.get("due_by")),
+        )
+
+
 class RelayApi:
     def __init__(self, client: httpx.Client, base_url: str) -> None:
         self._client = client
@@ -208,3 +274,15 @@ class RelayApi:
 
     def expire_checkout(self, creds: Credentials, session_id: str) -> CheckoutView:
         return CheckoutView.parse(self._signed(creds, "POST", f"/v1/checkout_sessions/{session_id}/expire"))
+
+    def create_refund(
+        self, creds: Credentials, *, refund_id: str, invoice_id: str, payment_intent: str, amount: int
+    ) -> RefundView:
+        body = {"refund_ref": refund_id, "invoice_ref": invoice_id, "payment_intent": payment_intent, "amount": amount}
+        return RefundView.parse(self._signed(creds, "POST", "/v1/refunds", body))
+
+    def get_refund(self, creds: Credentials, refund_id: str) -> RefundView:
+        return RefundView.parse(self._signed(creds, "GET", f"/v1/refunds/{refund_id}"))
+
+    def get_dispute(self, creds: Credentials, dispute_id: str) -> DisputeView:
+        return DisputeView.parse(self._signed(creds, "GET", f"/v1/disputes/{dispute_id}"))

@@ -146,7 +146,7 @@ AGENTS: dict[str, Agent] = {
         "Review overdue invoices and prepare payment reminders.",
         ("payment_followup",),
         ("ai.payment_followup", "ai.payment_followup_scan", "assistant_request"),
-        ("sales.send_payment_reminder", "sales.create_quote", "sales.confirm_order"),
+        ("sales.send_payment_reminder", "sales.create_quote", "sales.confirm_order", "payments.card_refund"),
         ("writer", "agent"),
         ("list_overdue_invoices", "get_customer", "propose_payment_reminder"),
         ("finance",),

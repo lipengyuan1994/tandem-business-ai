@@ -2684,7 +2684,35 @@
         "expired": "Not paid (page closed)",
         "failed": "Didn't go through"
       },
-      "surplus": "{{amount}} came in after the invoice was already settled. Pay it back from the Stripe Dashboard, or keep it."
+      "surplus": "{{amount}} came in after the invoice was already settled. Pay it back to the card below, or keep it.",
+      "refunds": "Card refunds",
+      "refundStates": {
+        "proposed": "Waiting for approval",
+        "sending": "Sending to Stripe",
+        "pending": "On its way to the card",
+        "succeeded": "Paid back",
+        "failed": "Didn't go through",
+        "canceled": "Not approved"
+      },
+      "refundSources": {
+        "credit_note": "Credit note {{number}}",
+        "surplus": "Paid twice",
+        "dashboard": "Made in Stripe"
+      },
+      "refundAsk": "Pay {{amount}} back to the card",
+      "refundAskTitle": "Pay {{amount}} back to the customer's card?",
+      "refundAskBody": "This asks for approval first. Once an owner or admin approves it in Approvals, Stripe pays it back to the card the customer used. It can't be undone after that.",
+      "refundAskConfirm": "Ask for approval",
+      "refundAsked": "Sent for approval. Nothing is paid back until it's approved.",
+      "refundWhy": {
+        "credit_note": "Owed on credit note {{number}}",
+        "surplus": "Paid twice"
+      },
+      "dispute": "The customer's bank disputed {{amount}} of this card payment. Answer it in your Stripe Dashboard before the deadline.",
+      "disputeLost": "The dispute over {{amount}} was lost, so it came off the invoice.",
+      "disputeWon": "The dispute over {{amount}} closed in your favour.",
+      "disputeError": "The lost dispute over {{amount}} couldn't be taken off the invoice yet. Tandem will try again.",
+      "disputeDue": "Answer by"
     }
   },
   "payPage": {

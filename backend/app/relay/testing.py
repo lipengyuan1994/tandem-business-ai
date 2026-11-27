@@ -27,13 +27,17 @@ def _form(request: httpx.Request) -> dict[str, str]:
 
 
 class FakeStripe:
-    """Accounts, account links and webhook events of a Connect platform in test mode."""
+    """Accounts, account links, Checkout, refunds, disputes and webhook events of a Connect platform in test mode."""
 
     def __init__(self, router: respx.MockRouter, *, key: str = STRIPE_KEY) -> None:
         self.key = key
         self.accounts: dict[str, dict[str, Any]] = {}
         self.links: list[dict[str, Any]] = []
         self.sessions: dict[str, dict[str, Any]] = {}
+        self.intents: dict[str, dict[str, Any]] = {}  # payment intent id -> account, amount, currency
+        self.refunds: dict[str, dict[str, Any]] = {}
+        self.disputes: dict[str, dict[str, Any]] = {}
+        self.refund_status = "succeeded"  # what a new refund starts as ("pending" for bank debits and slow cards)
         self.calls: list[tuple[str, str, dict[str, str], dict[str, str]]] = []  # method, path, form, headers
         self.by_key: dict[str, httpx.Response] = {}
         self.fail_next: list[httpx.Response] = []
@@ -54,17 +58,76 @@ class FakeStripe:
             "disabled_reason": "requirements.past_due",
         }
 
+    def _intent(self, session: dict[str, Any]) -> str:
+        intent = f"pi_{secrets.token_hex(8)}"
+        self.intents[intent] = {
+            "account": session["account"],
+            "amount": session["amount_total"],
+            "currency": session["currency"],
+        }
+        return intent
+
     def pay(self, session_id: str) -> dict[str, Any]:
         """The customer paid by card on the Checkout page: returns the session as Stripe sends it in the event."""
         session = self.sessions[session_id]
-        session.update(status="complete", payment_status="paid", payment_intent=f"pi_{secrets.token_hex(8)}")
+        session.update(status="complete", payment_status="paid", payment_intent=self._intent(session))
         return dict(session)
 
     def start_bank_payment(self, session_id: str) -> dict[str, Any]:
         """The customer chose a bank debit: Checkout completes, the money arrives days later (or never)."""
         session = self.sessions[session_id]
-        session.update(status="complete", payment_status="unpaid", payment_intent=f"pi_{secrets.token_hex(8)}")
+        session.update(status="complete", payment_status="unpaid", payment_intent=self._intent(session))
         return dict(session)
+
+    def refunded(self, intent: str) -> int:
+        live = (r for r in self.refunds.values() if r["payment_intent"] == intent and r["status"] != "failed")
+        return sum(r["amount"] for r in live)
+
+    def _new_refund(self, intent: str, amount: int, metadata: dict[str, str]) -> dict[str, Any]:
+        refund_id = f"re_{secrets.token_hex(12)}"
+        self.refunds[refund_id] = {
+            "id": refund_id,
+            "object": "refund",
+            "account": self.intents[intent]["account"],
+            "amount": amount,
+            "currency": self.intents[intent]["currency"],
+            "payment_intent": intent,
+            "charge": f"ch_{intent[3:]}",
+            "status": self.refund_status,
+            "failure_reason": None,
+            "reason": "requested_by_customer",
+            "created": 1795000100,
+            "metadata": metadata,
+        }
+        return self.refunds[refund_id]
+
+    def dashboard_refund(self, intent: str, amount: int) -> str:
+        """Someone at the business refunded part of a payment in their Stripe Dashboard (no Tandem metadata)."""
+        return str(self._new_refund(intent, amount, {})["id"])
+
+    def finish_refund(self, refund_id: str, *, ok: bool, reason: str = "expired_or_canceled_card") -> None:
+        self.refunds[refund_id].update(status="succeeded" if ok else "failed", failure_reason=None if ok else reason)
+
+    def dispute(self, intent: str, amount: int | None = None, *, reason: str = "fraudulent") -> str:
+        """The cardholder disputed a payment with their bank."""
+        dispute_id = f"dp_{secrets.token_hex(12)}"
+        self.disputes[dispute_id] = {
+            "id": dispute_id,
+            "object": "dispute",
+            "account": self.intents[intent]["account"],
+            "amount": amount if amount is not None else self.intents[intent]["amount"] - self.refunded(intent),
+            "currency": self.intents[intent]["currency"],
+            "payment_intent": intent,
+            "charge": f"ch_{intent[3:]}",
+            "status": "needs_response",
+            "reason": reason,
+            "created": 1795000200,
+            "evidence_details": {"due_by": 1795800000, "has_evidence": False, "submission_count": 0},
+        }
+        return dispute_id
+
+    def close_dispute(self, dispute_id: str, *, won: bool) -> None:
+        self.disputes[dispute_id]["status"] = "won" if won else "lost"
 
     def finish_bank_payment(self, session_id: str, *, ok: bool) -> dict[str, Any]:
         session = self.sessions[session_id]
@@ -156,6 +219,8 @@ class FakeStripe:
             return httpx.Response(200, json=link)
         if path == "/v1/checkout/sessions" or path.startswith("/v1/checkout/sessions/"):
             return self._checkout(request, form)
+        if path == "/v1/refunds" or path.startswith(("/v1/refunds/", "/v1/disputes/")):
+            return self._refunds(request, form)
         return httpx.Response(404, json={"error": {"type": "invalid_request_error", "message": f"no route {path}"}})
 
     def _checkout(self, request: httpx.Request, form: dict[str, str]) -> httpx.Response:
@@ -202,6 +267,38 @@ class FakeStripe:
         elif not (request.method == "GET" and len(parts) == 5):
             return missing
         return httpx.Response(200, json=self._public(session))
+
+    def _refunds(self, request: httpx.Request, form: dict[str, str]) -> httpx.Response:
+        account = request.headers.get("stripe-account")
+        if account not in self.accounts:
+            return httpx.Response(400, json={"error": {"code": "account_invalid", "message": "No such account"}})
+        parts = request.url.path.split("/")
+        if request.method == "POST" and parts[2] == "refunds" and len(parts) == 3:
+            intent = form.get("payment_intent", "")
+            if self.intents.get(intent, {}).get("account") != account:
+                return httpx.Response(
+                    404, json={"error": {"code": "resource_missing", "message": "No such payment_intent"}}
+                )
+            amount = int(form["amount"])
+            if amount > self.intents[intent]["amount"] - self.refunded(intent):
+                return httpx.Response(
+                    400,
+                    json={"error": {"code": "amount_too_large", "message": "Refund is larger than what is left"}},
+                )
+            metadata = {k[9:-1]: v for k, v in form.items() if k.startswith("metadata[")}
+            refund = self._new_refund(intent, amount, metadata)
+            refund["refund_application_fee"] = form.get("refund_application_fee")
+            return httpx.Response(200, json=self._strip(refund))
+        if request.method == "GET" and len(parts) == 4:
+            store = self.refunds if parts[2] == "refunds" else self.disputes
+            found = store.get(parts[3])
+            if found is not None and found["account"] == account:
+                return httpx.Response(200, json=self._strip(found))
+        return httpx.Response(404, json={"error": {"code": "resource_missing", "message": "No such object"}})
+
+    @staticmethod
+    def _strip(obj: dict[str, Any]) -> dict[str, Any]:
+        return {k: v for k, v in obj.items() if k not in ("account", "refund_application_fee")}
 
     @staticmethod
     def _public(session: dict[str, Any]) -> dict[str, Any]:

@@ -13,9 +13,11 @@ from app.platform.db import transaction
 from app.platform.errors import Invalid, error_responses
 from app.platform.permissions import require
 
-from . import connection, events, paylinks, signing
+from . import connection, events, paylinks, refunds, signing
 from . import permissions as P
 from .schemas import (
+    CardRefundIn,
+    CardRefundProposedOut,
     InvoiceOnlinePaymentsOut,
     PayLinkOut,
     PaymentConnectionOut,
@@ -113,6 +115,20 @@ def reset_link(invoice_id: uuid.UUID, response: Response, ctx: Context = Depends
     response.headers["Cache-Control"] = "no-store"  # carries the pay link, a capability
     with transaction(ctx) as db:
         return paylinks.share(db, ctx, invoice_id, reset=True)
+
+
+@router.post(
+    "/invoices/{invoice_id}/card-refunds",
+    response_model=CardRefundProposedOut,
+    status_code=201,
+    summary="Ask to pay money back to the customer's card (waits for an owner or admin to approve)",
+    responses=ERRORS,
+)
+def propose_card_refund(
+    invoice_id: uuid.UUID, body: CardRefundIn, ctx: Context = Depends(require(P.REFUND_PROPOSE))
+) -> CardRefundProposedOut:
+    with transaction(ctx) as db:
+        return refunds.propose(db, ctx, invoice_id, body)
 
 
 async def relay_event(request: Request) -> tuple[RelayEventIn, bytes]:

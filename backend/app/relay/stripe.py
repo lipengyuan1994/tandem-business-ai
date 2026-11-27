@@ -172,6 +172,36 @@ class Stripe:
     def expire_checkout_session(self, account: str, session: str) -> dict[str, Any]:
         return self.request("POST", f"/v1/checkout/sessions/{session}/expire", account=account)
 
+    # -- refunds and disputes (on the connected account) --------------------------------------------------------
+
+    def create_refund(
+        self,
+        account: str,
+        *,
+        payment_intent: str,
+        amount: int,
+        metadata: dict[str, str],
+        refund_application_fee: bool,
+        key: str,
+    ) -> dict[str, Any]:
+        """Pay part or all of one charge back to the customer's card (ADR-022, phase 3). The key is Tandem's refund
+        id, so a retry never refunds twice."""
+        params: dict[str, Any] = {
+            "payment_intent": payment_intent,
+            "amount": amount,
+            "reason": "requested_by_customer",
+            "metadata": metadata,
+        }
+        if refund_application_fee:
+            params["refund_application_fee"] = True
+        return self.request("POST", "/v1/refunds", params, account=account, idempotency_key=key)
+
+    def retrieve_refund(self, account: str, refund: str) -> dict[str, Any]:
+        return self.request("GET", f"/v1/refunds/{refund}", account=account)
+
+    def retrieve_dispute(self, account: str, dispute: str) -> dict[str, Any]:
+        return self.request("GET", f"/v1/disputes/{dispute}", account=account)
+
 
 def verify_webhook(payload: bytes, header: str, secret: str, now: int) -> bool:
     """Stripe-Signature: `t=<ts>,v1=<hex HMAC-SHA256 of "<ts>.<raw body>">` (same construction as signing.py)."""
@@ -212,4 +242,40 @@ def checkout_view(session: dict[str, Any]) -> dict[str, Any]:
         "expires_at": session.get("expires_at"),
         "client_reference_id": session.get("client_reference_id"),
         "metadata": {str(k): str(v) for k, v in metadata.items() if str(k).startswith("tandem_")},
+    }
+
+
+def _object_id(value: Any) -> Any:
+    return value.get("id") if isinstance(value, dict) else value
+
+
+def refund_view(refund: dict[str, Any]) -> dict[str, Any]:
+    """A refund as Tandem records it: amounts, status and Stripe ids only."""
+    metadata = refund.get("metadata") or {}
+    return {
+        "id": refund.get("id"),
+        "amount": refund.get("amount"),
+        "currency": refund.get("currency"),
+        "status": refund.get("status"),
+        "failure_reason": refund.get("failure_reason"),
+        "payment_intent": _object_id(refund.get("payment_intent")),
+        "charge": _object_id(refund.get("charge")),
+        "created": refund.get("created"),
+        "metadata": {str(k): str(v) for k, v in metadata.items() if str(k).startswith("tandem_")},
+    }
+
+
+def dispute_view(dispute: dict[str, Any]) -> dict[str, Any]:
+    """A dispute as Tandem records it. Evidence stays in Stripe; only when a response is due comes across."""
+    evidence = dispute.get("evidence_details") or {}
+    return {
+        "id": dispute.get("id"),
+        "amount": dispute.get("amount"),
+        "currency": dispute.get("currency"),
+        "status": dispute.get("status"),
+        "reason": dispute.get("reason"),
+        "payment_intent": _object_id(dispute.get("payment_intent")),
+        "charge": _object_id(dispute.get("charge")),
+        "created": dispute.get("created"),
+        "due_by": evidence.get("due_by") if isinstance(evidence, dict) else None,
     }

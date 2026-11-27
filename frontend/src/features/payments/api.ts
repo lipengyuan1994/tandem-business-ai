@@ -61,3 +61,18 @@ export function usePayLink(invoiceId: string) {
     onSettled: async () => { await qc.invalidateQueries({ queryKey: invoiceKey(invoiceId) }) },
   })
 }
+
+export const REFUND_PROPOSE = "payments.refund.propose"
+export type RefundOption = Schemas["RefundOption"]
+
+/** Asks for a card refund. Nothing is sent until an owner or admin approves it in Approvals. */
+export function useCardRefund(invoiceId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (option: RefundOption) => unwrap(await api.POST("/api/v1/payments/invoices/{invoice_id}/card-refunds", {
+      params: { path: { invoice_id: invoiceId } },
+      body: { request_id: option.request_id, source: option.source, invoice_refund_id: option.invoice_refund_id ?? null },
+    })),
+    onSettled: async () => { await qc.invalidateQueries({ queryKey: invoiceKey(invoiceId) }) },
+  })
+}

@@ -4,6 +4,17 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **New (2026-11-27): online payments, step 3 of 5.** Money owed back on a card payment can be paid back to the
+  customer's card from the invoice page: a credit note whose refund was recorded as "card", or money paid twice.
+  Each card refund waits for an owner's or admin's approval in Approvals before Stripe pays it. Refunds made in the
+  Stripe Dashboard and card disputes show on the invoice, and owners and admins are told; a lost dispute reopens the
+  invoice for the amount the bank took back.
+- **Migration:** `20261127_2200_payments_refunds_disputes` (new `payment_refunds` and `payment_disputes` tables). No
+  manual step. Role policy 2026-11-27.3 adds `payments.refund.propose` (owner, admin, demo reviewer, operator) and
+  `payments.refund.send` (owner, admin).
+- **Relay:** its Stripe key needs Refunds write and Disputes read, and its webhook endpoint the `refund.*` and
+  `charge.dispute.*` events (see `docs/runbooks/payments-relay.md`). Before enabling refunds on a live relay.
+
 - **New (2026-11-27): online payments, step 2 of 5.** Customers can pay an issued invoice online. On the invoice
   page, Copy pay link gives a link to send the customer; it opens a page (`/pay/...`) with the amount due and a
   Pay button that goes to Stripe's own payment page. The payment is recorded on the invoice by itself, once, when

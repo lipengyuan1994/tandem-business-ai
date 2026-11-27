@@ -10,6 +10,8 @@ Tandem side (signed with the client's secret, see signing.py):
   payment request; `GET /v1/checkout_sessions/{id}` reads one back and `POST /v1/checkout_sessions/{id}/expire`
   closes one. Sessions are always created and read with the caller's own account, so Stripe itself refuses a
   session that belongs to another business.
+- `POST /v1/refunds` pays part of a charge back to the customer's card; `GET /v1/refunds/{id}` and
+  `GET /v1/disputes/{id}` read one back (phase 3). All on the caller's own account.
 A client can only ever reach its own account: the account is found from the client, never named in the request.
 
 Stripe side:
@@ -45,12 +47,22 @@ from .config import RelaySettings, get_settings
 from .crypto import UnsealError, seal, unseal
 from .db import Database, make_engine
 from .models import RelayAccount, RelayClient, RelayEvent, RelayNonce
-from .stripe import Stripe, StripeError, account_view, checkout_view, verify_webhook
+from .stripe import (
+    Stripe,
+    StripeError,
+    account_view,
+    checkout_view,
+    dispute_view,
+    refund_view,
+    verify_webhook,
+)
 
 log = structlog.get_logger(__name__)
 NONCE = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
 SETTINGS_PATH = "/settings/payments"
 SESSION_ID = re.compile(r"^cs_[A-Za-z0-9_]{1,200}$")
+REFUND_ID = re.compile(r"^(re|pyr)_[A-Za-z0-9]{1,100}$")
+DISPUTE_ID = re.compile(r"^(dp|du)_[A-Za-z0-9]{1,100}$")
 # Checkout pages return to Tandem's public pay page only, never to an arbitrary URL.
 PAY_PATH = re.compile(r"^/pay/[A-Za-z0-9_.=-]{10,400}(\?[A-Za-z0-9_={}&-]{0,100})?$")
 # Stripe accepts expires_at between 30 minutes and 24 hours ahead.
@@ -86,6 +98,13 @@ class CheckoutIn(BaseModel):
     cancel_path: str = Field(max_length=500)
     expires_at: int = Field(gt=0)
     bank_transfers: bool = False
+
+
+class RefundIn(BaseModel):
+    refund_ref: str = Field(pattern=r"^[0-9a-f-]{36}$")
+    invoice_ref: str = Field(pattern=r"^[0-9a-f-]{36}$")
+    payment_intent: str = Field(pattern=r"^pi_[A-Za-z0-9]{1,100}$")
+    amount: int = Field(gt=0, le=99_999_999)
 
 
 @dataclass
@@ -430,6 +449,64 @@ def create_app(
     async def expire_checkout(session_id: str, request: Request) -> dict[str, Any]:
         raw = await _raw(request)
         return await run_in_threadpool(lambda: _session_call(raw, session_id, expire=True))
+
+    # -- refunds and disputes -----------------------------------------------------------------------------------
+
+    def _create_refund(raw: Raw) -> dict[str, Any]:
+        client = authenticate(relay, raw)
+        body = _parse(RefundIn, raw.body)
+        account_id = _require_account(client)
+        metadata = {
+            "tandem_refund": body.refund_ref,
+            "tandem_invoice": body.invoice_ref,
+            "tandem_business_ref": client.business_ref,
+        }
+        with relay.stripe_http() as http:
+            try:
+                refund = relay.stripe(http).create_refund(
+                    account_id,
+                    payment_intent=body.payment_intent,
+                    amount=body.amount,
+                    metadata=metadata,
+                    # With a platform fee, the platform pays its share of the fee back too (ADR-022, phase 3).
+                    refund_application_fee=settings.application_fee_bps > 0,
+                    key=f"tandem-refund-{client.id}-{body.refund_ref}",
+                )
+            except StripeError as exc:
+                raise _stripe_failure(exc) from None
+        log.info("relay.refund_created", client=client.id, refund=refund.get("id"))
+        return refund_view(refund)
+
+    def _read_object(raw: Raw, kind: str, object_id: str) -> dict[str, Any]:
+        client = authenticate(relay, raw)
+        pattern, label = (REFUND_ID, "refund") if kind == "refund" else (DISPUTE_ID, "dispute")
+        if not pattern.match(object_id):
+            raise RelayError(404, "not_found", f"No such {label}")
+        account_id = _require_account(client)
+        with relay.stripe_http() as http:
+            stripe = relay.stripe(http)
+            try:
+                if kind == "refund":
+                    return refund_view(stripe.retrieve_refund(account_id, object_id))
+                return dispute_view(stripe.retrieve_dispute(account_id, object_id))
+            except StripeError as exc:
+                if exc.status == 404:
+                    raise RelayError(404, "not_found", f"No such {label}") from None
+                raise _stripe_failure(exc) from None
+
+    @app.post("/v1/refunds")
+    async def create_refund(request: Request) -> dict[str, Any]:
+        return await run_in_threadpool(_create_refund, await _raw(request))
+
+    @app.get("/v1/refunds/{refund_id}")
+    async def read_refund(refund_id: str, request: Request) -> dict[str, Any]:
+        raw = await _raw(request)
+        return await run_in_threadpool(lambda: _read_object(raw, "refund", refund_id))
+
+    @app.get("/v1/disputes/{dispute_id}")
+    async def read_dispute(dispute_id: str, request: Request) -> dict[str, Any]:
+        raw = await _raw(request)
+        return await run_in_threadpool(lambda: _read_object(raw, "dispute", dispute_id))
 
     # -- Stripe's Connect webhook ---------------------------------------------------------------------------
 

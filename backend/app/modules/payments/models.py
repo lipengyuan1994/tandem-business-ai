@@ -32,6 +32,13 @@ EVENT_OUTCOMES = ("pending", "applied", "ignored", "failed")
 # paid; `processing` after a bank debit was started (the money arrives days later); `paid` once Stripe says so and
 # the money is on the invoice; `expired` or `failed` otherwise.
 REQUEST_STATUSES = ("creating", "open", "processing", "paid", "expired", "failed")
+# A card refund (phase 3): `proposed` while it waits for approval; `sending` once approved, until Stripe answers;
+# then Stripe's own `pending`, `succeeded` or `failed`; `canceled` if the proposal was turned down or expired, or
+# Stripe canceled it.
+REFUND_SOURCES = ("credit_note", "surplus", "dashboard")
+REFUND_STATUSES = ("proposed", "sending", "pending", "succeeded", "failed", "canceled")
+LIVE_REFUND_STATUSES = ("proposed", "sending", "pending", "succeeded")
+DISPUTE_OUTCOMES = ("open", "won", "lost")
 
 
 class PaymentConnection(BusinessScopedBase):
@@ -135,4 +142,71 @@ class PaymentRequest(BusinessScopedBase):
         CheckConstraint(f"status in ({','.join(repr(s) for s in REQUEST_STATUSES)})", name="status"),
         CheckConstraint("amount_minor > 0", name="amount"),
         CheckConstraint("applied_minor >= 0 and surplus_minor >= 0", name="split"),
+    )
+
+
+class PaymentRefund(BusinessScopedBase):
+    """Money paid back to a customer's card from one paid payment request. Sent from Tandem only after approval
+    (source `credit_note` or `surplus`), or found in Stripe after someone refunded in the Dashboard (`dashboard`).
+    The row id is the Stripe idempotency key, so one approved refund is never sent twice."""
+
+    __tablename__ = "payment_refunds"
+    request_id: Mapped[uuid.UUID]
+    invoice_id: Mapped[uuid.UUID]
+    source: Mapped[str] = mapped_column(String(12))
+    invoice_refund_id: Mapped[uuid.UUID | None]  # the sales refund (credit note) this pays out
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(3))
+    status: Mapped[str] = mapped_column(String(12), default="proposed")
+    proposal_id: Mapped[uuid.UUID | None]
+    stripe_refund_id: Mapped[str | None] = mapped_column(String(80))
+    failure_reason: Mapped[str | None] = mapped_column(String(80))
+    requested_by: Mapped[uuid.UUID | None]
+    sent_at: Mapped[datetime | None]
+    settled_at: Mapped[datetime | None]
+    last_error: Mapped[str | None] = mapped_column(String(500))
+    __table_args__ = scoped_table_args(
+        UniqueConstraint("stripe_refund_id"),
+        ForeignKeyConstraint(["business_id", "request_id"], ["payment_requests.business_id", "payment_requests.id"]),
+        Index("ix_payment_refunds_invoice", "business_id", "invoice_id"),
+        Index(
+            "uq_payment_refunds_credit",
+            "business_id",
+            "invoice_refund_id",
+            unique=True,
+            postgresql_where=text(
+                f"invoice_refund_id is not null and status in ({','.join(repr(s) for s in LIVE_REFUND_STATUSES)})"
+            ),
+        ),
+        CheckConstraint(f"source in ({','.join(repr(s) for s in REFUND_SOURCES)})", name="source"),
+        CheckConstraint(f"status in ({','.join(repr(s) for s in REFUND_STATUSES)})", name="status"),
+        CheckConstraint("(source = 'credit_note') = (invoice_refund_id is not null)", name="credit_note"),
+        CheckConstraint("amount_minor > 0", name="amount"),
+    )
+
+
+class PaymentDispute(BusinessScopedBase):
+    """A customer's bank disputing a card payment (a chargeback). The evidence and the answer stay in Stripe's
+    Dashboard; Tandem tracks the deadline and, when the dispute is lost, takes the money back off the invoice."""
+
+    __tablename__ = "payment_disputes"
+    request_id: Mapped[uuid.UUID]
+    invoice_id: Mapped[uuid.UUID]
+    stripe_dispute_id: Mapped[str] = mapped_column(String(80))
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(3))
+    stripe_status: Mapped[str] = mapped_column(String(32))
+    reason: Mapped[str | None] = mapped_column(String(40))
+    outcome: Mapped[str] = mapped_column(String(8), default="open")
+    due_by: Mapped[datetime | None]
+    opened_at: Mapped[datetime]
+    closed_at: Mapped[datetime | None]
+    reversed_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    last_error: Mapped[str | None] = mapped_column(String(500))
+    __table_args__ = scoped_table_args(
+        UniqueConstraint("stripe_dispute_id"),
+        ForeignKeyConstraint(["business_id", "request_id"], ["payment_requests.business_id", "payment_requests.id"]),
+        Index("ix_payment_disputes_invoice", "business_id", "invoice_id"),
+        CheckConstraint(f"outcome in ({','.join(repr(s) for s in DISPUTE_OUTCOMES)})", name="outcome"),
+        CheckConstraint("amount_minor > 0 and reversed_minor >= 0", name="amount"),
     )

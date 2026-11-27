@@ -2,10 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Release / phase | v1 · phases 1 and 2 built (connected accounts, pay links); phases 3 to 5 planned ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
+| Release / phase | v1 · phases 1 to 3 built (connected accounts, pay links, card refunds and disputes); phases 4 and 5 planned ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
 | Tier / kind | A (outbound money movement, webhooks, public pay page) |
 | Depends on | platform, org, sales, approvals, notifications (in `dependencies.py` and [02](../02-architecture.md)) |
-| Owns tables | built: `payment_connections`, `payment_events`, `payment_links`, `payment_requests`; planned: `payment_disputes`, `payment_payouts` |
+| Owns tables | built: `payment_connections`, `payment_events`, `payment_links`, `payment_requests`, `payment_refunds`, `payment_disputes`; planned: `payment_payouts` |
 
 ## Purpose
 Let a business's customers pay issued invoices online through Stripe, and record that money in the sales ledger
@@ -100,13 +100,45 @@ right deployment signed with that deployment's key.
   relay's application fee `RELAY_APPLICATION_FEE_BPS` defaults to 0 (nothing charged, Q14); pay links do not expire
   (replace one to cut it off); the hourly check replaces the planned daily one.
 
+## Phase 3 as built (2026-11-27)
+- **What can be paid back to a card:** money a credit note owes back to the customer when staff recorded that refund
+  with method "card", and the surplus left on an online payment (phase 2). `GET /payments/invoices/{id}` now lists
+  `refund_options` (empty without `payments.refund.propose`, and under `DATA_PROFILE=regulated`), `refunds` and
+  `disputes`. The amount always comes from Tandem's own records, never from the request, and never more than is left
+  on the card payment after earlier card and Dashboard refunds. Cash or bank refunds on a credit note are never
+  offered for the card.
+- **Through approvals:** `POST /payments/invoices/{id}/card-refunds` (`payments.refund.propose`: owner, admin, demo reviewer,
+  operator) writes a `payment_refunds` row (`proposed`) and a proposal `payments.card_refund`. Approving it needs
+  `payments.refund.send` (owner, admin); self-approval follows the business's approval settings. Rejected, expired or
+  cancelled proposals cancel the row so the amount can be asked for again. Only one live refund per credit-note
+  refund. Policy 2026-11-27.3.
+- **Sending:** approval queues `payments.send_refund`; the relay's `POST /v1/refunds` refunds the payment intent on
+  the business's account with the Tandem refund id in the idempotency key and metadata, so a retry never pays twice.
+  When the relay's application fee is above 0 the refund also returns the platform's share. A relay outage leaves
+  the row `sending` and the job retries; the hourly check also re-sends rows stuck in `sending` for 15 minutes and
+  re-reads `pending` ones. `refund.*` events re-read the refund through the relay (`GET /v1/refunds/{id}`) and set
+  `pending|succeeded|failed`; a failure notifies owners and admins and the amount is offered again. The ledger is
+  not touched: the credit note already recorded the refund, and a surplus was never on the invoice.
+- **Refunds made in the Stripe Dashboard:** recorded as source `dashboard` and reported to owners and admins; the
+  invoice is left alone (the business issues a credit note if the customer is owed it). Phase 5 has the agent draft
+  that credit note. Refunds on payments Tandem does not know are ignored.
+- **Disputes:** `charge.dispute.*` events re-read the dispute (`GET /v1/disputes/{id}`) and keep a
+  `payment_disputes` row with Stripe's status, reason and answer-by date; opening one notifies holders of
+  `payments.connection.manage` and the invoice shows it with its deadline. Disputes are answered in the Stripe
+  Dashboard. While a dispute is open or lost, no card refund is offered for that payment. A lost dispute takes the
+  disputed amount (never more than is still net paid) off the invoice once through `sales.reverse_online_payment`:
+  the payment is voided, any part the bank did not take is re-recorded, and the invoice reopens. Won, prevented and
+  `warning_closed` only clear the flag. A reversal that fails is kept with its error and retried hourly.
+- **Defaults chosen:** refunds always go through approvals (no auto-approve); a Dashboard refund never changes the
+  invoice on its own; the platform fee is refunded with the payment when one is charged.
+
 ## Phases
 | Phase | What ships | Size |
 |---|---|---|
 | 0 | ADR-022, roadmap and this card | S |
 | 1 | Relay service, Settings > Payments, connected accounts and status (**built 2026-11-27**) | L |
 | 2 | Pay links and pay page, Checkout, webhooks into the ledger, unapplied payments, hourly check (**built 2026-11-27**) | L |
-| 3 | Card refunds through approvals, Dashboard refund matching, disputes | M |
+| 3 | Card refunds through approvals, Dashboard refund matching, disputes (**built 2026-11-27**) | M |
 | 4 | Stripe fees, payouts, QuickBooks clearing and fees accounts, transfers | M |
 | 5 | Agent work: pay links in drafted reminders, surplus refunds, unmatched refunds, payouts in the briefing | M |
 

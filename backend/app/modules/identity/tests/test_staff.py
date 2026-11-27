@@ -119,6 +119,7 @@ def test_demo_reviewer_has_exactly_admin_permissions_except_configuration() -> N
         "org.location.write",
         "identity.membership.write",
         "payments.connection.manage",
+        "payments.refund.send",  # sends real money back to a card
     }
     forbidden = excluded | {
         "ai.settings.write",

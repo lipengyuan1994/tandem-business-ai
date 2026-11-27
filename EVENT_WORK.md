@@ -924,3 +924,24 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   links do not expire. Surplus is refunded from the Stripe Dashboard until phases 3 and 5.
 - Tests: 11 backend pay-link tests, 7 relay checkout tests, 5 log-masking cases, 14 frontend tests (pay page and
   invoice card).
+
+
+## 2026-11-27 — Online payments phase 3: card refunds through approvals, Dashboard refunds and disputes
+
+- Continued as product owner on the owner's instruction to keep going phase by phase. Mocked Stripe only (fake
+  Stripe over `respx`); no Stripe account, key or network call to Stripe.
+- Relay: `POST /v1/refunds` (Tandem's refund id in the idempotency key and metadata; returns the platform fee with
+  the refund when a fee is charged), `GET /v1/refunds/{id}`, `GET /v1/disputes/{id}`, each on the caller's own
+  account only. Tests: 3 new relay tests.
+- Tandem: `payment_refunds` and `payment_disputes` (forced RLS), migration `20261127_2200_payments_refunds_disputes`.
+  Card refunds of credit-note refunds recorded as "card" and of online surplus, asked for with
+  `payments.refund.propose` and approved with `payments.refund.send` (policy 2026-11-27.3) through a
+  `payments.card_refund` proposal, sent by a job that retries outages, finished by `refund.*` events or the hourly
+  check. Refunds made in the Stripe Dashboard are recorded and reported, never put on the invoice by themselves.
+  Disputes are tracked with their answer-by date; a lost one takes the money off the invoice once through the new
+  `sales.reverse_online_payment` and reopens it. The invoice card shows refund buttons, card refunds and a dispute
+  warning.
+- Defaults chosen: every card refund goes through approvals; Dashboard refunds leave the invoice alone (phase 5 has
+  the agent draft the credit note); the platform fee is returned with a refund when one is charged.
+- Tests: 10 backend refund and dispute tests, 3 relay tests, 3 new frontend tests (invoice card).
+

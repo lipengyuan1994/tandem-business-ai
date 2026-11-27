@@ -23,7 +23,8 @@ QuickBooks sync: `accounting.sync.read|run` for owner/admin/demo_reviewer (audit
 `accounting.connection.manage` owner only; policy 2026-11-24.2.
 Online payments: `payments.connection.read` for owner/admin/demo_reviewer; `payments.connection.manage` owner and
 admin; policy 2026-11-27.1. Pay links: `payments.link.share` for owner/admin/demo_reviewer/operator; policy
-2026-11-27.2.
+2026-11-27.2. Card refunds: `payments.refund.propose` owner/admin/demo_reviewer/operator, `payments.refund.send` owner and admin;
+policy 2026-11-27.3.
 `demo-logins --guest` prepares the public Demo Guest across the three validated synthetic businesses.
 It preserves the original app and Keycloak identities on upgrade. Fresh accounts acquire a Keycloak
 subject through a reserved setup address before the public address is activated. Repeat provisioning

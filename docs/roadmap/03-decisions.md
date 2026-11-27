@@ -280,3 +280,9 @@ stays ask. The new recorded `reply_guardrail` use-case requires one constraint m
   payment attempt (`payment_requests.surplus_minor`) rather than in a separate unapplied-payments table, so sales'
   "payments never exceed the total" check is unchanged. Bank debit is behind `PAYMENTS_BANK_TRANSFERS` and the
   platform fee is `RELAY_APPLICATION_FEE_BPS`, both off by default until the owner answers Q14 and Q16.
+- **Phase 3 notes (2026-11-27):** card refunds are sent only for what Tandem's own records owe back (a credit-note
+  refund recorded with method "card", or online surplus), always through an approval, with Tandem's refund id as
+  Stripe's idempotency key. A refund made in the Stripe Dashboard is recorded and reported but never changes the
+  invoice by itself (the plan's "matched by a drafted proposal" is phase 5's agent work). A lost dispute reverses the
+  payment through `sales.reverse_online_payment`, which voids it and re-records any part the bank did not take, so
+  sales' ledger checks stay true after an earlier partial refund.
