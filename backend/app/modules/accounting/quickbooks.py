@@ -101,6 +101,8 @@ ENTITIES = {
     "payment": "Payment",
     "bill": "Bill",
     "billpayment": "BillPayment",
+    "transfer": "Transfer",
+    "purchase": "Purchase",
 }
 
 

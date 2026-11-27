@@ -38,6 +38,10 @@ class FakeStripe:
         self.refunds: dict[str, dict[str, Any]] = {}
         self.disputes: dict[str, dict[str, Any]] = {}
         self.refund_status = "succeeded"  # what a new refund starts as ("pending" for bank debits and slow cards)
+        self.balance: list[dict[str, Any]] = []  # balance transactions, in order
+        self.payouts: dict[str, dict[str, Any]] = {}
+        self.page_size = 100  # largest page of balance transactions served
+        self.fee_fixed = 30  # Stripe's card fee in this fake: 2.9% + 30 (minor units)
         self.calls: list[tuple[str, str, dict[str, str], dict[str, str]]] = []  # method, path, form, headers
         self.by_key: dict[str, httpx.Response] = {}
         self.fail_next: list[httpx.Response] = []
@@ -67,11 +71,64 @@ class FakeStripe:
         }
         return intent
 
+    def _txn(self, account: str, kind: str, category: str, amount: int, fee: int, source: str) -> dict[str, Any]:
+        txn = {
+            "id": f"txn_{secrets.token_hex(10)}",
+            "object": "balance_transaction",
+            "account": account,
+            "type": kind,
+            "reporting_category": category,
+            "amount": amount,
+            "fee": fee,
+            "net": amount - fee,
+            "currency": "usd",
+            "source": source,
+            "payout": None,
+        }
+        self.balance.append(txn)
+        return txn
+
+    def _charge(self, intent: str) -> None:
+        """The money arrived: a charge and its balance transaction, with Stripe's fee taken off."""
+        found = self.intents[intent]
+        fee = round(found["amount"] * 0.029) + self.fee_fixed
+        txn = self._txn(found["account"], "charge", "charge", found["amount"], fee, f"ch_{intent[3:]}")
+        txn["currency"] = found["currency"]
+        found.update(charge=f"ch_{intent[3:]}", balance_transaction=txn)
+
     def pay(self, session_id: str) -> dict[str, Any]:
         """The customer paid by card on the Checkout page: returns the session as Stripe sends it in the event."""
         session = self.sessions[session_id]
         session.update(status="complete", payment_status="paid", payment_intent=self._intent(session))
+        self._charge(session["payment_intent"])
         return dict(session)
+
+    def payout(self, account: str, *, automatic: bool = True, status: str = "paid") -> str:
+        """Stripe pays the account's available balance out to its bank: every transaction not yet paid out."""
+        payout_id = f"po_{secrets.token_hex(12)}"
+        swept = [t for t in self.balance if t["account"] == account and t["payout"] is None and t["type"] != "payout"]
+        amount = sum(t["net"] for t in swept)
+        for txn in swept:
+            txn["payout"] = payout_id if automatic else None
+        own = self._txn(account, "payout", "payout", -amount, 0, payout_id)
+        own["payout"] = payout_id
+        self.payouts[payout_id] = {
+            "id": payout_id,
+            "object": "payout",
+            "account": account,
+            "amount": amount,
+            "currency": "usd",
+            "status": status,
+            "arrival_date": 1795910400,  # 2026-11-29 UTC
+            "created": 1795791600,  # 2026-11-27 15:00 UTC
+            "automatic": automatic,
+            "method": "standard",
+            "failure_code": None,
+        }
+        return payout_id
+
+    def fail_payout(self, payout_id: str, code: str = "account_closed") -> None:
+        self.payouts[payout_id].update(status="failed", failure_code=code)
 
     def start_bank_payment(self, session_id: str) -> dict[str, Any]:
         """The customer chose a bank debit: Checkout completes, the money arrives days later (or never)."""
@@ -99,6 +156,7 @@ class FakeStripe:
             "created": 1795000100,
             "metadata": metadata,
         }
+        self._txn(self.intents[intent]["account"], "refund", "refund", -amount, 0, refund_id)
         return self.refunds[refund_id]
 
     def dashboard_refund(self, intent: str, amount: int) -> str:
@@ -124,15 +182,21 @@ class FakeStripe:
             "created": 1795000200,
             "evidence_details": {"due_by": 1795800000, "has_evidence": False, "submission_count": 0},
         }
+        found = self.disputes[dispute_id]
+        self._txn(found["account"], "adjustment", "dispute", -found["amount"], 1500, dispute_id)
         return dispute_id
 
     def close_dispute(self, dispute_id: str, *, won: bool) -> None:
-        self.disputes[dispute_id]["status"] = "won" if won else "lost"
+        found = self.disputes[dispute_id]
+        found["status"] = "won" if won else "lost"
+        if won:
+            self._txn(found["account"], "adjustment", "dispute_reversal", found["amount"], 0, dispute_id)
 
     def finish_bank_payment(self, session_id: str, *, ok: bool) -> dict[str, Any]:
         session = self.sessions[session_id]
         if ok:
             session["payment_status"] = "paid"
+            self._charge(session["payment_intent"])
         return dict(session)
 
     def expire_session(self, session_id: str) -> dict[str, Any]:
@@ -221,6 +285,10 @@ class FakeStripe:
             return self._checkout(request, form)
         if path == "/v1/refunds" or path.startswith(("/v1/refunds/", "/v1/disputes/")):
             return self._refunds(request, form)
+        if request.method == "GET" and (
+            path == "/v1/balance_transactions" or path.startswith(("/v1/payment_intents/", "/v1/payouts/"))
+        ):
+            return self._money(request, form)
         return httpx.Response(404, json={"error": {"type": "invalid_request_error", "message": f"no route {path}"}})
 
     def _checkout(self, request: httpx.Request, form: dict[str, str]) -> httpx.Response:
@@ -295,6 +363,65 @@ class FakeStripe:
             if found is not None and found["account"] == account:
                 return httpx.Response(200, json=self._strip(found))
         return httpx.Response(404, json={"error": {"code": "resource_missing", "message": "No such object"}})
+
+    def _money(self, request: httpx.Request, params: dict[str, str]) -> httpx.Response:
+        account = request.headers.get("stripe-account")
+        missing = httpx.Response(404, json={"error": {"code": "resource_missing", "message": "No such object"}})
+        if account not in self.accounts:
+            return httpx.Response(400, json={"error": {"code": "account_invalid", "message": "No such account"}})
+        parts = request.url.path.split("/")
+        if parts[2] == "payment_intents" and len(parts) == 4:
+            found = self.intents.get(parts[3])
+            if found is None or found["account"] != account:
+                return missing
+            txn = found.get("balance_transaction")
+            expanded = any(
+                k.startswith("expand") and v == "latest_charge.balance_transaction" for k, v in params.items()
+            )
+            charge: Any = found.get("charge")
+            if charge and expanded:
+                charge = {"id": charge, "object": "charge", "balance_transaction": self._strip(txn) if txn else None}
+            return httpx.Response(
+                200,
+                json={
+                    "id": parts[3],
+                    "object": "payment_intent",
+                    "amount": found["amount"],
+                    "amount_received": found["amount"] if found.get("charge") else 0,
+                    "currency": found["currency"],
+                    "status": "succeeded" if found.get("charge") else "processing",
+                    "latest_charge": charge,
+                },
+            )
+        if parts[2] == "payouts" and len(parts) == 4:
+            payout = self.payouts.get(parts[3])
+            return (
+                missing
+                if payout is None or payout["account"] != account
+                else httpx.Response(200, json=self._strip(payout))
+            )
+        if parts[2] == "balance_transactions" and len(parts) == 3:
+            payout = self.payouts.get(params.get("payout", ""))
+            if payout is None or payout["account"] != account:
+                return missing
+            if not payout["automatic"]:
+                return httpx.Response(
+                    400,
+                    json={
+                        "error": {"code": "invalid_request_error", "message": "Only automatic payouts can be listed"}
+                    },
+                )
+            rows = [t for t in self.balance if t["account"] == account and t["payout"] == payout["id"]]
+            after = params.get("starting_after")
+            if after:
+                ids = [t["id"] for t in rows]
+                rows = rows[ids.index(after) + 1 :] if after in ids else []
+            size = min(int(params.get("limit", "10")), self.page_size)
+            return httpx.Response(
+                200,
+                json={"object": "list", "data": [self._strip(t) for t in rows[:size]], "has_more": len(rows) > size},
+            )
+        return missing
 
     @staticmethod
     def _strip(obj: dict[str, Any]) -> dict[str, Any]:

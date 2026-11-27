@@ -286,3 +286,8 @@ stays ask. The new recorded `reply_guardrail` use-case requires one constraint m
   invoice by itself (the plan's "matched by a drafted proposal" is phase 5's agent work). A lost dispute reverses the
   payment through `sales.reverse_online_payment`, which voids it and re-records any part the bank did not take, so
   sales' ledger checks stay true after an earlier partial refund.
+- **Phase 4 notes (2026-11-27):** Stripe's fee is read per payment for display, but booked in QuickBooks per payout
+  from Stripe's own list of what the payout contained, so the clearing account empties exactly as Stripe pays out.
+  The clearing and fees accounts are optional: without a clearing account the sync sends payments as before and no
+  payouts. Accounting now depends on payments (it reads `payments.public.ledger_payouts`). Tandem only reads payouts;
+  it never starts, changes or cancels one.

@@ -12,6 +12,8 @@ Tandem side (signed with the client's secret, see signing.py):
   session that belongs to another business.
 - `POST /v1/refunds` pays part of a charge back to the customer's card; `GET /v1/refunds/{id}` and
   `GET /v1/disputes/{id}` read one back (phase 3). All on the caller's own account.
+- `GET /v1/payments/{payment_intent}/fee` gives a payment's Stripe fee and net; `GET /v1/payouts/{id}` reads a payout
+  and `GET /v1/payouts/{id}/summary` totals what it paid out (charges, refunds, disputes, other, fees) (phase 4).
 A client can only ever reach its own account: the account is found from the client, never named in the request.
 
 Stripe side:
@@ -51,8 +53,11 @@ from .stripe import (
     Stripe,
     StripeError,
     account_view,
+    add_to_summary,
     checkout_view,
     dispute_view,
+    payment_fee_view,
+    payout_view,
     refund_view,
     verify_webhook,
 )
@@ -63,6 +68,9 @@ SETTINGS_PATH = "/settings/payments"
 SESSION_ID = re.compile(r"^cs_[A-Za-z0-9_]{1,200}$")
 REFUND_ID = re.compile(r"^(re|pyr)_[A-Za-z0-9]{1,100}$")
 DISPUTE_ID = re.compile(r"^(dp|du)_[A-Za-z0-9]{1,100}$")
+INTENT_ID = re.compile(r"^pi_[A-Za-z0-9]{1,100}$")
+PAYOUT_ID = re.compile(r"^po_[A-Za-z0-9]{1,100}$")
+SUMMARY_PAGES = 50  # 5,000 transactions; a bigger payout is summarised as incomplete
 # Checkout pages return to Tandem's public pay page only, never to an arbitrary URL.
 PAY_PATH = re.compile(r"^/pay/[A-Za-z0-9_.=-]{10,400}(\?[A-Za-z0-9_={}&-]{0,100})?$")
 # Stripe accepts expires_at between 30 minutes and 24 hours ahead.
@@ -507,6 +515,65 @@ def create_app(
     async def read_dispute(dispute_id: str, request: Request) -> dict[str, Any]:
         raw = await _raw(request)
         return await run_in_threadpool(lambda: _read_object(raw, "dispute", dispute_id))
+
+    # -- fees and payouts (phase 4) ------------------------------------------------------------------------------
+
+    def _read_fee(raw: Raw, intent_id: str) -> dict[str, Any]:
+        client = authenticate(relay, raw)
+        if not INTENT_ID.match(intent_id):
+            raise RelayError(404, "not_found", "No such payment")
+        account_id = _require_account(client)
+        with relay.stripe_http() as http:
+            try:
+                return payment_fee_view(relay.stripe(http).retrieve_payment_intent(account_id, intent_id))
+            except StripeError as exc:
+                if exc.status == 404:
+                    raise RelayError(404, "not_found", "No such payment") from None
+                raise _stripe_failure(exc) from None
+
+    def _read_payout(raw: Raw, payout_id: str, *, summary: bool) -> dict[str, Any]:
+        client = authenticate(relay, raw)
+        if not PAYOUT_ID.match(payout_id):
+            raise RelayError(404, "not_found", "No such payout")
+        account_id = _require_account(client)
+        with relay.stripe_http() as http:
+            stripe = relay.stripe(http)
+            try:
+                payout = payout_view(stripe.retrieve_payout(account_id, payout_id))
+                if not summary:
+                    return payout
+                totals = {"charges": 0, "refunds": 0, "disputes": 0, "other": 0, "fees": 0, "count": 0}
+                if not payout["automatic"]:  # Stripe lists what a payout contains only for automatic payouts
+                    return {"payout": payout, "available": False, "complete": False, **totals}
+                after: str | None = None
+                for _ in range(SUMMARY_PAGES):
+                    page = stripe.list_payout_transactions(account_id, payout_id, after)
+                    data = [t for t in page.get("data") or [] if isinstance(t, dict)]
+                    for txn in data:
+                        add_to_summary(totals, txn)
+                    if not page.get("has_more") or not data:
+                        return {"payout": payout, "available": True, "complete": True, **totals}
+                    after = str(data[-1].get("id"))
+                return {"payout": payout, "available": True, "complete": False, **totals}
+            except StripeError as exc:
+                if exc.status == 404:
+                    raise RelayError(404, "not_found", "No such payout") from None
+                raise _stripe_failure(exc) from None
+
+    @app.get("/v1/payments/{intent_id}/fee")
+    async def read_fee(intent_id: str, request: Request) -> dict[str, Any]:
+        raw = await _raw(request)
+        return await run_in_threadpool(lambda: _read_fee(raw, intent_id))
+
+    @app.get("/v1/payouts/{payout_id}")
+    async def read_payout(payout_id: str, request: Request) -> dict[str, Any]:
+        raw = await _raw(request)
+        return await run_in_threadpool(lambda: _read_payout(raw, payout_id, summary=False))
+
+    @app.get("/v1/payouts/{payout_id}/summary")
+    async def read_payout_summary(payout_id: str, request: Request) -> dict[str, Any]:
+        raw = await _raw(request)
+        return await run_in_threadpool(lambda: _read_payout(raw, payout_id, summary=True))
 
     # -- Stripe's Connect webhook ---------------------------------------------------------------------------
 

@@ -39,6 +39,8 @@ REFUND_SOURCES = ("credit_note", "surplus", "dashboard")
 REFUND_STATUSES = ("proposed", "sending", "pending", "succeeded", "failed", "canceled")
 LIVE_REFUND_STATUSES = ("proposed", "sending", "pending", "succeeded")
 DISPUTE_OUTCOMES = ("open", "won", "lost")
+# A payout (phase 4) is Stripe moving the business's balance to its bank account, with Stripe's own status.
+PAYOUT_STATUSES = ("pending", "in_transit", "paid", "failed", "canceled")
 
 
 class PaymentConnection(BusinessScopedBase):
@@ -129,6 +131,9 @@ class PaymentRequest(BusinessScopedBase):
     # What reached the invoice, and what could not because the invoice was already settled (to pay back or keep).
     applied_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
     surplus_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    # Stripe's processing fee and what reached the Stripe balance (phase 4), read once the payment is paid.
+    stripe_fee_minor: Mapped[int | None] = mapped_column(BigInteger)
+    net_minor: Mapped[int | None] = mapped_column(BigInteger)
     invoice_payment_id: Mapped[uuid.UUID | None]
     paid_at: Mapped[datetime | None]
     closed_at: Mapped[datetime | None]
@@ -209,4 +214,35 @@ class PaymentDispute(BusinessScopedBase):
         Index("ix_payment_disputes_invoice", "business_id", "invoice_id"),
         CheckConstraint(f"outcome in ({','.join(repr(s) for s in DISPUTE_OUTCOMES)})", name="outcome"),
         CheckConstraint("amount_minor > 0 and reversed_minor >= 0", name="amount"),
+    )
+
+
+class PaymentPayout(BusinessScopedBase):
+    """Stripe paying the business's Stripe balance out to its bank (phase 4). Totals come from Stripe's own list of
+    what the payout contained (charges, refunds, disputes, fees), so the books can move the money out of the Stripe
+    clearing account and record Stripe's fees. A manual payout has no such list: it is shown, not summarised."""
+
+    __tablename__ = "payment_payouts"
+    stripe_payout_id: Mapped[str] = mapped_column(String(80))
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(3))
+    status: Mapped[str] = mapped_column(String(12))
+    arrival_date: Mapped[datetime | None]
+    automatic: Mapped[bool]
+    method: Mapped[str | None] = mapped_column(String(16))
+    failure_code: Mapped[str | None] = mapped_column(String(80))
+    charges_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    refunds_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    disputes_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    other_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    fees_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    transaction_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    summarized_at: Mapped[datetime | None]
+    summary_complete: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
+    first_seen_at: Mapped[datetime]
+    last_error: Mapped[str | None] = mapped_column(String(500))
+    __table_args__ = scoped_table_args(
+        UniqueConstraint("stripe_payout_id"),
+        Index("ix_payment_payouts_arrival", "business_id", "arrival_date"),
+        CheckConstraint(f"status in ({','.join(repr(s) for s in PAYOUT_STATUSES)})", name="status"),
     )

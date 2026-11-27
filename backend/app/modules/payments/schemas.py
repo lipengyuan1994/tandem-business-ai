@@ -79,6 +79,8 @@ class PaymentRequestOut(BaseModel):
     )
     created_at: datetime
     paid_at: datetime | None = None
+    stripe_fee_minor: int | None = Field(default=None, description="Stripe's processing fee, once Stripe settled it")
+    net_minor: int | None = Field(default=None, description="What reached the Stripe balance after Stripe's fee")
 
 
 RefundSource = Literal["credit_note", "surplus", "dashboard"]
@@ -184,3 +186,28 @@ class PayPageOut(BaseModel):
 
 class CheckoutStartOut(BaseModel):
     url: str = Field(description="Stripe's hosted payment page for the open balance")
+
+
+PayoutStatus = Literal["pending", "in_transit", "paid", "failed", "canceled"]
+
+
+class PayoutOut(BaseModel):
+    """Stripe paying the business's Stripe balance out to its bank. Totals are Stripe's own, from what the payout
+    contained; a manual payout (started in the Stripe Dashboard) has none."""
+
+    id: uuid.UUID
+    amount_minor: int
+    currency: str
+    status: PayoutStatus
+    arrival_date: date | None = None
+    automatic: bool
+    method: str | None = None
+    failure_code: str | None = None
+    charges_minor: int = 0
+    refunds_minor: int = 0
+    disputes_minor: int = 0
+    other_minor: int = 0
+    fees_minor: int = 0
+    transaction_count: int = 0
+    summarized: bool = False
+    summary_complete: bool = False

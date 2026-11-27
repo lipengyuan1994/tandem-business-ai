@@ -28,6 +28,8 @@ ENTITY_TYPES = (
     "bill",
     "bill_payment",
     "item",
+    "payout_transfer",
+    "payout_fees",
 )
 SYNC_STATUSES = ("synced", "failed", "skipped")
 
@@ -58,6 +60,9 @@ class AccountingConnection(BusinessScopedBase):
     expense_account_id: Mapped[str | None] = mapped_column(String(40))
     payable_account_id: Mapped[str | None] = mapped_column(String(40))
     bank_account_id: Mapped[str | None] = mapped_column(String(40))
+    # Stripe (M21 phase 4): card payments land in a clearing account; payouts move them to the bank, less fees.
+    stripe_clearing_account_id: Mapped[str | None] = mapped_column(String(40))
+    stripe_fees_account_id: Mapped[str | None] = mapped_column(String(40))
     auto_sync: Mapped[bool] = mapped_column(default=True, server_default="true")
     sync_lease_until: Mapped[datetime | None]
     last_sync_started_at: Mapped[datetime | None]

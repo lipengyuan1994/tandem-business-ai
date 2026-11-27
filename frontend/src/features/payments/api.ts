@@ -39,6 +39,17 @@ export function useDisconnectStripe() {
   return usePaymentsMutation(async (version: number) => unwrap(await api.POST("/api/v1/payments/stripe/disconnect", { body: { version } })))
 }
 
+export type Payout = Schemas["PayoutOut"]
+
+/** Stripe payouts to the business's bank, newest first (phase 4). Tandem never starts or changes one. */
+export function usePayouts(enabled: boolean) {
+  const { permissions } = useSession()
+  return useQuery({
+    queryKey: ["payments", "payouts"] as const, enabled: enabled && permissions.has(CONNECTION_READ),
+    queryFn: async () => unwrap(await api.GET("/api/v1/payments/payouts")),
+  })
+}
+
 export const LINK_SHARE = "payments.link.share"
 export type InvoiceOnlinePayments = Schemas["InvoiceOnlinePaymentsOut"]
 

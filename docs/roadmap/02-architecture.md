@@ -76,7 +76,7 @@ Every module may import `app.platform.*` and the `public.py` of the modules list
 | `ai` | org, identity, crm, catalog, scheduling, inventory, conversations, knowledge, marketing, approvals, sales, purchasing, dashboard, notifications | 4 |
 | `voice` | ai, conversations | 5 |
 | `admin_ops` (v1) | org, identity, files, notifications, crm | 4 |
-| `accounting` (v1) | org, sales, purchasing | 5 |
+| `accounting` (v1) | org, sales, purchasing, payments | 5 |
 | `payments` (v1) | org, sales, approvals, notifications | 5 |
 
 ```mermaid

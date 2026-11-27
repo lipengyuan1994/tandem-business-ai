@@ -24,7 +24,7 @@ existing Stripe account.
 |---|---|
 | `RELAY_SECRET_KEY` | At least 32 characters. Seals client secrets. Changing it makes every business register again. |
 | `RELAY_DATABASE_URL` | SQLAlchemy URL of the relay's store, e.g. `sqlite:////relay-data/relay.db`. |
-| `RELAY_STRIPE_SECRET_KEY` | The platform's **restricted** key (Accounts and Account Links write, Checkout Sessions write, Refunds write, Disputes read, Events read). Empty: the relay runs and answers 503 to anything that needs Stripe. A `sk_live_`/`rk_live_` key puts every business in live mode. |
+| `RELAY_STRIPE_SECRET_KEY` | The platform's **restricted** key (Accounts and Account Links write, Checkout Sessions write, Refunds write, Disputes read, Payouts read, Balance read, Events read). Payouts and Balance read are for phase 4 (fees and payouts). Empty: the relay runs and answers 503 to anything that needs Stripe. A `sk_live_`/`rk_live_` key puts every business in live mode. |
 | `RELAY_STRIPE_WEBHOOK_SECRET` | Signing secret of the Connect webhook endpoint below. |
 | `RELAY_STRIPE_API_VERSION` | Pin Stripe's API version once the platform account exists; empty uses the account default. |
 | `RELAY_ENROLLMENT_TOKEN` | When set, a Tandem server must present it to register (give it to the people who run Tandem servers). Empty lets anyone register, which is only right when the relay is reachable from your own Tandem alone. |
@@ -47,8 +47,9 @@ in `EGRESS_ALLOWLIST`. For a relay on the same Docker network set `PAYMENTS_RELA
 3. Add a webhook endpoint `https://<relay host>/v1/stripe/webhook`, "Events on connected accounts", with at least
    `account.updated`, `account.application.deauthorized`, `checkout.session.completed`,
    `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`,
-   `refund.created`, `refund.updated`, `refund.failed`, `charge.dispute.created`, `charge.dispute.updated` and
-   `charge.dispute.closed`; put its signing secret in `RELAY_STRIPE_WEBHOOK_SECRET`.
+   `refund.created`, `refund.updated`, `refund.failed`, `charge.dispute.created`, `charge.dispute.updated`,
+   `charge.dispute.closed`, `payout.created`, `payout.updated`, `payout.paid`, `payout.failed`, `payout.canceled` and
+   `payout.reconciliation_completed`; put its signing secret in `RELAY_STRIPE_WEBHOOK_SECRET`.
 4. Restart the relay, open Settings > Payments in a test business, and walk through Stripe's test onboarding.
 5. Live mode is a separate key and endpoint, and only after the owner decides to go live.
 

@@ -2,10 +2,10 @@
 
 | Field | Value |
 |---|---|
-| Release / phase | v1 · phases 1 to 3 built (connected accounts, pay links, card refunds and disputes); phases 4 and 5 planned ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
+| Release / phase | v1 · phases 1 to 4 built (connected accounts, pay links, card refunds and disputes, fees and payouts); phase 5 planned ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
 | Tier / kind | A (outbound money movement, webhooks, public pay page) |
-| Depends on | platform, org, sales, approvals, notifications (in `dependencies.py` and [02](../02-architecture.md)) |
-| Owns tables | built: `payment_connections`, `payment_events`, `payment_links`, `payment_requests`, `payment_refunds`, `payment_disputes`; planned: `payment_payouts` |
+| Depends on | platform, org, sales, approvals, notifications (in `dependencies.py` and [02](../02-architecture.md)); accounting reads payouts from `payments.public` |
+| Owns tables | built: `payment_connections`, `payment_events`, `payment_links`, `payment_requests`, `payment_refunds`, `payment_disputes`, `payment_payouts` |
 
 ## Purpose
 Let a business's customers pay issued invoices online through Stripe, and record that money in the sales ledger
@@ -132,6 +132,30 @@ right deployment signed with that deployment's key.
 - **Defaults chosen:** refunds always go through approvals (no auto-approve); a Dashboard refund never changes the
   invoice on its own; the platform fee is refunded with the payment when one is charged.
 
+## Phase 4 as built (2026-11-27)
+- **Stripe's fee on each payment:** once a payment request is paid, the job `payments.read_fees` reads the payment's
+  balance transaction through the relay (`GET /v1/payments/{payment_intent}/fee`) and stores `stripe_fee_minor` and
+  `net_minor` on the request. The invoice's online payment card shows the fee and what reached the Stripe balance. A
+  fee Stripe has not settled yet (bank debits) is filled in by the hourly `payments.check_payouts`.
+- **Payouts:** `payout.*` events re-read the payout (`GET /v1/payouts/{id}`) into `payment_payouts` with Stripe's
+  status and arrival date. Once a payout is paid, Tandem reads Stripe's own list of what it contained
+  (`GET /v1/payouts/{id}/summary`: charges, refunds, disputes, other, fees, count; the relay pages through up to
+  5,000 transactions and says when it could not read them all). A manual payout (started in the Stripe Dashboard)
+  has no such list, so it is shown without totals. A failed payout notifies holders of `payments.connection.manage`.
+  The hourly check re-reads payouts still on their way. Tandem never starts, changes or cancels a payout.
+  `GET /payments/payouts` (`payments.connection.read`) lists the latest 100 for Settings > Payments.
+- **QuickBooks:** accounting now depends on payments and reads `ledger_payouts` from `payments.public`. Two optional
+  accounts join the mapping: a Stripe clearing account and a Stripe fees account. With a clearing account chosen,
+  customer payments taken through Stripe are deposited there instead of the usual deposit account, and each paid
+  payout is sent as a Transfer from clearing to the bank account on its arrival date, plus a Purchase for Stripe's
+  fees from clearing to the fees account (sync records `payout_transfer` and `payout_fees`). A payout that fails
+  after it was sent has both deleted in QuickBooks. Fees of a manual payout, or one whose list was too long, are
+  left to the bookkeeper and say so in the sync log. Payouts in another currency than the QuickBooks company's are
+  skipped. Card refunds and lost disputes keep their phase 3 handling (refunds entered by hand against the credit
+  memo, lost disputes void the payment), so the bookkeeper should enter a Stripe card refund from the clearing account.
+- **Defaults chosen:** no clearing account means no change to how payments are sent and no payouts are sent; fees
+  are booked per payout (as Stripe settles them), not per payment.
+
 ## Phases
 | Phase | What ships | Size |
 |---|---|---|
@@ -139,7 +163,7 @@ right deployment signed with that deployment's key.
 | 1 | Relay service, Settings > Payments, connected accounts and status (**built 2026-11-27**) | L |
 | 2 | Pay links and pay page, Checkout, webhooks into the ledger, unapplied payments, hourly check (**built 2026-11-27**) | L |
 | 3 | Card refunds through approvals, Dashboard refund matching, disputes (**built 2026-11-27**) | M |
-| 4 | Stripe fees, payouts, QuickBooks clearing and fees accounts, transfers | M |
+| 4 | Stripe fees, payouts, QuickBooks clearing and fees accounts, transfers (**built 2026-11-27**) | M |
 | 5 | Agent work: pay links in drafted reminders, surplus refunds, unmatched refunds, payouts in the briefing | M |
 
 Phases 1 and 2 are the first usable release. Later: deposits at booking, saved cards and autopay, paying part of an

@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { meWith, mockMe, renderApp } from "@/test/app"
 import { server } from "@/test/server"
-import { CONNECTION_MANAGE, CONNECTION_READ, type PaymentConnection } from "./api"
+import { CONNECTION_MANAGE, CONNECTION_READ, type PaymentConnection, type Payout } from "./api"
 
 // Synthetic data only.
 const ROOT = "*/api/v1/payments/stripe"
@@ -24,6 +24,7 @@ function mocks(connection: PaymentConnection, ...permissions: string[]) {
   mockMe(meWith(CONNECTION_READ, ...permissions))
   server.use(
     http.get(ROOT, () => HttpResponse.json(connection)),
+    http.get("*/api/v1/payments/payouts", () => HttpResponse.json([])),
     http.get("*/api/v1/org/business", () => HttpResponse.json({ currency: "USD", timezone: "America/Denver" })),
   )
 }
@@ -85,6 +86,26 @@ describe("payments settings", () => {
     const dialog = await screen.findByRole("dialog")
     await userEvent.click(within(dialog).getByRole("button", { name: "Turn off online payments" }))
     await waitFor(() => expect(body).toEqual({ version: 3 }))
+  })
+
+  it("lists payouts with Stripe's totals, and says when one failed or was made by hand", async () => {
+    mocks(active)
+    const base: Payout = {
+      id: "p1", amount_minor: 8787, currency: "USD", status: "paid", arrival_date: "2026-11-29", automatic: true,
+      charges_minor: 9000, refunds_minor: 0, disputes_minor: 0, other_minor: 0, fees_minor: 213, transaction_count: 1,
+      summarized: true, summary_complete: true,
+    }
+    server.use(http.get("*/api/v1/payments/payouts", () => HttpResponse.json([
+      base,
+      { ...base, id: "p2", status: "failed", failure_code: "account_closed" },
+      { ...base, id: "p3", automatic: false, summarized: true, summary_complete: false, fees_minor: 0 },
+    ])))
+    renderApp("/settings/payments")
+    const table = await screen.findByRole("table")
+    expect(within(table).getAllByText("$87.87")).toHaveLength(3)
+    expect(within(table).getAllByText("$90.00 in payments, $2.13 in Stripe fees (1 items)")).toHaveLength(2)
+    expect(within(table).getByText(/did not reach your bank/)).toBeInTheDocument()
+    expect(within(table).getByText(/Started by hand in Stripe/)).toBeInTheDocument()
   })
 
   it("says when the server has no payments relay", async () => {
