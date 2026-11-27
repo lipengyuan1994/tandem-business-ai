@@ -27,7 +27,18 @@ class PaymentConnectionOut(BaseModel):
     last_error: str | None = None
     # Stripe's own Dashboard for the business's account (full-Dashboard accounts sign in there directly).
     dashboard_url: str | None = None
+    # Phase 5: what Tandem prepares on its own (each still waits for a person).
+    reminder_links: bool = True
+    draft_refunds: bool = True
     version: int | None = None
+
+
+class PaymentSettingsIn(BaseModel):
+    version: int
+    reminder_links: bool | None = Field(default=None, description="Add the invoice's pay link to payment reminders")
+    draft_refunds: bool | None = Field(
+        default=None, description="Draft a card refund for approval when a customer pays an invoice that was settled"
+    )
 
 
 class StripeOnboardingIn(BaseModel):

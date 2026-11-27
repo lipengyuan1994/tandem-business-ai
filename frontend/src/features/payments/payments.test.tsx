@@ -10,7 +10,7 @@ import { CONNECTION_MANAGE, CONNECTION_READ, type PaymentConnection, type Payout
 const ROOT = "*/api/v1/payments/stripe"
 const notConnected: PaymentConnection = {
   configured: true, status: "not_connected", business_currency: "USD", charges_enabled: false, payouts_enabled: false,
-  details_submitted: false, requirements_due: [], version: null,
+  details_submitted: false, requirements_due: [], version: null, reminder_links: true, draft_refunds: true,
 }
 const onboarding: PaymentConnection = {
   ...notConnected, status: "onboarding", mode: "test", stripe_account_id: "acct_test0001", country: "US", default_currency: "usd",
@@ -106,6 +106,30 @@ describe("payments settings", () => {
     expect(within(table).getAllByText("$90.00 in payments, $2.13 in Stripe fees (1 items)")).toHaveLength(2)
     expect(within(table).getByText(/did not reach your bank/)).toBeInTheDocument()
     expect(within(table).getByText(/Started by hand in Stripe/)).toBeInTheDocument()
+  })
+
+  it("lets an owner turn off pay links in reminders, with the version", async () => {
+    mocks(active, CONNECTION_MANAGE)
+    let body: Record<string, unknown> = {}
+    server.use(http.patch(`${ROOT}/settings`, async ({ request }) => {
+      body = (await request.json()) as Record<string, unknown>
+      return HttpResponse.json({ ...active, reminder_links: false, version: 4 })
+    }))
+    renderApp("/settings/payments")
+    const links = await screen.findByRole("switch", { name: "Add the pay link to payment reminders" })
+    expect(links).toBeChecked()
+    expect(screen.getByRole("switch", { name: "Draft refunds of overpayments" })).toBeChecked()
+    await userEvent.click(links)
+    await waitFor(() => expect(body).toEqual({ version: 3, reminder_links: false }))
+    await waitFor(() => expect(links).not.toBeChecked())
+  })
+
+  it("shows staff who can only read what Tandem does, without letting them change it", async () => {
+    mocks({ ...active, draft_refunds: false })
+    renderApp("/settings/payments")
+    const drafts = await screen.findByRole("switch", { name: "Draft refunds of overpayments" })
+    expect(drafts).not.toBeChecked()
+    expect(drafts).toBeDisabled()
   })
 
   it("says when the server has no payments relay", async () => {

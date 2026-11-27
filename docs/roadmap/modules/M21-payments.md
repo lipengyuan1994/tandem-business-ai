@@ -1,8 +1,8 @@
-# M21 · payments (v1, in progress)
+# M21 · payments (v1, built; live use waits on the Stripe platform account)
 
 | Field | Value |
 |---|---|
-| Release / phase | v1 · phases 1 to 4 built (connected accounts, pay links, card refunds and disputes, fees and payouts); phase 5 planned ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
+| Release / phase | v1 · phases 1 to 5 built (connected accounts, pay links, card refunds and disputes, fees and payouts, agent work); live payments wait on Boston AI Forward's Stripe platform account and keys ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
 | Tier / kind | A (outbound money movement, webhooks, public pay page) |
 | Depends on | platform, org, sales, approvals, notifications (in `dependencies.py` and [02](../02-architecture.md)); accounting reads payouts from `payments.public` |
 | Owns tables | built: `payment_connections`, `payment_events`, `payment_links`, `payment_requests`, `payment_refunds`, `payment_disputes`, `payment_payouts` |
@@ -120,8 +120,8 @@ right deployment signed with that deployment's key.
   `pending|succeeded|failed`; a failure notifies owners and admins and the amount is offered again. The ledger is
   not touched: the credit note already recorded the refund, and a surplus was never on the invoice.
 - **Refunds made in the Stripe Dashboard:** recorded as source `dashboard` and reported to owners and admins; the
-  invoice is left alone (the business issues a credit note if the customer is owed it). Phase 5 has the agent draft
-  that credit note. Refunds on payments Tandem does not know are ignored.
+  invoice is left alone (the business issues a credit note if the customer is owed it). Phase 5 matches that credit
+  note's card refund to the Dashboard refund so it is not paid twice. Refunds on payments Tandem does not know are ignored.
 - **Disputes:** `charge.dispute.*` events re-read the dispute (`GET /v1/disputes/{id}`) and keep a
   `payment_disputes` row with Stripe's status, reason and answer-by date; opening one notifies holders of
   `payments.connection.manage` and the invoice shows it with its deadline. Disputes are answered in the Stripe
@@ -156,6 +156,30 @@ right deployment signed with that deployment's key.
 - **Defaults chosen:** no clearing account means no change to how payments are sent and no payouts are sent; fees
   are booked per payout (as Stripe settles them), not per payment.
 
+## Phase 5 as built (2026-11-27)
+- **Pay links in payment reminders:** sales cannot import payments, so payments registers a provider on the registry
+  (`reminder_pay_link`). When a payment reminder (`sales.payment_reminder.send`) is previewed, it shows a "Pay online"
+  line; when it is sent, the invoice's pay link is made if it has none and added to the email (`pay_url` in the
+  `payment_reminder` template). This covers reminders sent by hand and reminders the agent drafts; the model never
+  writes the link. No link is added when payments is not set up, the account cannot take payments, the invoice
+  cannot be paid online, the sender lacks `sales.document.write`, or the setting is off.
+- **Overpayments:** when an online payment leaves a surplus, the job `payments.draft_surplus_refund` drafts a card
+  refund of it as an approvals proposal (origin `rule`, never auto-approved). Rejecting it leaves the money with the
+  business and the refund stays on offer. Nothing is drafted in regulated mode, after payments is turned off, for a
+  payment under dispute, or with the setting off.
+- **Dashboard refunds:** a Dashboard refund is tied to a credit note's card refund (`invoice_refund_id`) when the
+  amounts are exactly the same, whichever comes first: on the refund's event, or on `sales.document_changed` after
+  the credit note is issued (job `payments.match_dashboard_refunds`). The credit note's refund is then no longer
+  offered, so the customer is not paid back twice. A different amount is left for a person, and the notification
+  says how to account for it. Tandem does not draft the credit note itself (its lines are the business's choice).
+- **Briefing:** the AI briefing (prompt `briefing.v2`) reads `payments.public.briefing_facts` for users with
+  `payments.connection.read`: payouts arriving in the next two days, those that arrived in the last day, failed or
+  canceled ones, and how many Dashboard refunds no credit note accounts for. `ai` now depends on `payments`.
+- **Settings:** `PATCH /payments/stripe/settings` (`payments.connection.manage`, with `version`) turns either
+  automation off: `reminder_links` and `draft_refunds`, both on by default, shown as switches in Settings > Payments.
+- **Defaults chosen:** both automations on, because each one only adds a link the customer can ignore or drafts
+  something a person must approve; matching only on an exact amount, so Tandem never guesses which refund is which.
+
 ## Phases
 | Phase | What ships | Size |
 |---|---|---|
@@ -164,7 +188,7 @@ right deployment signed with that deployment's key.
 | 2 | Pay links and pay page, Checkout, webhooks into the ledger, unapplied payments, hourly check (**built 2026-11-27**) | L |
 | 3 | Card refunds through approvals, Dashboard refund matching, disputes (**built 2026-11-27**) | M |
 | 4 | Stripe fees, payouts, QuickBooks clearing and fees accounts, transfers (**built 2026-11-27**) | M |
-| 5 | Agent work: pay links in drafted reminders, surplus refunds, unmatched refunds, payouts in the briefing | M |
+| 5 | Agent work: pay links in drafted reminders, surplus refunds, unmatched refunds, payouts in the briefing (**built 2026-11-27**) | M |
 
 Phases 1 and 2 are the first usable release. Later: deposits at booking, saved cards and autopay, paying part of an
 invoice online, in-person payments, surcharges, Xero.

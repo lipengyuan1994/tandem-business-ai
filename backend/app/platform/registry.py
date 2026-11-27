@@ -179,6 +179,9 @@ class Registry:
     ai_reserve_action: Callable[[Session, Context], None] | None = None
     customer_care_delivery_guard: Callable[[Session, Context, UUID], DeliveryGuard] | None = None
     customer_care_customer_linked: Callable[[Session, Context, UUID, UUID], None] | None = None
+    # (db, ctx, invoice_id, make) -> the invoice's pay link for a payment reminder, or None when it gets none.
+    # With make=False nothing is written: an existing link, or "" when one would be made at sending (M21 phase 5).
+    reminder_pay_link: Callable[[Session, Context, UUID, bool], str | None] | None = None
     public_routes: set[str] = field(default_factory=set)
     _frozen: bool = False
 
@@ -255,6 +258,11 @@ class Registry:
     def set_public_business_resolver(self, resolver: PublicBusinessResolver) -> None:
         self._check()
         self.public_business_resolver = resolver
+
+    def set_reminder_pay_link(self, provider: Callable[[Session, Context, UUID, bool], str | None]) -> None:
+        """Payments offers the invoice's pay link to the payment reminder that sales sends (sales cannot import it)."""
+        self._check()
+        self.reminder_pay_link = provider
 
     def add_public_route(self, path: str) -> None:
         """Declare a route that intentionally has no permission dependency (checked by an architecture test)."""

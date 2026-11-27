@@ -962,3 +962,23 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
 - Defaults chosen: both accounts optional, and without a clearing account nothing changes in QuickBooks; fees booked
   per payout as Stripe settles them; manual payouts' fees left to the bookkeeper; Tandem never starts a payout.
 - Tests: 8 backend payout and fee tests, 6 QuickBooks payout sync tests, relay tests, 2 new frontend tests.
+
+## 2026-11-27 — Online payments phase 5: agent work (last phase)
+
+- Continued as product owner on the owner's instruction to keep going until the feature is built. Mocked Stripe only;
+  no Stripe account, key or network call to Stripe.
+- Pay links in payment reminders: payments registers `reminder_pay_link` on the registry (sales cannot import
+  payments); the reminder's preview shows a "Pay online" line and the sent email carries the link. The model never
+  writes the link.
+- Overpayments: job `payments.draft_surplus_refund` drafts the surplus card refund as a rule-origin approvals proposal
+  (never auto-approved). Dashboard refunds: matched to a credit note's card refund of the same amount on their event
+  or after the credit note (`payments.match_dashboard_refunds`), so the customer is not paid back twice. Migration
+  `20261128_0300_payments_agent` relaxes the check on `payment_refunds` for this and adds two settings.
+- Briefing: prompt `briefing.v2` with payouts arriving, arrived and failed, and unmatched Dashboard refunds, for users
+  with `payments.connection.read`. `ai` now depends on `payments` (02-architecture table updated).
+- Settings > Payments: two switches (`PATCH /payments/stripe/settings`), both on by default.
+- Defaults chosen: both automations on (each only adds a link or drafts something a person approves); matching only on
+  an exact amount; Tandem does not draft credit notes.
+- Tests: 10 backend tests (`test_drafts.py`), the surplus refund test now goes through the drafted proposal, 2 new
+  frontend tests.
+- Left for the owner: opening Boston AI Forward's Stripe platform account, the relay's live keys, and going live.

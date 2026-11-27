@@ -18,6 +18,7 @@ AI_TOOL_PERMISSIONS = AI_SYSTEM_PERMISSIONS  # upper bound for staff-triggered r
 USE_CASE_EXTRA_PERMISSIONS: dict[str, frozenset[str]] = {
     "campaign_draft": frozenset({"marketing.campaign.read", "marketing.campaign.write"}),
     "payment_followup": frozenset({"sales.document.write"}),  # owner decision 2026-11-04; proposals only
+    "briefing": frozenset({"payments.connection.read"}),  # Stripe payouts in the briefing (M21 phase 5), read only
 }
 # Proposals created with an assistant context are checked against "ai.assistant.use"
 # (approvals/service.py `_can_create`), not "approvals.proposal.create".

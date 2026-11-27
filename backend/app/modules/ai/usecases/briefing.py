@@ -12,9 +12,11 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from app.modules.dashboard import public as dashboard
+from app.modules.payments import public as payments
 from app.platform import clock
 from app.platform.context import Context
 from app.platform.db import transaction
+from app.platform.money import money_text
 
 from ..agent.contexts import staff_ctx_factory, staff_permissions
 from ..agent.prompts import load_prompt
@@ -53,6 +55,26 @@ def validate_numbers(output: str, facts: str) -> None:
         raise ValueError("Every number must appear verbatim in the supplied facts; remove unsupported numbers.")
 
 
+PAYMENTS_READ = "payments.connection.read"
+
+
+def _payouts(online: payments.PaymentsBriefing) -> dict[str, object]:
+    """Stripe payouts to the business's bank (M21 phase 5). Amounts as exact money text, dates as ISO dates."""
+
+    def row(p: payments.BriefingPayout) -> dict[str, object]:
+        return {
+            "amount": money_text(p.amount_minor, p.currency),
+            "arrival_date": p.arrival_on.isoformat() if p.arrival_on else None,
+        }
+
+    return {
+        "arriving_soon": [row(p) for p in online.arriving],
+        "arrived_in_bank": [row(p) for p in online.arrived],
+        "did_not_reach_bank": [row(p) for p in online.failed],
+        "stripe_dashboard_refunds_without_credit_note": online.dashboard_refunds_to_match,
+    }
+
+
 class BriefingOut(BaseModel):
     generated_at: datetime
     bullets: list[str]
@@ -76,6 +98,7 @@ def run(ctx: Context, *, router: Router | None = None) -> BriefingOut:
     read_ctx = factory(uuid.uuid4())
     with transaction(read_ctx) as db:
         s = dashboard.today_summary(db, read_ctx)
+        online = payments.briefing_facts(db, read_ctx) if read_ctx.has(PAYMENTS_READ) else None
     upcoming = (
         []
         if s.agenda is None
@@ -110,6 +133,7 @@ def run(ctx: Context, *, router: Router | None = None) -> BriefingOut:
         if s.low_stock is None
         else [x.model_dump(mode="json", exclude={"item_id"}) for x in s.low_stock],
         "delivery_issues": s.delivery_issues,
+        "stripe_payouts": None if online is None else _payouts(online),
     }
     facts = redact_contacts(json.dumps(data, ensure_ascii=False)) or "{}"
     run_id, value = complete(

@@ -7,7 +7,8 @@ waits in the approvals queue as `payments.card_refund` until someone with `payme
 approves; only then does a job ask the relay for the Stripe refund, with the refund row's id as the idempotency key.
 
 Refunds made in the Stripe Dashboard arrive as `refund.*` events. Tandem records them against the payment they came
-from and tells the business, but never changes the invoice by itself (a credit note does that; phase 5 drafts one).
+from and tells the business, but never changes the invoice by itself: a credit note does that. Since phase 5 such a
+refund is matched to a credit note's card refund of the same amount, so that refund is not paid back a second time.
 
 The sales ledger already counts a credit note's refund when the credit note is issued, so a card refund that fails
 changes nothing there: the row shows the failure and the refund can be asked for again.
@@ -203,7 +204,10 @@ def for_invoice(db: Session, ctx: Context, invoice_id: uuid.UUID) -> list[CardRe
 # -- asking for a refund -------------------------------------------------------------------------------------------
 
 
-def propose(db: Session, ctx: Context, invoice_id: uuid.UUID, body: CardRefundIn) -> CardRefundProposedOut:
+def propose(
+    db: Session, ctx: Context, invoice_id: uuid.UUID, body: CardRefundIn, *, drafted: bool = False
+) -> CardRefundProposedOut:
+    """Ask for a card refund. `drafted`: Tandem prepared it on its own (phase 5); it waits for approval all the same."""
     ctx.require(P.REFUND_PROPOSE)
     if is_regulated():
         raise Conflict("payments.regulated_profile", detail="Online payments are off under this data profile")
@@ -267,6 +271,7 @@ def propose(db: Session, ctx: Context, invoice_id: uuid.UUID, body: CardRefundIn
         action_type=ACTION,
         payload=CardRefundPayload(refund_id=row.id).model_dump(mode="json"),
         title=f"Pay {money} back to the customer's card for invoice {invoice.number} ({what})",
+        evidence=_drafted_evidence(invoice.number, money) if drafted else None,
     )
     row.proposal_id = proposal.id
     audit.record(
@@ -275,7 +280,10 @@ def propose(db: Session, ctx: Context, invoice_id: uuid.UUID, body: CardRefundIn
         action="payments.refund_proposed",
         target_type="payment_refund",
         target_id=row.id,
-        summary=f"Asked to pay {money} back by card for invoice {invoice.number} ({what}); waiting for approval",
+        summary=(
+            f"{'Drafted' if drafted else 'Asked'} paying {money} back by card for invoice {invoice.number} ({what}); "
+            "waiting for approval"
+        ),
         proposal_id=proposal.id,
     )
     db.flush()
@@ -584,6 +592,7 @@ def _dashboard(db: Session, ctx: Context, view: RefundView) -> str:
         return "applied"  # another worker recorded it first
     invoice = sales.online_invoice(db, ctx, request.invoice_id)
     money = money_text(view.amount, request.currency)
+    matched = match_dashboard(db, ctx, request.invoice_id).get(row_id)
     audit.record(
         db,
         ctx,
@@ -592,16 +601,78 @@ def _dashboard(db: Session, ctx: Context, view: RefundView) -> str:
         target_id=row_id,
         summary=f"A refund of {money} for invoice {invoice.number} was made in Stripe's Dashboard; invoice unchanged",
     )
+    body = (
+        f"Tandem matched it to the card refund of credit note {matched}, so that refund will not be paid again."
+        if matched
+        else "Tandem has not changed the invoice. If the customer is owed this money, issue a credit note with the "
+        "refund recorded as paid back by card: Tandem matches it to this refund and does not pay it again."
+    )
     notifications.notify_permission(
         db,
         ctx,
         P.REFUND_SEND,
         kind="payments_refund",
         title=f"A {money} refund for invoice {invoice.number} was made in Stripe",
-        body="Tandem has not changed the invoice. Issue a credit note if the customer is owed this money.",
+        body=body,
         link=_link(request.invoice_id),
     )
     return "applied"
+
+
+def unmatched_dashboard(db: Session, ctx: Context, invoice_id: uuid.UUID | None = None) -> list[PaymentRefund]:
+    """Refunds made in the Stripe Dashboard that no credit note accounts for yet (failed or canceled ones aside)."""
+    stmt = select(PaymentRefund).where(
+        PaymentRefund.business_id == ctx.business_id,
+        PaymentRefund.source == "dashboard",
+        PaymentRefund.invoice_refund_id.is_(None),
+        PaymentRefund.status.in_(LIVE_REFUND_STATUSES),
+    )
+    if invoice_id is not None:
+        stmt = stmt.where(PaymentRefund.invoice_id == invoice_id)
+    return list(db.scalars(stmt.order_by(PaymentRefund.created_at, PaymentRefund.id)))
+
+
+def match_dashboard(db: Session, ctx: Context, invoice_id: uuid.UUID) -> dict[uuid.UUID, str | None]:
+    """Phase 5: tie each unmatched Dashboard refund to a credit note's card refund of exactly the same amount on the
+    same invoice, oldest first, so Tandem never offers to pay that credit note back again. Returns refund id ->
+    credit note number for the refunds matched now. Different amounts are left for a person to sort out."""
+    rows = unmatched_dashboard(db, ctx, invoice_id)
+    if not rows:
+        return {}
+    taken = _credit_refunds_taken(db, ctx, invoice_id)
+    owed = [r for r in sales.online_refunds(db, ctx, invoice_id) if r.method == "card" and r.id not in taken]
+    matched: dict[uuid.UUID, str | None] = {}
+    for row in rows:
+        found = next((o for o in owed if o.amount_minor == row.amount_minor), None)
+        if found is None:
+            continue
+        owed.remove(found)
+        row.invoice_refund_id = found.id
+        row.version += 1
+        matched[row.id] = found.credit_note_number
+        audit.record(
+            db,
+            ctx,
+            action="payments.dashboard_refund_matched",
+            target_type="payment_refund",
+            target_id=row.id,
+            summary=(
+                f"Matched a {money_text(row.amount_minor, row.currency)} refund made in Stripe's Dashboard to credit "
+                f"note {found.credit_note_number}; that refund will not be paid back again"
+            ),
+        )
+    db.flush()
+    return matched
+
+
+def _drafted_evidence(number: str | None, money: str) -> list[approvals.Evidence]:
+    return [
+        approvals.Evidence(
+            kind="note",
+            excerpt=f"Drafted by Tandem: the customer paid {money} more than invoice {number} still owed. Approve to "
+            "pay it back to their card, or reject to keep it.",
+        )
+    ]
 
 
 def check_job(ctx: Context, payload: dict[str, Any]) -> None:

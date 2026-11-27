@@ -13,13 +13,14 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { MoneyText } from "@/components/common/MoneyText"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useBusiness } from "@/features/org/hooks"
 import { toastError } from "@/lib/errors"
 import { formatMoney } from "@/lib/money"
 import {
-  CONNECTION_MANAGE, CONNECTION_READ, useDisconnectStripe, usePaymentConnection, usePayouts, useRefreshAccount, useStartOnboarding,
-  type PaymentConnection, type Payout,
+  CONNECTION_MANAGE, CONNECTION_READ, useDisconnectStripe, usePaymentConnection, usePaymentSettings, usePayouts, useRefreshAccount,
+  useStartOnboarding, type PaymentConnection, type PaymentSettings, type Payout,
 } from "./api"
 
 // Countries where Stripe offers accounts to US-platform connected businesses that Tandem expects first; others can follow.
@@ -78,6 +79,7 @@ function Body() {
       {!c.configured && <p className="rounded-md border p-3 text-sm">{t("payments.notConfigured")}</p>}
       <StatusCard c={c} />
       <p className="text-xs text-muted-foreground">{t("payments.cardsNote")}</p>
+      {c.stripe_account_id && c.status !== "disconnected" ? <Automation c={c} /> : null}
       {c.stripe_account_id ? <Payouts /> : null}
     </>
   )
@@ -173,6 +175,36 @@ function Flag({ label, on }: { label: string; on: boolean }) {
       <dt className="text-muted-foreground">{label}</dt>
       <dd className={on ? "font-medium text-emerald-700 dark:text-emerald-400" : "font-medium"}>{t(on ? "payments.yes" : "payments.notYet")}</dd>
     </div>
+  )
+}
+
+const SETTINGS = ["reminder_links", "draft_refunds"] as const
+
+/** What Tandem does by itself with online payments. Both are on by default; owners can turn either off. */
+function Automation({ c }: { c: PaymentConnection }) {
+  const { t } = useTranslation()
+  const { permissions } = useSession()
+  const save = usePaymentSettings()
+  const [conflict, setConflict] = useState(false)
+  const canManage = permissions.has(CONNECTION_MANAGE)
+  const change = (settings: PaymentSettings) => save.mutate({ version: c.version ?? 0, ...settings }, {
+    onError: (e) => toastError(e, () => setConflict(true)),
+  })
+  return (
+    <section className="space-y-3" aria-labelledby="payments-automation">
+      <h3 id="payments-automation" className="text-base font-semibold">{t("payments.automation.title")}</h3>
+      {SETTINGS.map((key) => (
+        <div key={key} className="flex items-start gap-3">
+          <Switch id={`payments-${key}`} checked={c[key] ?? true} disabled={!canManage || save.isPending}
+            aria-describedby={`payments-${key}-help`} onCheckedChange={(on) => change({ [key]: on })} />
+          <div className="space-y-0.5">
+            <Label htmlFor={`payments-${key}`}>{t(`payments.automation.${key}.label`)}</Label>
+            <p id={`payments-${key}-help`} className="text-sm text-muted-foreground">{t(`payments.automation.${key}.help`)}</p>
+          </div>
+        </div>
+      ))}
+      <ConflictDialog open={conflict} onOpenChange={setConflict} onReload={() => setConflict(false)} />
+    </section>
   )
 }
 

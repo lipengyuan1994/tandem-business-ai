@@ -40,6 +40,7 @@ DEPENDENCIES: dict[str, frozenset[str]] = {
             "purchasing",
             "dashboard",
             "notifications",
+            "payments",
         }
     ),
     "voice": frozenset({"ai", "conversations"}),

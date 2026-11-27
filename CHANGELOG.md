@@ -4,6 +4,14 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **New (2026-11-27): online payments, step 5 of 5.** Payment reminders, sent by hand or drafted by Tandem, now
+  include the invoice's pay link. When a customer pays more than an invoice owes, Tandem drafts a card refund of the
+  difference for an owner to approve in Approvals. A refund made in the Stripe Dashboard is matched to a credit note's
+  card refund of the same amount, so it is not paid twice. The morning briefing mentions payouts arriving, arrived or
+  failed. Both automations are on by default and can be turned off in Settings > Payments.
+- **Migration:** `20261128_0300_payments_agent` (two settings on `payment_connections`; Dashboard refunds may now name
+  a credit note). No manual step.
+
 - **New (2026-11-27): online payments, step 4 of 5.** The invoice's online payment card shows Stripe's fee and what
   reached the Stripe balance. Settings > Payments lists Stripe's payouts to the business's bank with their arrival
   date and what each contained; owners and admins are told when a payout fails. In Settings > Accounting, two

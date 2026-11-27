@@ -24,7 +24,7 @@ from . import provider
 from .crypto import UnsealError, seal, unseal
 from .models import PaymentConnection
 from .relay import AccountView, Credentials, RelayError
-from .schemas import PaymentConnectionOut, StripeOnboardingIn, StripeOnboardingOut
+from .schemas import PaymentConnectionOut, PaymentSettingsIn, StripeOnboardingIn, StripeOnboardingOut
 
 DASHBOARD = "https://dashboard.stripe.com"
 
@@ -96,6 +96,8 @@ def out(db: Session, ctx: Context) -> PaymentConnectionOut:
         last_checked_at=conn.last_checked_at,
         last_error=conn.last_error,
         dashboard_url=_dashboard(conn),
+        reminder_links=conn.reminder_links,
+        draft_refunds=conn.draft_refunds,
         version=conn.version,
     )
 
@@ -279,6 +281,35 @@ def disconnect(db: Session, ctx: Context, version: int) -> None:
         target_type="payment_connection",
         target_id=conn.id,
         summary="Turned online payments off (the Stripe account stays the business's own)",
+    )
+
+
+def update_settings(db: Session, ctx: Context, body: PaymentSettingsIn) -> None:
+    """Phase 5 settings. Each one only changes what Tandem prepares for a person to check."""
+    ctx.require(P.CONNECTION_MANAGE)
+    conn = get(db, ctx, lock=True)
+    if conn is None or conn.stripe_account_id is None:
+        raise Conflict("payments.not_connected", detail="Online payments are not set up")
+    if conn.version != body.version:
+        raise Conflict("payments.version_conflict", current_version=conn.version)
+    words = {"reminder_links": "pay links in payment reminders", "draft_refunds": "drafted card refunds"}
+    changed: dict[str, bool] = {}
+    for name in words:
+        value = getattr(body, name)
+        if value is not None and value != getattr(conn, name):
+            setattr(conn, name, value)
+            changed[name] = value
+    if not changed:
+        return
+    conn.version += 1
+    audit.record(
+        db,
+        ctx,
+        action="payments.settings_changed",
+        target_type="payment_connection",
+        target_id=conn.id,
+        summary="Online payments: " + "; ".join(f"{words[k]} {'on' if v else 'off'}" for k, v in changed.items()),
+        changes=dict(changed),
     )
 
 

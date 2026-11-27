@@ -15,7 +15,7 @@ from app.platform import audit, clock
 from app.platform.context import Context
 from app.platform.errors import Conflict
 from app.platform.money import minor_text, money_text
-from app.platform.registry import ExecutionMeta, PreviewLine
+from app.platform.registry import ExecutionMeta, PreviewLine, get_registry
 
 from . import payments
 from . import permissions as P
@@ -82,6 +82,12 @@ def reminder_invoice(db: Session, ctx: Context, p: PaymentReminderPayload, *, lo
     return row
 
 
+def _pay_link(db: Session, ctx: Context, row: Invoice, *, make: bool) -> str | None:
+    """The invoice's pay link when the business takes payments online (M21 phase 5), else None."""
+    provider = get_registry().reminder_pay_link
+    return provider(db, ctx, row.id, make) if provider is not None else None
+
+
 def validate_reminder(db: Session, ctx: Context, p: PaymentReminderPayload) -> None:
     reminder_invoice(db, ctx, p)
 
@@ -94,6 +100,11 @@ def describe_reminder(db: Session, ctx: Context, p: PaymentReminderPayload) -> l
         PreviewLine("Message", None, p.body),
         PreviewLine("Amount due", None, money_text(payments.balance(row), row.currency)),
         PreviewLine("Due date", None, str(row.due_date)),
+        *(
+            [PreviewLine("Pay online", None, link or "A pay link for this invoice is added when it is sent")]
+            if (link := _pay_link(db, ctx, row, make=False)) is not None
+            else []
+        ),
     ]
 
 
@@ -111,6 +122,7 @@ def run_reminder(db: Session, ctx: Context, p: PaymentReminderPayload, meta: Exe
             "amount": minor_text(payments.balance(row), row.currency),
             "currency": row.currency,
             "due_date": str(row.due_date),
+            "pay_url": _pay_link(db, ctx, row, make=True) or "",
         },
         idempotency_key=f"sales.payment_reminder:{ctx.business_id}:{meta.idempotency_key}",
         related_type="sales.invoice",

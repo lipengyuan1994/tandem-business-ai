@@ -165,9 +165,11 @@ def test_surplus_can_be_paid_back_and_the_relay_outage_is_retried(world: World) 
     world.stripe.pay(session)
     _cash(world, invoice, 6300)  # paid twice: cash at the counter, card online
     world.run()
-    [option] = _summary(world, invoice)["refund_options"]
-    assert (option["source"], option["amount_minor"]) == ("surplus", 6300)
-    asked = _ask(world.owner, invoice, option).json()
+    # Tandem drafts the surplus refund for approval on its own (phase 5); nothing else is offered meanwhile.
+    summary = _summary(world, invoice)
+    [drafted] = summary["refunds"]
+    assert (drafted["source"], drafted["amount_minor"], summary["refund_options"]) == ("surplus", 6300, [])
+    asked = {"proposal_id": drafted["proposal_id"]}
     world.stripe.fail_next.append(httpx.Response(503, json={"error": {"type": "api_error", "message": "down"}}))
     _decide(login_as(world.app, world.business, ["admin"]), asked["proposal_id"])
     world.run()

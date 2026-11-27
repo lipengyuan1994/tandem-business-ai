@@ -2717,6 +2717,17 @@
       "disputeDue": "Answer by",
       "fee": "Stripe's fee {{fee}}; {{net}} reached your Stripe balance."
     },
+    "automation": {
+      "title": "What Tandem does for you",
+      "reminder_links": {
+        "label": "Add the pay link to payment reminders",
+        "help": "Reminders for unpaid invoices, sent by you or drafted by Tandem, include a link to pay by card."
+      },
+      "draft_refunds": {
+        "label": "Draft refunds of overpayments",
+        "help": "When a customer pays more than an invoice owes, Tandem drafts a card refund for an owner to approve. Nothing is refunded without approval."
+      }
+    },
     "payoutsList": {
       "title": "Payouts to your bank",
       "help": "Stripe pays your Stripe balance out to your bank, less its fees and any refunds or disputes. Payouts are set up in your Stripe Dashboard.",

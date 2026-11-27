@@ -36,6 +36,10 @@ REQUEST_STATUSES = ("creating", "open", "processing", "paid", "expired", "failed
 # then Stripe's own `pending`, `succeeded` or `failed`; `canceled` if the proposal was turned down or expired, or
 # Stripe canceled it.
 REFUND_SOURCES = ("credit_note", "surplus", "dashboard")
+CREDIT_NOTE_CHECK = (
+    "(source = 'credit_note' and invoice_refund_id is not null)"
+    " or (source = 'surplus' and invoice_refund_id is null) or source = 'dashboard'"
+)
 REFUND_STATUSES = ("proposed", "sending", "pending", "succeeded", "failed", "canceled")
 LIVE_REFUND_STATUSES = ("proposed", "sending", "pending", "succeeded")
 DISPUTE_OUTCOMES = ("open", "won", "lost")
@@ -63,6 +67,10 @@ class PaymentConnection(BusinessScopedBase):
     connected_at: Mapped[datetime | None]
     last_checked_at: Mapped[datetime | None]
     last_error: Mapped[str | None] = mapped_column(String(500))
+    # Phase 5 settings: add the invoice's pay link to payment reminders; draft a card refund proposal for money
+    # taken after an invoice was settled. Both only change what waits for a person, never what is charged.
+    reminder_links: Mapped[bool] = mapped_column(default=True, server_default="true")
+    draft_refunds: Mapped[bool] = mapped_column(default=True, server_default="true")
     __table_args__ = scoped_table_args(
         UniqueConstraint("business_id"),
         CheckConstraint("provider in ('stripe')", name="provider"),
@@ -185,7 +193,8 @@ class PaymentRefund(BusinessScopedBase):
         ),
         CheckConstraint(f"source in ({','.join(repr(s) for s in REFUND_SOURCES)})", name="source"),
         CheckConstraint(f"status in ({','.join(repr(s) for s in REFUND_STATUSES)})", name="status"),
-        CheckConstraint("(source = 'credit_note') = (invoice_refund_id is not null)", name="credit_note"),
+        # A credit note's refund always names it, a surplus never does, and a Dashboard refund may once matched.
+        CheckConstraint(CREDIT_NOTE_CHECK, name="credit_note"),
         CheckConstraint("amount_minor > 0", name="amount"),
     )
 
