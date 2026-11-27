@@ -12,8 +12,8 @@
 			wrap json
 			request>headers>X-Embed-Token delete
 			resp_headers>X-Embed-Token delete
-			request>uri regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
-			request>headers>Referer regexp (?i)(/(?:q|api/v1/public/quotes)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
+			request>uri regexp (?i)(/(?:q|pay|api/v1/public/quotes|api/v1/payments/pay)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
+			request>headers>Referer regexp (?i)(/(?:q|pay|api/v1/public/quotes|api/v1/payments/pay)/|[?&](?:code|state|session_state|token)=)[^/?#&\s]+ ${1}[redacted]
 		}
 	}
 }
@@ -70,7 +70,7 @@ localhost {
 		reverse_proxy keycloak:8080
 	}
 	# Match production: public visitor and supplier pages use the widget entry.
-	@public_pages path /p/* /q/*
+	@public_pages path /p/* /q/* /pay/*
 	handle @public_pages {
 		rewrite * /widget.html
 		reverse_proxy web:5173

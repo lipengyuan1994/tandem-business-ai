@@ -77,7 +77,12 @@ def test_export_contains_every_module_of_one_business_and_nothing_of_another(dem
     }  # fmt: skip
     assert manifest["modules"]["voice"] == {"voice_sessions": 0}
     assert manifest["modules"]["accounting"] == {"accounting_connections": 0, "accounting_sync_records": 0}
-    assert manifest["modules"]["payments"] == {"payment_connections": 0, "payment_events": 0}
+    assert manifest["modules"]["payments"] == {
+        "payment_connections": 0,
+        "payment_events": 0,
+        "payment_links": 0,
+        "payment_requests": 0,
+    }
     # Nothing is sent while the demo data is loaded; it holds no assistant runs, voice sessions or accounting link.
     for module in expected - {"notifications", "admin_ops", "ai", "voice", "accounting", "payments"}:
         assert any(count > 0 for count in manifest["modules"][module].values()), f"{module} exported no rows"

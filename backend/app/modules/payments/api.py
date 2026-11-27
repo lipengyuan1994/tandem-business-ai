@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+import uuid
+
+from fastapi import APIRouter, Depends, Request, Response
 from pydantic import ValidationError
 
 from app.platform import ratelimit
@@ -11,9 +13,11 @@ from app.platform.db import transaction
 from app.platform.errors import Invalid, error_responses
 from app.platform.permissions import require
 
-from . import connection, events, signing
+from . import connection, events, paylinks, signing
 from . import permissions as P
 from .schemas import (
+    InvoiceOnlinePaymentsOut,
+    PayLinkOut,
     PaymentConnectionOut,
     PaymentDisconnectIn,
     RelayEventIn,
@@ -71,6 +75,44 @@ def disconnect(body: PaymentDisconnectIn, ctx: Context = Depends(require(P.CONNE
         connection.disconnect(db, ctx, body.version)
     with transaction(ctx) as db:
         return connection.out(db, ctx)
+
+
+@router.get(
+    "/invoices/{invoice_id}",
+    response_model=InvoiceOnlinePaymentsOut,
+    summary="An invoice's pay link and online payments",
+    responses=ERRORS,
+)
+def invoice_payments(
+    invoice_id: uuid.UUID, response: Response, ctx: Context = Depends(require(P.LINK_SHARE))
+) -> InvoiceOnlinePaymentsOut:
+    response.headers["Cache-Control"] = "no-store"  # carries the pay link, a capability
+    with transaction(ctx) as db:
+        return paylinks.summary(db, ctx, invoice_id)
+
+
+@router.post(
+    "/invoices/{invoice_id}/link",
+    response_model=PayLinkOut,
+    summary="Get the invoice's pay link (made on first use) to send to the customer",
+    responses=ERRORS,
+)
+def share_link(invoice_id: uuid.UUID, response: Response, ctx: Context = Depends(require(P.LINK_SHARE))) -> PayLinkOut:
+    response.headers["Cache-Control"] = "no-store"  # carries the pay link, a capability
+    with transaction(ctx) as db:
+        return paylinks.share(db, ctx, invoice_id)
+
+
+@router.post(
+    "/invoices/{invoice_id}/link/reset",
+    response_model=PayLinkOut,
+    summary="Replace the invoice's pay link; the old link stops working",
+    responses=ERRORS,
+)
+def reset_link(invoice_id: uuid.UUID, response: Response, ctx: Context = Depends(require(P.LINK_SHARE))) -> PayLinkOut:
+    response.headers["Cache-Control"] = "no-store"  # carries the pay link, a capability
+    with transaction(ctx) as db:
+        return paylinks.share(db, ctx, invoice_id, reset=True)
 
 
 async def relay_event(request: Request) -> tuple[RelayEventIn, bytes]:

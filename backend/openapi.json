@@ -4340,6 +4340,20 @@
         "title": "ChatConfirmIn",
         "type": "object"
       },
+      "CheckoutStartOut": {
+        "properties": {
+          "url": {
+            "description": "Stripe's hosted payment page for the open balance",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "CheckoutStartOut",
+        "type": "object"
+      },
       "Clause": {
         "additionalProperties": false,
         "description": "One whitelisted filter. There is no free-form SQL anywhere in a segment.",
@@ -7795,6 +7809,102 @@
         "title": "InviteOut",
         "type": "object"
       },
+      "InvoiceOnlinePaymentsOut": {
+        "properties": {
+          "available": {
+            "description": "Whether a pay link can be shared for this invoice now",
+            "title": "Available",
+            "type": "boolean"
+          },
+          "invoice_id": {
+            "format": "uuid",
+            "title": "Invoice Id",
+            "type": "string"
+          },
+          "link_created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link Created At"
+          },
+          "link_last_opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link Last Opened At"
+          },
+          "link_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link Url"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "test",
+                  "live"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "requests": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentRequestOut"
+            },
+            "title": "Requests",
+            "type": "array"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "not_configured",
+                  "regulated_profile",
+                  "not_connected",
+                  "not_active",
+                  "not_issued",
+                  "settled"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          }
+        },
+        "required": [
+          "invoice_id",
+          "available"
+        ],
+        "title": "InvoiceOnlinePaymentsOut",
+        "type": "object"
+      },
       "ItemPage": {
         "properties": {
           "items": {
@@ -10097,6 +10207,102 @@
         "title": "PauseOut",
         "type": "object"
       },
+      "PayLinkOut": {
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "PayLinkOut",
+        "type": "object"
+      },
+      "PayPageOut": {
+        "description": "What a customer with the pay link sees. No customer details beyond what the invoice itself shows.",
+        "properties": {
+          "balance_minor": {
+            "title": "Balance Minor",
+            "type": "integer"
+          },
+          "business_name": {
+            "title": "Business Name",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "invoice_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Number"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "state": {
+            "enum": [
+              "payable",
+              "processing",
+              "paid",
+              "unavailable"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "test_mode": {
+            "default": false,
+            "title": "Test Mode",
+            "type": "boolean"
+          },
+          "total_minor": {
+            "title": "Total Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "business_name",
+          "invoice_number",
+          "currency",
+          "total_minor",
+          "balance_minor",
+          "issue_date",
+          "due_date",
+          "state"
+        ],
+        "title": "PayPageOut",
+        "type": "object"
+      },
       "PayablesAgingReport": {
         "description": "Open balances of supplier bills on `as_of`, bucketed by days past due (bill date when no due date).",
         "properties": {
@@ -10557,6 +10763,83 @@
           "body"
         ],
         "title": "PaymentReminderIn",
+        "type": "object"
+      },
+      "PaymentRequestOut": {
+        "properties": {
+          "amount_minor": {
+            "title": "Amount Minor",
+            "type": "integer"
+          },
+          "applied_minor": {
+            "default": 0,
+            "title": "Applied Minor",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At"
+          },
+          "status": {
+            "enum": [
+              "creating",
+              "open",
+              "processing",
+              "paid",
+              "expired",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "surplus_minor": {
+            "default": 0,
+            "description": "Money taken after the invoice was already settled: pay it back from Stripe or keep it",
+            "title": "Surplus Minor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amount_minor",
+          "currency",
+          "created_at"
+        ],
+        "title": "PaymentRequestOut",
         "type": "object"
       },
       "PendingItem": {
@@ -26863,6 +27146,333 @@
         "summary": "Replace business settings, including the default sales tax rate",
         "tags": [
           "org"
+        ]
+      }
+    },
+    "/api/v1/payments/invoices/{invoice_id}": {
+      "get": {
+        "operationId": "invoice_payments_api_v1_payments_invoices__invoice_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceOnlinePaymentsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "An invoice's pay link and online payments",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/payments/invoices/{invoice_id}/link": {
+      "post": {
+        "operationId": "share_link_api_v1_payments_invoices__invoice_id__link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayLinkOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Get the invoice's pay link (made on first use) to send to the customer",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/payments/invoices/{invoice_id}/link/reset": {
+      "post": {
+        "operationId": "reset_link_api_v1_payments_invoices__invoice_id__link_reset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayLinkOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Replace the invoice's pay link; the old link stops working",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/payments/pay/{token}": {
+      "get": {
+        "operationId": "pay_page_api_v1_payments_pay__token__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayPageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Too many requests"
+          }
+        },
+        "summary": "Read an invoice's pay page",
+        "tags": [
+          "payments-pay"
+        ]
+      }
+    },
+    "/api/v1/payments/pay/{token}/checkout": {
+      "post": {
+        "operationId": "checkout_api_v1_payments_pay__token__checkout_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutStartOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Too many requests"
+          }
+        },
+        "summary": "Open Stripe's payment page for the invoice's open balance",
+        "tags": [
+          "payments-pay"
         ]
       }
     },

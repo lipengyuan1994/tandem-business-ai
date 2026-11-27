@@ -3,8 +3,8 @@
 The relay signs each forwarded event with this business's relay secret. The envelope names the business; the
 signature proves it came from the relay client registered for that business. Events are stored once by Stripe
 event id and applied by `payments.apply_event`, which re-reads the object through the relay (Stripe does not
-guarantee order, and the envelope never carries the object). Phase 1 applies account events; payment events
-follow in phase 2.
+guarantee order, and the envelope never carries the object). Account events refresh the connection; Checkout
+Session events bring the payment request up to date (paylinks.apply).
 """
 
 from __future__ import annotations
@@ -22,14 +22,13 @@ from app.platform.context import Context
 from app.platform.db import transaction
 from app.platform.errors import Conflict, Unauthenticated
 
-from . import connection, signing
-from . import permissions as P
+from . import connection, paylinks, signing
 from .crypto import UnsealError, unseal
 from .models import PaymentEvent
 from .schemas import RelayEventIn
 
 JOB_KIND = "payments.apply_event"
-JOB_PERMISSIONS = frozenset({P.CONNECTION_READ, P.CONNECTION_MANAGE, "org.business.read"})
+JOB_PERMISSIONS = paylinks.JOB_PERMISSIONS
 ACCOUNT_EVENTS = frozenset(
     {"account.updated", "account.application.authorized", "capability.updated", "person.updated"}
 )
@@ -101,7 +100,7 @@ def apply_job(ctx: Context, payload: dict[str, Any]) -> None:
             return
         row.attempts += 1
         row.version += 1
-        event_type = row.event_type
+        event_type, object_id = row.event_type, row.object_id
     if event_type in ACCOUNT_EVENTS or event_type == DEAUTHORIZED:
         try:
             connection.refresh(ctx)
@@ -112,5 +111,15 @@ def apply_job(ctx: Context, payload: dict[str, Any]) -> None:
             _finish(ctx, row_id, "failed", exc.detail or exc.code)
             return
         _finish(ctx, row_id, "applied")
+        return
+    if event_type in paylinks.CHECKOUT_EVENTS and object_id:
+        try:
+            outcome = paylinks.apply(ctx, object_id, event_type)
+        except Conflict as exc:
+            _finish(ctx, row_id, "failed", exc.detail or exc.code)
+            if exc.code == "payments.relay_unavailable":
+                raise
+            return
+        _finish(ctx, row_id, outcome)
         return
     _finish(ctx, row_id, "ignored")

@@ -47,6 +47,11 @@ export function parseQuoteLocation(pathname: string): string | null {
   return /^\/q\/([A-Za-z0-9_.-]{1,600})\/?$/.exec(pathname)?.[1] ?? null
 }
 
+/** "/pay/<token>" → the invoice pay link's token. */
+export function parsePayLocation(pathname: string): string | null {
+  return /^\/pay\/([A-Za-z0-9_.-]{1,400})\/?$/.exec(pathname)?.[1] ?? null
+}
+
 
 const embedMemory = new Map<string, string>()
 function readEmbedToken(slug: string) {

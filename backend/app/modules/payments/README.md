@@ -1,7 +1,8 @@
 # payments (M21)
 
 Online invoice payments through Stripe Connect ([ADR-022](../../../../docs/roadmap/03-decisions.md)). Spec:
-[M21](../../../../docs/roadmap/modules/M21-payments.md). Phase 1 of 5: the business's connected Stripe account.
+[M21](../../../../docs/roadmap/modules/M21-payments.md). Phases 1 and 2 of 5: the business's connected Stripe
+account, and pay links that let customers pay invoices on Stripe Checkout.
 
 Tandem never holds a Stripe key. Every Stripe call goes through the **payments relay** (`app/relay`, runbook
 `docs/runbooks/payments-relay.md`); this module talks to it over HTTP only (`relay.py`, signed with `signing.py`,
@@ -11,10 +12,13 @@ Tables (forced business RLS): `payment_connections` (one per business: relay URL
 secret sealed with a key derived from `APP_SECRET_KEY`, Stripe account id, mode, charges/payouts enabled,
 requirements due, status `onboarding|active|restricted|disconnected`) and `payment_events` (each forwarded Stripe
 event once per business: id, type, account, object, outcome `pending|applied|ignored|failed`). Exports leave out
-the sealed secret. No customer data yet, so no erasure handler.
+the sealed secret. Phase 2 adds `payment_links` (one active link per invoice, only the token's hash stored) and
+`payment_requests` (one per Checkout attempt: amount, session id and page address, status
+`creating|open|processing|paid|expired|failed`, what was applied to the invoice and any surplus). Exports leave out
+token hashes and Stripe page addresses. Nothing names a customer, so there is still no erasure handler.
 
-Permissions: `payments.connection.read` (owner, admin, demo reviewer) and `payments.connection.manage` (owner,
-admin).
+Permissions: `payments.connection.read` (owner, admin, demo reviewer), `payments.connection.manage` (owner,
+admin) and `payments.link.share` (owner, admin, demo reviewer, operator).
 
 Flow:
 - `POST /payments/stripe/onboarding` registers the business with the relay the first time (outside any
@@ -25,6 +29,13 @@ Flow:
   once and queues `payments.apply_event`, which re-reads the account through the relay and updates the status.
 - `POST /payments/stripe/disconnect` turns online payments off in Tandem only; Stripe keeps the account and setting
   up again reuses it.
+- `POST /payments/invoices/{id}/link` (and `/link/reset`) gives the invoice's pay link (`tokens.py`, signed with a
+  key derived from `APP_SECRET_KEY`). The public `api_pay.py` routes serve `/pay/<token>`: the page, and
+  `/checkout`, which asks the relay for a Checkout Session for the open balance (`paylinks.start_checkout`).
+- `checkout.session.*` events queue `payments.apply_event` like account events; `paylinks.apply` re-reads the
+  session and records the money through `sales.record_online_payment` (idempotent on the payment intent).
+  `sales.document_changed` expires open sessions of a changed invoice (`payments.close_requests`), and the hourly
+  `payments.check_requests` re-reads attempts whose event may have been lost.
 - Refused under `DATA_PROFILE=regulated`; not offered while `PAYMENTS_RELAY_URL` is empty.
 
 Tests: `tests/` run the real relay app in-process against a fake Stripe over `respx` (`app.relay.testing`).

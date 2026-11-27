@@ -1,3 +1,4 @@
 CONNECTION_READ = "payments.connection.read"
 CONNECTION_MANAGE = "payments.connection.manage"
-ALL = frozenset({CONNECTION_READ, CONNECTION_MANAGE})
+LINK_SHARE = "payments.link.share"
+ALL = frozenset({CONNECTION_READ, CONNECTION_MANAGE, LINK_SHARE})

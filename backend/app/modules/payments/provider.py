@@ -49,3 +49,14 @@ def app_base_url() -> str:
 
 def enrollment_token() -> str:
     return get_settings().payments_relay_enrollment_token.get_secret_value()
+
+
+def bank_transfers() -> bool:
+    return get_settings().payments_bank_transfers
+
+
+PAY_PATH = "/pay/"
+
+
+def pay_url(token: str) -> str:
+    return f"{app_base_url()}{PAY_PATH}{token}"

@@ -33,6 +33,7 @@ class FakeStripe:
         self.key = key
         self.accounts: dict[str, dict[str, Any]] = {}
         self.links: list[dict[str, Any]] = []
+        self.sessions: dict[str, dict[str, Any]] = {}
         self.calls: list[tuple[str, str, dict[str, str], dict[str, str]]] = []  # method, path, form, headers
         self.by_key: dict[str, httpx.Response] = {}
         self.fail_next: list[httpx.Response] = []
@@ -52,6 +53,28 @@ class FakeStripe:
             "past_due": due,
             "disabled_reason": "requirements.past_due",
         }
+
+    def pay(self, session_id: str) -> dict[str, Any]:
+        """The customer paid by card on the Checkout page: returns the session as Stripe sends it in the event."""
+        session = self.sessions[session_id]
+        session.update(status="complete", payment_status="paid", payment_intent=f"pi_{secrets.token_hex(8)}")
+        return dict(session)
+
+    def start_bank_payment(self, session_id: str) -> dict[str, Any]:
+        """The customer chose a bank debit: Checkout completes, the money arrives days later (or never)."""
+        session = self.sessions[session_id]
+        session.update(status="complete", payment_status="unpaid", payment_intent=f"pi_{secrets.token_hex(8)}")
+        return dict(session)
+
+    def finish_bank_payment(self, session_id: str, *, ok: bool) -> dict[str, Any]:
+        session = self.sessions[session_id]
+        if ok:
+            session["payment_status"] = "paid"
+        return dict(session)
+
+    def expire_session(self, session_id: str) -> dict[str, Any]:
+        self.sessions[session_id]["status"] = "expired"
+        return dict(self.sessions[session_id])
 
     def event(
         self, account: str | None, kind: str, obj: dict[str, Any], *, event_id: str | None = None
@@ -131,7 +154,61 @@ class FakeStripe:
             }
             self.links.append(link)
             return httpx.Response(200, json=link)
+        if path == "/v1/checkout/sessions" or path.startswith("/v1/checkout/sessions/"):
+            return self._checkout(request, form)
         return httpx.Response(404, json={"error": {"type": "invalid_request_error", "message": f"no route {path}"}})
+
+    def _checkout(self, request: httpx.Request, form: dict[str, str]) -> httpx.Response:
+        account = request.headers.get("stripe-account")
+        missing = httpx.Response(404, json={"error": {"code": "resource_missing", "message": "No such session"}})
+        if account not in self.accounts:
+            return httpx.Response(400, json={"error": {"code": "account_invalid", "message": "No such account"}})
+        parts = request.url.path.split("/")
+        if request.method == "POST" and len(parts) == 4:
+            if not self.accounts[account]["charges_enabled"]:
+                return httpx.Response(
+                    400, json={"error": {"code": "account_invalid", "message": "This account cannot take payments"}}
+                )
+            session_id = f"cs_test_{secrets.token_hex(12)}"
+            self.sessions[session_id] = {
+                "id": session_id,
+                "object": "checkout.session",
+                "account": account,
+                "url": f"https://checkout.stripe.com/c/pay/{session_id}",
+                "status": "open",
+                "payment_status": "unpaid",
+                "mode": form.get("mode"),
+                "amount_total": int(form["line_items[0][price_data][unit_amount]"]),
+                "currency": form.get("line_items[0][price_data][currency]"),
+                "payment_intent": None,
+                "expires_at": int(form["expires_at"]),
+                "client_reference_id": form.get("client_reference_id"),
+                "success_url": form.get("success_url"),
+                "cancel_url": form.get("cancel_url"),
+                "payment_method_types": [v for k, v in sorted(form.items()) if k.startswith("payment_method_types[")],
+                "application_fee_amount": form.get("payment_intent_data[application_fee_amount]"),
+                "metadata": {k[9:-1]: v for k, v in form.items() if k.startswith("metadata[")},
+            }
+            return httpx.Response(200, json=self._public(self.sessions[session_id]))
+        session = self.sessions.get(parts[4]) if len(parts) > 4 else None
+        if session is None or session["account"] != account:
+            return missing
+        if request.method == "POST" and len(parts) == 6 and parts[5] == "expire":
+            if session["status"] != "open":
+                return httpx.Response(
+                    400, json={"error": {"code": "checkout_session_not_open", "message": "Session is not open"}}
+                )
+            session["status"] = "expired"
+        elif not (request.method == "GET" and len(parts) == 5):
+            return missing
+        return httpx.Response(200, json=self._public(session))
+
+    @staticmethod
+    def _public(session: dict[str, Any]) -> dict[str, Any]:
+        out = {k: v for k, v in session.items() if k not in ("account", "application_fee_amount")}
+        if out["status"] != "open":
+            out["url"] = None
+        return out
 
 
 def asgi_route(router: respx.MockRouter, host: str, client: TestClient) -> None:

@@ -6,7 +6,7 @@ import { type Connect, type Plugin, defineConfig } from 'vite'
 
 // The visitor widget is its own entry (widget.html) so its bundle stays small; /p/:slug/* serves it.
 const widgetRewrite: Connect.NextHandleFunction = (req, _res, next) => {
-  if (req.url && (/^\/p\/[a-z0-9-]+\/(chat|request|bookings)\/?(\?.*)?$/.test(req.url) || /^\/embed\/[a-z0-9-]+\/chat\/?(\?.*)?$/.test(req.url) || /^\/q\/[A-Za-z0-9_.-]{1,600}\/?(\?.*)?$/.test(req.url))) req.url = '/widget.html'
+  if (req.url && (/^\/p\/[a-z0-9-]+\/(chat|request|bookings)\/?(\?.*)?$/.test(req.url) || /^\/embed\/[a-z0-9-]+\/chat\/?(\?.*)?$/.test(req.url) || /^\/(q|pay)\/[A-Za-z0-9_.-]{1,600}\/?(\?.*)?$/.test(req.url))) req.url = '/widget.html'
   next()
 }
 const publicWidget: Plugin = {
@@ -28,6 +28,18 @@ const supplierCopy: Plugin = {
   },
 }
 
+const payCopy: Plugin = {
+  name: 'pay-copy',
+  resolveId: (id) => id === 'virtual:pay-copy' ? '\0pay-copy' : undefined,
+  load(id) {
+    if (id !== '\0pay-copy') return
+    const path = `${import.meta.dirname}/src/locales/en.json`
+    this.addWatchFile(path)
+    const copy = JSON.parse(readFileSync(path, 'utf8')) as { payPage: Record<string, string> }
+    return `export default ${JSON.stringify(copy.payPage)}`
+  },
+}
+
 const bookingCopy: Plugin = {
   name: 'booking-copy',
   resolveId: (id) => id === 'virtual:booking-copy' ? '\0booking-copy' : undefined,
@@ -44,7 +56,7 @@ const bookingCopy: Plugin = {
 const hmrClientPort = process.env.VITE_HMR_CLIENT_PORT ? Number(process.env.VITE_HMR_CLIENT_PORT) : undefined
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), publicWidget, supplierCopy, bookingCopy],
+  plugins: [react(), tailwindcss(), publicWidget, supplierCopy, payCopy, bookingCopy],
   resolve: { alias: { '@': `${import.meta.dirname}/src` } },
   server: {
     allowedHosts: ['localhost', 'web'],

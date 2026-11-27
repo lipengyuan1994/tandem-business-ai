@@ -22,6 +22,9 @@ class RelaySettings(BaseSettings):
     stripe_api_base: str = "https://api.stripe.com"
     # Pin the Stripe API version once the platform account exists; empty uses the account's default version.
     stripe_api_version: str = ""
+    # Boston AI Forward's application fee per payment in basis points (100 = 1%). Default 0: no fee. Changing it
+    # changes what businesses pay, so it is the owner's decision (open question Q14).
+    application_fee_bps: int = Field(default=0, ge=0, le=1000)
     # When set, a Tandem install must present it to register (hosted model); empty lets any install register.
     enrollment_token: SecretStr = Field(default=SecretStr(""), repr=False)
     enrollments_per_hour: int = Field(default=20, ge=1)

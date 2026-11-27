@@ -33,7 +33,7 @@ SENSITIVE_KEYS = {
     "api_key",
 }
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
-CAPABILITY_PATH_RE = re.compile(r"(/(?:api/v1/public/quotes|q)/)[^/\s?#]+")
+CAPABILITY_PATH_RE = re.compile(r"(/(?:api/v1/public/quotes|q|api/v1/payments/pay|pay)/)[^/\s?#]+")
 
 
 def redact_request_path(path: str) -> str:

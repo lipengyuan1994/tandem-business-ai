@@ -275,3 +275,8 @@ stays ask. The new recorded `reply_guardrail` use-case requires one constraint m
   Tandem and Tandem reaches it only over HTTP (tested). Each business registers its own relay client, so a
   compromised deployment's credential reaches only its own businesses' accounts. The relay works the same hosted
   by Boston AI Forward or run next to Tandem (`PAYMENTS_RELAY_PRIVATE`), so Q13 does not block anything.
+- **Phase 2 notes (2026-11-27):** the relay creates, reads and expires Checkout Sessions for the calling client's
+  account only (a session id on another account answers not found). Money beyond the open balance is kept on the
+  payment attempt (`payment_requests.surplus_minor`) rather than in a separate unapplied-payments table, so sales'
+  "payments never exceed the total" check is unchanged. Bank debit is behind `PAYMENTS_BANK_TRANSFERS` and the
+  platform fee is `RELAY_APPLICATION_FEE_BPS`, both off by default until the owner answers Q14 and Q16.

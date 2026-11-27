@@ -5,7 +5,7 @@ Permission strings for modules that are not built yet are listed here so the mat
 
 from __future__ import annotations
 
-POLICY_VERSION = "2026-11-27.1"
+POLICY_VERSION = "2026-11-27.2"
 
 ROLE_NAMES = ("owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor")
 
@@ -44,6 +44,8 @@ ACCOUNTING_CONNECT = {"accounting.connection.manage"}
 PAYMENTS_READ = {"payments.connection.read"}
 # Linking a Stripe account and turning online payments on or off: owner or admin (M21 rule 1).
 PAYMENTS_MANAGE = {"payments.connection.manage"}
+# Making and sharing an invoice's pay link, and seeing its online payments: whoever can issue invoices.
+PAYMENTS_LINK = {"payments.link.share"}
 
 APPROVE = {
     "crm": "crm.proposal.approve",
@@ -83,6 +85,7 @@ _ADMIN = (
     | ACCOUNTING_READ
     | ACCOUNTING_RUN
     | PAYMENTS_READ
+    | PAYMENTS_LINK
     | APPROVALS
     | AUDIT_READ
     | OUTBOX
@@ -114,6 +117,7 @@ ROLES: dict[str, frozenset[str]] = {
         | PURCH_READ
         | {"purchasing.po.receive"}
         | SALES_WRITE
+        | PAYMENTS_LINK
         | APPROVALS
         | OUTBOX
         | AI_USE

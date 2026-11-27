@@ -4,6 +4,17 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **New (2026-11-27): online payments, step 2 of 5.** Customers can pay an issued invoice online. On the invoice
+  page, Copy pay link gives a link to send the customer; it opens a page (`/pay/...`) with the amount due and a
+  Pay button that goes to Stripe's own payment page. The payment is recorded on the invoice by itself, once, when
+  Stripe confirms it. Replace link cuts off a link already sent. Cards only unless `PAYMENTS_BANK_TRANSFERS=true`
+  (US bank debit, recorded only when the bank confirms). Needs step 1 set up and an issued invoice.
+- **Migration:** `20261127_1800_payments_pay_links` (new `payment_links` and `payment_requests` tables;
+  `invoice_payments` gains `provider` and `external_id`). No manual step. Role policy 2026-11-27.2 adds
+  `payments.link.share` (owner, admin, demo reviewer, operator).
+- **Caddy:** `/pay/*` is served from the public bundle, and pay-link tokens are masked in its logs. Upgrades replace
+  the Caddyfile as usual. The relay gains `RELAY_APPLICATION_FEE_BPS` (default 0).
+
 - **New (2026-11-27): online payments, step 1 of 5.** Settings > Payments lets an owner or admin set up a Stripe
   account for the business (Stripe's own onboarding; the business keeps the full Stripe Dashboard) and see whether
   Stripe can take payments yet. Customers cannot pay online until step 2. Off unless the server is connected to a

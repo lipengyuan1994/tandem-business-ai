@@ -38,3 +38,26 @@ export function useRefreshAccount() {
 export function useDisconnectStripe() {
   return usePaymentsMutation(async (version: number) => unwrap(await api.POST("/api/v1/payments/stripe/disconnect", { body: { version } })))
 }
+
+export const LINK_SHARE = "payments.link.share"
+export type InvoiceOnlinePayments = Schemas["InvoiceOnlinePaymentsOut"]
+
+const invoiceKey = (invoiceId: string) => ["payments", "invoice", invoiceId] as const
+
+export function useInvoiceOnlinePayments(invoiceId: string) {
+  const { permissions } = useSession()
+  return useQuery({
+    queryKey: invoiceKey(invoiceId), enabled: permissions.has(LINK_SHARE),
+    queryFn: async () => unwrap(await api.GET("/api/v1/payments/invoices/{invoice_id}", { params: { path: { invoice_id: invoiceId } } })),
+  })
+}
+
+export function usePayLink(invoiceId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (reset: boolean) => unwrap(reset
+      ? await api.POST("/api/v1/payments/invoices/{invoice_id}/link/reset", { params: { path: { invoice_id: invoiceId } } })
+      : await api.POST("/api/v1/payments/invoices/{invoice_id}/link", { params: { path: { invoice_id: invoiceId } } })),
+    onSettled: async () => { await qc.invalidateQueries({ queryKey: invoiceKey(invoiceId) }) },
+  })
+}

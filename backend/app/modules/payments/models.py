@@ -10,7 +10,17 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import CheckConstraint, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    ForeignKeyConstraint,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,6 +28,10 @@ from app.platform.models import BusinessScopedBase, scoped_table_args
 
 CONNECTION_STATUSES = ("onboarding", "active", "restricted", "disconnected")
 EVENT_OUTCOMES = ("pending", "applied", "ignored", "failed")
+# A payment request is one visit to Stripe Checkout. `creating` until the relay answers; `open` while the page can be
+# paid; `processing` after a bank debit was started (the money arrives days later); `paid` once Stripe says so and
+# the money is on the invoice; `expired` or `failed` otherwise.
+REQUEST_STATUSES = ("creating", "open", "processing", "paid", "expired", "failed")
 
 
 class PaymentConnection(BusinessScopedBase):
@@ -66,4 +80,59 @@ class PaymentEvent(BusinessScopedBase):
         UniqueConstraint("business_id", "stripe_event_id"),
         CheckConstraint(f"outcome in ({','.join(repr(s) for s in EVENT_OUTCOMES)})", name="outcome"),
         Index("ix_payment_events_outcome", "business_id", "outcome"),
+    )
+
+
+class PaymentLink(BusinessScopedBase):
+    """The pay link of one invoice. The token is signed (tokens.py) and only its hash is stored; resetting a link
+    revokes it and makes a new row, so an old link stops working."""
+
+    __tablename__ = "payment_links"
+    invoice_id: Mapped[uuid.UUID]
+    token_hash: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[uuid.UUID | None]
+    revoked_at: Mapped[datetime | None]
+    last_opened_at: Mapped[datetime | None]
+    __table_args__ = scoped_table_args(
+        UniqueConstraint("token_hash"),
+        Index(
+            "uq_payment_links_active",
+            "business_id",
+            "invoice_id",
+            unique=True,
+            postgresql_where=text("revoked_at is null"),
+        ),
+    )
+
+
+class PaymentRequest(BusinessScopedBase):
+    """One Stripe Checkout Session for an invoice's open balance. No card data: Stripe ids and amounts only."""
+
+    __tablename__ = "payment_requests"
+    link_id: Mapped[uuid.UUID]
+    invoice_id: Mapped[uuid.UUID]
+    status: Mapped[str] = mapped_column(String(12), default="creating")
+    amount_minor: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(3))
+    checkout_session_id: Mapped[str | None] = mapped_column(String(255))
+    checkout_url: Mapped[str | None] = mapped_column(String(1000))
+    expires_at: Mapped[datetime]
+    payment_intent_id: Mapped[str | None] = mapped_column(String(80))
+    method: Mapped[str | None] = mapped_column(String(16))
+    # What reached the invoice, and what could not because the invoice was already settled (to pay back or keep).
+    applied_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    surplus_minor: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    invoice_payment_id: Mapped[uuid.UUID | None]
+    paid_at: Mapped[datetime | None]
+    closed_at: Mapped[datetime | None]
+    last_checked_at: Mapped[datetime | None]
+    last_error: Mapped[str | None] = mapped_column(String(500))
+    __table_args__ = scoped_table_args(
+        UniqueConstraint("checkout_session_id"),
+        ForeignKeyConstraint(["business_id", "link_id"], ["payment_links.business_id", "payment_links.id"]),
+        Index("ix_payment_requests_invoice", "business_id", "invoice_id"),
+        Index("ix_payment_requests_status", "business_id", "status"),
+        CheckConstraint(f"status in ({','.join(repr(s) for s in REQUEST_STATUSES)})", name="status"),
+        CheckConstraint("amount_minor > 0", name="amount"),
+        CheckConstraint("applied_minor >= 0 and surplus_minor >= 0", name="split"),
     )

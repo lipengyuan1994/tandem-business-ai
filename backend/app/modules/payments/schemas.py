@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -61,3 +61,57 @@ class RelayEventIn(BaseModel):
 
 class RelayEventOut(BaseModel):
     status: Literal["accepted", "duplicate"]
+
+
+RequestStatus = Literal["creating", "open", "processing", "paid", "expired", "failed"]
+Unavailable = Literal["not_configured", "regulated_profile", "not_connected", "not_active", "not_issued", "settled"]
+
+
+class PaymentRequestOut(BaseModel):
+    id: uuid.UUID
+    status: RequestStatus
+    amount_minor: int
+    currency: str
+    method: str | None = None
+    applied_minor: int = 0
+    surplus_minor: int = Field(
+        default=0, description="Money taken after the invoice was already settled: pay it back from Stripe or keep it"
+    )
+    created_at: datetime
+    paid_at: datetime | None = None
+
+
+class InvoiceOnlinePaymentsOut(BaseModel):
+    invoice_id: uuid.UUID
+    available: bool = Field(description="Whether a pay link can be shared for this invoice now")
+    unavailable_reason: Unavailable | None = None
+    link_url: str | None = None
+    link_created_at: datetime | None = None
+    link_last_opened_at: datetime | None = None
+    mode: Literal["test", "live"] | None = None
+    requests: list[PaymentRequestOut] = Field(default_factory=list)
+
+
+class PayLinkOut(BaseModel):
+    url: str
+
+
+PayPageState = Literal["payable", "processing", "paid", "unavailable"]
+
+
+class PayPageOut(BaseModel):
+    """What a customer with the pay link sees. No customer details beyond what the invoice itself shows."""
+
+    business_name: str
+    invoice_number: str | None
+    currency: str
+    total_minor: int
+    balance_minor: int
+    issue_date: date | None
+    due_date: date | None
+    state: PayPageState
+    test_mode: bool = False
+
+
+class CheckoutStartOut(BaseModel):
+    url: str = Field(description="Stripe's hosted payment page for the open balance")
