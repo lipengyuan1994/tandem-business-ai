@@ -88,6 +88,19 @@ services:
       api:
         condition: service_started
 
+  # Payments relay (ADR-022): off unless started with `--profile payments`. Needs RELAY_* in .env (a Stripe test key)
+  # and, to receive Stripe events locally, `stripe listen --forward-connect-to http://localhost:8100/v1/stripe/webhook`
+  # pointed at a published port; see docs/runbooks/payments-relay.md.
+  payments-relay:
+    <<: *backend
+    profiles: ["payments"]
+    command: ["uvicorn", "app.relay.main:create_app", "--factory", "--reload", "--reload-dir", "/app/app/relay", "--host", "0.0.0.0", "--port", "8100"]
+    volumes:
+      - ../../backend:/app
+      - relay_data:/relay-data
+    ports: ["127.0.0.1:8100:8100"]
+    depends_on: {}
+
   web:
     image: node:24-alpine
     working_dir: /app
@@ -111,3 +124,4 @@ volumes:
   pgdata:
   caddy_data:
   web_node_modules:
+  relay_data:

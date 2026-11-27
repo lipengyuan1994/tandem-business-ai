@@ -4,6 +4,16 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **New (2026-11-27): online payments, step 1 of 5.** Settings > Payments lets an owner or admin set up a Stripe
+  account for the business (Stripe's own onboarding; the business keeps the full Stripe Dashboard) and see whether
+  Stripe can take payments yet. Customers cannot pay online until step 2. Off unless the server is connected to a
+  payments relay (`PAYMENTS_RELAY_URL`, see `docs/runbooks/payments-relay.md`); refused under the regulated profile.
+- **New service:** the payments relay (`app.relay.main:create_app`, same backend image). Only Boston AI Forward runs
+  it in production; it is not part of an installation's Compose stack. Development: `--profile payments`.
+- **Migration:** `20261127_1400_payments_connections` (new `payment_connections` and `payment_events` tables). No
+  manual step. Role policy 2026-11-27.1 adds `payments.connection.read` (owner, admin, demo reviewer) and
+  `payments.connection.manage` (owner, admin).
+
 - **Fixed (2026-11-25):** customer and supplier cash refunds must be covered by dated payments, and aging no longer
   reopens a balance for a refund before its credit. Purchase order bill fill uses only received, unbilled units and
   checks them again when saving. The PO estimate never becomes the bill's total automatically. Contact consent evidence uses UTC.

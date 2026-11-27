@@ -77,6 +77,7 @@ Every module may import `app.platform.*` and the `public.py` of the modules list
 | `voice` | ai, conversations | 5 |
 | `admin_ops` (v1) | org, identity, files, notifications, crm | 4 |
 | `accounting` (v1) | org, sales, purchasing | 5 |
+| `payments` (v1) | org, sales, approvals, notifications | 5 |
 
 ```mermaid
 flowchart BT

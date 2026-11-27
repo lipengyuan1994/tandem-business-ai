@@ -12,6 +12,7 @@ Operating instructions for a Tandem Business AI installation. Each one can be fo
 | [rotate-secrets.md](rotate-secrets.md) | Change database, OIDC, restic or API-key secrets |
 | [incident.md](incident.md) | Something is down or behaving badly |
 | [refund-date-review.md](refund-date-review.md) | Review legacy cash refund dates and reconcile affected aging reports |
+| [payments-relay.md](payments-relay.md) | Run the Stripe payments relay; connect a Tandem server to it |
 | [access.md](access.md) | SSH, Keycloak admin console, logs |
 | [teardown.md](teardown.md) | Destroy an installation and check billing |
 

@@ -223,7 +223,18 @@
     "purchasing.refund_required": "The credit is more than the bill still owes. Record how the supplier paid back the difference.",
     "purchasing.refund_not_needed": "The bill still owes more than this credit, so nothing was paid back.",
     "purchasing.payment_refunded": "The supplier paid back part of this payment with a credit. Void that credit first.",
-    "purchasing.credit_date_in_future": "The credit date can't be in the future."
+    "purchasing.credit_date_in_future": "The credit date can't be in the future.",
+    "payments.not_configured": "Online payments aren't set up on this server yet. Whoever runs Tandem needs to connect the payments relay first.",
+    "payments.regulated_profile": "Online payments aren't available on a server set up for regulated health data.",
+    "payments.relay_unavailable": "Stripe or the payments service couldn't be reached. Try again in a few minutes.",
+    "payments.relay_auth": "The payments service no longer recognises this business. Whoever runs Tandem needs to check the relay setup.",
+    "payments.no_account": "The payments service has no Stripe account for this business. Set up payments again.",
+    "payments.stripe_refused": "Stripe refused the request.",
+    "payments.relay_changed": "This server now uses a different payments service. Whoever runs Tandem needs to move the business across first.",
+    "payments.not_connected": "Set up online payments first.",
+    "payments.credential_unreadable": "Tandem can't read its stored payments credential. Whoever runs Tandem needs to check the server's secret key.",
+    "payments.account_mismatch": "The payments service reports a different Stripe account than this business uses. Whoever runs Tandem needs to check it.",
+    "payments.version_conflict": "Someone else changed the payment settings. Reload to see the latest."
   },
   "identity": {
     "selectBusiness": {
@@ -291,7 +302,8 @@
       "policies": "Policies",
       "staff": "Staff",
       "resources": "Resources & availability",
-      "accounting": "Accounting"
+      "accounting": "Accounting",
+      "payments": "Payments"
     },
     "business": {
       "name": "Business name",
@@ -2574,5 +2586,70 @@
     "retry": "Retry",
     "retryLabel": "Retry {{label}}",
     "retryQueued": "Queued to try again."
+  },
+  "payments": {
+    "title": "Payments",
+    "intro": "Let customers pay invoices online by card. Money goes straight to your own Stripe account; Tandem never sees card numbers.",
+    "noAccess": "You don't have access to payment settings.",
+    "stripe": "Stripe",
+    "testMode": "Test mode",
+    "status": {
+      "not_connected": "Not set up",
+      "onboarding": "Setting up",
+      "active": "Ready",
+      "restricted": "Needs attention",
+      "disconnected": "Turned off"
+    },
+    "explain": {
+      "not_connected": "Set up a Stripe account for this business. Stripe asks for your business details and a bank account for payouts.",
+      "onboarding": "Stripe still needs some details before it can take payments for you. Continue where you left off.",
+      "active": "Stripe can take card payments and pay out to your bank.",
+      "restricted": "Stripe has paused payments or payouts until it gets more information. Continue in Stripe to fix it.",
+      "disconnected": "Online payments are off for this business. Your Stripe account is still yours; turn payments back on any time."
+    },
+    "charges": "Card payments",
+    "payouts": "Payouts",
+    "details": "Details sent",
+    "yes": "Yes",
+    "notYet": "Not yet",
+    "stillNeeded_one": "Stripe still needs {{count}} thing:",
+    "stillNeeded_other": "Stripe still needs {{count}} things:",
+    "requirement": {
+      "business_profile": "Business details",
+      "business_type": "Business type",
+      "company": "Company details",
+      "external_account": "Bank account for payouts",
+      "individual": "Your personal details",
+      "representative": "Details of the person responsible",
+      "owners": "Owners",
+      "directors": "Directors",
+      "executives": "Executives",
+      "tos_acceptance": "Agreeing to Stripe's terms",
+      "settings": "Account settings",
+      "person": "A person's details"
+    },
+    "currencyMismatch": "Your business uses {{business}} but the Stripe account pays out in {{stripe}}.",
+    "lastChecked": "Last checked:",
+    "country": "Country the business is registered in",
+    "countryHelp": "Stripe can't change this later.",
+    "countries": {
+      "US": "United States",
+      "CA": "Canada",
+      "GB": "United Kingdom",
+      "IE": "Ireland",
+      "AU": "Australia",
+      "NZ": "New Zealand"
+    },
+    "setUp": "Set up with Stripe",
+    "continue": "Continue in Stripe",
+    "reconnect": "Turn payments back on",
+    "checkNow": "Check status",
+    "openDashboard": "Open Stripe Dashboard",
+    "disconnect": "Turn off online payments",
+    "disconnectTitle": "Turn off online payments?",
+    "disconnectBody": "Customers can no longer pay invoices online. Your Stripe account, its money and its payouts stay as they are, and you can turn this back on later.",
+    "linkExpired": "That Stripe link expired. Continue in Stripe to get a fresh one.",
+    "notConfigured": "Online payments aren't set up on this server yet. Whoever runs Tandem needs to connect the payments relay first.",
+    "cardsNote": "Cards only for now. Stripe takes its fees from each payment, in your Stripe account."
   }
 }

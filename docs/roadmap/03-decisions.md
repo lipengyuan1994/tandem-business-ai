@@ -226,9 +226,9 @@ stays ask. The new recorded `reply_guardrail` use-case requires one constraint m
   deployment for Intuit).
 
 ## ADR-022 Online invoice payments: Stripe Connect, direct charges, Stripe Checkout
-- **Status:** PROPOSED 2026-11-27 (owner, in chat: "Plan Stripe payments", then "Start phase 0" for this record
-  and the roadmap change). Accepted when the owner merges it. It replaces the v1 non-goal "Payments and card
-  handling" in [01](01-product-and-scope.md#non-goals-v1).
+- **Status:** ACCEPTED 2026-11-27 (owner, in chat: "Plan Stripe payments", then "Start phase 0" for this record
+  and the roadmap change; merged in PR #17). It replaces the v1 non-goal "Payments and card handling" in
+  [01](01-product-and-scope.md#non-goals-v1).
 - **Decision 1:** a business's customers can pay an issued invoice online. Boston AI Forward runs a Stripe Connect
   platform; each business gets its own connected Stripe account. The account uses Stripe's default controller
   settings: full Stripe Dashboard, Stripe owns payment losses, the account pays Stripe's fees, Stripe collects
@@ -268,3 +268,10 @@ stays ask. The new recorded `reply_guardrail` use-case requires one constraint m
   exceed the balance" rule (unapplied online payments). Stripe facts were read from Stripe's docs and pricing page on
   2026-11-27 and must be re-checked when phase 1 starts. Plan and phases: Claude Doc "Tandem Stripe payments plan".
 - **Revisit when:** the hosting model is decided (Q13), or a business needs in-person card payments.
+- **Phase 1 notes (2026-11-27):** Stripe's docs still show creating Accounts v2 connected accounts only with a
+  preview API version, so the relay uses **Accounts v1** with the controller settings of decision 1
+  (`fees.payer=account`, `losses.payments=stripe`, `stripe_dashboard.type=full`, `requirement_collection=stripe`).
+  The relay is one standalone FastAPI app in `backend/app/relay/` with its own SQLite store; it imports nothing from
+  Tandem and Tandem reaches it only over HTTP (tested). Each business registers its own relay client, so a
+  compromised deployment's credential reaches only its own businesses' accounts. The relay works the same hosted
+  by Boston AI Forward or run next to Tandem (`PAYMENTS_RELAY_PRIVATE`), so Q13 does not block anything.

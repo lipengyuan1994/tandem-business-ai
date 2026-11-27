@@ -113,7 +113,13 @@ def test_role_matrix_sanity() -> None:
 
 
 def test_demo_reviewer_has_exactly_admin_permissions_except_configuration() -> None:
-    excluded = {"org.settings.write", "org.business.write", "org.location.write", "identity.membership.write"}
+    excluded = {
+        "org.settings.write",
+        "org.business.write",
+        "org.location.write",
+        "identity.membership.write",
+        "payments.connection.manage",
+    }
     forbidden = excluded | {
         "ai.settings.write",
         "identity.owner.grant",

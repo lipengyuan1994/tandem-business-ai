@@ -113,6 +113,14 @@ class Settings(BaseSettings):
     # Empty = {APP_BASE_URL}/api/v1/accounting/quickbooks/callback
     quickbooks_redirect_uri: str = ""
 
+    # Online invoice payments through Stripe (modules/payments, ADR-022). Empty relay URL = not offered.
+    # The relay host must be in EGRESS_ALLOWLIST, unless PAYMENTS_RELAY_PRIVATE says it runs next to Tandem.
+    payments_relay_url: str = ""
+    payments_relay_enrollment_token: SecretStr = Field(default=SecretStr(""), repr=False)
+    payments_relay_private: bool = False
+    # Where the relay posts Stripe events. Empty = {APP_BASE_URL}/api/v1/payments/relay/events
+    payments_events_url: str = ""
+
     log_level: str = "info"
 
     @property
