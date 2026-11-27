@@ -2106,6 +2106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/invoices/{invoice_id}/card-refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask to pay money back to the customer's card (waits for an owner or admin to approve) */
+        post: operations["propose_card_refund_api_v1_payments_invoices__invoice_id__card_refunds_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/invoices/{invoice_id}/link": {
         parameters: {
             query?: never;
@@ -5192,6 +5209,77 @@ export interface components {
             /** Version */
             version: number;
         };
+        /**
+         * CardRefundIn
+         * @description Ask for a card refund. The amount is not chosen here: it is the credit note's refund, or what is left of the
+         *     surplus, so a refund never pays back more than the invoice's own records say.
+         */
+        CardRefundIn: {
+            /** Invoice Refund Id */
+            invoice_refund_id?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "credit_note" | "surplus";
+        };
+        /** CardRefundOut */
+        CardRefundOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Credit Note Number */
+            credit_note_number?: string | null;
+            /** Currency */
+            currency: string;
+            /**
+             * Failure Reason
+             * @description Stripe's reason when a refund failed
+             */
+            failure_reason?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Proposal Id */
+            proposal_id?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Settled At */
+            settled_at?: string | null;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "credit_note" | "surplus" | "dashboard";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "proposed" | "sending" | "pending" | "succeeded" | "failed" | "canceled";
+        };
+        /** CardRefundProposedOut */
+        CardRefundProposedOut: {
+            /**
+             * Proposal Id
+             * Format: uuid
+             */
+            proposal_id: string;
+            refund: components["schemas"]["CardRefundOut"];
+        };
         /** CaseOut */
         CaseOut: {
             /** Appointment Id */
@@ -6229,6 +6317,52 @@ export interface components {
             /** Warnings */
             warnings: string[];
         };
+        /** DisputeOut */
+        DisputeOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Closed At */
+            closed_at?: string | null;
+            /** Currency */
+            currency: string;
+            /**
+             * Due By
+             * @description Answer in Stripe's Dashboard before this
+             */
+            due_by?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Last Error */
+            last_error?: string | null;
+            /**
+             * Opened At
+             * Format: date-time
+             */
+            opened_at: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "open" | "won" | "lost";
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Reversed Minor
+             * @description What a lost dispute took back off the invoice
+             * @default 0
+             */
+            reversed_minor: number;
+            /** Stripe Status */
+            stripe_status: string;
+        };
         /** DocumentCreate */
         DocumentCreate: {
             /** Bill To Address */
@@ -6658,6 +6792,8 @@ export interface components {
              * @description Whether a pay link can be shared for this invoice now
              */
             available: boolean;
+            /** Disputes */
+            disputes?: components["schemas"]["DisputeOut"][];
             /**
              * Invoice Id
              * Format: uuid
@@ -6671,6 +6807,13 @@ export interface components {
             link_url?: string | null;
             /** Mode */
             mode?: ("test" | "live") | null;
+            /**
+             * Refund Options
+             * @description Card refunds the reader may ask for now (empty without the permission)
+             */
+            refund_options?: components["schemas"]["RefundOption"][];
+            /** Refunds */
+            refunds?: components["schemas"]["CardRefundOut"][];
             /** Requests */
             requests?: components["schemas"]["PaymentRequestOut"][];
             /** Unavailable Reason */
@@ -8343,6 +8486,30 @@ export interface components {
             paid_on: string;
             /** Reference */
             reference?: string | null;
+        };
+        /**
+         * RefundOption
+         * @description Something that may be paid back to the customer's card now, from one paid card payment.
+         */
+        RefundOption: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Credit Note Number */
+            credit_note_number?: string | null;
+            /** Currency */
+            currency: string;
+            /** Invoice Refund Id */
+            invoice_refund_id?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "credit_note" | "surplus";
         };
         /** RefundOut */
         RefundOut: {
@@ -19608,6 +19775,86 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvoiceOnlinePaymentsOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    propose_card_refund_api_v1_payments_invoices__invoice_id__card_refunds_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardRefundIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardRefundProposedOut"];
                 };
             };
             /** @description Bad request */
