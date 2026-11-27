@@ -112,7 +112,7 @@ Rotation is documented in the runbook ([11](11-quality-and-operations.md#runbook
 
 ## Privacy
 
-- **Data minimisation:** collect name, contact points, consent and service history only. No dates of birth, ID numbers or payment data.
+- **Data minimisation:** collect name, contact points, consent and service history only. No dates of birth, ID numbers or payment data. Online payments ([ADR-022](03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout)) store only Stripe ids, amounts, status and method type; card details are entered only on Stripe's hosted page and never reach Tandem.
 - **Hosted AI disclosure:** each business has `ai_policy`:
   - `hosted_vultr`: Vultr Serverless Inference only. This is the default.
   - `hosted_any`: Vultr plus configured external providers.

@@ -25,6 +25,7 @@ One file per module. A module spec is the **contract** an agent implements: tabl
 | M18 | [admin_ops](M18-admin-ops.md) | v1 (System page in P6) | P6 / P8 | A | PRE (System page, export, erasure) | org, identity, files, notifications, crm |
 | M19 | [knowledge](M19-knowledge.md) | v1 | P10-C1 | A | EVENT | conversations |
 | M20 | [accounting](M20-accounting.md) | v1 | gap map (2026-11-24) | A | — | org, sales, purchasing |
+| M21 | [payments](M21-payments.md) | v1 (planned, ADR-022 proposed) | — | A | — | org, sales, approvals, notifications |
 
 Shared rules that apply to every module, so specs do not repeat them:
 - Every table follows [05-data-model.md](../05-data-model.md#conventions-for-every-table): `id`, `business_id`, `version`, `created_at`, `updated_at`, composite FKs and row-level security. Specs list only the *other* columns.

@@ -876,3 +876,16 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
 
 - Review follow-up: aggregate PO valuation is a comparison estimate, not a default bill total. Require a manual total
   unless the operator chooses receipt-matched lines. Added legacy refund-date review instructions without a migration.
+
+## 2026-11-27 — Online payments plan, phase 0: decision record and roadmap change
+
+- Owner asked to plan Stripe payments, then said "Start phase 0". Docs only; no payment code.
+- ADR-022 (PROPOSED until the owner merges): Stripe Connect platform run by Boston AI Forward, full-Dashboard
+  connected accounts, direct charges on Stripe-hosted Checkout, a payments relay that keeps the platform key off
+  every deployment, webhooks into the existing invoice ledger, refused under the regulated profile.
+- Roadmap: the v1 non-goal "Payments and card handling" becomes "handling card data in Tandem; in-person card
+  terminals; paying suppliers through Tandem". New planned module card M21 payments; M16 and the privacy page say
+  card data never reaches Tandem. Open questions Q13 to Q17 (hosting, platform fee, Stripe account, ACH, existing
+  Stripe accounts).
+- Stripe facts were read from Stripe's docs and pricing page on 2026-11-27.
+
