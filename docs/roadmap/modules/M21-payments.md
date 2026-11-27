@@ -1,11 +1,11 @@
-# M21 · payments (v1, planned)
+# M21 · payments (v1, in progress)
 
 | Field | Value |
 |---|---|
-| Release / phase | v1 · planned; nothing built yet ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), proposed 2026-11-27) |
+| Release / phase | v1 · phase 1 built (connected accounts); phases 2 to 5 planned ([ADR-022](../03-decisions.md#adr-022-online-invoice-payments-stripe-connect-direct-charges-stripe-checkout), accepted 2026-11-27) |
 | Tier / kind | A (outbound money movement, webhooks, public pay page) |
-| Depends on | platform, org, sales, approvals, notifications (added to `dependencies.py` and [02](../02-architecture.md) when built) |
-| Owns tables (planned) | `payment_connections`, `payment_requests`, `payment_events`, `payment_disputes`, `payment_payouts` |
+| Depends on | platform, org, sales, approvals, notifications (in `dependencies.py` and [02](../02-architecture.md)) |
+| Owns tables | built: `payment_connections`, `payment_events`; planned: `payment_requests`, `payment_disputes`, `payment_payouts` |
 
 ## Purpose
 Let a business's customers pay issued invoices online through Stripe, and record that money in the sales ledger
@@ -49,11 +49,34 @@ right deployment signed with that deployment's key.
 9. Pay links are signed, rate limited, need no login and show only what the invoice shows. Onboarding links are
    made fresh on each click and never emailed.
 
+## Phase 1 as built (2026-11-27)
+- **Relay** (`backend/app/relay/`, runbook [payments-relay](../../runbooks/payments-relay.md)): `POST /v1/clients`
+  registers one client per business (optional enrollment token, rate limited per address) and returns its shared
+  secret once; the relay keeps it sealed. Signed calls (`Tandem-Relay-Signature`, 5-minute window, single-use nonce)
+  create the business's connected account (Accounts v1, controller settings of ADR-022, idempotency key per client),
+  read it, and make a fresh Account Link. The relay finds the account from the client, so no call names an account.
+  `POST /v1/stripe/webhook` checks Stripe's signature, stores each event once and forwards an envelope (event id,
+  type, account, object id, never the object) to the client's events URL, signed with the client's secret; failed
+  deliveries back off from 1 minute to 1 day and stop after 3 days. Events URLs must be https on public addresses,
+  except hosts the operator lists as private.
+- **Tandem** (`modules/payments`): `GET /payments/stripe`, `POST /payments/stripe/onboarding` (country, default US;
+  registers, creates the account if needed, returns a single-use Stripe link), `POST /payments/stripe/refresh`,
+  `POST /payments/stripe/disconnect` (version-checked; the Stripe account is untouched). Status is `onboarding`
+  until Stripe has the details, `restricted` when details are in but charges are off, `active` when charges are
+  enabled, `disconnected` after Turn off. `POST /payments/relay/events` (public, signature-checked, 16 KB cap,
+  600 per minute per address) stores the event once and queues `payments.apply_event`, which re-reads the account
+  through the relay. A disconnected business stays disconnected whatever Stripe sends.
+- **Permissions:** `payments.connection.read` (owner, admin, demo reviewer), `payments.connection.manage` (owner,
+  admin). Policy 2026-11-27.1.
+- **Defaults chosen for the open questions:** no platform fee anywhere (nothing is charged yet; phase 2 adds the
+  setting at 0); cards only, bank payments wait for phase 2 behind a setting; only new Stripe accounts (connecting
+  an existing one by OAuth is later); test mode until the relay holds a live key.
+
 ## Phases
 | Phase | What ships | Size |
 |---|---|---|
 | 0 | ADR-022, roadmap and this card | S |
-| 1 | Relay service, Settings > Payments, connected accounts and status | L |
+| 1 | Relay service, Settings > Payments, connected accounts and status (**built 2026-11-27**) | L |
 | 2 | Pay links and pay page, Checkout, webhooks into the ledger, unapplied payments, daily check | L |
 | 3 | Card refunds through approvals, Dashboard refund matching, disputes | M |
 | 4 | Stripe fees, payouts, QuickBooks clearing and fees accounts, transfers | M |

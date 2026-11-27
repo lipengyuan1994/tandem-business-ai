@@ -889,3 +889,20 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
   Stripe accounts).
 - Stripe facts were read from Stripe's docs and pricing page on 2026-11-27.
 
+## 2026-11-27 — Online payments phase 1: payments relay and Stripe account setup
+
+- Owner said "Start phase 1", then asked Claude to act as product owner and keep going phase by phase. Built with
+  mocked Stripe only (fake Stripe over `respx`); no Stripe account, key or network call to Stripe.
+- Payments relay (`backend/app/relay/`): standalone FastAPI app with its own SQLite store, imports nothing from
+  Tandem (architecture test). One client per business, HMAC-signed requests with a 5-minute window and single-use
+  nonces, sealed client secrets, Accounts v1 with ADR-022's controller settings (v2 creation is still preview-only
+  in Stripe's docs, read 2026-11-27), fresh Account Links, the Connect webhook checked and stored once and forwarded
+  as an envelope with retries for 3 days. Events URLs must be https on public addresses unless listed as private.
+- Tandem module `payments` (M21): `payment_connections` and `payment_events` with forced RLS, Settings > Payments
+  (set up, continue in Stripe, check status, Stripe Dashboard link, turn off), the signed events endpoint and the
+  `payments.apply_event` job. Permissions and role policy 2026-11-27.1.
+- Defaults for the open questions: no platform fee (nothing is charged yet), cards only with bank payments left for
+  phase 2 behind a setting, new Stripe accounts only, test mode until a live key exists. Q13 (hosting) does not
+  block: the relay runs hosted or next to Tandem.
+- Tests: 14 relay tests, 13 payments module tests, 2 architecture tests, 6 frontend tests.
+

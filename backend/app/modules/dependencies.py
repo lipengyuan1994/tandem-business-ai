@@ -45,6 +45,7 @@ DEPENDENCIES: dict[str, frozenset[str]] = {
     "voice": frozenset({"ai", "conversations"}),
     "admin_ops": frozenset({"org", "identity", "files", "notifications", "crm"}),
     "accounting": frozenset({"org", "sales", "purchasing"}),
+    "payments": frozenset({"org", "sales", "approvals", "notifications"}),
 }
 
 

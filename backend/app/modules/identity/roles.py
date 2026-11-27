@@ -5,7 +5,7 @@ Permission strings for modules that are not built yet are listed here so the mat
 
 from __future__ import annotations
 
-POLICY_VERSION = "2026-11-24.2"
+POLICY_VERSION = "2026-11-27.1"
 
 ROLE_NAMES = ("owner", "admin", "demo_reviewer", "operator", "inventory_manager", "marketing_manager", "auditor")
 
@@ -41,6 +41,9 @@ ACCOUNTING_READ = {"accounting.sync.read"}
 ACCOUNTING_RUN = {"accounting.sync.run"}
 # Linking the books to QuickBooks hands Intuit a sign-in to the business: owner only.
 ACCOUNTING_CONNECT = {"accounting.connection.manage"}
+PAYMENTS_READ = {"payments.connection.read"}
+# Linking a Stripe account and turning online payments on or off: owner or admin (M21 rule 1).
+PAYMENTS_MANAGE = {"payments.connection.manage"}
 
 APPROVE = {
     "crm": "crm.proposal.approve",
@@ -79,6 +82,7 @@ _ADMIN = (
     | SALES_ADMIN
     | ACCOUNTING_READ
     | ACCOUNTING_RUN
+    | PAYMENTS_READ
     | APPROVALS
     | AUDIT_READ
     | OUTBOX
@@ -92,8 +96,9 @@ ROLES: dict[str, frozenset[str]] = {
         _ADMIN
         | {"org.business.admin", "identity.owner.grant", "audit.export", "ai.settings.write", "admin_ops.data.manage"}
         | ACCOUNTING_CONNECT
+        | PAYMENTS_MANAGE
     ),
-    "admin": frozenset(_ADMIN),
+    "admin": frozenset(_ADMIN | PAYMENTS_MANAGE),
     "demo_reviewer": frozenset(_ADMIN - ORG_WRITE - {"identity.membership.write"}),
     "operator": frozenset(
         ORG_READ

@@ -134,13 +134,19 @@ def client(
     resolve: bool = True,
     *,
     local: bool = False,
+    local_hosts: Iterable[str] | None = None,
 ) -> httpx.Client:
+    """`local=True` permits LOCAL_INFERENCE_HOSTS over HTTP and on private addresses; `local_hosts` names other such
+    hosts instead (a service that runs next to Tandem, such as the payments relay)."""
     hosts = frozenset(allowlist) if allowlist is not None else get_settings().egress_hosts
-    local_hosts = get_settings().local_hosts if local else frozenset()
+    if local_hosts is not None:
+        near = frozenset(h.strip().lower().rstrip(".") for h in local_hosts if h.strip())
+    else:
+        near = get_settings().local_hosts if local else frozenset()
     return httpx.Client(
         timeout=timeout,
         follow_redirects=False,
-        event_hooks={"request": [_guard(hosts, resolve, local_hosts)], "response": [_limit_size]},
-        transport=_PinnedLocalTransport(local_hosts) if local_hosts else None,
-        trust_env=not bool(local_hosts),
+        event_hooks={"request": [_guard(hosts, resolve, near)], "response": [_limit_size]},
+        transport=_PinnedLocalTransport(near) if near else None,
+        trust_env=not bool(near),
     )
