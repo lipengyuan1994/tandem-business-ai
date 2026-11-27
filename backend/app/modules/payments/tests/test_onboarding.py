@@ -210,3 +210,40 @@ def test_export_leaves_out_the_relay_secret(world: World) -> None:
         tables = lifecycle.export(db, _ctx(world))
     text = repr(tables)
     assert "relay_secret_sealed" not in text and "payment_connections" in text
+
+
+def test_an_account_disconnected_in_stripe_stops_online_payments(world: World, registry: Registry) -> None:
+    world.onboard()
+    account = world.account_id()
+    world.stripe.complete_onboarding(account)
+    world.owner.post(f"{API}/stripe/refresh")
+    # A deauthorization for another account, or one Stripe can still read, changes nothing.
+    world.stripe_event("account.application.deauthorized")
+    jobs.run_pending(registry)
+    assert world.status()["status"] == "active"
+    other = dict(world.stripe.accounts[account], id="acct_other")
+    world.stripe.accounts["acct_other"] = other
+    del world.stripe.accounts[account]  # Stripe refuses to read an account that left the platform
+    world.stripe_event("account.application.deauthorized", account="acct_other")
+    jobs.run_pending(registry)
+    assert world.status()["status"] == "active"
+    world.stripe_event("account.application.deauthorized")
+    jobs.run_pending(registry)
+    status = world.status()
+    assert status["status"] == "disconnected" and status["last_error"]
+    notes = world.owner.get("/api/v1/notifications").json()["items"]
+    assert any("Stripe account was disconnected" in n["title"] for n in notes)
+    with transaction(_ctx(world)) as db:
+        outcomes = sorted(r.outcome for r in db.scalars(select(PaymentEvent)))
+    assert outcomes.count("applied") >= 2
+
+
+def test_mode_follows_the_relay_when_its_operator_sets_a_live_key(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    world.onboard()
+    assert world.status()["mode"] == "test"
+    relay_settings = world.relay.app.state.relay.settings
+    monkeypatch.setattr(type(relay_settings), "mode", property(lambda self: "live"))
+    r = world.owner.post(f"{API}/stripe/refresh")
+    assert r.status_code == 200 and r.json()["mode"] == "live"

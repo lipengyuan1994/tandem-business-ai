@@ -62,8 +62,9 @@ def _is_ip(host: str) -> bool:
     return True
 
 
-def check_url(url: str, settings: RelaySettings, *, resolver: Resolver | None = None) -> None:
-    """Refuse destinations that could reach the relay's own network. With a resolver, check every address too."""
+def check_url(url: str, settings: RelaySettings, *, resolver: Resolver | None = None) -> list[str]:
+    """Refuse destinations that could reach the relay's own network. With a resolver, check every address too, and
+    return them so the post connects only to these (empty for an operator's private host, which is not resolved)."""
     parts = urllib.parse.urlsplit(url)
     host = (parts.hostname or "").lower().rstrip(".")
     if not host:
@@ -75,10 +76,37 @@ def check_url(url: str, settings: RelaySettings, *, resolver: Resolver | None = 
         raise BadDestination("the URL must not carry credentials")
     if _is_ip(host):
         raise BadDestination("the URL must name a host, not an IP address")
-    if resolver is not None and not private:
-        addresses = resolver(host)
-        if not addresses or not all(_public(ip) for ip in addresses):
-            raise BadDestination(f"{host} resolves to a non-public address")
+    if resolver is None or private:
+        return []
+    addresses = resolver(host)
+    if not addresses or not all(_public(ip) for ip in addresses):
+        raise BadDestination(f"{host} resolves to a non-public address")
+    return addresses
+
+
+def post_pinned(
+    http: httpx.Client, url: str, addresses: list[str], *, content: bytes, headers: dict[str, str]
+) -> httpx.Response:
+    """Post to one of the addresses checked a moment ago, never to a fresh DNS answer: a name that changes what it
+    points at between the check and the post (DNS rebinding) cannot reach the relay's own network. The Host header
+    and TLS server name keep the real name, so the certificate is still checked against it. The connection is not
+    kept, so it is never reused for another client's name on the same address."""
+    if not addresses:
+        return http.post(url, content=content, headers=headers)
+    target = httpx.URL(url)
+    pinned_headers = {**headers, "Host": target.netloc.decode("ascii"), "Connection": "close"}
+    for index, address in enumerate(addresses):
+        try:
+            return http.post(
+                target.copy_with(host=address),
+                content=content,
+                headers=pinned_headers,
+                extensions={"sni_hostname": target.host},
+            )
+        except (httpx.ConnectError, httpx.ConnectTimeout):
+            if index == len(addresses) - 1:
+                raise
+    raise AssertionError("checked addresses must not be empty")  # pragma: no cover
 
 
 def envelope(event: dict[str, object], business_ref: str) -> str:
@@ -113,11 +141,13 @@ def deliver_one(
     row.attempts += 1
     error: str | None = None
     try:
-        check_url(client.events_url, settings, resolver=resolver)
+        addresses = check_url(client.events_url, settings, resolver=resolver)
         secret = unseal(settings.secret_key.get_secret_value(), client.secret_sealed)
         body = row.body.encode()
-        response = http.post(
+        response = post_pinned(
+            http,
             client.events_url,
+            addresses,
             content=body,
             headers={
                 "Content-Type": "application/json",

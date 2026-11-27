@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.modules.notifications import public as notifications
 from app.modules.org.public import get_business_brief, get_public_email
 from app.platform import audit, clock
 from app.platform.config import is_regulated
@@ -104,7 +105,8 @@ def out(db: Session, ctx: Context) -> PaymentConnectionOut:
 
 def apply_view(conn: PaymentConnection, view: AccountView, *, reconnect: bool = False) -> bool:
     """Store what Stripe says about the account. Returns True when anything the settings page shows changed."""
-    before = (conn.status, conn.charges_enabled, conn.payouts_enabled, conn.details_submitted, conn.requirements_due)
+    before = (conn.status, conn.mode, conn.charges_enabled, conn.payouts_enabled, conn.details_submitted)
+    before_due = conn.requirements_due
     due = sorted(set(view.currently_due) | set(view.past_due))
     conn.stripe_account_id = view.id
     conn.country = view.country
@@ -114,11 +116,14 @@ def apply_view(conn: PaymentConnection, view: AccountView, *, reconnect: bool = 
     conn.details_submitted = view.details_submitted
     conn.requirements_due = due
     conn.disabled_reason = (view.disabled_reason or "")[:100] or None
+    if view.mode is not None:  # the relay's operator may move it from a test key to a live key after setup
+        conn.mode = view.mode
     if conn.status != "disconnected" or reconnect:
         conn.status = status_for(view)
     conn.last_checked_at = clock.now()
     conn.last_error = None
-    changed = before != (conn.status, conn.charges_enabled, conn.payouts_enabled, conn.details_submitted, due)
+    after = (conn.status, conn.mode, conn.charges_enabled, conn.payouts_enabled, conn.details_submitted)
+    changed = before != after or before_due != due
     conn.version += 1
     return changed
 
@@ -282,6 +287,39 @@ def disconnect(db: Session, ctx: Context, version: int) -> None:
         target_id=conn.id,
         summary="Turned online payments off (the Stripe account stays the business's own)",
     )
+
+
+def deauthorized(ctx: Context, account_id: str | None) -> bool:
+    """Stripe says the account left the platform and refused to read it back: stop offering online payments.
+    Returns False when the event names another account than the one this business uses."""
+    with transaction(ctx) as db:
+        conn = get(db, ctx, lock=True)
+        if conn is None or conn.stripe_account_id is None or conn.stripe_account_id != account_id:
+            return False
+        if conn.status == "disconnected":
+            return True
+        conn.status = "disconnected"
+        conn.last_error = "The Stripe account was disconnected from Tandem in Stripe"
+        conn.last_checked_at = clock.now()
+        conn.version += 1
+        audit.record(
+            db,
+            ctx,
+            action="payments.deauthorized",
+            target_type="payment_connection",
+            target_id=conn.id,
+            summary="Online payments stopped: the Stripe account was disconnected from Tandem in Stripe",
+        )
+        notifications.notify_permission(
+            db,
+            ctx,
+            P.CONNECTION_MANAGE,
+            kind="payments_connection",
+            title="Online payments stopped: your Stripe account was disconnected",
+            body="Pay links no longer open Stripe. Set up online payments again in Settings to take card payments.",
+            link="/settings/payments",
+        )
+        return True
 
 
 def update_settings(db: Session, ctx: Context, body: PaymentSettingsIn) -> None:

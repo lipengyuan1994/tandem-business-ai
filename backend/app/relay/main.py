@@ -322,7 +322,7 @@ def create_app(
             stripe = relay.stripe(http)
             try:
                 if existing is not None:
-                    return account_view(stripe.retrieve_account(existing))
+                    return account_view(stripe.retrieve_account(existing), settings.mode)
                 created = stripe.create_account(
                     country=body.country,
                     email=body.email,
@@ -338,7 +338,7 @@ def create_app(
         except IntegrityError:
             pass  # a concurrent call stored it first; the idempotency key made it the same account
         log.info("relay.account_created", client=client_id, account=created.get("id"))
-        return account_view(created)
+        return account_view(created, settings.mode)
 
     def _read_account(raw: Raw) -> dict[str, Any]:
         account_id = _account_id(authenticate(relay, raw))
@@ -346,7 +346,7 @@ def create_app(
             raise RelayError(404, "no_account", "This business has no Stripe account yet")
         with relay.stripe_http() as http:
             try:
-                return account_view(relay.stripe(http).retrieve_account(account_id))
+                return account_view(relay.stripe(http).retrieve_account(account_id), settings.mode)
             except StripeError as exc:
                 raise _stripe_failure(exc) from None
 

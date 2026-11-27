@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import replace
+from datetime import timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -34,6 +35,7 @@ ACCOUNT_EVENTS = frozenset(
     {"account.updated", "account.application.authorized", "capability.updated", "person.updated"}
 )
 DEAUTHORIZED = "account.application.deauthorized"
+REPLAY_WINDOW = timedelta(days=2)
 
 
 def receive(db: Session, ctx: Context, event: RelayEventIn, body: bytes, client_id: str, signature: str) -> bool:
@@ -101,8 +103,11 @@ def apply_job(ctx: Context, payload: dict[str, Any]) -> None:
             return
         row.attempts += 1
         row.version += 1
-        event_type, object_id = row.event_type, row.object_id
-    if event_type in ACCOUNT_EVENTS or event_type == DEAUTHORIZED:
+        event_type, object_id, account_id = row.event_type, row.object_id, row.account_id
+    if event_type == DEAUTHORIZED:
+        _deauthorized(ctx, row_id, account_id)
+        return
+    if event_type in ACCOUNT_EVENTS:
         try:
             connection.refresh(ctx)
         except Conflict as exc:
@@ -121,9 +126,54 @@ def apply_job(ctx: Context, payload: dict[str, Any]) -> None:
             if exc.code == "payments.relay_unavailable":
                 raise
             return
+        if outcome == refunds.WAITING:
+            _finish(ctx, row_id, "failed", refunds.WAITING_NOTE)
+            # Retried with back-off; replay_job also runs it again once the payment is recorded.
+            raise Conflict("payments.payment_not_recorded", detail=refunds.WAITING_NOTE)
         _finish(ctx, row_id, outcome)
         return
     _finish(ctx, row_id, "ignored")
+
+
+def replay_job(db: Session, ctx: Context, payload: dict[str, Any]) -> None:
+    """A payment was just recorded: apply again the refund and dispute events that were waiting for it. Only recent
+    ones: a Stripe page lives at most a day, so an older waiting event is about a payment made outside Tandem."""
+    since = clock.now() - REPLAY_WINDOW
+    waiting = db.execute(
+        select(PaymentEvent.id, PaymentEvent.stripe_event_id).where(
+            PaymentEvent.business_id == ctx.business_id,
+            PaymentEvent.outcome == "failed",
+            PaymentEvent.last_error == refunds.WAITING_NOTE,
+            PaymentEvent.received_at >= since,
+            PaymentEvent.event_type.in_(refunds.EVENTS | disputes.EVENTS),
+        )
+    ).all()
+    for row_id, event_id in waiting:
+        jobs.enqueue(
+            db,
+            JOB_KIND,
+            {"event_row_id": str(row_id)},
+            business_id=ctx.business_id,
+            dedupe_key=f"payments-event:{ctx.business_id}:{event_id}:after:{payload['request_id']}",
+        )
+
+
+def _deauthorized(ctx: Context, row_id: uuid.UUID, account_id: str | None) -> None:
+    """The account left the platform. The event alone does not turn payments off: the account is read back, and
+    only when Stripe refuses that read is the connection marked disconnected. A stale event for an account that is
+    reachable again only refreshes it."""
+    try:
+        connection.refresh(ctx)
+    except Conflict as exc:
+        if exc.code == "payments.relay_unavailable":
+            _finish(ctx, row_id, "failed", exc.detail)
+            raise  # the job runner retries with back-off
+        if exc.code == "payments.stripe_refused" and connection.deauthorized(ctx, account_id):
+            _finish(ctx, row_id, "applied")
+            return
+        _finish(ctx, row_id, "failed", exc.detail or exc.code)
+        return
+    _finish(ctx, row_id, "applied")
 
 
 def _apply_object(ctx: Context, event_type: str, object_id: str) -> str:

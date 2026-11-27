@@ -982,3 +982,25 @@ adaptation and fake-curl tests do not establish those runtime requirements. No d
 - Tests: 10 backend tests (`test_drafts.py`), the surplus refund test now goes through the drafted proposal, 2 new
   frontend tests.
 - Left for the owner: opening Boston AI Forward's Stripe platform account, the relay's live keys, and going live.
+
+## 2026-11-27 — Online payments: fixes from the late code review of phases 1 to 4
+
+- The automated reviewer's comments on PRs #18 to #21 arrived after they merged. Each was checked against main; all
+  ten were real and are fixed here, each with a test. Mocked Stripe only.
+- Checkout (#19): two presses or two tabs could open two Stripe pages for one invoice (customer charged twice). The
+  start now locks the invoice row and refuses with `payments.checkout_starting` while another page is opening (an
+  opener older than 2 minutes no longer blocks). An invoice paid or credited while Stripe opened the page: the new
+  page is closed (`payments.invoice_changed`). The pay page shows relay and Stripe errors instead of reloading.
+- Payments are dated by Stripe's charge time (the relay expands `payment_intent.latest_charge`), not when Tandem heard.
+- Refund and dispute events that arrive before the payment is recorded (#20) were dropped as "ignored". They now wait
+  (retried with back-off, and replayed by `payments.replay_waiting_events` once the payment is recorded, for 2 days).
+- `account.application.deauthorized` (#18): when Stripe then refuses to read the account, the connection is marked
+  disconnected and owners are told. A stale event for a readable account changes nothing.
+- Test or live mode now follows the relay on every account read (#18), so a relay moved to a live key shows live.
+- Relay callbacks (#18, security): the post connected to a fresh DNS answer after the check, so a name could be
+  re-pointed at the relay's own network (DNS rebinding). Deliveries now connect only to the checked addresses, with
+  Host and TLS name kept, and no connection reuse.
+- Fees and payouts (#21): the hourly fee check rotates through missing fees (least recently tried first), and paid
+  payouts are re-read for 7 days so a late failure is caught. A re-read that changes nothing no longer bumps the
+  payout's version (which made QuickBooks re-send it).
+- No migration.

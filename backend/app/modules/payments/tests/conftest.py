@@ -116,6 +116,7 @@ def configured(monkeypatch: pytest.MonkeyPatch) -> None:
 def world(registry: Registry, router: respx.MockRouter, configured: None, tmp_path: Path) -> World:
     clock.set_clock(lambda: NOW)
     stripe = FakeStripe(router)
+    stripe.clock = lambda: int(clock.now().timestamp())
     relay_settings = RelaySettings(
         secret_key=SecretStr("relay-test-secret-key-0123456789abcdef"),
         database_url=f"sqlite:///{tmp_path / 'relay.db'}",
@@ -135,4 +136,5 @@ def world(registry: Registry, router: respx.MockRouter, configured: None, tmp_pa
     app = create_app(registry)
     asgi_route(router, RELAY_HOST, relay)
     asgi_route(router, "localhost", TestClient(app, base_url="https://localhost:8443"))
+    asgi_route(router, "93.184.216.34", TestClient(app, base_url="https://localhost:8443"))  # the relay's pinned post
     return World(app, make_business(), relay, stripe, registry)

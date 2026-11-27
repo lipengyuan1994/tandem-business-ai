@@ -75,10 +75,11 @@ def _get(db: Session, ctx: Context, invoice_id: uuid.UUID, *, lock: bool = False
     return row
 
 
-def online_invoice(db: Session, ctx: Context, invoice_id: uuid.UUID) -> OnlineInvoice:
+def online_invoice(db: Session, ctx: Context, invoice_id: uuid.UUID, *, lock: bool = False) -> OnlineInvoice:
     """What a pay page or a pay-link check needs. The caller has already decided the reader may see it (a staff
-    permission, or a signed pay link for this invoice)."""
-    row = _get(db, ctx, invoice_id)
+    permission, or a signed pay link for this invoice). `lock` holds the invoice row until the caller's transaction
+    ends, so a payment or credit cannot change the balance between this read and what the caller writes."""
+    row = _get(db, ctx, invoice_id, lock=lock)
     return OnlineInvoice(
         id=row.id,
         number=row.number,

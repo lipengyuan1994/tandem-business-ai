@@ -4,6 +4,14 @@ Release notes for operators. Each release lists database migrations and any manu
 
 ## Unreleased
 
+- **Fixed (2026-11-27): online payments.** A customer pressing Pay twice, or in two tabs, can no longer be charged
+  twice, and a payment page opened while the invoice was being paid in the shop is closed. Online payments are dated
+  by when Stripe took the money. Refunds and disputes Stripe reports before the payment are no longer lost. If the
+  Stripe account is disconnected from Tandem in Stripe, online payments stop and owners are told. Payout failures
+  reported days after a payout are caught. No migration.
+- **Relay:** event deliveries now connect only to the addresses that were checked (protection against DNS
+  rebinding). Update the relay with the app.
+
 - **New (2026-11-27): online payments, step 5 of 5.** Payment reminders, sent by hand or drafted by Tandem, now
   include the invoice's pay link. When a customer pays more than an invoice owes, Tandem drafts a card refund of the
   difference for an owner to approve in Approvals. A refund made in the Stripe Dashboard is matched to a credit note's

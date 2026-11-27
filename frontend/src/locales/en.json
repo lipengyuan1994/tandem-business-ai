@@ -2767,6 +2767,7 @@
     "testMode": "Test mode: no real money moves.",
     "expired": "This pay link doesn't work any more. Ask the business for a new one.",
     "rateLimited": "Too many tries. Wait a minute and try again.",
+    "starting": "Your payment page is already opening, maybe in another tab. Wait a moment, then try again.",
     "error": "Something went wrong. Try again in a moment.",
     "retry": "Try again"
   }

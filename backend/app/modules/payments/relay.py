@@ -51,6 +51,7 @@ class AccountView:
     currently_due: list[str]
     past_due: list[str]
     disabled_reason: str | None
+    mode: str | None = None  # the relay's mode now: "test" or "live" (older relays leave it out)
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> AccountView:
@@ -66,6 +67,7 @@ class AccountView:
             currently_due=[str(x) for x in data.get("currently_due") or []],
             past_due=[str(x) for x in data.get("past_due") or []],
             disabled_reason=data.get("disabled_reason"),
+            mode=data["mode"] if data.get("mode") in ("test", "live") else None,
         )
 
 
@@ -81,6 +83,7 @@ class CheckoutView:
     expires_at: int | None
     request_ref: str | None
     invoice_ref: str | None
+    paid_at: int | None = None  # when Stripe took the money (unix seconds), when the relay knows it
 
     @classmethod
     def parse(cls, data: dict[str, Any]) -> CheckoutView:
@@ -101,6 +104,7 @@ class CheckoutView:
             expires_at=data.get("expires_at") if isinstance(data.get("expires_at"), int) else None,
             request_ref=metadata.get("tandem_request"),
             invoice_ref=metadata.get("tandem_invoice"),
+            paid_at=_int(data.get("paid_at")),
         )
 
 

@@ -68,6 +68,23 @@ describe("pay page", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("This invoice is paid")
   })
 
+  it.each([
+    ["payments.relay_unavailable", "Something went wrong. Try again in a moment."],
+    ["payments.stripe_refused", "Something went wrong. Try again in a moment."],
+    ["payments.checkout_starting", "Your payment page is already opening"],
+  ] as const)("shows why Stripe's page did not open (%s) and keeps the pay button", async (code, text) => {
+    let gets = 0
+    server.use(
+      http.get(BASE, () => { gets++; return HttpResponse.json(PAGE) }),
+      http.post(`${BASE}/checkout`, () => HttpResponse.json({ code }, { status: 409 })),
+    )
+    render(<PayPage token={TOKEN} />)
+    await userEvent.click(await screen.findByRole("button", { name: "Pay $63.00" }))
+    expect(await screen.findByRole("alert")).toHaveTextContent(text)
+    expect(screen.getByRole("button", { name: "Pay $63.00" })).toBeEnabled()
+    expect(gets).toBe(1)
+  })
+
   it("waits for Stripe's word after the customer comes back", async () => {
     history.replaceState(null, "", `/pay/${TOKEN}?paid=1`)
     let gets = 0

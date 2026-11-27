@@ -121,7 +121,9 @@ def apply(ctx: Context, dispute_id: str) -> str:
             )
             .with_for_update()
         )
-        if request is None or view.currency.upper() != request.currency.upper():
+        if request is None:
+            return refunds.WAITING
+        if view.currency.upper() != request.currency.upper():
             return "ignored"
         row = db.scalar(
             select(PaymentDispute)
