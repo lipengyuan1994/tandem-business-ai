@@ -2293,6 +2293,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/stripe/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Choose what Tandem prepares on its own: pay links in reminders, drafted card refunds */
+        patch: operations["update_settings_api_v1_payments_stripe_settings_patch"];
+        trace?: never;
+    };
     "/api/v1/public/quotes/{token}": {
         parameters: {
             query?: never;
@@ -7718,6 +7735,11 @@ export interface components {
             details_submitted: boolean;
             /** Disabled Reason */
             disabled_reason?: string | null;
+            /**
+             * Draft Refunds
+             * @default true
+             */
+            draft_refunds: boolean;
             /** Last Checked At */
             last_checked_at?: string | null;
             /** Last Error */
@@ -7729,6 +7751,11 @@ export interface components {
              * @default false
              */
             payouts_enabled: boolean;
+            /**
+             * Reminder Links
+             * @default true
+             */
+            reminder_links: boolean;
             /** Requirements Due */
             requirements_due?: string[];
             /**
@@ -7850,6 +7877,21 @@ export interface components {
              * @default 0
              */
             surplus_minor: number;
+        };
+        /** PaymentSettingsIn */
+        PaymentSettingsIn: {
+            /**
+             * Draft Refunds
+             * @description Draft a card refund for approval when a customer pays an invoice that was settled
+             */
+            draft_refunds?: boolean | null;
+            /**
+             * Reminder Links
+             * @description Add the invoice's pay link to payment reminders
+             */
+            reminder_links?: boolean | null;
+            /** Version */
+            version: number;
         };
         /**
          * PayoutOut
@@ -20665,6 +20707,84 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentConnectionOut"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Not found (also returned for records of another business) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Conflict (version mismatch or business rule) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    update_settings_api_v1_payments_stripe_settings_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentSettingsIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

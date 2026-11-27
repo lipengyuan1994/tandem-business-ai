@@ -291,3 +291,9 @@ stays ask. The new recorded `reply_guardrail` use-case requires one constraint m
   The clearing and fees accounts are optional: without a clearing account the sync sends payments as before and no
   payouts. Accounting now depends on payments (it reads `payments.public.ledger_payouts`). Tandem only reads payouts;
   it never starts, changes or cancels one.
+- **Phase 5 notes (2026-11-27):** the agent never writes a pay link: payments adds it to a payment reminder at sending
+  through a registry hook (`reminder_pay_link`), since sales may not import payments. Surplus refunds are drafted as
+  rule-origin proposals and never auto-approved. A Dashboard refund is matched to a credit note's card refund only on
+  an exact amount; Tandem does not draft credit notes, because their lines are the business's choice. Both
+  automations default to on and can be turned off per business. The AI briefing reads payouts through
+  `payments.public` (ai now depends on payments).

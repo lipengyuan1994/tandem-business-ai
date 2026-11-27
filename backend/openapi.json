@@ -10829,6 +10829,11 @@
             ],
             "title": "Disabled Reason"
           },
+          "draft_refunds": {
+            "default": true,
+            "title": "Draft Refunds",
+            "type": "boolean"
+          },
           "last_checked_at": {
             "anyOf": [
               {
@@ -10870,6 +10875,11 @@
           "payouts_enabled": {
             "default": false,
             "title": "Payouts Enabled",
+            "type": "boolean"
+          },
+          "reminder_links": {
+            "default": true,
+            "title": "Reminder Links",
             "type": "boolean"
           },
           "requirements_due": {
@@ -11176,6 +11186,43 @@
           "created_at"
         ],
         "title": "PaymentRequestOut",
+        "type": "object"
+      },
+      "PaymentSettingsIn": {
+        "properties": {
+          "draft_refunds": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Draft a card refund for approval when a customer pays an invoice that was settled",
+            "title": "Draft Refunds"
+          },
+          "reminder_links": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Add the invoice's pay link to payment reminders",
+            "title": "Reminder Links"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "PaymentSettingsIn",
         "type": "object"
       },
       "PayoutOut": {
@@ -28443,6 +28490,73 @@
           }
         },
         "summary": "Read the Stripe account's readiness now",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/payments/stripe/settings": {
+      "patch": {
+        "operationId": "update_settings_api_v1_payments_stripe_settings_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentSettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentConnectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Permission denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Not found (also returned for records of another business)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Conflict (version mismatch or business rule)"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {}
+            },
+            "description": "Validation failed"
+          }
+        },
+        "summary": "Choose what Tandem prepares on its own: pay links in reminders, drafted card refunds",
         "tags": [
           "payments"
         ]

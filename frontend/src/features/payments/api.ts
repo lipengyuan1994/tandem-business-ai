@@ -39,6 +39,19 @@ export function useDisconnectStripe() {
   return usePaymentsMutation(async (version: number) => unwrap(await api.POST("/api/v1/payments/stripe/disconnect", { body: { version } })))
 }
 
+export type PaymentSettings = { reminder_links?: boolean; draft_refunds?: boolean }
+
+/** What Tandem does on its own with online payments (phase 5): pay links in reminders, drafted surplus refunds. */
+export function usePaymentSettings() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ version, ...settings }: PaymentSettings & { version: number }) =>
+      unwrap(await api.PATCH("/api/v1/payments/stripe/settings", { body: { version, ...settings } })),
+    onSuccess: (data) => { qc.setQueryData(KEY, data) },
+    onError: async () => { await qc.invalidateQueries({ queryKey: KEY }) },
+  })
+}
+
 export type Payout = Schemas["PayoutOut"]
 
 /** Stripe payouts to the business's bank, newest first (phase 4). Tandem never starts or changes one. */

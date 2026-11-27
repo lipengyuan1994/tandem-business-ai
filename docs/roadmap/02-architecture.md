@@ -73,8 +73,8 @@ Every module may import `app.platform.*` and the `public.py` of the modules list
 | `sales` (v1) | org, crm, catalog, inventory, scheduling, approvals, notifications | 4 |
 | `purchasing` (v1) | org, catalog, inventory, approvals, notifications | 3 |
 | `dashboard` | org, crm, scheduling, inventory, conversations, approvals, notifications | 4 |
-| `ai` | org, identity, crm, catalog, scheduling, inventory, conversations, knowledge, marketing, approvals, sales, purchasing, dashboard, notifications | 4 |
-| `voice` | ai, conversations | 5 |
+| `ai` | org, identity, crm, catalog, scheduling, inventory, conversations, knowledge, marketing, approvals, sales, purchasing, dashboard, notifications, payments | 6 |
+| `voice` | ai, conversations | 7 |
 | `admin_ops` (v1) | org, identity, files, notifications, crm | 4 |
 | `accounting` (v1) | org, sales, purchasing, payments | 5 |
 | `payments` (v1) | org, sales, approvals, notifications | 5 |

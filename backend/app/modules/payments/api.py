@@ -22,6 +22,7 @@ from .schemas import (
     PayLinkOut,
     PaymentConnectionOut,
     PaymentDisconnectIn,
+    PaymentSettingsIn,
     PayoutOut,
     RelayEventIn,
     RelayEventOut,
@@ -76,6 +77,21 @@ def refresh(ctx: Context = Depends(require(P.CONNECTION_MANAGE))) -> PaymentConn
 def disconnect(body: PaymentDisconnectIn, ctx: Context = Depends(require(P.CONNECTION_MANAGE))) -> PaymentConnectionOut:
     with transaction(ctx) as db:
         connection.disconnect(db, ctx, body.version)
+    with transaction(ctx) as db:
+        return connection.out(db, ctx)
+
+
+@router.patch(
+    "/stripe/settings",
+    response_model=PaymentConnectionOut,
+    summary="Choose what Tandem prepares on its own: pay links in reminders, drafted card refunds",
+    responses=ERRORS,
+)
+def update_settings(
+    body: PaymentSettingsIn, ctx: Context = Depends(require(P.CONNECTION_MANAGE))
+) -> PaymentConnectionOut:
+    with transaction(ctx) as db:
+        connection.update_settings(db, ctx, body)
     with transaction(ctx) as db:
         return connection.out(db, ctx)
 

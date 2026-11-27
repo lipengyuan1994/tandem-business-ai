@@ -37,7 +37,8 @@ TEMPLATES: dict[str, tuple[str | None, str]] = {
     "conversation_reply": (None, "{{ body }}"),
     "payment_reminder": (
         "Payment reminder: invoice {{number}}",
-        "{{ body }}\n\nAmount due: {{ amount }} {{ currency }}\nDue date: {{ due_date }}",
+        "{{ body }}\n\nAmount due: {{ amount }} {{ currency }}\nDue date: {{ due_date }}"
+        "{% if pay_url is defined and pay_url %}\nPay online: {{ pay_url }}{% endif %}",  # older rows have no pay_url
     ),
     "appointment_confirmation": (
         "Your appointment at {{ business_name }}",

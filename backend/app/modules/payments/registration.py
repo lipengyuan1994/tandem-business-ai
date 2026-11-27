@@ -1,6 +1,6 @@
 from app.platform.registry import Registry
 
-from . import api, api_pay, disputes, events, lifecycle, paylinks, payouts, refunds
+from . import api, api_pay, disputes, drafts, events, lifecycle, paylinks, payouts, refunds
 from . import permissions as P
 
 
@@ -20,6 +20,10 @@ def register(reg: Registry) -> None:
     reg.add_job(payouts.FEE_JOB, payouts.read_fees_job, transactional=False)
     reg.add_job(payouts.CHECK_JOB, payouts.check_job, transactional=False)
     reg.add_cron("payments.check_payouts", payouts.CHECK_JOB, 3600, per_business=True)
+    reg.add_job(drafts.DRAFT_JOB, drafts.draft_surplus_job)
+    reg.add_job(drafts.MATCH_JOB, drafts.match_job)
+    reg.subscribe("sales.document_changed", "payments.match-dashboard-refunds", drafts.on_document_changed)
     reg.subscribe("approvals.proposal_closed", "payments.on_refund_proposal_closed", refunds.on_proposal_closed)
     reg.subscribe("sales.document_changed", "payments.close-stale-checkouts", paylinks.on_document_changed)
+    reg.set_reminder_pay_link(paylinks.reminder_link)
     reg.add_export_handler("payments", lifecycle.export)

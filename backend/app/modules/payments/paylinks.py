@@ -29,7 +29,7 @@ from app.platform.db import transaction
 from app.platform.errors import Conflict, NotFound
 from app.platform.money import money_text
 
-from . import connection, disputes, provider, refunds, tokens
+from . import connection, disputes, drafts, provider, refunds, tokens
 from . import permissions as P
 from .models import PaymentConnection, PaymentLink, PaymentRequest
 from .relay import CheckoutView, Credentials, RelayError
@@ -157,6 +157,11 @@ def share(db: Session, ctx: Context, invoice_id: uuid.UUID, *, reset: bool = Fal
     reason = _unavailable(connection.get(db, ctx)) or _invoice_unavailable(invoice)
     if reason is not None:
         raise Conflict(f"payments.{reason}", detail="This invoice cannot be paid online right now")
+    return PayLinkOut(url=_url(ctx, _ensure_link(db, ctx, invoice, reset=reset)))
+
+
+def _ensure_link(db: Session, ctx: Context, invoice: sales.OnlineInvoice, *, reset: bool = False) -> PaymentLink:
+    invoice_id = invoice.id
     link = _active_link(db, ctx, invoice_id)
     if link is not None and reset:
         link.revoked_at = clock.now()
@@ -197,7 +202,28 @@ def share(db: Session, ctx: Context, invoice_id: uuid.UUID, *, reset: bool = Fal
                 target_id=link.id,
                 summary=f"Made a pay link for invoice {invoice.number}",
             )
-    return PayLinkOut(url=_url(ctx, link))
+    return link
+
+
+REMINDER_SENDER = "sales.document.write"  # who may send a payment reminder (sales' own permission)
+
+
+def reminder_link(db: Session, ctx: Context, invoice_id: uuid.UUID, make: bool) -> str | None:
+    """The pay link a payment reminder carries (M21 phase 5; offered to sales through the registry). None when the
+    business turned this off or the invoice cannot be paid online. Whoever may send the reminder may send its link.
+    With `make` False nothing is written: the existing link, or "" when one would be made at sending."""
+    if not ctx.has(REMINDER_SENDER):
+        return None
+    conn = connection.get(db, ctx)
+    if conn is None or not conn.reminder_links or _unavailable(conn) is not None:
+        return None
+    invoice = sales.online_invoice(db, ctx, invoice_id)
+    if _invoice_unavailable(invoice) is not None:
+        return None
+    if not make:
+        link = _active_link(db, ctx, invoice_id)
+        return _url(ctx, link) if link is not None else ""
+    return _url(ctx, _ensure_link(db, ctx, invoice))
 
 
 # -- the customer: pay page and checkout ------------------------------------------------------------------------
@@ -442,10 +468,12 @@ def _record_paid(db: Session, ctx: Context, row: PaymentRequest, view: CheckoutV
     jobs.enqueue(
         db, FEE_JOB, {"request_id": str(row.id)}, business_id=ctx.business_id, dedupe_key=f"payments-fee:{row.id}"
     )
+    if result.surplus_minor:
+        drafts.enqueue_surplus_draft(db, ctx, row.id)
     summary = f"Received {money_text(view.amount_total, row.currency)} online through Stripe"
     if result.surplus_minor:
         surplus = money_text(result.surplus_minor, row.currency)
-        summary += f"; {surplus} could not go on the invoice (already settled): pay it back from Stripe or keep it"
+        summary += f"; {surplus} could not go on the invoice (already settled): pay it back by card or keep it"
     audit.record(
         db,
         ctx,

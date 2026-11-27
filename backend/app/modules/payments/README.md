@@ -1,9 +1,10 @@
 # payments (M21)
 
 Online invoice payments through Stripe Connect ([ADR-022](../../../../docs/roadmap/03-decisions.md)). Spec:
-[M21](../../../../docs/roadmap/modules/M21-payments.md). Phases 1 to 4 of 5: the business's connected Stripe
-account, pay links that let customers pay invoices on Stripe Checkout, card refunds and disputes, and Stripe's fees
-and payouts.
+[M21](../../../../docs/roadmap/modules/M21-payments.md). All five phases are built: the business's connected Stripe
+account, pay links that let customers pay invoices on Stripe Checkout, card refunds and disputes, Stripe's fees and
+payouts, and the agent work (pay links in reminders, drafted surplus refunds, Dashboard refund matching, payouts in
+the briefing).
 
 Tandem never holds a Stripe key. Every Stripe call goes through the **payments relay** (`app/relay`, runbook
 `docs/runbooks/payments-relay.md`); this module talks to it over HTTP only (`relay.py`, signed with `signing.py`,
@@ -55,6 +56,11 @@ Flow:
   `payments.check_payouts` fills in missing fees and re-reads payouts still on their way. `GET /payments/payouts`
   lists them. Accounting reads paid payouts through `public.py` (`ledger_payouts`) to book the transfer and fees.
   Tandem never starts, changes or cancels a payout.
+- Phase 5 (`drafts.py`): payments registers `reminder_pay_link` on the registry, so a payment reminder from sales gets
+  the invoice's pay link at sending. A surplus queues `payments.draft_surplus_refund`, which drafts its card refund as
+  a rule-origin proposal. Dashboard refunds are matched to a credit note's card refund of the same amount on their
+  event or, through `sales.document_changed`, by `payments.match_dashboard_refunds`. `public.briefing_facts` gives the
+  AI briefing recent payouts. `PATCH /payments/stripe/settings` turns `reminder_links` or `draft_refunds` off.
 - Refused under `DATA_PROFILE=regulated`; not offered while `PAYMENTS_RELAY_URL` is empty.
 
 Tests: `tests/` run the real relay app in-process against a fake Stripe over `respx` (`app.relay.testing`).
